@@ -3,6 +3,8 @@ package org.zephyrsoft.util.gui;
 import java.lang.reflect.*;
 import javax.swing.*;
 import com.jeta.forms.components.panel.*;
+import com.jeta.forms.gui.common.*;
+import org.slf4j.*;
 
 /**
  * Helper class for easy implementation of Abeille Forms.<br/>
@@ -15,20 +17,26 @@ import com.jeta.forms.components.panel.*;
  * 
  * @author Mathis Dirksen-Thedens
  */
-public abstract class AbeilleForm extends JFrame {
+public abstract class AbeillePanel extends JPanel {
 	
 	private static final long serialVersionUID = -7153324343867137784L;
 	
+	protected final Logger LOG;
+	
 	private FormPanel panel;
 	
-	public AbeilleForm() {
+	public AbeillePanel() {
 		super();
 		Class<?> clazz = getClass();
-		String clazzName = clazz.getCanonicalName();
-		String pathFromclazzName = clazzName.replaceAll("\\.", "/");
-		panel = new FormPanel(pathFromclazzName + ".jfrm");
-		add(panel);
-		autoPopulateFields(clazz);
+		LOG = LoggerFactory.getLogger(clazz);
+		String clazzName = clazz.getSimpleName();
+		try {
+			panel = new FormPanel(clazz.getResourceAsStream(clazzName + ".jfrm"));
+			add(panel);
+			autoPopulateFields(clazz);
+		} catch (FormException e) {
+			LOG.error("could not load form layout", e);
+		}
 	}
 	
 	private void autoPopulateFields(Class<?> clazz) {

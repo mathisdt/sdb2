@@ -8,7 +8,7 @@ import org.zephyrsoft.util.gui.*;
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class MyAbeilleTestForm extends AbeilleForm {
+public class MyAbeilleTestPanel extends AbeillePanel {
 	private static final long serialVersionUID = 2085932072819350375L;
 	
 	@AutoPopulate
@@ -20,7 +20,7 @@ public class MyAbeilleTestForm extends AbeilleForm {
 	@AutoPopulate
 	private JTextArea textarea4;
 	
-	public MyAbeilleTestForm() {
+	public MyAbeilleTestPanel() {
 		// verify that the fields are filled by printing out the contents
 		System.out.println(label1);
 		System.out.println(button2);
@@ -29,6 +29,10 @@ public class MyAbeilleTestForm extends AbeilleForm {
 	}
 	
 	public static void main(String[] args) {
-		new MyAbeilleTestForm();
+		MyAbeilleTestPanel testPanel = new MyAbeilleTestPanel();
+		JFrame frame = new JFrame();
+		frame.add(testPanel);
+		frame.setVisible(true);
+		frame.setSize(200, 300);
 	}
 }
