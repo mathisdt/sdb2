@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.border.*;
+import javax.swing.event.*;
 import org.zephyrsoft.sdb2.*;
 import org.zephyrsoft.sdb2.model.*;
 import org.zephyrsoft.util.gui.*;
@@ -44,6 +45,46 @@ public class MainWindow extends JFrame {
 		this.model = model;
 	}
 	
+	private Song songListSelected;
+	
+	protected void handleSongListSelectionChanged(ListSelectionEvent e) {
+		if (songListSelected!=null) {
+			saveSongData(songListSelected);
+		}
+		songListSelected = (Song) songList.getSelectedValue();
+		if (songListSelected!=null) {
+			loadSongData(songListSelected);
+		}
+	}
+	
+	/**
+	 * Stores all data contained in the GUI elements.
+	 * @param song the model object to which the data should be written
+	 */
+	private void saveSongData(Song song) {
+		// TODO
+	}
+	
+	/**
+	 * Reads song data and puts the values into the GUI elements.
+	 * @param song the model object which should be read
+	 */
+	private void loadSongData(Song song) {
+		// TODO
+	}
+	
+	protected void handleWindowClosing() {
+		if (songListSelected!=null) {
+			saveSongData(songListSelected);
+		}
+		boolean mayClose = controller.prepareClose();
+		if (mayClose) {
+			setVisible(false);
+			dispose();
+			controller.shutdown();
+		}
+	}
+	
 	/**
 	 * Create the frame.
 	 * @param controller 
@@ -54,12 +95,7 @@ public class MainWindow extends JFrame {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				boolean mayClose = controller.prepareClose();
-				if (mayClose) {
-					setVisible(false);
-					dispose();
-					controller.shutdown();
-				}
+				handleWindowClosing();
 			}
 		});
 		setPreferredSize(new Dimension(800, 600));
@@ -121,6 +157,12 @@ public class MainWindow extends JFrame {
 		panelSongList.add(scrollPaneSongList, BorderLayout.CENTER);
 		
 		songList = new JList();
+		songList.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				handleSongListSelectionChanged(e);
+			}
+		});
 		scrollPaneSongList.setViewportView(songList);
 		
 		JPanel panelSongListButtons = new JPanel();
@@ -972,6 +1014,7 @@ public class MainWindow extends JFrame {
 		panelShortcuts.setLayout(gbl_panelShortcuts);
 		tabbedPane.setFocusTraversalPolicy(new FocusTraversalOnArray(new Component[]{panelEdit, panelPresent, panelImportExportStatistics, panelSettings}));
 	}
+	
 	public JTextField getTextFieldTitle() {
 		return textFieldTitle;
 	}
