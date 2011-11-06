@@ -1,13 +1,15 @@
 package org.zephyrsoft.sdb2.model;
 
+import java.io.*;
 import java.util.*;
 
 /**
  * Representation of a song.
- * 
  * @author Mathis Dirksen-Thedens
  */
-public class Song {
+public class Song implements Serializable {
+	
+	private static final long serialVersionUID = -7133402923581521674L;
 	
 	private String title;
 	private String composer;
@@ -22,7 +24,7 @@ public class Song {
 	private String tonality;
 	private String chordSequence;
 	
-	private Set<Song> linkedSongs = new HashSet<Song>();
+	private List<Song> linkedSongs = new ArrayList<Song>();
 	
 	public String getTitle() {
 		return title;
@@ -124,6 +126,12 @@ public class Song {
 		return linkedSongs.remove(o);
 	}
 	
+	public int linkedSongsSize() {
+		return linkedSongs.size();
+	}
 	
+	public Song getLinkedSong(int index) {
+		return linkedSongs.get(index);
+	}
 	
 }

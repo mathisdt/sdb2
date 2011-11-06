@@ -1,6 +1,5 @@
 package org.zephyrsoft.sdb2;
 
-import java.awt.*;
 import org.kohsuke.args4j.*;
 import org.slf4j.*;
 import org.zephyrsoft.sdb2.gui.*;
@@ -9,9 +8,11 @@ public class Start {
 	
 	private static Logger LOG = LoggerFactory.getLogger(Start.class);
 	
-	@Option(name = "--help", aliases = { "-help", "-h" }, usage = "display a short description of the available command line options")
+	@Option(name = "--help", aliases = {"-help", "-h"},
+		usage = "display a short description of the available command line options (this message)")
 	private boolean help = false;
-	@Option(name = "--dbfile", metaVar = "FILE", usage = "use this instead of the default location to load and save the song database")
+	@Option(name = "--dbfile", metaVar = "FILE",
+		usage = "use this instead of the default location to load and save the song database")
 	private String databaseFile = null;
 	
 	public static void main(String[] args) {
@@ -31,23 +32,24 @@ public class Start {
 			parser.printUsage(System.err);
 		}
 		
-		EventQueue.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					MainController controller = new MainController();
-					MainWindow window = new MainWindow(controller);
-					if (databaseFile!=null) {
-						controller.setDbFileName(databaseFile);
-					}
-					controller.initializeModel();
-					window.setModel(controller.getModel());
-					window.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
+		if (help) {
+			System.err.println("The available options are:");
+			parser.printUsage(System.err);
+		} else {
+			MainController controller = new MainController();
+			try {
+				MainWindow window = new MainWindow(controller);
+				if (databaseFile != null) {
+					controller.setDbFileName(databaseFile);
 				}
+				controller.initializeModel();
+				window.setModel(controller.getModel());
+				window.setVisible(true);
+			} catch (Throwable t) {
+				LOG.error("problem while starting up the application", t);
+				controller.shutdown(-1);
 			}
-		});
+		}
 	}
 	
 }

@@ -11,7 +11,6 @@ import org.zephyrsoft.util.gui.*;
 
 /**
  * Main window of the application.
- * 
  * @author Mathis Dirksen-Thedens
  */
 public class MainWindow extends JFrame {
@@ -19,40 +18,63 @@ public class MainWindow extends JFrame {
 	private static final long serialVersionUID = -6874196690375696416L;
 	
 	private JPanel contentPane;
-	private JTextField textFieldFilter;
+	
+	private JEditorPane editorLyrics;
 	private JTextField textFieldTitle;
-	private JTextField textFieldComposer;
+	private JComboBox comboBoxLanguage;
 	private JTextField textFieldTonality;
+	private JTextField textFieldComposer;
 	private JTextField textFieldAuthorText;
 	private JTextField textFieldAuthorTranslation;
 	private JTextField textFieldPublisher;
 	private JTextField textFieldAdditionalCopyrightNotes;
 	private JTextField textFieldSongNotes;
+	private JEditorPane editorChordSequence;
+	private JList linkedSongsList;
 	
 	private final MainController controller;
 	private MainModel model;
-	private JComboBox comboBoxLanguage;
-	private JEditorPane editorLyrics;
-	private JEditorPane editorChordSequence;
+	private ListModel listModel;
+	private ListModel linkedSongsListModel;
+	
 	private JList songList;
 	private JList presentSongList;
+	private JTextField textFieldFilter;
 	private JPanel panelSectionButtons;
 	private JLabel lblSelectedSongMetadata;
 	private JLabel lblPresentedSongMetadata;
 	private JLabel lblStatistics;
+	private Song songListSelected;
 	
 	public void setModel(MainModel model) {
 		this.model = model;
+		bindModel();
 	}
 	
-	private Song songListSelected;
+	private void bindModel() {
+		listModel = new AbstractListModel() {
+			
+			private static final long serialVersionUID = 2762185055890409506L;
+			
+			@Override
+			public int getSize() {
+				return model.getSize();
+			}
+			
+			@Override
+			public Object getElementAt(int index) {
+				return model.getSong(index);
+			}
+		};
+		songList.setModel(listModel);
+	}
 	
 	protected void handleSongListSelectionChanged(ListSelectionEvent e) {
-		if (songListSelected!=null) {
+		if (songListSelected != null) {
 			saveSongData(songListSelected);
 		}
 		songListSelected = (Song) songList.getSelectedValue();
-		if (songListSelected!=null) {
+		if (songListSelected != null) {
 			loadSongData(songListSelected);
 		}
 	}
@@ -69,12 +91,28 @@ public class MainWindow extends JFrame {
 	 * Reads song data and puts the values into the GUI elements.
 	 * @param song the model object which should be read
 	 */
-	private void loadSongData(Song song) {
+	private void loadSongData(final Song song) {
 		// TODO
+		
+		linkedSongsListModel = new AbstractListModel() {
+			
+			private static final long serialVersionUID = 2762185055890409506L;
+			
+			@Override
+			public int getSize() {
+				return song.linkedSongsSize();
+			}
+			
+			@Override
+			public Object getElementAt(int index) {
+				return song.getLinkedSong(index);
+			}
+		};
+		linkedSongsList.setModel(linkedSongsListModel);
 	}
 	
 	protected void handleWindowClosing() {
-		if (songListSelected!=null) {
+		if (songListSelected != null) {
 			saveSongData(songListSelected);
 		}
 		boolean mayClose = controller.prepareClose();
@@ -87,7 +125,7 @@ public class MainWindow extends JFrame {
 	
 	/**
 	 * Create the frame.
-	 * @param controller 
+	 * @param controller
 	 */
 	public MainWindow(MainController mainController) {
 		
@@ -119,10 +157,10 @@ public class MainWindow extends JFrame {
 		panelFilter.setBorder(null);
 		panelSongList.add(panelFilter, BorderLayout.NORTH);
 		GridBagLayout gbl_panelFilter = new GridBagLayout();
-		gbl_panelFilter.columnWidths = new int[]{39, 114, 22, 0};
-		gbl_panelFilter.rowHeights = new int[]{22, 0};
-		gbl_panelFilter.columnWeights = new double[]{0.0, 1.0, 0.0, Double.MIN_VALUE};
-		gbl_panelFilter.rowWeights = new double[]{0.0, Double.MIN_VALUE};
+		gbl_panelFilter.columnWidths = new int[] {39, 114, 22, 0};
+		gbl_panelFilter.rowHeights = new int[] {22, 0};
+		gbl_panelFilter.columnWeights = new double[] {0.0, 1.0, 0.0, Double.MIN_VALUE};
+		gbl_panelFilter.rowWeights = new double[] {0.0, Double.MIN_VALUE};
 		panelFilter.setLayout(gbl_panelFilter);
 		
 		JLabel lblFilter = new JLabel("Filter:");
@@ -144,9 +182,12 @@ public class MainWindow extends JFrame {
 		
 		JButton btnClearFilter = new JButton("");
 		btnClearFilter.setMargin(new Insets(0, 0, 0, 0));
-		btnClearFilter.setRolloverIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/plaf/basic/resources/clear_rollover.gif")));
-		btnClearFilter.setPressedIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/plaf/basic/resources/clear_pressed.gif")));
-		btnClearFilter.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/plaf/basic/resources/clear.gif")));
+		btnClearFilter.setRolloverIcon(new ImageIcon(MainWindow.class
+			.getResource("/org/jdesktop/swingx/plaf/basic/resources/clear_rollover.gif")));
+		btnClearFilter.setPressedIcon(new ImageIcon(MainWindow.class
+			.getResource("/org/jdesktop/swingx/plaf/basic/resources/clear_pressed.gif")));
+		btnClearFilter.setIcon(new ImageIcon(MainWindow.class
+			.getResource("/org/jdesktop/swingx/plaf/basic/resources/clear.gif")));
 		GridBagConstraints gbc_btnClearFilter = new GridBagConstraints();
 		gbc_btnClearFilter.anchor = GridBagConstraints.NORTHWEST;
 		gbc_btnClearFilter.gridx = 2;
@@ -168,14 +209,15 @@ public class MainWindow extends JFrame {
 		JPanel panelSongListButtons = new JPanel();
 		panelSongList.add(panelSongListButtons, BorderLayout.SOUTH);
 		GridBagLayout gbl_panelSongListButtons = new GridBagLayout();
-		gbl_panelSongListButtons.columnWidths = new int[]{0, 0, 0};
-		gbl_panelSongListButtons.rowHeights = new int[]{26};
-		gbl_panelSongListButtons.columnWeights = new double[]{0.0, 0.0, 0.0};
-		gbl_panelSongListButtons.rowWeights = new double[]{0.0};
+		gbl_panelSongListButtons.columnWidths = new int[] {0, 0, 0};
+		gbl_panelSongListButtons.rowHeights = new int[] {26};
+		gbl_panelSongListButtons.columnWeights = new double[] {0.0, 0.0, 0.0};
+		gbl_panelSongListButtons.rowWeights = new double[] {0.0};
 		panelSongListButtons.setLayout(gbl_panelSongListButtons);
 		
 		JButton btnNewSong = new JButton("New");
-		btnNewSong.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/editors/newHighlighter.gif")));
+		btnNewSong.setIcon(new ImageIcon(MainWindow.class
+			.getResource("/org/jdesktop/swingx/editors/newHighlighter.gif")));
 		GridBagConstraints gbc_btnNewSong = new GridBagConstraints();
 		gbc_btnNewSong.fill = GridBagConstraints.VERTICAL;
 		gbc_btnNewSong.anchor = GridBagConstraints.WEST;
@@ -185,7 +227,8 @@ public class MainWindow extends JFrame {
 		panelSongListButtons.add(btnNewSong, gbc_btnNewSong);
 		
 		JButton btnDeleteSong = new JButton("Delete");
-		btnDeleteSong.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/editors/deleteHighlighter.gif")));
+		btnDeleteSong.setIcon(new ImageIcon(MainWindow.class
+			.getResource("/org/jdesktop/swingx/editors/deleteHighlighter.gif")));
 		GridBagConstraints gbc_btnDeleteSong = new GridBagConstraints();
 		gbc_btnDeleteSong.fill = GridBagConstraints.VERTICAL;
 		gbc_btnDeleteSong.anchor = GridBagConstraints.WEST;
@@ -195,7 +238,8 @@ public class MainWindow extends JFrame {
 		panelSongListButtons.add(btnDeleteSong, gbc_btnDeleteSong);
 		
 		JButton btnSelectSong = new JButton("Select");
-		btnSelectSong.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/plaf/basic/resources/month-up.png")));
+		btnSelectSong.setIcon(new ImageIcon(MainWindow.class
+			.getResource("/org/jdesktop/swingx/plaf/basic/resources/month-up.png")));
 		GridBagConstraints gbc_btnSelectSong = new GridBagConstraints();
 		gbc_btnSelectSong.fill = GridBagConstraints.VERTICAL;
 		gbc_btnSelectSong.anchor = GridBagConstraints.EAST;
@@ -211,10 +255,11 @@ public class MainWindow extends JFrame {
 		JPanel panelEdit = new JPanel();
 		tabbedPane.addTab("Edit Song", null, panelEdit, null);
 		GridBagLayout gbl_panelEdit = new GridBagLayout();
-		gbl_panelEdit.columnWidths = new int[]{9999, 9999, 9999};
-		gbl_panelEdit.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		gbl_panelEdit.columnWeights = new double[]{1.0, 1.0, 1.0};
-		gbl_panelEdit.rowWeights = new double[]{0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
+		gbl_panelEdit.columnWidths = new int[] {9999, 9999, 9999};
+		gbl_panelEdit.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		gbl_panelEdit.columnWeights = new double[] {1.0, 1.0, 1.0};
+		gbl_panelEdit.rowWeights =
+			new double[] {0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE};
 		panelEdit.setLayout(gbl_panelEdit);
 		
 		JLabel lblLyricsAndChords = new JLabel("Lyrics and Chords");
@@ -432,8 +477,8 @@ public class MainWindow extends JFrame {
 		gbc_scrollPaneLinkedSongsList.gridy = 9;
 		panelEdit.add(scrollPaneLinkedSongsList, gbc_scrollPaneLinkedSongsList);
 		
-		JList listLinkedSongsList = new JList();
-		scrollPaneLinkedSongsList.setViewportView(listLinkedSongsList);
+		linkedSongsList = new JList();
+		scrollPaneLinkedSongsList.setViewportView(linkedSongsList);
 		
 		JPanel panelLinkedSongs = new JPanel();
 		GridBagConstraints gbc_panelLinkedSongs = new GridBagConstraints();
@@ -442,10 +487,10 @@ public class MainWindow extends JFrame {
 		gbc_panelLinkedSongs.gridy = 10;
 		panelEdit.add(panelLinkedSongs, gbc_panelLinkedSongs);
 		GridBagLayout gbl_panelLinkedSongs = new GridBagLayout();
-		gbl_panelLinkedSongs.columnWidths = new int[]{0, 0};
-		gbl_panelLinkedSongs.rowHeights = new int[]{26};
-		gbl_panelLinkedSongs.columnWeights = new double[]{1.0, 1.0};
-		gbl_panelLinkedSongs.rowWeights = new double[]{0.0};
+		gbl_panelLinkedSongs.columnWidths = new int[] {0, 0};
+		gbl_panelLinkedSongs.rowHeights = new int[] {26};
+		gbl_panelLinkedSongs.columnWeights = new double[] {1.0, 1.0};
+		gbl_panelLinkedSongs.rowWeights = new double[] {0.0};
 		panelLinkedSongs.setLayout(gbl_panelLinkedSongs);
 		
 		JButton btnAdd = new JButton("Add");
@@ -458,7 +503,8 @@ public class MainWindow extends JFrame {
 		panelLinkedSongs.add(btnAdd, gbc_btnAdd);
 		
 		JButton btnRemove = new JButton("Remove");
-		btnRemove.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/editors/deleteHighlighter.gif")));
+		btnRemove.setIcon(new ImageIcon(MainWindow.class
+			.getResource("/org/jdesktop/swingx/editors/deleteHighlighter.gif")));
 		GridBagConstraints gbc_btnRemove = new GridBagConstraints();
 		gbc_btnRemove.fill = GridBagConstraints.BOTH;
 		gbc_btnRemove.gridx = 1;
@@ -486,10 +532,10 @@ public class MainWindow extends JFrame {
 		JPanel panelSelectedMetadata = new JPanel();
 		panelPresentLeft.add(panelSelectedMetadata, BorderLayout.SOUTH);
 		GridBagLayout gbl_panelSelectedMetadata = new GridBagLayout();
-		gbl_panelSelectedMetadata.columnWidths = new int[]{258, 0};
-		gbl_panelSelectedMetadata.rowHeights = new int[]{14, 14, 0};
-		gbl_panelSelectedMetadata.columnWeights = new double[]{0.0, Double.MIN_VALUE};
-		gbl_panelSelectedMetadata.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_panelSelectedMetadata.columnWidths = new int[] {258, 0};
+		gbl_panelSelectedMetadata.rowHeights = new int[] {14, 14, 0};
+		gbl_panelSelectedMetadata.columnWeights = new double[] {0.0, Double.MIN_VALUE};
+		gbl_panelSelectedMetadata.rowWeights = new double[] {0.0, 0.0, Double.MIN_VALUE};
 		panelSelectedMetadata.setLayout(gbl_panelSelectedMetadata);
 		
 		JLabel lblSelectedSong = new JLabel("Selected song:");
@@ -512,10 +558,10 @@ public class MainWindow extends JFrame {
 		JPanel panelSelectedSongListButtons = new JPanel();
 		panelPresentLeft.add(panelSelectedSongListButtons, BorderLayout.EAST);
 		GridBagLayout gbl_panelSelectedSongListButtons = new GridBagLayout();
-		gbl_panelSelectedSongListButtons.columnWidths = new int[]{0};
-		gbl_panelSelectedSongListButtons.rowHeights = new int[]{0, 0, 0, 0};
-		gbl_panelSelectedSongListButtons.columnWeights = new double[]{0.0};
-		gbl_panelSelectedSongListButtons.rowWeights = new double[]{1.0, 0.0, 0.0, 0.0};
+		gbl_panelSelectedSongListButtons.columnWidths = new int[] {0};
+		gbl_panelSelectedSongListButtons.rowHeights = new int[] {0, 0, 0, 0};
+		gbl_panelSelectedSongListButtons.columnWeights = new double[] {0.0};
+		gbl_panelSelectedSongListButtons.rowWeights = new double[] {1.0, 0.0, 0.0, 0.0};
 		panelSelectedSongListButtons.setLayout(gbl_panelSelectedSongListButtons);
 		
 		JButton btnUp = new JButton("Up");
@@ -528,7 +574,8 @@ public class MainWindow extends JFrame {
 		panelSelectedSongListButtons.add(btnUp, gbc_btnUp);
 		
 		JButton btnUnselect = new JButton("Unselect");
-		btnUnselect.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/plaf/basic/resources/month-down.png")));
+		btnUnselect.setIcon(new ImageIcon(MainWindow.class
+			.getResource("/org/jdesktop/swingx/plaf/basic/resources/month-down.png")));
 		GridBagConstraints gbc_btnUnselect = new GridBagConstraints();
 		gbc_btnUnselect.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnUnselect.insets = new Insets(0, 0, 5, 0);
@@ -552,10 +599,10 @@ public class MainWindow extends JFrame {
 		JPanel panelPresentationButtons = new JPanel();
 		panelPresentRight.add(panelPresentationButtons, BorderLayout.CENTER);
 		GridBagLayout gbl_panelPresentationButtons = new GridBagLayout();
-		gbl_panelPresentationButtons.columnWidths = new int[]{0, 0};
-		gbl_panelPresentationButtons.rowHeights = new int[]{0, 0, 0, 0, 0, 0};
-		gbl_panelPresentationButtons.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gbl_panelPresentationButtons.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+		gbl_panelPresentationButtons.columnWidths = new int[] {0, 0};
+		gbl_panelPresentationButtons.rowHeights = new int[] {0, 0, 0, 0, 0, 0};
+		gbl_panelPresentationButtons.columnWeights = new double[] {1.0, Double.MIN_VALUE};
+		gbl_panelPresentationButtons.rowWeights = new double[] {0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
 		panelPresentationButtons.setLayout(gbl_panelPresentationButtons);
 		
 		JButton btnShowLogo = new JButton("Show logo");
@@ -600,19 +647,19 @@ public class MainWindow extends JFrame {
 		panelSectionButtons = new JPanel();
 		scrollPaneSectionButtons.setViewportView(panelSectionButtons);
 		GridBagLayout gbl_panelSectionButtons = new GridBagLayout();
-		gbl_panelSectionButtons.columnWidths = new int[]{0};
-		gbl_panelSectionButtons.rowHeights = new int[]{0};
-		gbl_panelSectionButtons.columnWeights = new double[]{Double.MIN_VALUE};
-		gbl_panelSectionButtons.rowWeights = new double[]{Double.MIN_VALUE};
+		gbl_panelSectionButtons.columnWidths = new int[] {0};
+		gbl_panelSectionButtons.rowHeights = new int[] {0};
+		gbl_panelSectionButtons.columnWeights = new double[] {Double.MIN_VALUE};
+		gbl_panelSectionButtons.rowWeights = new double[] {Double.MIN_VALUE};
 		panelSectionButtons.setLayout(gbl_panelSectionButtons);
 		
 		JPanel panelPresentedMetadata = new JPanel();
 		panelPresentRight.add(panelPresentedMetadata, BorderLayout.SOUTH);
 		GridBagLayout gbl_panelPresentedMetadata = new GridBagLayout();
-		gbl_panelPresentedMetadata.columnWidths = new int[]{258, 0};
-		gbl_panelPresentedMetadata.rowHeights = new int[]{14, 14, 0};
-		gbl_panelPresentedMetadata.columnWeights = new double[]{0.0, Double.MIN_VALUE};
-		gbl_panelPresentedMetadata.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+		gbl_panelPresentedMetadata.columnWidths = new int[] {258, 0};
+		gbl_panelPresentedMetadata.rowHeights = new int[] {14, 14, 0};
+		gbl_panelPresentedMetadata.columnWeights = new double[] {0.0, Double.MIN_VALUE};
+		gbl_panelPresentedMetadata.rowWeights = new double[] {0.0, 0.0, Double.MIN_VALUE};
 		panelPresentedMetadata.setLayout(gbl_panelPresentedMetadata);
 		
 		JLabel lblPresentedSong = new JLabel("Presented song:");
@@ -635,10 +682,11 @@ public class MainWindow extends JFrame {
 		JPanel panelImportExportStatistics = new JPanel();
 		tabbedPane.addTab("Import / Export / Statistics", null, panelImportExportStatistics, null);
 		GridBagLayout gbl_panelImportExportStatistics = new GridBagLayout();
-		gbl_panelImportExportStatistics.columnWidths = new int[]{0, 70, 0, 0};
-		gbl_panelImportExportStatistics.rowHeights = new int[]{30, 0, 0, 30, 30, 0, 0, 0, 0};
-		gbl_panelImportExportStatistics.columnWeights = new double[]{1.0, 0.0, 1.0, Double.MIN_VALUE};
-		gbl_panelImportExportStatistics.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panelImportExportStatistics.columnWidths = new int[] {0, 70, 0, 0};
+		gbl_panelImportExportStatistics.rowHeights = new int[] {30, 0, 0, 30, 30, 0, 0, 0, 0};
+		gbl_panelImportExportStatistics.columnWeights = new double[] {1.0, 0.0, 1.0, Double.MIN_VALUE};
+		gbl_panelImportExportStatistics.rowWeights =
+			new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		panelImportExportStatistics.setLayout(gbl_panelImportExportStatistics);
 		
 		JLabel lblSelectedSong2 = new JLabel("Selected Song");
@@ -733,10 +781,12 @@ public class MainWindow extends JFrame {
 		scrollPaneSettings.setViewportBorder(null);
 		scrollPaneSettings.setViewportView(panel);
 		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[]{0, 0, 0, 0, 0};
-		gbl_panel.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 1.0, 0.0};
-		gbl_panel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gbl_panel.columnWidths = new int[] {0, 0, 0, 0, 0};
+		gbl_panel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		gbl_panel.columnWeights = new double[] {0.0, 0.0, 0.0, 1.0, 0.0};
+		gbl_panel.rowWeights =
+			new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+				0.0, Double.MIN_VALUE};
 		panel.setLayout(gbl_panel);
 		
 		JButton btnUnlock = new JButton("Unlock");
@@ -1007,65 +1057,83 @@ public class MainWindow extends JFrame {
 		JPanel panelShortcuts = new JPanel();
 		tabbedPane.addTab("Keyboard Shortcuts", null, panelShortcuts, null);
 		GridBagLayout gbl_panelShortcuts = new GridBagLayout();
-		gbl_panelShortcuts.columnWidths = new int[]{0};
-		gbl_panelShortcuts.rowHeights = new int[]{0};
-		gbl_panelShortcuts.columnWeights = new double[]{Double.MIN_VALUE};
-		gbl_panelShortcuts.rowWeights = new double[]{Double.MIN_VALUE};
+		gbl_panelShortcuts.columnWidths = new int[] {0};
+		gbl_panelShortcuts.rowHeights = new int[] {0};
+		gbl_panelShortcuts.columnWeights = new double[] {Double.MIN_VALUE};
+		gbl_panelShortcuts.rowWeights = new double[] {Double.MIN_VALUE};
 		panelShortcuts.setLayout(gbl_panelShortcuts);
-		tabbedPane.setFocusTraversalPolicy(new FocusTraversalOnArray(new Component[]{panelEdit, panelPresent, panelImportExportStatistics, panelSettings}));
+		tabbedPane.setFocusTraversalPolicy(new FocusTraversalOnArray(new Component[] {panelEdit, panelPresent,
+			panelImportExportStatistics, panelSettings}));
 	}
 	
 	public JTextField getTextFieldTitle() {
 		return textFieldTitle;
 	}
+	
 	public JComboBox getComboBoxLanguage() {
 		return comboBoxLanguage;
 	}
+	
 	public JTextField getTextFieldTonality() {
 		return textFieldTonality;
 	}
+	
 	public JEditorPane getEditorLyrics() {
 		return editorLyrics;
 	}
+	
 	public JTextField getTextFieldComposer() {
 		return textFieldComposer;
 	}
+	
 	public JTextField getTextFieldAuthorText() {
 		return textFieldAuthorText;
 	}
+	
 	public JTextField getTextFieldAuthorTranslation() {
 		return textFieldAuthorTranslation;
 	}
+	
 	public JTextField getTextFieldPublisher() {
 		return textFieldPublisher;
 	}
+	
 	public JTextField getTextFieldAdditionalCopyrightNotes() {
 		return textFieldAdditionalCopyrightNotes;
 	}
+	
 	public JTextField getTextFieldSongNotes() {
 		return textFieldSongNotes;
 	}
+	
 	public JEditorPane getEditorChordSequence() {
 		return editorChordSequence;
 	}
+	
 	public JList getSongList() {
 		return songList;
 	}
+	
 	public JTextField getTextFieldFilter() {
 		return textFieldFilter;
 	}
+	
 	public JList getPresentSongList() {
 		return presentSongList;
 	}
+	
 	public JPanel getPanelSectionButtons() {
 		return panelSectionButtons;
 	}
+	
 	public JLabel getLblSelectedSongMetadata() {
 		return lblSelectedSongMetadata;
 	}
+	
 	public JLabel getLblPresentedSongMetadata() {
 		return lblPresentedSongMetadata;
 	}
+	
 	public JLabel getLblStatistics() {
 		return lblStatistics;
 	}

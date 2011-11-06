@@ -5,7 +5,6 @@ import com.thoughtworks.xstream.*;
 
 /**
  * Converts the {@link MainModel} to and from XML.
- * 
  * @author Mathis Dirksen-Thedens
  */
 public class XMLConverter {
@@ -22,12 +21,16 @@ public class XMLConverter {
 	
 	public static MainModel fromXMLToModel(String xmlString) {
 		XStream xstream = initXStream();
-		return (MainModel) xstream.fromXML(xmlString);
+		MainModel model = (MainModel) xstream.fromXML(xmlString);
+		model.initIfNecessary();
+		return model;
 	}
 	
 	public static MainModel fromXMLToModel(InputStream xmlInputStream) {
 		XStream xstream = initXStream();
-		return (MainModel) xstream.fromXML(xmlInputStream);
+		MainModel model = (MainModel) xstream.fromXML(xmlInputStream);
+		model.initIfNecessary();
+		return model;
 	}
 	
 	private static XStream initXStream() {

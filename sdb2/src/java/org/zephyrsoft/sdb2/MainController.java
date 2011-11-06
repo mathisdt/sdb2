@@ -7,7 +7,6 @@ import org.zephyrsoft.sdb2.model.*;
 
 /**
  * Controller for {@link MainWindow}.
- * 
  * @author Mathis Dirksen-Thedens
  */
 public class MainController {
@@ -24,8 +23,12 @@ public class MainController {
 	}
 	
 	public void shutdown() {
-		LOG.debug("closing application");
-		System.exit(0);
+		shutdown(0);
+	}
+	
+	public void shutdown(int exitCode) {
+		LOG.debug("closing application, exit code " + exitCode);
+		System.exit(exitCode);
 	}
 	
 	public void initializeModel() {
@@ -68,7 +71,7 @@ public class MainController {
 	}
 	
 	private String getDbFileName() {
-		if (dbFileName==null) {
+		if (dbFileName == null) {
 			return getDefaultDataDir() + File.separator + "songs.sdb2";
 		} else {
 			return dbFileName;
