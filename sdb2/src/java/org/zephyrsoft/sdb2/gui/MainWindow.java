@@ -2,20 +2,25 @@ package org.zephyrsoft.sdb2.gui;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
+import org.slf4j.*;
 import org.zephyrsoft.sdb2.*;
 import org.zephyrsoft.sdb2.model.*;
 import org.zephyrsoft.util.gui.*;
 
 /**
  * Main window of the application.
+ * 
  * @author Mathis Dirksen-Thedens
  */
 public class MainWindow extends JFrame {
 	
 	private static final long serialVersionUID = -6874196690375696416L;
+	
+	private static Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 	
 	private JPanel contentPane;
 	
@@ -32,10 +37,11 @@ public class MainWindow extends JFrame {
 	private JEditorPane editorChordSequence;
 	private JList linkedSongsList;
 	
+	private KeyboardShortcutManager shortcutManager;
 	private final MainController controller;
 	private MainModel model;
-	private ListModel listModel;
-	private ListModel linkedSongsListModel;
+	private TransparentListModel<Song> listModel;
+	private TransparentListModel<Song> linkedSongsListModel;
 	
 	private JList songList;
 	private JList presentSongList;
@@ -52,26 +58,14 @@ public class MainWindow extends JFrame {
 	}
 	
 	private void bindModel() {
-		listModel = new AbstractListModel() {
-			
-			private static final long serialVersionUID = 2762185055890409506L;
-			
-			@Override
-			public int getSize() {
-				return model.getSize();
-			}
-			
-			@Override
-			public Object getElementAt(int index) {
-				return model.getSong(index);
-			}
-		};
+		listModel = new TransparentListModel<Song>(model.getAllSongs());
 		songList.setModel(listModel);
 	}
 	
 	protected void handleSongListSelectionChanged(ListSelectionEvent e) {
 		if (songListSelected != null) {
 			saveSongData(songListSelected);
+			clearSongData();
 		}
 		songListSelected = (Song) songList.getSelectedValue();
 		if (songListSelected != null) {
@@ -81,33 +75,62 @@ public class MainWindow extends JFrame {
 	
 	/**
 	 * Stores all data contained in the GUI elements.
+	 * 
 	 * @param song the model object to which the data should be written
 	 */
 	private void saveSongData(Song song) {
-		// TODO
+		LOG.debug("saveSongData");
+		song.setLyrics(editorLyrics.getText());
+		song.setTitle(textFieldTitle.getText());
+		song.setLanguage((LanguageEnum) comboBoxLanguage.getSelectedItem());
+		song.setTonality(textFieldTonality.getText());
+		song.setComposer(textFieldComposer.getText());
+		song.setAuthorText(textFieldAuthorText.getText());
+		song.setAuthorTranslation(textFieldAuthorTranslation.getText());
+		song.setPublisher(textFieldPublisher.getText());
+		song.setAdditionalCopyrightNotes(textFieldAdditionalCopyrightNotes.getText());
+		song.setSongNotes(textFieldSongNotes.getText());
+		song.setChordSequence(editorChordSequence.getText());
+		song.setLinkedSongs(linkedSongsListModel.getAllElements());
+	}
+	
+	/**
+	 * Deletes all values contained in the GUI elements of the song editing tab.
+	 */
+	private void clearSongData() {
+		editorLyrics.setText("");
+		textFieldTitle.setText("");
+		comboBoxLanguage.setSelectedItem(null);
+		textFieldTonality.setText("");
+		textFieldComposer.setText("");
+		textFieldAuthorText.setText("");
+		textFieldAuthorTranslation.setText("");
+		textFieldPublisher.setText("");
+		textFieldAdditionalCopyrightNotes.setText("");
+		textFieldSongNotes.setText("");
+		editorChordSequence.setText("");
+		linkedSongsList.setModel(new TransparentListModel<Song>(Collections.<Song> emptyList()));
 	}
 	
 	/**
 	 * Reads song data and puts the values into the GUI elements.
+	 * 
 	 * @param song the model object which should be read
 	 */
 	private void loadSongData(final Song song) {
-		// TODO
-		
-		linkedSongsListModel = new AbstractListModel() {
-			
-			private static final long serialVersionUID = 2762185055890409506L;
-			
-			@Override
-			public int getSize() {
-				return song.linkedSongsSize();
-			}
-			
-			@Override
-			public Object getElementAt(int index) {
-				return song.getLinkedSong(index);
-			}
-		};
+		LOG.debug("loadSongData");
+		editorLyrics.setText(song.getLyrics());
+		textFieldTitle.setText(song.getTitle());
+		comboBoxLanguage.setSelectedItem(song.getLanguage());
+		textFieldTonality.setText(song.getTonality());
+		textFieldComposer.setText(song.getComposer());
+		textFieldAuthorText.setText(song.getAuthorText());
+		textFieldAuthorTranslation.setText(song.getAuthorTranslation());
+		textFieldPublisher.setText(song.getPublisher());
+		textFieldAdditionalCopyrightNotes.setText(song.getAdditionalCopyrightNotes());
+		textFieldSongNotes.setText(song.getSongNotes());
+		editorChordSequence.setText(song.getChordSequence());
+		linkedSongsListModel = new TransparentListModel<Song>(song.getLinkedSongs());
 		linkedSongsList.setModel(linkedSongsListModel);
 	}
 	
@@ -123,13 +146,42 @@ public class MainWindow extends JFrame {
 		}
 	}
 	
+	protected void handleSongNew() {
+		Song song = new Song();
+//		song.setTitle("unnamed song");
+		model.addSong(song);
+		songList.setSelectedValue(song, true);
+	}
+	
+	private final void defineShortcuts() {
+		shortcutManager = new KeyboardShortcutManager();
+		KeyboardFocusManager focusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+		focusManager.addKeyEventDispatcher(shortcutManager);
+		
+		shortcutManager.add(new KeyboardShortcut(KeyEvent.VK_ESCAPE, false, false, false) {
+			@Override
+			public void doAction() {
+				LOG.debug("Escape-Action");
+				if (textFieldFilter.isFocusOwner()) {
+					// empty the search field
+					textFieldFilter.setText("");
+				} else {
+					// focus the search field
+					textFieldFilter.requestFocus();
+				}
+			}
+		});
+	}
+	
 	/**
 	 * Create the frame.
+	 * 
 	 * @param controller
 	 */
 	public MainWindow(MainController mainController) {
-		
 		controller = mainController;
+		defineShortcuts();
+		
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -205,6 +257,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		scrollPaneSongList.setViewportView(songList);
+		songList.setCellRenderer(new SongCellRenderer());
 		
 		JPanel panelSongListButtons = new JPanel();
 		panelSongList.add(panelSongListButtons, BorderLayout.SOUTH);
@@ -216,6 +269,12 @@ public class MainWindow extends JFrame {
 		panelSongListButtons.setLayout(gbl_panelSongListButtons);
 		
 		JButton btnNewSong = new JButton("New");
+		btnNewSong.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				handleSongNew();
+			}
+		});
 		btnNewSong.setIcon(new ImageIcon(MainWindow.class
 			.getResource("/org/jdesktop/swingx/editors/newHighlighter.gif")));
 		GridBagConstraints gbc_btnNewSong = new GridBagConstraints();

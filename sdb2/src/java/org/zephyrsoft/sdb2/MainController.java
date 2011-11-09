@@ -7,6 +7,7 @@ import org.zephyrsoft.sdb2.model.*;
 
 /**
  * Controller for {@link MainWindow}.
+ * 
  * @author Mathis Dirksen-Thedens
  */
 public class MainController {

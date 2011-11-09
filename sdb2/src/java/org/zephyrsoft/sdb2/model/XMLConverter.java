@@ -5,6 +5,7 @@ import com.thoughtworks.xstream.*;
 
 /**
  * Converts the {@link MainModel} to and from XML.
+ * 
  * @author Mathis Dirksen-Thedens
  */
 public class XMLConverter {

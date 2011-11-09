@@ -6,6 +6,7 @@ import org.zephyrsoft.sdb2.gui.*;
 
 /**
  * Model for {@link MainWindow}.
+ * 
  * @author Mathis Dirksen-Thedens
  */
 public class MainModel implements Iterable<Song>, Serializable {
@@ -21,6 +22,10 @@ public class MainModel implements Iterable<Song>, Serializable {
 		if (songs == null) {
 			songs = new ArrayList<Song>();
 		}
+	}
+	
+	public List<Song> getAllSongs() {
+		return Collections.unmodifiableList(songs);
 	}
 	
 	public int getSize() {

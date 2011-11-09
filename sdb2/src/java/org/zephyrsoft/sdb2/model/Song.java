@@ -5,9 +5,10 @@ import java.util.*;
 
 /**
  * Representation of a song.
+ * 
  * @author Mathis Dirksen-Thedens
  */
-public class Song implements Serializable {
+public class Song implements Serializable, Cloneable {
 	
 	private static final long serialVersionUID = -7133402923581521674L;
 	
@@ -132,6 +133,26 @@ public class Song implements Serializable {
 	
 	public Song getLinkedSong(int index) {
 		return linkedSongs.get(index);
+	}
+	
+	public List<Song> getLinkedSongs() {
+		return Collections.unmodifiableList(linkedSongs);
+	}
+	
+	public void setLinkedSongs(List<Song> linkedSongs) {
+		this.linkedSongs.clear();
+		if (linkedSongs != null) {
+			this.linkedSongs.addAll(linkedSongs);
+		}
+	}
+	
+	@Override
+	protected Song clone() throws CloneNotSupportedException {
+		Song clone = new Song();
+		
+		// TODO
+		
+		return clone;
 	}
 	
 }
