@@ -1,8 +1,12 @@
 package org.zephyrsoft.sdb2;
 
-import org.kohsuke.args4j.*;
-import org.slf4j.*;
-import org.zephyrsoft.sdb2.gui.*;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zephyrsoft.sdb2.gui.MainWindow;
 
 public class Start {
 	
@@ -11,8 +15,8 @@ public class Start {
 	@Option(name = "--help", aliases = {"-help", "-h"},
 		usage = "display a short description of the available command line options (this message)")
 	private boolean help = false;
-	@Option(name = "--dbfile", metaVar = "FILE",
-		usage = "use this instead of the default location to load and save the song database")
+	@Argument(metaVar = "<FILE>",
+		usage = "use this file to load from and save to (optional, the default is ~/.songdatabase/songs.sdb2)")
 	private String databaseFile = null;
 	
 	public static void main(String[] args) {
@@ -29,7 +33,7 @@ public class Start {
 			parser.parseArgument(args);
 		} catch (CmdLineException e) {
 			System.err.println(e.getMessage());
-			parser.printUsage(System.err);
+			help = true;
 		}
 		
 		if (help) {
@@ -37,6 +41,7 @@ public class Start {
 			parser.printUsage(System.err);
 		} else {
 			MainController controller = new MainController();
+			controller.setupLookAndFeel();
 			try {
 				MainWindow window = new MainWindow(controller);
 				if (databaseFile != null) {

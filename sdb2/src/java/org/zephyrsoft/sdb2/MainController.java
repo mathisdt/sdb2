@@ -1,9 +1,19 @@
 package org.zephyrsoft.sdb2;
 
-import java.io.*;
-import org.slf4j.*;
-import org.zephyrsoft.sdb2.gui.*;
-import org.zephyrsoft.sdb2.model.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.UnsupportedLookAndFeelException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zephyrsoft.sdb2.gui.MainWindow;
+import org.zephyrsoft.sdb2.model.MainModel;
+import org.zephyrsoft.sdb2.model.XMLConverter;
 
 /**
  * Controller for {@link MainWindow}.
@@ -11,6 +21,9 @@ import org.zephyrsoft.sdb2.model.*;
  * @author Mathis Dirksen-Thedens
  */
 public class MainController {
+	
+	public static final String DATA_DIR_STRING = System.getProperty("user.home") + File.separator + ".songdatabase";
+	public static final String DATA_FILE_STRING = "songs.sdb2";
 	
 	private static Logger LOG = LoggerFactory.getLogger(MainController.class);
 	
@@ -73,19 +86,18 @@ public class MainController {
 	
 	private String getDbFileName() {
 		if (dbFileName == null) {
-			return getDefaultDataDir() + File.separator + "songs.sdb2";
+			return getDefaultDataDir() + File.separator + DATA_FILE_STRING;
 		} else {
 			return dbFileName;
 		}
 	}
 	
 	private String getDefaultDataDir() {
-		String dataDirString = System.getProperty("user.home") + File.separator + ".songdatabase";
-		File dataDir = new File(dataDirString);
+		File dataDir = new File(DATA_DIR_STRING);
 		if (!dataDir.exists()) {
 			dataDir.mkdirs();
 		}
-		return dataDirString;
+		return DATA_DIR_STRING;
 	}
 	
 	/**
@@ -93,6 +105,27 @@ public class MainController {
 	 */
 	public void setDbFileName(String dbFileName) {
 		this.dbFileName = dbFileName;
+	}
+	
+	/**
+	 * Use a nice LaF.
+	 * 
+	 * @return {@code true} if the LaF could be applied, {@code false} otherwise
+	 */
+	public boolean setupLookAndFeel() {
+		try {
+			for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+				if ("Nimbus".equals(info.getName())) {
+					UIManager.setLookAndFeel(info.getClassName());
+					break;
+				}
+			}
+			return true;
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+			| UnsupportedLookAndFeelException e) {
+			LOG.warn("could not apply the look-and-feel");
+			return false;
+		}
 	}
 	
 }

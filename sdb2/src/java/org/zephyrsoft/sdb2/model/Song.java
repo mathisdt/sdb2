@@ -1,13 +1,17 @@
 package org.zephyrsoft.sdb2.model;
 
-import java.io.*;
-import java.util.*;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 /**
  * Representation of a song.
  * 
  * @author Mathis Dirksen-Thedens
  */
+@XStreamAlias("song")
 public class Song implements Serializable, Cloneable {
 	
 	private static final long serialVersionUID = -7133402923581521674L;
@@ -136,7 +140,7 @@ public class Song implements Serializable, Cloneable {
 	}
 	
 	public List<Song> getLinkedSongs() {
-		return Collections.unmodifiableList(linkedSongs);
+		return linkedSongs;
 	}
 	
 	public void setLinkedSongs(List<Song> linkedSongs) {

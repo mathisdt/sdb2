@@ -1,14 +1,15 @@
 package org.zephyrsoft.sdb2.gui;
 
-import java.util.*;
-import javax.swing.*;
+import java.util.Collections;
+import java.util.List;
+import javax.swing.AbstractListModel;
 
 /**
  * A typed underlyingList model implementation which transparently uses an underlying {@link List}.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class TransparentListModel<T> extends AbstractListModel {
+public class TransparentListModel<T> extends AbstractListModel<T> {
 	
 	private static final long serialVersionUID = -2952298254786461472L;
 	

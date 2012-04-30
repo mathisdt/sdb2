@@ -1,7 +1,8 @@
 package org.zephyrsoft.sdb2.model;
 
-import java.io.*;
-import com.thoughtworks.xstream.*;
+import java.io.InputStream;
+import java.io.OutputStream;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * Converts the {@link MainModel} to and from XML.
@@ -36,8 +37,9 @@ public class XMLConverter {
 	
 	private static XStream initXStream() {
 		XStream xstream = new XStream();
-		xstream.alias("song", Song.class);
-		xstream.alias("songs", MainModel.class);
+		// aliases and omitted fields are defined via annotations
+		xstream.processAnnotations(MainModel.class);
+		xstream.processAnnotations(Song.class);
 		return xstream;
 	}
 	
