@@ -10,6 +10,31 @@ package org.zephyrsoft.util;
 public class StringTools {
 	
 	/**
+	 * Compare two Strings with special care. If one of the Strings is {@code null}, it is assumed "smaller" than the
+	 * non-null String.
+	 * 
+	 * @see String#compareTo(String)
+	 * 
+	 * @param one first parameter to compare
+	 * @param two second parameter to compare
+	 * @return the same scheme as in {@link String#compareTo(String)}
+	 */
+	public static int compareWithNullFirst(String one, String two) {
+		if (one == null && two != null) {
+			return -1;
+		} else if (one != null && two == null) {
+			return 1;
+		} else if (one == null && two == null) {
+			return 0;
+		} else if (one != null && two != null) {
+			return one.compareTo(two);
+		} else {
+			// to silence the Eclipse warning, will never be executed:
+			throw new IllegalStateException();
+		}
+	}
+	
+	/**
 	 * A sibling of {@link String#replaceAll(String, String)} but without regex interpretation.
 	 * 
 	 * @param in the String in which the replacement shall take place

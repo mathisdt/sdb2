@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+	Creates the project's release bundle.
+	This script does NOT compile the source files but relies on Eclipse for compilation.
+-->
+<project default="completeBuild" basedir=".">
+
+	<property name="start.dir" value="${basedir}" />
+	<property name="resources.dir" value="${start.dir}/src/resources" />
+	<property name="bin.dir" value="${start.dir}/bin" />
+	<property name="lib.dir" value="${start.dir}/lib" />
+	<property name="target.dir" value="${start.dir}/target" />
+	<property name="release.dir" value="${start.dir}/release" />
+	<property name="release.lib.dir" value="${release.dir}/lib" />
+	<property name="release.img.dir" value="${release.dir}/img" />
+	<property name="release.jar" value="${release.dir}/sdb.jar" />
+	<property name="package.dir" value="${start.dir}/package" />
+	<property name="keystore.dir" value="${start.dir}/keystore" />
+	<property name="keystore.file" value="${keystore.dir}/keystore" />
+	<tstamp>
+		<format property="build.date" pattern="yyyy-MM-dd" />
+	</tstamp>
+	<tstamp>
+		<format property="build.time" pattern="HH:mm" />
+	</tstamp>
+	<tstamp>
+		<format property="build.time.dashed" pattern="HH-mm" />
+	</tstamp>
+
+	<target name="completeBuild">
+		<!-- read version information -->
+		<property file="${resources.dir}/org/zephyrsoft/sdb2/version.properties" />
+		<echo message="read from properties file: version=${programVersion}" />
+
+		<!-- make sure that needed directories exist as expected -->
+		<antcall target="prepare" />
+		<!-- build JAR file -->
+		<antcall target="createJar" />
+		<!-- sign all JAR files (needed for WebStart) -->
+		<antcall target="signJars" />
+		<!-- copy additional resources -->
+		<copy todir="${release.img.dir}">
+			<fileset dir="${resources.dir}/org/zephyrsoft/sdb2">
+				<include name="*.png" />
+			</fileset>
+		</copy>
+		<copy todir="${release.dir}">
+			<fileset dir="${resources.dir}">
+				<include name="webstart.php" />
+			</fileset>
+		</copy>
+		<!-- create scripts for easy startup -->
+		<echo file="${release.dir}/run-sdb.bat" append="false">java -jar %~dp0sdb.jar %1 %2 %3 %4 %5 %6 %7 %8 %9
+</echo>
+		<echo file="${release.dir}/run-sdb.sh" append="false">#!/bin/sh
+SCRIPT=$$(readlink -f $$0)
+SCRIPTDIR=$$(dirname $$SCRIPT)
+java -jar $$SCRIPTDIR/sdb.jar $$*
+</echo>
+		<!-- create package for distribution -->
+		<antcall target="buildPackage" />
+	</target>
+
+	<target name="prepare">
+		<mkdir dir="${target.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${target.dir}" includes="**/*" />
+		</delete>
+		<mkdir dir="${release.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${release.dir}" includes="**/*" />
+		</delete>
+		<mkdir dir="${release.lib.dir}" />
+		<mkdir dir="${release.img.dir}" />
+		<mkdir dir="${keystore.dir}" />
+		<mkdir dir="${package.dir}" />
+	</target>
+
+	<target name="createJar">
+		<!-- copy libraries -->
+		<copy todir="${release.lib.dir}">
+			<fileset dir="${lib.dir}">
+				<include name="*.jar" />
+			</fileset>
+		</copy>
+
+		<!-- put together classpath for JAR manifest -->
+		<path id="build-classpath">
+			<fileset dir="${release.lib.dir}">
+				<include name="*.jar" />
+			</fileset>
+		</path>
+		<manifestclasspath property="lib.list" jarfile="${release.jar}">
+			<classpath refid="build-classpath" />
+		</manifestclasspath>
+
+		<!-- copy classes and resources -->
+		<copy todir="${target.dir}">
+			<fileset dir="${bin.dir}">
+				<include name="org/zephyrsoft/**" />
+				<include name="*.properties" />
+				<include name="logback.xml" />
+			</fileset>
+		</copy>
+
+		<!-- create JAR -->
+		<jar basedir="${target.dir}" destfile="${release.jar}">
+			<manifest>
+				<attribute name="Main-Class" value="org.zephyrsoft.sdb2.Start" />
+				<attribute name="Class-Path" value="${lib.list}" />
+				<attribute name="Implementation-Vendor" value="zephyrsoft.net" />
+				<attribute name="Implementation-Title" value="Song Database" />
+				<attribute name="Implementation-Version" value="${programVersion} built on ${build.date} at ${build.time}" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="signJars">
+		<!-- create keystore if necessary -->
+		<antcall target="createKeystore" />
+
+		<!-- sign all JAR files -->
+		<signjar keystore="${keystore.file}" alias="sdb" storepass="sdbsdb">
+			<fileset dir="${release.dir}" includes="**/*.jar" />
+		</signjar>
+	</target>
+
+	<target name="checkKeystore">
+		<condition property="keystore.exists">
+			<available file="${keystore.file}" />
+		</condition>
+	</target>
+
+	<target name="createKeystore" depends="checkKeystore" unless="keystore.exists">
+		<echo>creating keystore</echo>
+		<genkey keystore="${keystore.file}" storepass="sdbsdb" alias="sdb" dname="CN=Build Script, OU=Song Database, O=ZephyrSoft, C=DE" validity="20000" />
+	</target>
+
+	<target name="buildPackage">
+		<!-- create ZIP -->
+		<zip destfile="${package.dir}/sdb-${programVersion}-built-on-${build.date}-at-${build.time.dashed}.zip">
+			<zipfileset dir="${release.dir}" prefix="sdb-${programVersion}" />
+		</zip>
+	</target>
+
+</project>

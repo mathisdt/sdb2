@@ -2,6 +2,7 @@ package org.zephyrsoft.sdb2.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.event.ListDataEvent;
@@ -26,6 +27,8 @@ public class MainModel implements Iterable<Song>, Serializable {
 	
 	private static Logger LOG = LoggerFactory.getLogger(MainModel.class);
 	
+	private boolean autoSort = true;
+	
 	@XStreamImplicit(itemFieldName = "song")
 	private List<Song> songs = null;
 	
@@ -35,14 +38,34 @@ public class MainModel implements Iterable<Song>, Serializable {
 	// TODO add list of observers + possibility to add/delete observing objects?
 	// ===> also see Observable or PropertyChangeSupport
 	
+	public MainModel() {
+		initIfNecessary();
+	}
+	
 	/**
-	 * Is called from {@link XMLConverter} and {@link MainWindow} to ensure a valid inner state after conversion from
-	 * XML and after creation via constructor. This is in this method because XStream might overwrite the value set
+	 * Should this model instance sort the songs automatically? Default: {@code true}
+	 * 
+	 * @param value the value to set
+	 */
+	public void setAutoSort(boolean value) {
+		this.autoSort = value;
+	}
+	
+	public boolean isAutoSort() {
+		return autoSort;
+	}
+	
+	/**
+	 * Is called from the local constructor and from {@link XMLConverter} to ensure a valid inner state after conversion
+	 * from XML and after creation via constructor. This is in this method because XStream might overwrite the value set
 	 * inside the constructor with {@code null}.
 	 */
 	public void initIfNecessary() {
 		if (songs == null) {
 			songs = new ArrayList<Song>();
+		}
+		if (autoSort) {
+			sortSongs();
 		}
 		if (createdListModels == null) {
 			createdListModels = new ArrayList<TransparentListModel<Song>>();
@@ -65,14 +88,38 @@ public class MainModel implements Iterable<Song>, Serializable {
 	
 	public boolean addSong(Song e) {
 		boolean b = songs.add(e);
+		if (autoSort) {
+			sortSongs();
+		}
 		notifyListModelListeners();
 		return b;
 	}
 	
+	public void insertSong(int index, Song e) {
+		if (autoSort) {
+			throw new IllegalStateException("should insert song at a specific position, but auto-sorting is enabled");
+		} else {
+			songs.add(index, e);
+			notifyListModelListeners();
+		}
+	}
+	
 	public boolean removeSong(Song o) {
 		boolean b = songs.remove(o);
+		if (autoSort) {
+			sortSongs();
+		}
 		notifyListModelListeners();
 		return b;
+	}
+	
+	public Song removeSong(int index) {
+		Song ret = songs.remove(index);
+		if (autoSort) {
+			sortSongs();
+		}
+		notifyListModelListeners();
+		return ret;
 	}
 	
 	private void notifyListModelListeners() {
@@ -92,6 +139,17 @@ public class MainModel implements Iterable<Song>, Serializable {
 	@Override
 	public Iterator<Song> iterator() {
 		return songs.iterator();
+	}
+	
+	private void sortSongs() {
+		Collections.sort(songs);
+	}
+	
+	public void sortAndUpdateView() {
+		if (autoSort) {
+			sortSongs();
+		}
+		notifyListModelListeners();
 	}
 	
 }

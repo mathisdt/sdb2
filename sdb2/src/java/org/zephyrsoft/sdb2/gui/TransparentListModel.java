@@ -1,6 +1,5 @@
 package org.zephyrsoft.sdb2.gui;
 
-import java.util.Collections;
 import java.util.List;
 import javax.swing.AbstractListModel;
 
@@ -36,7 +35,7 @@ public class TransparentListModel<T> extends AbstractListModel<T> {
 	}
 	
 	public List<T> getAllElements() {
-		return Collections.unmodifiableList(underlyingList);
+		return underlyingList;
 	}
 	
 }

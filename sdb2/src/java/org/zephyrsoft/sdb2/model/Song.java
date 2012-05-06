@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
+import org.zephyrsoft.util.StringTools;
 
 /**
  * Representation of a song.
@@ -12,7 +13,7 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
  * @author Mathis Dirksen-Thedens
  */
 @XStreamAlias("song")
-public class Song implements Serializable, Cloneable {
+public class Song implements Serializable, Cloneable, Comparable<Song> {
 	
 	private static final long serialVersionUID = -7133402923581521674L;
 	
@@ -157,6 +158,31 @@ public class Song implements Serializable, Cloneable {
 		// TODO
 		
 		return clone;
+	}
+	
+	/**
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	@Override
+	public int compareTo(Song o) {
+		int ret = 0;
+		
+		ret = StringTools.compareWithNullFirst(getTitle(), o.getTitle());
+		if (ret != 0) {
+			return ret;
+		}
+		
+		ret = StringTools.compareWithNullFirst(getLyrics(), o.getLyrics());
+		if (ret != 0) {
+			return ret;
+		}
+		
+		ret = StringTools.compareWithNullFirst(getChordSequence(), o.getChordSequence());
+		if (ret != 0) {
+			return ret;
+		}
+		
+		return ret;
 	}
 	
 }
