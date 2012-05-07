@@ -397,7 +397,7 @@ public class MainWindow extends JFrame {
 	/**
 	 * Create the frame.
 	 * 
-	 * @param controller
+	 * @param mainController
 	 */
 	public MainWindow(MainController mainController) {
 		setTitle("Song Database");

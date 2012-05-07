@@ -30,7 +30,6 @@ public class Structure {
 		return songs.get(index);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void loadFromFile(File file) throws IOException, ClassNotFoundException {
 		// load from a file which contains the serialized Vector of Songs
 		if (file.exists() && file.isFile()) {

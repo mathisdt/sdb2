@@ -40,7 +40,7 @@ public class StringTools {
 	 * @param in the String in which the replacement shall take place
 	 * @param toreplace what is to be replaced
 	 * @param replacewith the replacement
-	 * @return the input in which every occurrence of {@link toreplace} was replaced with {@link replacewith}
+	 * @return the input in which every occurrence of {@code toreplace} was replaced with {@code replacewith}
 	 */
 	public static String replace(String in, String toreplace, String replacewith) {
 		String ret = in;
@@ -97,11 +97,9 @@ public class StringTools {
 	 * 
 	 * @param haystack the String in which to search
 	 * @param needle the String which to find
-	 * @return {@code true} only if {@link haystack} contains {@link needle} (ignoring the casing of both)
+	 * @return {@code true} only if {@code haystack} contains {@code needle} (ignoring the casing of both)
 	 */
 	public static boolean containsIgnoreCase(String haystack, String needle) {
-		needle = needle.toLowerCase();
-		haystack = haystack.toLowerCase();
-		return haystack.contains(needle);
+		return haystack.toLowerCase().contains(needle.toLowerCase());
 	}
 }
