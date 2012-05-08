@@ -59,6 +59,10 @@ public class MainWindow extends JFrame {
 	
 	private static final long serialVersionUID = -6874196690375696416L;
 	
+	private static final String NEWLINE = "\n";
+	private static final String STACKTRACE_INDENTATION = "    ";
+	private static final int STACKTRACE_ELEMENT_COUNT = 4;
+	
 	private static final int TAB_INDEX_EDIT = 0;
 	private static final int TAB_INDEX_PRESENT = 1;
 	private static final int TAB_INDEX_STATS = 2;
@@ -100,22 +104,27 @@ public class MainWindow extends JFrame {
 	
 	private JButton btnClearFilter;
 	private JTextField textFieldFilter;
-	private JPanel panelSectionButtons;
-	private JLabel lblSelectedSongMetadata;
-	private JLabel lblPresentedSongMetadata;
-	private JLabel lblStatistics;
-	private JButton btnAddLinkedSong;
-	private JButton btnRemoveLinkedSong;
 	private JButton btnNewSong;
 	private JButton btnDeleteSong;
 	private JButton btnSelectSong;
+	
 	private JButton btnUp;
 	private JButton btnUnselect;
 	private JButton btnDown;
+	private JPanel panelSectionButtons;
+	private JButton btnAddLinkedSong;
+	private JButton btnRemoveLinkedSong;
 	
+	private JLabel lblSelectedSongMetadata;
+	private JLabel lblPresentedSongMetadata;
 	private JButton btnShowLogo;
 	private JButton btnShowBlankScreen;
 	private JButton btnPresentSelectedSong;
+	
+	private JLabel lblStatistics;
+	private JButton btnExportLyricsOnlyPdfSelected;
+	private JButton btnExportCompletePdfSelected;
+	private JButton btnExportStatisticsSelected;
 	
 	private void afterConstruction() {
 		// disable editing fields
@@ -361,11 +370,7 @@ public class MainWindow extends JFrame {
 		if (iValue == JFileChooser.APPROVE_OPTION) {
 			List<Song> imported = null;
 			ImportFromSDBv1 importer = new ImportFromSDBv1();
-			try {
-				imported = importer.loadFromFile(chooser.getSelectedFile());
-			} catch (Exception e) {
-				// TODO
-			}
+			imported = importer.loadFromFile(chooser.getSelectedFile());
 			if (imported != null) {
 				for (Song song : imported) {
 					mainModel.addSong(song);
@@ -394,6 +399,35 @@ public class MainWindow extends JFrame {
 		});
 	}
 	
+	public void handleError(Throwable ex) {
+		ErrorDialog dialog = new ErrorDialog(this);
+		StringBuilder ret = new StringBuilder();
+		ret.append(ex.getMessage());
+		ret.append(NEWLINE);
+		ret.append(NEWLINE);
+		buildStackTraceText(ex, ret);
+		dialog.setText(ret.toString());
+		dialog.setVisible(true);
+	}
+	
+	private static void buildStackTraceText(Throwable ex, StringBuilder sb) {
+		sb.append(ex.getClass().getCanonicalName());
+		sb.append(": ");
+		sb.append(ex.getMessage());
+		sb.append(NEWLINE);
+		if (ex.getStackTrace() != null) {
+			for (int i = 0; i < STACKTRACE_ELEMENT_COUNT && i < ex.getStackTrace().length; i++) {
+				sb.append(STACKTRACE_INDENTATION);
+				sb.append(ex.getStackTrace()[i].toString());
+				sb.append(NEWLINE);
+			}
+		}
+		if (ex.getCause() != null && ex.getCause() != ex) {
+			sb.append("CAUSED BY:" + NEWLINE);
+			buildStackTraceText(ex.getCause(), sb);
+		}
+	}
+	
 	/**
 	 * Create the frame.
 	 * 
@@ -407,7 +441,11 @@ public class MainWindow extends JFrame {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				handleWindowClosing();
+				try {
+					handleWindowClosing();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		setPreferredSize(new Dimension(800, 600));
@@ -475,9 +513,13 @@ public class MainWindow extends JFrame {
 		mainList.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() >= 2) {
-					// double-clicked: put into present list
-					handleSongSelect();
+				try {
+					if (e.getClickCount() >= 2) {
+						// double-clicked: put into present list
+						handleSongSelect();
+					}
+				} catch (Throwable ex) {
+					handleError(ex);
 				}
 			}
 		});
@@ -486,7 +528,11 @@ public class MainWindow extends JFrame {
 			.addListSelectionListener(new ListSelectionListener() {
 				@Override
 				public void valueChanged(ListSelectionEvent e) {
-					handleMainListSelectionChanged(e);
+					try {
+						handleMainListSelectionChanged(e);
+					} catch (Throwable ex) {
+						handleError(ex);
+					}
 				}
 			});
 		scrollPaneSongList.setViewportView(mainList);
@@ -505,7 +551,11 @@ public class MainWindow extends JFrame {
 		btnNewSong.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				handleSongNew();
+				try {
+					handleSongNew();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		btnNewSong.setIcon(new ImageIcon(MainWindow.class
@@ -522,7 +572,11 @@ public class MainWindow extends JFrame {
 		btnDeleteSong.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				handleSongDelete();
+				try {
+					handleSongDelete();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		btnDeleteSong.setIcon(new ImageIcon(MainWindow.class
@@ -539,7 +593,11 @@ public class MainWindow extends JFrame {
 		btnSelectSong.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				handleSongSelect();
+				try {
+					handleSongSelect();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		btnSelectSong.setIcon(new ImageIcon(MainWindow.class
@@ -590,7 +648,11 @@ public class MainWindow extends JFrame {
 		editorLyrics.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				handleSongDataFocusLost();
+				try {
+					handleSongDataFocusLost();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		editorLyrics.setFont(new Font("Courier New", editorLyrics.getFont().getStyle(), editorLyrics.getFont()
@@ -626,7 +688,11 @@ public class MainWindow extends JFrame {
 		textFieldTitle.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				handleSongDataFocusLost();
+				try {
+					handleSongDataFocusLost();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		GridBagConstraints gbc_textFieldTitle = new GridBagConstraints();
@@ -641,7 +707,11 @@ public class MainWindow extends JFrame {
 		textFieldComposer.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				handleSongDataFocusLost();
+				try {
+					handleSongDataFocusLost();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		GridBagConstraints gbc_textFieldComposer = new GridBagConstraints();
@@ -656,7 +726,11 @@ public class MainWindow extends JFrame {
 		textFieldPublisher.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				handleSongDataFocusLost();
+				try {
+					handleSongDataFocusLost();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		GridBagConstraints gbc_textFieldPublisher = new GridBagConstraints();
@@ -695,7 +769,11 @@ public class MainWindow extends JFrame {
 		comboBoxLanguage.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				handleSongDataFocusLost();
+				try {
+					handleSongDataFocusLost();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		GridBagConstraints gbc_comboBoxLanguage = new GridBagConstraints();
@@ -709,7 +787,11 @@ public class MainWindow extends JFrame {
 		textFieldAuthorText.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				handleSongDataFocusLost();
+				try {
+					handleSongDataFocusLost();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		GridBagConstraints gbc_textFieldAuthorText = new GridBagConstraints();
@@ -724,7 +806,11 @@ public class MainWindow extends JFrame {
 		textFieldAdditionalCopyrightNotes.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				handleSongDataFocusLost();
+				try {
+					handleSongDataFocusLost();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		GridBagConstraints gbc_textFieldAdditionalCopyrightNotes = new GridBagConstraints();
@@ -763,7 +849,11 @@ public class MainWindow extends JFrame {
 		textFieldTonality.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				handleSongDataFocusLost();
+				try {
+					handleSongDataFocusLost();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		GridBagConstraints gbc_textFieldTonality = new GridBagConstraints();
@@ -778,7 +868,12 @@ public class MainWindow extends JFrame {
 		textFieldAuthorTranslation.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				handleSongDataFocusLost();
+				try {
+					handleSongDataFocusLost();
+					
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		GridBagConstraints gbc_textFieldAuthorTranslation = new GridBagConstraints();
@@ -793,7 +888,11 @@ public class MainWindow extends JFrame {
 		textFieldSongNotes.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				handleSongDataFocusLost();
+				try {
+					handleSongDataFocusLost();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		GridBagConstraints gbc_textFieldSongNotes = new GridBagConstraints();
@@ -836,7 +935,11 @@ public class MainWindow extends JFrame {
 		editorChordSequence.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				handleSongDataFocusLost();
+				try {
+					handleSongDataFocusLost();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		editorChordSequence.setFont(new Font("Courier New", editorChordSequence.getFont().getStyle(),
@@ -872,10 +975,14 @@ public class MainWindow extends JFrame {
 		btnAddLinkedSong.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// TODO
-				
-				// now save the edited song
-				handleSongDataFocusLost();
+				try {
+					// TODO
+					
+					// now save the edited song
+					handleSongDataFocusLost();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		btnAddLinkedSong.setIcon(new ImageIcon(MainWindow.class
@@ -891,10 +998,14 @@ public class MainWindow extends JFrame {
 		btnRemoveLinkedSong.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// TODO
-				
-				// now save the edited song
-				handleSongDataFocusLost();
+				try {
+					// TODO
+					
+					// now save the edited song
+					handleSongDataFocusLost();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		btnRemoveLinkedSong.setIcon(new ImageIcon(MainWindow.class
@@ -925,7 +1036,11 @@ public class MainWindow extends JFrame {
 		presentList.addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
-				handlePresentListSelectionChanged(e);
+				try {
+					handlePresentListSelectionChanged(e);
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		presentList.setCellRenderer(new SongCellRenderer());
@@ -970,7 +1085,11 @@ public class MainWindow extends JFrame {
 		btnUp.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				handleSongUp();
+				try {
+					handleSongUp();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		btnUp.setToolTipText("Up");
@@ -988,7 +1107,11 @@ public class MainWindow extends JFrame {
 		btnUnselect.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				handleSongUnselect();
+				try {
+					handleSongUnselect();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		btnUnselect.setIcon(new ImageIcon(MainWindow.class
@@ -1005,7 +1128,11 @@ public class MainWindow extends JFrame {
 		btnDown.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				handleSongDown();
+				try {
+					handleSongDown();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		btnDown.setIcon(new ImageIcon(MainWindow.class.getResource("/javax/swing/plaf/metal/icons/sortDown.png")));
@@ -1126,7 +1253,7 @@ public class MainWindow extends JFrame {
 		gbc_lblSelectedSong2.gridy = 0;
 		panelImportExportStatistics.add(lblSelectedSong2, gbc_lblSelectedSong2);
 		
-		JButton btnExportLyricsOnlyPdfSelected = new JButton("Export lyrics-only PDF");
+		btnExportLyricsOnlyPdfSelected = new JButton("Export lyrics-only PDF");
 		GridBagConstraints gbc_btnExportLyricsOnlyPdfSelected = new GridBagConstraints();
 		gbc_btnExportLyricsOnlyPdfSelected.anchor = GridBagConstraints.NORTH;
 		gbc_btnExportLyricsOnlyPdfSelected.insets = new Insets(0, 0, 5, 5);
@@ -1145,7 +1272,7 @@ public class MainWindow extends JFrame {
 		gbc_lblStatistics.gridy = 1;
 		panelImportExportStatistics.add(lblStatistics, gbc_lblStatistics);
 		
-		JButton btnExportCompletePdfSelected = new JButton("Export complete PDF");
+		btnExportCompletePdfSelected = new JButton("Export complete PDF");
 		GridBagConstraints gbc_btnExportCompletePdfSelected = new GridBagConstraints();
 		gbc_btnExportCompletePdfSelected.anchor = GridBagConstraints.NORTH;
 		gbc_btnExportCompletePdfSelected.fill = GridBagConstraints.HORIZONTAL;
@@ -1154,7 +1281,7 @@ public class MainWindow extends JFrame {
 		gbc_btnExportCompletePdfSelected.gridy = 2;
 		panelImportExportStatistics.add(btnExportCompletePdfSelected, gbc_btnExportCompletePdfSelected);
 		
-		JButton btnExportStatisticsSelected = new JButton("Export statistics");
+		btnExportStatisticsSelected = new JButton("Export statistics");
 		GridBagConstraints gbc_btnExportStatisticsSelected = new GridBagConstraints();
 		gbc_btnExportStatisticsSelected.anchor = GridBagConstraints.NORTH;
 		gbc_btnExportStatisticsSelected.fill = GridBagConstraints.HORIZONTAL;
@@ -1211,7 +1338,11 @@ public class MainWindow extends JFrame {
 		btnImportFromSdb1.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				handleImportFromSDBv1();
+				try {
+					handleImportFromSDBv1();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		GridBagConstraints gbc_btnImportFromSdb1 = new GridBagConstraints();
