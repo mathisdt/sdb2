@@ -14,7 +14,6 @@ public class StringTools {
 	 * non-null String.
 	 * 
 	 * @see String#compareTo(String)
-	 * 
 	 * @param one first parameter to compare
 	 * @param two second parameter to compare
 	 * @return the same scheme as in {@link String#compareTo(String)}
@@ -101,5 +100,17 @@ public class StringTools {
 	 */
 	public static boolean containsIgnoreCase(String haystack, String needle) {
 		return haystack.toLowerCase().contains(needle.toLowerCase());
+	}
+	
+	/**
+	 * Equals method capable of handling null values.
+	 * 
+	 * @param one first string
+	 * @param two second string
+	 * @return {@code true} if both strings are {@code null} or if they are equal via {@link String#equals(Object)}
+	 *         method, {@code false} else
+	 */
+	public static boolean equals(String one, String two) {
+		return (one == null && two == null) || (one != null && one.equals(two));
 	}
 }

@@ -25,7 +25,7 @@ public class MainModel implements Iterable<Song>, Serializable {
 	
 	private static final long serialVersionUID = -2503516988752281994L;
 	
-	private static Logger LOG = LoggerFactory.getLogger(MainModel.class);
+	private static final Logger LOG = LoggerFactory.getLogger(MainModel.class);
 	
 	private boolean autoSort = true;
 	
@@ -60,7 +60,7 @@ public class MainModel implements Iterable<Song>, Serializable {
 	 * from XML and after creation via constructor. This is in this method because XStream might overwrite the value set
 	 * inside the constructor with {@code null}.
 	 */
-	public void initIfNecessary() {
+	public final void initIfNecessary() {
 		if (songs == null) {
 			songs = new ArrayList<Song>();
 		}

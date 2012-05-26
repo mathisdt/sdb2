@@ -8,9 +8,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.gui.MainWindow;
 
+/**
+ * Startup class for SDBv2.
+ * 
+ * @author Mathis Dirksen-Thedens
+ */
 public class Start {
 	
-	private static Logger LOG = LoggerFactory.getLogger(Start.class);
+	private static final Logger LOG = LoggerFactory.getLogger(Start.class);
 	
 	@Option(name = "--help", aliases = {"-help", "-h"},
 		usage = "display a short description of the available command line options (this message)")

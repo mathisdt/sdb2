@@ -12,7 +12,7 @@ import org.zephyrsoft.sdb2.model.Song;
 public interface Importer {
 	
 	/**
-	 * Read the indicated file and transform the songs found therein to the native SDB format.
+	 * Read the indicated file and transform the songs found therein to the native SDBv2 format.
 	 * 
 	 * @param inputFile the file to read (may not be {@code null})
 	 * @return all songs found in the file

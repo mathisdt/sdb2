@@ -4,7 +4,7 @@ import java.util.List;
 import javax.swing.AbstractListModel;
 
 /**
- * A typed underlyingList model implementation which transparently uses an underlying {@link List}.
+ * A typed list model implementation which transparently uses an underlying {@link List}.
  * 
  * @author Mathis Dirksen-Thedens
  */

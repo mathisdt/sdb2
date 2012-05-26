@@ -37,9 +37,11 @@ public class XMLConverter {
 	
 	private static XStream initXStream() {
 		XStream xstream = new XStream();
-		// aliases and omitted fields are defined via annotations
+		// aliases and omitted fields of model classes are defined via annotations
 		xstream.processAnnotations(MainModel.class);
 		xstream.processAnnotations(Song.class);
+		// custom converter for LanguageEnum
+		xstream.registerConverter(new LanguageEnumConverter());
 		return xstream;
 	}
 	

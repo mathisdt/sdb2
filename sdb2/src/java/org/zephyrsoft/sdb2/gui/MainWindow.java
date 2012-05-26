@@ -36,6 +36,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -69,14 +70,14 @@ public class MainWindow extends JFrame {
 	private static final int TAB_INDEX_SETTINGS = 3;
 	private static final int TAB_INDEX_SHORTCUTS = 4;
 	
-	private static Logger LOG = LoggerFactory.getLogger(MainWindow.class);
+	private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 	
 	private JPanel contentPane;
 	private JTabbedPane tabbedPane;
 	
 	private JEditorPane editorLyrics;
 	private JTextField textFieldTitle;
-	private JComboBox<?> comboBoxLanguage;
+	private JComboBox<LanguageEnum> comboBoxLanguage;
 	private JTextField textFieldTonality;
 	private JTextField textFieldComposer;
 	private JTextField textFieldAuthorText;
@@ -89,17 +90,17 @@ public class MainWindow extends JFrame {
 	private KeyboardShortcutManager shortcutManager;
 	private final MainController controller;
 	
-	private JList<Song> mainList;
+	private FixedWidthJList<Song> mainList;
 	private MainModel mainModel;
 	private TransparentListModel<Song> mainListModel;
 	private Song mainListSelected;
 	
-	private JList<Song> presentList;
+	private FixedWidthJList<Song> presentList;
 	private MainModel presentModel;
 	private TransparentListModel<Song> presentListModel;
 	private Song presentListSelected;
 	
-	private JList<Song> linkedSongsList;
+	private FixedWidthJList<Song> linkedSongsList;
 	private TransparentListModel<Song> linkedSongsListModel;
 	
 	private JButton btnClearFilter;
@@ -127,6 +128,13 @@ public class MainWindow extends JFrame {
 	private JButton btnExportStatisticsSelected;
 	
 	private void afterConstruction() {
+		// fill in available values for language
+		for (LanguageEnum item : LanguageEnum.values()) {
+			comboBoxLanguage.addItem(item);
+		}
+		clearSongData();
+		// add renderer for language
+		comboBoxLanguage.setRenderer(new LanguageCellRenderer());
 		// disable editing fields
 		setSongEditingEnabled(false);
 		// disable delete and select buttons below main list
@@ -264,6 +272,7 @@ public class MainWindow extends JFrame {
 		btnRemoveLinkedSong.setEnabled(state);
 		if (state) {
 			editorLyrics.requestFocusInWindow();
+			editorLyrics.setCaretPosition(0);
 		}
 	}
 	
@@ -324,6 +333,8 @@ public class MainWindow extends JFrame {
 		if (mainListSelected != null) {
 			presentModel.addSong(mainListSelected);
 			tabbedPane.setSelectedIndex(TAB_INDEX_PRESENT);
+			presentList.requestFocusInWindow();
+			presentList.setSelectedIndex(presentModel.getSize() - 1);
 		}
 	}
 	
@@ -383,6 +394,23 @@ public class MainWindow extends JFrame {
 		shortcutManager = new KeyboardShortcutManager();
 		KeyboardFocusManager focusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		focusManager.addKeyEventDispatcher(shortcutManager);
+		
+		/*
+		 * TODO perhaps better use this construct for globally binding a shortcut manager?
+		 * AWTEventListener keyListener = new AWTEventListener() {
+		 * @Override
+		 * public void eventDispatched(AWTEvent event) {
+		 * KeyEvent evt = (KeyEvent) event;
+		 * if(evt.getID() == KeyEvent.KEY_PRESSED) {
+		 * String mods = KeyEvent.getKeyModifiersText(evt.getModifiers());
+		 * String keytext = mods + " " + KeyEvent.getKeyText(evt.getKeyCode());
+		 * // do anything with the information now
+		 * }
+		 * }
+		 * };
+		 * long mask = AWTEvent.KEY_EVENT_MASK;
+		 * Toolkit.getDefaultToolkit().addAWTEventListener(keyListener, mask);
+		 */
 		
 		shortcutManager.add(new KeyboardShortcut(KeyEvent.VK_ESCAPE, false, false, false) {
 			@Override
@@ -507,9 +535,10 @@ public class MainWindow extends JFrame {
 		panelFilter.add(btnClearFilter, gbc_btnClearFilter);
 		
 		JScrollPane scrollPaneSongList = new JScrollPane();
+		scrollPaneSongList.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
 		panelSongList.add(scrollPaneSongList, BorderLayout.CENTER);
 		
-		mainList = new JList<Song>();
+		mainList = new FixedWidthJList<Song>();
 		mainList.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -655,8 +684,8 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		editorLyrics.setFont(new Font("Courier New", editorLyrics.getFont().getStyle(), editorLyrics.getFont()
-			.getSize()));
+		editorLyrics
+			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
 		
@@ -765,7 +794,7 @@ public class MainWindow extends JFrame {
 		gbc_lblAdditionalCopyrightNotes.gridy = 4;
 		panelEdit.add(lblAdditionalCopyrightNotes, gbc_lblAdditionalCopyrightNotes);
 		
-		comboBoxLanguage = new JComboBox<Object>();
+		comboBoxLanguage = new JComboBox<LanguageEnum>();
 		comboBoxLanguage.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
@@ -942,7 +971,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		editorChordSequence.setFont(new Font("Courier New", editorChordSequence.getFont().getStyle(),
+		editorChordSequence.setFont(new Font("Monospaced", editorChordSequence.getFont().getStyle(),
 			editorChordSequence.getFont().getSize()));
 		scrollPaneChordSequence.setViewportView(editorChordSequence);
 		editorChordSequence.setBackground(Color.WHITE);
@@ -955,7 +984,7 @@ public class MainWindow extends JFrame {
 		gbc_scrollPaneLinkedSongsList.gridy = 9;
 		panelEdit.add(scrollPaneLinkedSongsList, gbc_scrollPaneLinkedSongsList);
 		
-		linkedSongsList = new JList<Song>();
+		linkedSongsList = new FixedWidthJList<Song>();
 		scrollPaneLinkedSongsList.setViewportView(linkedSongsList);
 		
 		JPanel panelLinkedSongs = new JPanel();
@@ -1032,7 +1061,7 @@ public class MainWindow extends JFrame {
 		JScrollPane scrollPanePresentSongList = new JScrollPane();
 		panelPresentLeft.add(scrollPanePresentSongList, BorderLayout.CENTER);
 		
-		presentList = new JList<Song>();
+		presentList = new FixedWidthJList<Song>();
 		presentList.addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
@@ -1658,7 +1687,7 @@ public class MainWindow extends JFrame {
 		return textFieldTitle;
 	}
 	
-	public JComboBox<?> getComboBoxLanguage() {
+	public JComboBox<LanguageEnum> getComboBoxLanguage() {
 		return comboBoxLanguage;
 	}
 	
