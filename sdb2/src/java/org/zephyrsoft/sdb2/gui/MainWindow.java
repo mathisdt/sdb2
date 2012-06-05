@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GraphicsDevice;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -24,6 +25,7 @@ import javax.swing.DefaultListSelectionModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -38,6 +40,8 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.JTextComponent;
@@ -47,6 +51,7 @@ import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.importer.ImportFromSDBv1;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.MainModel;
+import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.util.CustomFileFilter;
 import org.zephyrsoft.util.gui.FocusTraversalOnArray;
@@ -126,6 +131,31 @@ public class MainWindow extends JFrame {
 	private JButton btnExportLyricsOnlyPdfSelected;
 	private JButton btnExportCompletePdfSelected;
 	private JButton btnExportStatisticsSelected;
+	private JButton btnExportLyricsOnlyPdfAll;
+	private JButton btnExportCompletePdfAll;
+	private JButton btnExportStatisticsAll;
+	private JButton btnImportFromSdb1;
+	
+	private JButton btnUnlock;
+	private JButton btnSelectTitleFont;
+	private JButton btnSelectLyricsFont;
+	private JButton btnSelectTranslationFont;
+	private JButton btnSelectCopyrightFont;
+	private JButton btnSelectTextColor;
+	private JButton btnSelectBackgroundColor;
+	private JButton btnSelectLogo;
+	private JSpinner spinnerTopMargin;
+	private JSpinner spinnerLeftMargin;
+	private JSpinner spinnerRightMargin;
+	private JSpinner spinnerBottomMargin;
+	private JSpinner spinnerDistanceTitleText;
+	private JSpinner spinnerDistanceTextCopyright;
+	private JComboBox<Object> comboSongListFiltering;
+	private JComboBox<GraphicsDevice> comboPresentationScreen1Display;
+	private JComboBox<ScreenContentsEnum> comboPresentationScreen1Contents;
+	private JComboBox<GraphicsDevice> comboPresentationScreen2Display;
+	private JComboBox<ScreenContentsEnum> comboPresentationScreen2Contents;
+	private JSpinner spinnerCountAsDisplayedAfter;
 	
 	private void afterConstruction() {
 		// fill in available values for language
@@ -151,12 +181,59 @@ public class MainWindow extends JFrame {
 		presentModel.setAutoSort(false);
 		presentListModel = presentModel.getListModel();
 		presentList.setModel(presentListModel);
+		
+		// fill in available values for screen contents
+		for (ScreenContentsEnum item : ScreenContentsEnum.values()) {
+			comboPresentationScreen1Contents.addItem(item);
+			comboPresentationScreen2Contents.addItem(item);
+		}
+		// add renderer for screen contents
+		comboPresentationScreen1Contents.setRenderer(new ScreenContentsCellRenderer());
+		comboPresentationScreen2Contents.setRenderer(new ScreenContentsCellRenderer());
 	}
 	
 	public void setModel(MainModel model) {
 		this.mainModel = model;
 		mainListModel = model.getListModel();
 		mainList.setModel(mainListModel);
+	}
+	
+	protected void handleSettingsUnlock() {
+		// reload screens
+		
+		// enable controls
+		setSettingsEnabled(true);
+	}
+	
+	private void setSettingsEnabled(boolean enabled) {
+		setEnabledIfNotNull(btnSelectTitleFont, enabled);
+		setEnabledIfNotNull(btnSelectLyricsFont, enabled);
+		setEnabledIfNotNull(btnSelectTranslationFont, enabled);
+		setEnabledIfNotNull(btnSelectCopyrightFont, enabled);
+		setEnabledIfNotNull(btnSelectTextColor, enabled);
+		setEnabledIfNotNull(btnSelectBackgroundColor, enabled);
+		setEnabledIfNotNull(btnSelectLogo, enabled);
+		setEnabledIfNotNull(spinnerTopMargin, enabled);
+		setEnabledIfNotNull(spinnerLeftMargin, enabled);
+		setEnabledIfNotNull(spinnerRightMargin, enabled);
+		setEnabledIfNotNull(spinnerBottomMargin, enabled);
+		setEnabledIfNotNull(spinnerDistanceTitleText, enabled);
+		setEnabledIfNotNull(spinnerDistanceTextCopyright, enabled);
+		setEnabledIfNotNull(comboSongListFiltering, enabled);
+		setEnabledIfNotNull(comboPresentationScreen1Display, enabled);
+		setEnabledIfNotNull(comboPresentationScreen1Contents, enabled);
+		setEnabledIfNotNull(comboPresentationScreen2Display, enabled);
+		setEnabledIfNotNull(comboPresentationScreen2Contents, enabled);
+		setEnabledIfNotNull(spinnerCountAsDisplayedAfter, enabled);
+		// disable the "unlock" button when enabling the other controls
+		// (and the other way around)
+		setEnabledIfNotNull(btnUnlock, !enabled);
+	}
+	
+	private static void setEnabledIfNotNull(JComponent component, boolean enabled) {
+		if (component != null) {
+			component.setEnabled(enabled);
+		}
 	}
 	
 	protected void handleMainListSelectionChanged(ListSelectionEvent e) {
@@ -476,6 +553,28 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
+		// TODO still not working:
+		addWindowStateListener(new WindowAdapter() {
+			@Override
+			public void windowDeactivated(WindowEvent e) {
+				try {
+					// on every window deactivation, lock the settings again
+					setSettingsEnabled(false);
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+			
+			@Override
+			public void windowLostFocus(WindowEvent e) {
+				try {
+					// on every window deactivation, lock the settings again
+					setSettingsEnabled(false);
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
 		setPreferredSize(new Dimension(800, 600));
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		setBounds(100, 100, 965, 659);
@@ -640,6 +739,13 @@ public class MainWindow extends JFrame {
 		panelSongListButtons.add(btnSelectSong, gbc_btnSelectSong);
 		
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		tabbedPane.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				// on every tab switch, lock the settings again
+				setSettingsEnabled(false);
+			}
+		});
 		tabbedPane.setBorder(null);
 		splitPane.setRightComponent(tabbedPane);
 		
@@ -1329,7 +1435,7 @@ public class MainWindow extends JFrame {
 		gbc_lblAllSongs2.gridy = 4;
 		panelImportExportStatistics.add(lblAllSongs2, gbc_lblAllSongs2);
 		
-		JButton btnExportLyricsOnlyPdfAll = new JButton("Export lyrics-only PDF");
+		btnExportLyricsOnlyPdfAll = new JButton("Export lyrics-only PDF");
 		GridBagConstraints gbc_btnExportLyricsOnlyPdfAll = new GridBagConstraints();
 		gbc_btnExportLyricsOnlyPdfAll.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnExportLyricsOnlyPdfAll.insets = new Insets(0, 0, 5, 5);
@@ -1337,7 +1443,7 @@ public class MainWindow extends JFrame {
 		gbc_btnExportLyricsOnlyPdfAll.gridy = 5;
 		panelImportExportStatistics.add(btnExportLyricsOnlyPdfAll, gbc_btnExportLyricsOnlyPdfAll);
 		
-		JButton btnExportCompletePdfAll = new JButton("Export complete PDF");
+		btnExportCompletePdfAll = new JButton("Export complete PDF");
 		GridBagConstraints gbc_btnExportCompletePdfAll = new GridBagConstraints();
 		gbc_btnExportCompletePdfAll.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnExportCompletePdfAll.insets = new Insets(0, 0, 5, 5);
@@ -1345,7 +1451,7 @@ public class MainWindow extends JFrame {
 		gbc_btnExportCompletePdfAll.gridy = 6;
 		panelImportExportStatistics.add(btnExportCompletePdfAll, gbc_btnExportCompletePdfAll);
 		
-		JButton btnExportStatisticsAll = new JButton("Export statistics");
+		btnExportStatisticsAll = new JButton("Export statistics");
 		GridBagConstraints gbc_btnExportStatisticsAll = new GridBagConstraints();
 		gbc_btnExportStatisticsAll.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnExportStatisticsAll.insets = new Insets(0, 0, 5, 5);
@@ -1363,7 +1469,7 @@ public class MainWindow extends JFrame {
 		gbc_lblImportingSongs.gridy = 8;
 		panelImportExportStatistics.add(lblImportingSongs, gbc_lblImportingSongs);
 		
-		JButton btnImportFromSdb1 = new JButton("Import from SDB 1.x");
+		btnImportFromSdb1 = new JButton("Import from SDB 1.x");
 		btnImportFromSdb1.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -1396,14 +1502,20 @@ public class MainWindow extends JFrame {
 		scrollPaneSettings.setViewportView(panel);
 		GridBagLayout gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[] {0, 0, 0, 0, 0};
-		gbl_panel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		gbl_panel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		gbl_panel.columnWeights = new double[] {0.0, 0.0, 0.0, 1.0, 0.0};
 		gbl_panel.rowWeights =
 			new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-				0.0, Double.MIN_VALUE};
+				0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		panel.setLayout(gbl_panel);
 		
-		JButton btnUnlock = new JButton("Unlock");
+		btnUnlock = new JButton("Unlock");
+		btnUnlock.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				handleSettingsUnlock();
+			}
+		});
 		GridBagConstraints gbc_btnUnlock = new GridBagConstraints();
 		gbc_btnUnlock.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnUnlock.gridwidth = 3;
@@ -1420,7 +1532,7 @@ public class MainWindow extends JFrame {
 		gbc_lblTitleFont.gridy = 2;
 		panel.add(lblTitleFont, gbc_lblTitleFont);
 		
-		JButton btnSelectTitleFont = new JButton("Select...");
+		btnSelectTitleFont = new JButton("Select...");
 		GridBagConstraints gbc_btnSelectTitleFont = new GridBagConstraints();
 		gbc_btnSelectTitleFont.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSelectTitleFont.fill = GridBagConstraints.HORIZONTAL;
@@ -1436,7 +1548,7 @@ public class MainWindow extends JFrame {
 		gbc_lblLyricsFont.gridy = 3;
 		panel.add(lblLyricsFont, gbc_lblLyricsFont);
 		
-		JButton btnSelectLyricsFont = new JButton("Select...");
+		btnSelectLyricsFont = new JButton("Select...");
 		GridBagConstraints gbc_btnSelectLyricsFont = new GridBagConstraints();
 		gbc_btnSelectLyricsFont.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnSelectLyricsFont.insets = new Insets(0, 0, 5, 5);
@@ -1452,7 +1564,7 @@ public class MainWindow extends JFrame {
 		gbc_lblTranslationFont.gridy = 4;
 		panel.add(lblTranslationFont, gbc_lblTranslationFont);
 		
-		JButton btnSelectTranslationFont = new JButton("Select...");
+		btnSelectTranslationFont = new JButton("Select...");
 		GridBagConstraints gbc_btnSelectTranslationFont = new GridBagConstraints();
 		gbc_btnSelectTranslationFont.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSelectTranslationFont.fill = GridBagConstraints.HORIZONTAL;
@@ -1468,7 +1580,7 @@ public class MainWindow extends JFrame {
 		gbc_lblCopyrightFont.gridy = 5;
 		panel.add(lblCopyrightFont, gbc_lblCopyrightFont);
 		
-		JButton btnSelectCopyrightFont = new JButton("Select...");
+		btnSelectCopyrightFont = new JButton("Select...");
 		GridBagConstraints gbc_btnSelectCopyrightFont = new GridBagConstraints();
 		gbc_btnSelectCopyrightFont.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSelectCopyrightFont.fill = GridBagConstraints.HORIZONTAL;
@@ -1484,7 +1596,7 @@ public class MainWindow extends JFrame {
 		gbc_lblTextColor.gridy = 6;
 		panel.add(lblTextColor, gbc_lblTextColor);
 		
-		JButton btnSelectTextColor = new JButton("Select...");
+		btnSelectTextColor = new JButton("Select...");
 		GridBagConstraints gbc_btnSelectTextColor = new GridBagConstraints();
 		gbc_btnSelectTextColor.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnSelectTextColor.insets = new Insets(0, 0, 5, 5);
@@ -1500,7 +1612,7 @@ public class MainWindow extends JFrame {
 		gbc_lblBackgroundColor.gridy = 7;
 		panel.add(lblBackgroundColor, gbc_lblBackgroundColor);
 		
-		JButton btnSelectBackgroundColor = new JButton("Select...");
+		btnSelectBackgroundColor = new JButton("Select...");
 		GridBagConstraints gbc_btnSelectBackgroundColor = new GridBagConstraints();
 		gbc_btnSelectBackgroundColor.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSelectBackgroundColor.fill = GridBagConstraints.HORIZONTAL;
@@ -1516,7 +1628,7 @@ public class MainWindow extends JFrame {
 		gbc_lblLogo.gridy = 8;
 		panel.add(lblLogo, gbc_lblLogo);
 		
-		JButton btnSelectLogo = new JButton("Select...");
+		btnSelectLogo = new JButton("Select...");
 		GridBagConstraints gbc_btnSelectLogo = new GridBagConstraints();
 		gbc_btnSelectLogo.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSelectLogo.fill = GridBagConstraints.HORIZONTAL;
@@ -1532,7 +1644,7 @@ public class MainWindow extends JFrame {
 		gbc_lblTopMargin.gridy = 9;
 		panel.add(lblTopMargin, gbc_lblTopMargin);
 		
-		JSpinner spinnerTopMargin = new JSpinner();
+		spinnerTopMargin = new JSpinner();
 		GridBagConstraints gbc_spinnerTopMargin = new GridBagConstraints();
 		gbc_spinnerTopMargin.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerTopMargin.insets = new Insets(0, 0, 5, 5);
@@ -1548,7 +1660,7 @@ public class MainWindow extends JFrame {
 		gbc_lblLeftMargin.gridy = 10;
 		panel.add(lblLeftMargin, gbc_lblLeftMargin);
 		
-		JSpinner spinnerLeftMargin = new JSpinner();
+		spinnerLeftMargin = new JSpinner();
 		GridBagConstraints gbc_spinnerLeftMargin = new GridBagConstraints();
 		gbc_spinnerLeftMargin.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerLeftMargin.insets = new Insets(0, 0, 5, 5);
@@ -1564,7 +1676,7 @@ public class MainWindow extends JFrame {
 		gbc_lblRightMargin.gridy = 11;
 		panel.add(lblRightMargin, gbc_lblRightMargin);
 		
-		JSpinner spinnerRightMargin = new JSpinner();
+		spinnerRightMargin = new JSpinner();
 		GridBagConstraints gbc_spinnerRightMargin = new GridBagConstraints();
 		gbc_spinnerRightMargin.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerRightMargin.insets = new Insets(0, 0, 5, 5);
@@ -1580,7 +1692,7 @@ public class MainWindow extends JFrame {
 		gbc_lblBottomMargin.gridy = 12;
 		panel.add(lblBottomMargin, gbc_lblBottomMargin);
 		
-		JSpinner spinnerBottomMargin = new JSpinner();
+		spinnerBottomMargin = new JSpinner();
 		GridBagConstraints gbc_spinnerBottomMargin = new GridBagConstraints();
 		gbc_spinnerBottomMargin.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerBottomMargin.insets = new Insets(0, 0, 5, 5);
@@ -1596,7 +1708,7 @@ public class MainWindow extends JFrame {
 		gbc_lblDistanceBetweenTitle.gridy = 13;
 		panel.add(lblDistanceBetweenTitle, gbc_lblDistanceBetweenTitle);
 		
-		JSpinner spinnerDistanceTitleText = new JSpinner();
+		spinnerDistanceTitleText = new JSpinner();
 		GridBagConstraints gbc_spinnerDistanceTitleText = new GridBagConstraints();
 		gbc_spinnerDistanceTitleText.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerDistanceTitleText.insets = new Insets(0, 0, 5, 5);
@@ -1612,7 +1724,7 @@ public class MainWindow extends JFrame {
 		gbc_lblDistanceBetweenText.gridy = 14;
 		panel.add(lblDistanceBetweenText, gbc_lblDistanceBetweenText);
 		
-		JSpinner spinnerDistanceTextCopyright = new JSpinner();
+		spinnerDistanceTextCopyright = new JSpinner();
 		GridBagConstraints gbc_spinnerDistanceTextCopyright = new GridBagConstraints();
 		gbc_spinnerDistanceTextCopyright.insets = new Insets(0, 0, 5, 5);
 		gbc_spinnerDistanceTextCopyright.fill = GridBagConstraints.HORIZONTAL;
@@ -1620,52 +1732,100 @@ public class MainWindow extends JFrame {
 		gbc_spinnerDistanceTextCopyright.gridy = 14;
 		panel.add(spinnerDistanceTextCopyright, gbc_spinnerDistanceTextCopyright);
 		
-		JLabel lblSongListContents = new JLabel("Song list contents");
-		GridBagConstraints gbc_lblSongListContents = new GridBagConstraints();
-		gbc_lblSongListContents.anchor = GridBagConstraints.EAST;
-		gbc_lblSongListContents.insets = new Insets(0, 0, 5, 5);
-		gbc_lblSongListContents.gridx = 1;
-		gbc_lblSongListContents.gridy = 15;
-		panel.add(lblSongListContents, gbc_lblSongListContents);
+		JLabel lblSongListFiltering = new JLabel("Song list filter");
+		GridBagConstraints gbc_lblSongListFiltering = new GridBagConstraints();
+		gbc_lblSongListFiltering.anchor = GridBagConstraints.EAST;
+		gbc_lblSongListFiltering.insets = new Insets(0, 0, 5, 5);
+		gbc_lblSongListFiltering.gridx = 1;
+		gbc_lblSongListFiltering.gridy = 15;
+		panel.add(lblSongListFiltering, gbc_lblSongListFiltering);
 		
-		JComboBox<?> comboSongListContents = new JComboBox<Object>();
-		GridBagConstraints gbc_comboSongListContents = new GridBagConstraints();
-		gbc_comboSongListContents.insets = new Insets(0, 0, 5, 5);
-		gbc_comboSongListContents.fill = GridBagConstraints.HORIZONTAL;
-		gbc_comboSongListContents.gridx = 3;
-		gbc_comboSongListContents.gridy = 15;
-		panel.add(comboSongListContents, gbc_comboSongListContents);
+		comboSongListFiltering = new JComboBox<Object>();
+		GridBagConstraints gbc_comboSongListFiltering = new GridBagConstraints();
+		gbc_comboSongListFiltering.insets = new Insets(0, 0, 5, 5);
+		gbc_comboSongListFiltering.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboSongListFiltering.gridx = 3;
+		gbc_comboSongListFiltering.gridy = 15;
+		panel.add(comboSongListFiltering, gbc_comboSongListFiltering);
 		
-		JLabel lblPresentationScreenContents = new JLabel("Presentation screen contents");
-		GridBagConstraints gbc_lblPresentationScreenContents = new GridBagConstraints();
-		gbc_lblPresentationScreenContents.anchor = GridBagConstraints.EAST;
-		gbc_lblPresentationScreenContents.insets = new Insets(0, 0, 5, 5);
-		gbc_lblPresentationScreenContents.gridx = 1;
-		gbc_lblPresentationScreenContents.gridy = 16;
-		panel.add(lblPresentationScreenContents, gbc_lblPresentationScreenContents);
+		JLabel lblPresentationScreen1Display = new JLabel("Presentation screen 1 display");
+		GridBagConstraints gbc_lblPresentationScreen1Display = new GridBagConstraints();
+		gbc_lblPresentationScreen1Display.anchor = GridBagConstraints.EAST;
+		gbc_lblPresentationScreen1Display.insets = new Insets(0, 0, 5, 5);
+		gbc_lblPresentationScreen1Display.gridx = 1;
+		gbc_lblPresentationScreen1Display.gridy = 16;
+		panel.add(lblPresentationScreen1Display, gbc_lblPresentationScreen1Display);
 		
-		JComboBox<?> comboPresentationScreenContents = new JComboBox<Object>();
-		GridBagConstraints gbc_comboPresentationScreenContents = new GridBagConstraints();
-		gbc_comboPresentationScreenContents.insets = new Insets(0, 0, 5, 5);
-		gbc_comboPresentationScreenContents.fill = GridBagConstraints.HORIZONTAL;
-		gbc_comboPresentationScreenContents.gridx = 3;
-		gbc_comboPresentationScreenContents.gridy = 16;
-		panel.add(comboPresentationScreenContents, gbc_comboPresentationScreenContents);
+		comboPresentationScreen1Display = new JComboBox<GraphicsDevice>();
+		GridBagConstraints gbc_comboPresentationScreen1Display = new GridBagConstraints();
+		gbc_comboPresentationScreen1Display.insets = new Insets(0, 0, 5, 5);
+		gbc_comboPresentationScreen1Display.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboPresentationScreen1Display.gridx = 3;
+		gbc_comboPresentationScreen1Display.gridy = 16;
+		panel.add(comboPresentationScreen1Display, gbc_comboPresentationScreen1Display);
+		
+		JLabel lblPresentationScreen1Contents = new JLabel("Presentation screen 1 contents");
+		GridBagConstraints gbc_lblPresentationScreen1Contents = new GridBagConstraints();
+		gbc_lblPresentationScreen1Contents.anchor = GridBagConstraints.EAST;
+		gbc_lblPresentationScreen1Contents.insets = new Insets(0, 0, 5, 5);
+		gbc_lblPresentationScreen1Contents.gridx = 1;
+		gbc_lblPresentationScreen1Contents.gridy = 17;
+		panel.add(lblPresentationScreen1Contents, gbc_lblPresentationScreen1Contents);
+		
+		comboPresentationScreen1Contents = new JComboBox<ScreenContentsEnum>();
+		GridBagConstraints gbc_comboPresentationScreen1Contents = new GridBagConstraints();
+		gbc_comboPresentationScreen1Contents.insets = new Insets(0, 0, 5, 5);
+		gbc_comboPresentationScreen1Contents.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboPresentationScreen1Contents.gridx = 3;
+		gbc_comboPresentationScreen1Contents.gridy = 17;
+		panel.add(comboPresentationScreen1Contents, gbc_comboPresentationScreen1Contents);
+		
+		JLabel lblPresentationScreen2Display = new JLabel("Presentation screen 2 display");
+		GridBagConstraints gbc_lblPresentationScreen2Display = new GridBagConstraints();
+		gbc_lblPresentationScreen2Display.anchor = GridBagConstraints.EAST;
+		gbc_lblPresentationScreen2Display.insets = new Insets(0, 0, 5, 5);
+		gbc_lblPresentationScreen2Display.gridx = 1;
+		gbc_lblPresentationScreen2Display.gridy = 18;
+		panel.add(lblPresentationScreen2Display, gbc_lblPresentationScreen2Display);
+		
+		comboPresentationScreen2Display = new JComboBox<GraphicsDevice>();
+		GridBagConstraints gbc_comboPresentationScreen2Display = new GridBagConstraints();
+		gbc_comboPresentationScreen2Display.insets = new Insets(0, 0, 5, 5);
+		gbc_comboPresentationScreen2Display.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboPresentationScreen2Display.gridx = 3;
+		gbc_comboPresentationScreen2Display.gridy = 18;
+		panel.add(comboPresentationScreen2Display, gbc_comboPresentationScreen2Display);
+		
+		JLabel lblPresentationScreen2Contents = new JLabel("Presentation screen 2 contents");
+		GridBagConstraints gbc_lblPresentationScreen2Contents = new GridBagConstraints();
+		gbc_lblPresentationScreen2Contents.anchor = GridBagConstraints.EAST;
+		gbc_lblPresentationScreen2Contents.insets = new Insets(0, 0, 5, 5);
+		gbc_lblPresentationScreen2Contents.gridx = 1;
+		gbc_lblPresentationScreen2Contents.gridy = 19;
+		panel.add(lblPresentationScreen2Contents, gbc_lblPresentationScreen2Contents);
+		
+		comboPresentationScreen2Contents = new JComboBox<ScreenContentsEnum>();
+		GridBagConstraints gbc_comboPresentationScreen2Contents = new GridBagConstraints();
+		gbc_comboPresentationScreen2Contents.insets = new Insets(0, 0, 5, 5);
+		gbc_comboPresentationScreen2Contents.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboPresentationScreen2Contents.gridx = 3;
+		gbc_comboPresentationScreen2Contents.gridy = 19;
+		panel.add(comboPresentationScreen2Contents, gbc_comboPresentationScreen2Contents);
 		
 		JLabel lblSecondsToCount = new JLabel("Seconds to count a song as displayed after");
 		GridBagConstraints gbc_lblSecondsToCount = new GridBagConstraints();
 		gbc_lblSecondsToCount.anchor = GridBagConstraints.EAST;
 		gbc_lblSecondsToCount.insets = new Insets(0, 0, 5, 5);
 		gbc_lblSecondsToCount.gridx = 1;
-		gbc_lblSecondsToCount.gridy = 17;
+		gbc_lblSecondsToCount.gridy = 20;
 		panel.add(lblSecondsToCount, gbc_lblSecondsToCount);
 		
-		JSpinner spinnerCountAsDisplayedAfter = new JSpinner();
+		spinnerCountAsDisplayedAfter = new JSpinner();
 		GridBagConstraints gbc_spinnerCountAsDisplayedAfter = new GridBagConstraints();
 		gbc_spinnerCountAsDisplayedAfter.insets = new Insets(0, 0, 5, 5);
 		gbc_spinnerCountAsDisplayedAfter.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerCountAsDisplayedAfter.gridx = 3;
-		gbc_spinnerCountAsDisplayedAfter.gridy = 17;
+		gbc_spinnerCountAsDisplayedAfter.gridy = 20;
 		panel.add(spinnerCountAsDisplayedAfter, gbc_spinnerCountAsDisplayedAfter);
 		
 		JPanel panelShortcuts = new JPanel();
