@@ -1,10 +1,11 @@
-package org.zephyrsoft.sdb2.model;
+package org.zephyrsoft.sdb2.model.converter;
 
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import org.zephyrsoft.sdb2.model.LanguageEnum;
 
 /**
  * A XStream converter for {@link LanguageEnum} values.

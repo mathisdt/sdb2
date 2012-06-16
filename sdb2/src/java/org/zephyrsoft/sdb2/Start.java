@@ -21,8 +21,8 @@ public class Start {
 		usage = "display a short description of the available command line options (this message)")
 	private boolean help = false;
 	@Argument(metaVar = "<FILE>",
-		usage = "use this file to load from and save to (optional, the default is ~/.songdatabase/songs.sdb2)")
-	private String databaseFile = null;
+		usage = "use this file to load from and save to (optional, the default is ~/.songdatabase/songs/songs.xml)")
+	private String songsFile = null;
 	
 	public static void main(String[] args) {
 		new Start(args);
@@ -49,11 +49,12 @@ public class Start {
 			controller.setupLookAndFeel();
 			try {
 				MainWindow window = new MainWindow(controller);
-				if (databaseFile != null) {
-					controller.setDbFileName(databaseFile);
+				controller.loadSettings();
+				if (songsFile != null) {
+					controller.setSongsFileName(songsFile);
 				}
-				controller.initializeModel();
-				window.setModel(controller.getModel());
+				controller.initializeSongsModel();
+				window.setModels(controller.getSongs(), controller.getSettings());
 				window.setVisible(true);
 			} catch (Throwable t) {
 				LOG.error("problem while starting up the application", t);

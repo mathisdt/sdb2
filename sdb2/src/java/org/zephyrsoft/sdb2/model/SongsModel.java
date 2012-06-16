@@ -21,11 +21,11 @@ import org.zephyrsoft.sdb2.gui.TransparentListModel;
  * @author Mathis Dirksen-Thedens
  */
 @XStreamAlias("songs")
-public class MainModel implements Iterable<Song>, Serializable {
+public class SongsModel implements Iterable<Song>, Serializable {
 	
 	private static final long serialVersionUID = -2503516988752281994L;
 	
-	private static final Logger LOG = LoggerFactory.getLogger(MainModel.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SongsModel.class);
 	
 	private boolean autoSort = true;
 	
@@ -38,7 +38,7 @@ public class MainModel implements Iterable<Song>, Serializable {
 	// TODO add list of observers + possibility to add/delete observing objects?
 	// ===> also see Observable or PropertyChangeSupport
 	
-	public MainModel() {
+	public SongsModel() {
 		initIfNecessary();
 	}
 	
@@ -62,18 +62,18 @@ public class MainModel implements Iterable<Song>, Serializable {
 	 */
 	public final void initIfNecessary() {
 		if (songs == null) {
-			songs = new ArrayList<Song>();
+			songs = new ArrayList<>();
 		}
 		if (autoSort) {
 			sortSongs();
 		}
 		if (createdListModels == null) {
-			createdListModels = new ArrayList<TransparentListModel<Song>>();
+			createdListModels = new ArrayList<>();
 		}
 	}
 	
 	public TransparentListModel<Song> getListModel() {
-		TransparentListModel<Song> createdListModel = new TransparentListModel<Song>(songs);
+		TransparentListModel<Song> createdListModel = new TransparentListModel<>(songs);
 		createdListModels.add(createdListModel);
 		return createdListModel;
 	}

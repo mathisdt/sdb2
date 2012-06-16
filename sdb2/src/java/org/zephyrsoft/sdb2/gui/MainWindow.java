@@ -19,6 +19,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
 import javax.swing.DefaultListSelectionModel;
@@ -50,9 +51,11 @@ import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.importer.ImportFromSDBv1;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
-import org.zephyrsoft.sdb2.model.MainModel;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
+import org.zephyrsoft.sdb2.model.SettingKey;
+import org.zephyrsoft.sdb2.model.SettingsModel;
 import org.zephyrsoft.sdb2.model.Song;
+import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.util.CustomFileFilter;
 import org.zephyrsoft.util.gui.FocusTraversalOnArray;
 
@@ -95,13 +98,15 @@ public class MainWindow extends JFrame {
 	private KeyboardShortcutManager shortcutManager;
 	private final MainController controller;
 	
-	private FixedWidthJList<Song> mainList;
-	private MainModel mainModel;
-	private TransparentListModel<Song> mainListModel;
-	private Song mainListSelected;
+	private SettingsModel settingsModel;
+	
+	private FixedWidthJList<Song> songsList;
+	private SongsModel songsModel;
+	private TransparentListModel<Song> songsListModel;
+	private Song songsListSelected;
 	
 	private FixedWidthJList<Song> presentList;
-	private MainModel presentModel;
+	private SongsModel presentModel;
 	private TransparentListModel<Song> presentListModel;
 	private Song presentListSelected;
 	
@@ -167,7 +172,7 @@ public class MainWindow extends JFrame {
 		comboBoxLanguage.setRenderer(new LanguageCellRenderer());
 		// disable editing fields
 		setSongEditingEnabled(false);
-		// disable delete and select buttons below main list
+		// disable delete and select buttons below songs list
 		btnDeleteSong.setEnabled(false);
 		btnSelectSong.setEnabled(false);
 		// disable buttons beneath the present list
@@ -176,8 +181,8 @@ public class MainWindow extends JFrame {
 		btnDown.setEnabled(false);
 		// disable "present this song" button
 		btnPresentSelectedSong.setEnabled(false);
-		// create empty mainModel for the "selected songs" list
-		presentModel = new MainModel();
+		// create empty songsModel for the "selected songs" list
+		presentModel = new SongsModel();
 		presentModel.setAutoSort(false);
 		presentListModel = presentModel.getListModel();
 		presentList.setModel(presentListModel);
@@ -192,17 +197,70 @@ public class MainWindow extends JFrame {
 		comboPresentationScreen2Contents.setRenderer(new ScreenContentsCellRenderer());
 	}
 	
-	public void setModel(MainModel model) {
-		this.mainModel = model;
-		mainListModel = model.getListModel();
-		mainList.setModel(mainListModel);
+	public void setModels(SongsModel songs, SettingsModel settings) {
+		this.songsModel = songs;
+		this.settingsModel = settings;
+		songsListModel = songs.getListModel();
+		songsList.setModel(songsListModel);
+		
+		// load values for instantly displayed settings
+		spinnerTopMargin.setValue(settingsModel.getInteger(SettingKey.TOP_MARGIN));
+		spinnerLeftMargin.setValue(settingsModel.getInteger(SettingKey.LEFT_MARGIN));
+		spinnerRightMargin.setValue(settingsModel.getInteger(SettingKey.RIGHT_MARGIN));
+		spinnerBottomMargin.setValue(settingsModel.getInteger(SettingKey.BOTTOM_MARGIN));
+		spinnerDistanceTitleText.setValue(settingsModel.getInteger(SettingKey.DISTANCE_TITLE_TEXT));
+		spinnerDistanceTextCopyright.setValue(settingsModel.getInteger(SettingKey.DISTANCE_TEXT_COPYRIGHT));
+		comboSongListFiltering.setSelectedItem(settingsModel.get(SettingKey.SONG_LIST_FILTER));
+		comboPresentationScreen1Display.setSelectedItem(settingsModel.get(SettingKey.SCREEN_1_DISPLAY));
+		comboPresentationScreen1Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_1_CONTENTS));
+		comboPresentationScreen2Display.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_DISPLAY));
+		comboPresentationScreen2Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_CONTENTS));
+		spinnerCountAsDisplayedAfter.setValue(settingsModel.getInteger(SettingKey.SECONDS_UNTIL_COUNTED));
 	}
 	
 	protected void handleSettingsUnlock() {
 		// reload screens
+		// TODO
 		
 		// enable controls
 		setSettingsEnabled(true);
+	}
+	
+	protected void handleSettingsSaveAndLock() {
+		if (settingsModel != null) {
+			commitSpinners(spinnerTopMargin, spinnerLeftMargin, spinnerRightMargin, spinnerBottomMargin,
+				spinnerDistanceTitleText, spinnerDistanceTextCopyright, spinnerCountAsDisplayedAfter);
+			// disable controls
+			setSettingsEnabled(false);
+			// copy changed settings to the model
+			settingsModel.put(SettingKey.TOP_MARGIN, spinnerTopMargin.getValue());
+			settingsModel.put(SettingKey.LEFT_MARGIN, spinnerLeftMargin.getValue());
+			settingsModel.put(SettingKey.RIGHT_MARGIN, spinnerRightMargin.getValue());
+			settingsModel.put(SettingKey.BOTTOM_MARGIN, spinnerBottomMargin.getValue());
+			settingsModel.put(SettingKey.DISTANCE_TITLE_TEXT, spinnerDistanceTitleText.getValue());
+			settingsModel.put(SettingKey.DISTANCE_TEXT_COPYRIGHT, spinnerDistanceTextCopyright.getValue());
+			settingsModel.put(SettingKey.SONG_LIST_FILTER, comboSongListFiltering.getSelectedItem());
+			settingsModel.put(SettingKey.SCREEN_1_DISPLAY, comboPresentationScreen1Display.getSelectedItem());
+			settingsModel.put(SettingKey.SCREEN_1_CONTENTS, comboPresentationScreen1Contents.getSelectedItem());
+			settingsModel.put(SettingKey.SCREEN_2_DISPLAY, comboPresentationScreen2Display.getSelectedItem());
+			settingsModel.put(SettingKey.SCREEN_2_CONTENTS, comboPresentationScreen2Contents.getSelectedItem());
+			settingsModel.put(SettingKey.SECONDS_UNTIL_COUNTED, spinnerCountAsDisplayedAfter.getValue());
+			// copying is not necessary for fonts, colors and the logo file name
+			// because those settings are only stored directly in the model
+			
+			// apply settings
+			// TODO
+		}
+	}
+	
+	private static void commitSpinners(JSpinner... spinners) {
+		for (JSpinner spinner : spinners) {
+			try {
+				spinner.commitEdit();
+			} catch (ParseException pe) {
+				// edited value is invalid: spinner.getValue() will return the last valid value
+			}
+		}
 	}
 	
 	private void setSettingsEnabled(boolean enabled) {
@@ -236,22 +294,22 @@ public class MainWindow extends JFrame {
 		}
 	}
 	
-	protected void handleMainListSelectionChanged(ListSelectionEvent e) {
+	protected void handleSongsListSelectionChanged(ListSelectionEvent e) {
 		// only the last event in a row should fire these actions (check valueIsAdjusting)
 		if (!e.getValueIsAdjusting()) {
-			if (mainListSelected != null) {
-				saveSongData(mainListSelected);
+			if (songsListSelected != null) {
+				saveSongData(songsListSelected);
 				clearSongData();
 				setSongEditingEnabled(false);
-				// disable delete and select buttons below main list
+				// disable delete and select buttons below songs list
 				btnDeleteSong.setEnabled(false);
 				btnSelectSong.setEnabled(false);
 			}
-			mainListSelected = mainList.getSelectedValue();
-			if (mainListSelected != null) {
-				loadSongData(mainListSelected);
+			songsListSelected = songsList.getSelectedValue();
+			if (songsListSelected != null) {
+				loadSongData(songsListSelected);
 				setSongEditingEnabled(true);
-				// enable delete and select buttons below main list
+				// enable delete and select buttons below songs list
 				btnDeleteSong.setEnabled(true);
 				btnSelectSong.setEnabled(true);
 			}
@@ -285,13 +343,13 @@ public class MainWindow extends JFrame {
 	}
 	
 	protected void handleSongDataFocusLost() {
-		saveSongData(mainListSelected);
+		saveSongData(songsListSelected);
 	}
 	
 	/**
 	 * Stores all data contained in the GUI elements.
 	 * 
-	 * @param song the mainModel object to which the data should be written
+	 * @param song the songsModel object to which the data should be written
 	 */
 	private void saveSongData(Song song) {
 		LOG.debug("saveSongData");
@@ -308,7 +366,7 @@ public class MainWindow extends JFrame {
 		song.setChordSequence(editorChordSequence.getText());
 		song.setLinkedSongs(linkedSongsListModel.getAllElements());
 		// now put the songs in the right order again (the title could be edited)
-		mainModel.sortAndUpdateView();
+		songsModel.sortAndUpdateView();
 	}
 	
 	/**
@@ -356,7 +414,7 @@ public class MainWindow extends JFrame {
 	/**
 	 * Reads song data and puts the values into the GUI elements.
 	 * 
-	 * @param song the mainModel object which should be read
+	 * @param song the songsModel object which should be read
 	 */
 	private void loadSongData(final Song song) {
 		LOG.debug("loadSongData");
@@ -381,9 +439,10 @@ public class MainWindow extends JFrame {
 	}
 	
 	protected void handleWindowClosing() {
-		if (mainListSelected != null) {
-			saveSongData(mainListSelected);
+		if (songsListSelected != null) {
+			saveSongData(songsListSelected);
 		}
+		handleSettingsSaveAndLock();
 		boolean mayClose = controller.prepareClose();
 		if (mayClose) {
 			setVisible(false);
@@ -394,21 +453,21 @@ public class MainWindow extends JFrame {
 	
 	protected void handleSongNew() {
 		Song song = new Song();
-		mainModel.addSong(song);
-		mainList.setSelectedValue(song, true);
+		songsModel.addSong(song);
+		songsList.setSelectedValue(song, true);
 	}
 	
 	protected void handleSongDelete() {
-		if (mainListSelected != null) {
-			Song songToDelete = mainListSelected;
-			mainList.removeSelectionInterval(0, mainModel.getSize() - 1);
-			mainModel.removeSong(songToDelete);
+		if (songsListSelected != null) {
+			Song songToDelete = songsListSelected;
+			songsList.removeSelectionInterval(0, songsModel.getSize() - 1);
+			songsModel.removeSong(songToDelete);
 		}
 	}
 	
 	protected void handleSongSelect() {
-		if (mainListSelected != null) {
-			presentModel.addSong(mainListSelected);
+		if (songsListSelected != null) {
+			presentModel.addSong(songsListSelected);
 			tabbedPane.setSelectedIndex(TAB_INDEX_PRESENT);
 			presentList.requestFocusInWindow();
 			presentList.setSelectedIndex(presentModel.getSize() - 1);
@@ -461,7 +520,7 @@ public class MainWindow extends JFrame {
 			imported = importer.loadFromFile(chooser.getSelectedFile());
 			if (imported != null) {
 				for (Song song : imported) {
-					mainModel.addSong(song);
+					songsModel.addSong(song);
 				}
 			}
 		}
@@ -553,23 +612,12 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		// TODO still not working:
-		addWindowStateListener(new WindowAdapter() {
-			@Override
-			public void windowDeactivated(WindowEvent e) {
-				try {
-					// on every window deactivation, lock the settings again
-					setSettingsEnabled(false);
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-			
+		addWindowFocusListener(new WindowAdapter() {
 			@Override
 			public void windowLostFocus(WindowEvent e) {
 				try {
 					// on every window deactivation, lock the settings again
-					setSettingsEnabled(false);
+					handleSettingsSaveAndLock();
 				} catch (Throwable ex) {
 					handleError(ex);
 				}
@@ -637,8 +685,8 @@ public class MainWindow extends JFrame {
 		scrollPaneSongList.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
 		panelSongList.add(scrollPaneSongList, BorderLayout.CENTER);
 		
-		mainList = new FixedWidthJList<Song>();
-		mainList.addMouseListener(new MouseAdapter() {
+		songsList = new FixedWidthJList<Song>();
+		songsList.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				try {
@@ -651,20 +699,20 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		mainList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		((DefaultListSelectionModel) mainList.getSelectionModel())
+		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		((DefaultListSelectionModel) songsList.getSelectionModel())
 			.addListSelectionListener(new ListSelectionListener() {
 				@Override
 				public void valueChanged(ListSelectionEvent e) {
 					try {
-						handleMainListSelectionChanged(e);
+						handleSongsListSelectionChanged(e);
 					} catch (Throwable ex) {
 						handleError(ex);
 					}
 				}
 			});
-		scrollPaneSongList.setViewportView(mainList);
-		mainList.setCellRenderer(new SongCellRenderer());
+		scrollPaneSongList.setViewportView(songsList);
+		songsList.setCellRenderer(new SongCellRenderer());
 		
 		JPanel panelSongListButtons = new JPanel();
 		panelSongList.add(panelSongListButtons, BorderLayout.SOUTH);
@@ -743,7 +791,7 @@ public class MainWindow extends JFrame {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				// on every tab switch, lock the settings again
-				setSettingsEnabled(false);
+				handleSettingsSaveAndLock();
 			}
 		});
 		tabbedPane.setBorder(null);
@@ -1888,7 +1936,7 @@ public class MainWindow extends JFrame {
 	}
 	
 	public JList<?> getSongList() {
-		return mainList;
+		return songsList;
 	}
 	
 	public JTextField getTextFieldFilter() {

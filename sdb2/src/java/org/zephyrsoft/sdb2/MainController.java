@@ -12,7 +12,8 @@ import javax.swing.UnsupportedLookAndFeelException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.gui.MainWindow;
-import org.zephyrsoft.sdb2.model.MainModel;
+import org.zephyrsoft.sdb2.model.SettingsModel;
+import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.XMLConverter;
 
 /**
@@ -22,18 +23,23 @@ import org.zephyrsoft.sdb2.model.XMLConverter;
  */
 public class MainController {
 	
-	public static final String DATA_DIR_STRING = System.getProperty("user.home") + File.separator + ".songdatabase";
-	public static final String DATA_FILE_STRING = "songs.sdb2";
+	public static final String BASE_DIR_STRING = System.getProperty("user.home") + File.separator + ".songdatabase";
+	public static final String SONGS_SUBDIR_STRING = "songs";
+	public static final String SONGS_FILE_STRING = "songs.xml";
+	public static final String SETTINGS_SUBDIR_STRING = "settings";
+	public static final String SETTINGS_FILE_STRING = "settings.xml";
 	
 	private static Logger LOG = LoggerFactory.getLogger(MainController.class);
 	
-	private String dbFileName = null;
-	private MainModel model = null;
+	private String songsFileName = null;
+	private SongsModel songs = null;
+	private SettingsModel settings = null;
 	
 	public boolean prepareClose() {
 		LOG.debug("preparing to close application");
-		boolean successfullySaved = serializeToFile();
-		return successfullySaved;
+		boolean successfullySavedSongs = saveSongs();
+		boolean successfullySavedSettings = saveSettings();
+		return successfullySavedSongs && successfullySavedSettings;
 	}
 	
 	public void shutdown() {
@@ -45,66 +51,113 @@ public class MainController {
 		System.exit(exitCode);
 	}
 	
-	public void initializeModel() {
-		LOG.debug("initializing model from file");
-		model = populateFromFile();
-		if (model == null) {
+	public void initializeSongsModel() {
+		LOG.debug("loading songs from file");
+		songs = populateSongsModelFromFile();
+		if (songs == null) {
 			// there was a problem while reading
-			model = new MainModel();
+			songs = new SongsModel();
 		}
 	}
 	
-	private MainModel populateFromFile() {
-		File file = new File(getDbFileName());
+	public void loadSettings() {
+		LOG.debug("loading settings from file");
+		File file = new File(getSettingsFileName());
 		try {
 			InputStream xmlInputStream = new FileInputStream(file);
-			MainModel modelToReturn = XMLConverter.fromXMLToModel(xmlInputStream);
+			settings = XMLConverter.fromXMLToSettingsModel(xmlInputStream);
 			xmlInputStream.close();
-			return modelToReturn;
 		} catch (IOException e) {
-			LOG.error("could not read data from \"" + file.getAbsolutePath() + "\"");
-			return null;
+			LOG.error("could not read settings from \"" + file.getAbsolutePath() + "\"");
+		}
+		if (settings == null) {
+			// there was a problem while reading
+			settings = new SettingsModel();
 		}
 	}
 	
-	private boolean serializeToFile() {
-		File file = new File(getDbFileName());
+	public boolean saveSettings() {
+		File file = new File(getSettingsFileName());
 		try {
 			OutputStream xmlOutputStream = new FileOutputStream(file);
-			XMLConverter.fromModelToXML(model, xmlOutputStream);
+			XMLConverter.fromSettingsModelToXML(settings, xmlOutputStream);
 			xmlOutputStream.close();
 			return true;
 		} catch (IOException e) {
-			LOG.error("could not write data to \"" + file.getAbsolutePath() + "\"");
+			LOG.error("could not write settings to \"" + file.getAbsolutePath() + "\"");
 			return false;
 		}
 	}
 	
-	public MainModel getModel() {
-		return model;
-	}
-	
-	private String getDbFileName() {
-		if (dbFileName == null) {
-			return getDefaultDataDir() + File.separator + DATA_FILE_STRING;
-		} else {
-			return dbFileName;
+	private SongsModel populateSongsModelFromFile() {
+		File file = new File(getSongsFileName());
+		try {
+			InputStream xmlInputStream = new FileInputStream(file);
+			SongsModel modelToReturn = XMLConverter.fromXMLToSongsModel(xmlInputStream);
+			xmlInputStream.close();
+			return modelToReturn;
+		} catch (IOException e) {
+			LOG.error("could not read songs from \"" + file.getAbsolutePath() + "\"");
+			return null;
 		}
 	}
 	
-	private String getDefaultDataDir() {
-		File dataDir = new File(DATA_DIR_STRING);
+	private boolean saveSongs() {
+		File file = new File(getSongsFileName());
+		try {
+			OutputStream xmlOutputStream = new FileOutputStream(file);
+			XMLConverter.fromSongsModelToXML(songs, xmlOutputStream);
+			xmlOutputStream.close();
+			return true;
+		} catch (IOException e) {
+			LOG.error("could not write songs to \"" + file.getAbsolutePath() + "\"");
+			return false;
+		}
+	}
+	
+	public SongsModel getSongs() {
+		return songs;
+	}
+	
+	public SettingsModel getSettings() {
+		return settings;
+	}
+	
+	private String getSongsFileName() {
+		if (songsFileName == null) {
+			return getSongsDir() + File.separator + SONGS_FILE_STRING;
+		} else {
+			return songsFileName;
+		}
+	}
+	
+	private String getSettingsFileName() {
+		return getSettingsDir() + File.separator + SETTINGS_FILE_STRING;
+	}
+	
+	private String getSongsDir() {
+		return getDir(SONGS_SUBDIR_STRING);
+	}
+	
+	private String getSettingsDir() {
+		return getDir(SETTINGS_SUBDIR_STRING);
+	}
+	
+	private String getDir(String subDirectory) {
+		String path = BASE_DIR_STRING + File.separator + subDirectory;
+		File dataDir = new File(path);
 		if (!dataDir.exists()) {
 			dataDir.mkdirs();
 		}
-		return DATA_DIR_STRING;
+		return path;
 	}
 	
 	/**
-	 * Sets the database location to a custom value. Must be called before {@link #populateFromFile()} to be effective!
+	 * Sets the database location to a custom value. Must be called before {@link #populateSongsModelFromFile()} to be
+	 * effective!
 	 */
-	public void setDbFileName(String dbFileName) {
-		this.dbFileName = dbFileName;
+	public void setSongsFileName(String dbFileName) {
+		this.songsFileName = dbFileName;
 	}
 	
 	/**
