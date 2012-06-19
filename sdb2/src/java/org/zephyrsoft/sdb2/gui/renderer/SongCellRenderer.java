@@ -1,9 +1,10 @@
-package org.zephyrsoft.sdb2.gui;
+package org.zephyrsoft.sdb2.gui.renderer;
 
 import java.awt.Color;
 import java.awt.Component;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
+import org.zephyrsoft.sdb2.gui.SongCell;
 import org.zephyrsoft.sdb2.model.Song;
 
 /**

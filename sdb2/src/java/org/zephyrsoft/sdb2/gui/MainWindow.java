@@ -49,6 +49,9 @@ import javax.swing.text.JTextComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.MainController;
+import org.zephyrsoft.sdb2.gui.renderer.LanguageCellRenderer;
+import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
+import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
 import org.zephyrsoft.sdb2.importer.ImportFromSDBv1;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
@@ -57,7 +60,10 @@ import org.zephyrsoft.sdb2.model.SettingsModel;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.util.CustomFileFilter;
+import org.zephyrsoft.util.gui.ErrorDialog;
+import org.zephyrsoft.util.gui.FixedWidthJList;
 import org.zephyrsoft.util.gui.FocusTraversalOnArray;
+import org.zephyrsoft.util.gui.TransparentListModel;
 
 /**
  * Main window of the application.
@@ -204,18 +210,22 @@ public class MainWindow extends JFrame {
 		songsList.setModel(songsListModel);
 		
 		// load values for instantly displayed settings
-		spinnerTopMargin.setValue(settingsModel.getInteger(SettingKey.TOP_MARGIN));
-		spinnerLeftMargin.setValue(settingsModel.getInteger(SettingKey.LEFT_MARGIN));
-		spinnerRightMargin.setValue(settingsModel.getInteger(SettingKey.RIGHT_MARGIN));
-		spinnerBottomMargin.setValue(settingsModel.getInteger(SettingKey.BOTTOM_MARGIN));
-		spinnerDistanceTitleText.setValue(settingsModel.getInteger(SettingKey.DISTANCE_TITLE_TEXT));
-		spinnerDistanceTextCopyright.setValue(settingsModel.getInteger(SettingKey.DISTANCE_TEXT_COPYRIGHT));
+		setSpinnerValue(spinnerTopMargin, settingsModel.getInteger(SettingKey.TOP_MARGIN));
+		setSpinnerValue(spinnerLeftMargin, settingsModel.getInteger(SettingKey.LEFT_MARGIN));
+		setSpinnerValue(spinnerRightMargin, settingsModel.getInteger(SettingKey.RIGHT_MARGIN));
+		setSpinnerValue(spinnerBottomMargin, settingsModel.getInteger(SettingKey.BOTTOM_MARGIN));
+		setSpinnerValue(spinnerDistanceTitleText, settingsModel.getInteger(SettingKey.DISTANCE_TITLE_TEXT));
+		setSpinnerValue(spinnerDistanceTextCopyright, settingsModel.getInteger(SettingKey.DISTANCE_TEXT_COPYRIGHT));
 		comboSongListFiltering.setSelectedItem(settingsModel.get(SettingKey.SONG_LIST_FILTER));
 		comboPresentationScreen1Display.setSelectedItem(settingsModel.get(SettingKey.SCREEN_1_DISPLAY));
 		comboPresentationScreen1Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_1_CONTENTS));
 		comboPresentationScreen2Display.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_DISPLAY));
 		comboPresentationScreen2Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_CONTENTS));
-		spinnerCountAsDisplayedAfter.setValue(settingsModel.getInteger(SettingKey.SECONDS_UNTIL_COUNTED));
+		setSpinnerValue(spinnerCountAsDisplayedAfter, settingsModel.getInteger(SettingKey.SECONDS_UNTIL_COUNTED));
+	}
+	
+	private static void setSpinnerValue(JSpinner spinner, Object value) {
+		spinner.setValue(value == null ? 0 : value);
 	}
 	
 	protected void handleSettingsUnlock() {

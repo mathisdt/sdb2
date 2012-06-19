@@ -3,7 +3,6 @@ package org.zephyrsoft.sdb2.model;
 import java.io.InputStream;
 import java.io.OutputStream;
 import com.thoughtworks.xstream.XStream;
-import org.zephyrsoft.sdb2.model.converter.LanguageEnumConverter;
 
 /**
  * Converts the {@link SongsModel} to and from XML.
@@ -42,8 +41,10 @@ public class XMLConverter {
 		xstream.processAnnotations(SettingsModel.class);
 		xstream.processAnnotations(SongsModel.class);
 		xstream.processAnnotations(Song.class);
-		// custom converter for LanguageEnum
-		xstream.registerConverter(new LanguageEnumConverter());
+		// custom converters for enums
+		xstream.registerConverter(new GenericEnumConverter<>(FilterTypeEnum.class));
+		xstream.registerConverter(new GenericEnumConverter<>(LanguageEnum.class));
+		xstream.registerConverter(new GenericEnumConverter<>(ScreenContentsEnum.class));
 		return xstream;
 	}
 	

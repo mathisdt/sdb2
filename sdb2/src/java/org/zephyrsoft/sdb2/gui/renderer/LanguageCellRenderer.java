@@ -1,4 +1,4 @@
-package org.zephyrsoft.sdb2.gui;
+package org.zephyrsoft.sdb2.gui.renderer;
 
 import java.awt.Component;
 import javax.swing.DefaultListCellRenderer;
@@ -35,7 +35,7 @@ public class LanguageCellRenderer implements ListCellRenderer<LanguageEnum> {
 			ret.setText("Mixed");
 		} else {
 			LOG.warn("unknown language enum value: {}", value.toString());
-			ret.setText(value.getLanguageAbbreviation());
+			ret.setText(value.name());
 		}
 		return ret;
 	}

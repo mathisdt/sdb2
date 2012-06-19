@@ -1,5 +1,8 @@
 package org.zephyrsoft.util;
 
+import java.util.Locale;
+import org.apache.commons.lang3.text.WordUtils;
+
 /**
  * Methods which are missing in the {@link String} class.<br/>
  * <br/>
@@ -8,6 +11,39 @@ package org.zephyrsoft.util;
  * @author Mathis Dirksen-Thedens
  */
 public class StringTools {
+	
+	/**
+	 * Convert a string which is in camel case to all caps, separated with underscores. Example:
+	 * "camelCaseStringExample" => "CAMEL_CASE_STRING_EXAMPLE"
+	 * 
+	 * @param camelCasedString the camel-cased string
+	 * @return the string with underscores in all caps
+	 */
+	public static String camelCaseToUnderscored(String camelCasedString) {
+		if (camelCasedString == null || camelCasedString.length() == 0) {
+			return "";
+		} else {
+			return camelCasedString.replaceAll("([A-Z]+)([A-Z][a-z])", "$1_$2")
+				.replaceAll("([a-z\\d])([A-Z])", "$1_$2").toUpperCase(Locale.ENGLISH);
+		}
+	}
+	
+	/**
+	 * Convert a string which is separated with underscores to camel case. Example: "UNDERSCORED_STRING_EXAMPLE" =>
+	 * "underscoredStringExample"
+	 * 
+	 * @param underscoredString the underscore-separated string
+	 * @return the camel-cased string
+	 */
+	public static String underscoredToCamelCase(String underscoredString) {
+		if (underscoredString == null || underscoredString.length() == 0) {
+			return "";
+		} else {
+			String ret = WordUtils.capitalizeFully(underscoredString, new char[] {'_'}).replaceAll("_", "");
+			ret = ret.substring(0, 1).toLowerCase(Locale.ENGLISH) + ret.substring(1);
+			return ret;
+		}
+	}
 	
 	/**
 	 * Compare two Strings with special care. If one of the Strings is {@code null}, it is assumed "smaller" than the

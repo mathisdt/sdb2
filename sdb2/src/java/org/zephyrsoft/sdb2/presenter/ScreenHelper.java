@@ -13,6 +13,10 @@ import org.zephyrsoft.util.StringTools;
  */
 public class ScreenHelper {
 	
+	private ScreenHelper() {
+		// this class should not be instantiated
+	}
+	
 	public static List<GraphicsDevice> getScreens() {
 		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		return Arrays.asList(env.getScreenDevices());

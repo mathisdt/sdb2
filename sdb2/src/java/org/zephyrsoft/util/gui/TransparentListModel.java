@@ -1,4 +1,4 @@
-package org.zephyrsoft.sdb2.gui;
+package org.zephyrsoft.util.gui;
 
 import java.util.List;
 import javax.swing.AbstractListModel;

@@ -1,4 +1,4 @@
-package org.zephyrsoft.sdb2.gui;
+package org.zephyrsoft.sdb2.gui.renderer;
 
 import java.awt.Component;
 import javax.swing.DefaultListCellRenderer;
@@ -33,7 +33,7 @@ public class ScreenContentsCellRenderer implements ListCellRenderer<ScreenConten
 			ret.setText("lyrics and chords");
 		} else {
 			LOG.warn("unknown screen contents enum value: {}", value.toString());
-			ret.setText(value.getAbbreviation());
+			ret.setText(value.name());
 		}
 		return ret;
 	}

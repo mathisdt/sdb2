@@ -13,7 +13,7 @@ import com.thoughtworks.xstream.annotations.XStreamOmitField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.gui.MainWindow;
-import org.zephyrsoft.sdb2.gui.TransparentListModel;
+import org.zephyrsoft.util.gui.TransparentListModel;
 
 /**
  * Model for {@link MainWindow}.
