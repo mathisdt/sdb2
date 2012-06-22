@@ -11,11 +11,14 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.border.EmptyBorder;
+import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 
 /**
+ * The presentation display for the lyrics.
+ * 
  * @author Mathis Dirksen-Thedens
  */
-public class PresenterWindow extends JFrame {
+public class PresenterWindow extends JFrame implements Presenter {
 	
 	private static final long serialVersionUID = -2390663756699128439L;
 	
@@ -24,7 +27,7 @@ public class PresenterWindow extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public PresenterWindow(GraphicsDevice screen) {
+	public PresenterWindow(GraphicsDevice screen, ScreenContentsEnum contents, Presentable presentable) {
 		super(screen.getDefaultConfiguration());
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		contentPane = new JPanel();
@@ -45,6 +48,13 @@ public class PresenterWindow extends JFrame {
 		setBounds(screen.getDefaultConfiguration().getBounds());
 //		Dimension dim = new Dimension(screen.getDisplayMode().getWidth(), screen.getDisplayMode().getHeight());
 //		setSize(dim);
+		
+		prepareContent(contents, presentable);
+	}
+	
+	private void prepareContent(ScreenContentsEnum contents, Presentable presentable) {
+		// TODO determine what to present
+		
 	}
 	
 	private static Cursor getTransparentCursor() {
@@ -53,6 +63,33 @@ public class PresenterWindow extends JFrame {
 		Cursor transparentCursor =
 			Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisiblecursor");
 		return transparentCursor;
+	}
+	
+	/**
+	 * @see org.zephyrsoft.sdb2.presenter.Presenter#moveToPart(java.lang.Integer)
+	 */
+	@Override
+	public void moveToPart(Integer part) {
+		// TODO
+		
+	}
+	
+	/**
+	 * @see org.zephyrsoft.sdb2.presenter.Presenter#showPresenter()
+	 */
+	@Override
+	public void showPresenter() {
+		// TODO fade in
+		setVisible(true);
+	}
+	
+	/**
+	 * @see org.zephyrsoft.sdb2.presenter.Presenter#hidePresenter()
+	 */
+	@Override
+	public void hidePresenter() {
+		// TODO fade out
+		setVisible(false);
 	}
 	
 }

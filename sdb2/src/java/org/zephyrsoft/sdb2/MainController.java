@@ -1,20 +1,31 @@
 package org.zephyrsoft.sdb2;
 
+import java.awt.GraphicsDevice;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.gui.MainWindow;
+import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
+import org.zephyrsoft.sdb2.model.SettingKey;
 import org.zephyrsoft.sdb2.model.SettingsModel;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.XMLConverter;
+import org.zephyrsoft.sdb2.presenter.Presentable;
+import org.zephyrsoft.sdb2.presenter.Presenter;
+import org.zephyrsoft.sdb2.presenter.PresenterBundle;
+import org.zephyrsoft.sdb2.presenter.PresenterWindow;
+import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 
 /**
  * Controller for {@link MainWindow}.
@@ -34,6 +45,66 @@ public class MainController {
 	private String songsFileName = null;
 	private SongsModel songs = null;
 	private SettingsModel settings = null;
+	private List<GraphicsDevice> screens;
+	private PresenterBundle presentationControl;
+	
+	public void present(Presentable presentable) {
+		// end old presentation (if any)
+		if (presentationControl != null) {
+			presentationControl.hidePresenter();
+		}
+		
+		presentationControl = new PresenterBundle();
+		
+		Presenter presenter1 =
+			createPresenter(ScreenHelper.getScreen(screens, settings.getString(SettingKey.SCREEN_1_DISPLAY)),
+				(ScreenContentsEnum) settings.get(SettingKey.SCREEN_1_CONTENTS), presentable);
+		if (presenter1 != null) {
+			presentationControl.addPresenter(presenter1);
+		}
+		
+		Presenter presenter2 =
+			createPresenter(ScreenHelper.getScreen(screens, settings.getString(SettingKey.SCREEN_2_DISPLAY)),
+				(ScreenContentsEnum) settings.get(SettingKey.SCREEN_2_CONTENTS), presentable);
+		if (presenter2 != null) {
+			presentationControl.addPresenter(presenter2);
+		}
+		
+		// start presentation
+		presentationControl.showPresenter();
+	}
+	
+	public void moveToPart(Integer part) {
+		presentationControl.moveToPart(part);
+	}
+	
+	private PresenterWindow createPresenter(GraphicsDevice screen, ScreenContentsEnum contents, Presentable presentable) {
+		if (screen == null) {
+			// nothing to be done
+			return null;
+		}
+		return new PresenterWindow(screen, contents, presentable);
+	}
+	
+	public List<GraphicsDevice> getScreens() {
+		return Collections.unmodifiableList(screens);
+	}
+	
+	public void detectScreens() {
+		if (screens == null) {
+			screens = new ArrayList<>();
+		} else {
+			screens.clear();
+		}
+		
+		// for the setting "don't show at all"
+		screens.add(null);
+		
+		List<GraphicsDevice> screensInternal = ScreenHelper.getScreens();
+		for (GraphicsDevice screen : screensInternal) {
+			screens.add(screen);
+		}
+	}
 	
 	public boolean prepareClose() {
 		LOG.debug("preparing to close application");

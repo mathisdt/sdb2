@@ -3,6 +3,7 @@ package org.zephyrsoft.sdb2.presenter;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.zephyrsoft.util.StringTools;
 
@@ -17,13 +18,21 @@ public class ScreenHelper {
 		// this class should not be instantiated
 	}
 	
+	/**
+	 * Get the comprehensive list of all screens attached to the system.
+	 */
 	public static List<GraphicsDevice> getScreens() {
 		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		return Arrays.asList(env.getScreenDevices());
+		return Collections.unmodifiableList(Arrays.asList(env.getScreenDevices()));
 	}
 	
-	public static GraphicsDevice getScreen(String screenId) {
-		List<GraphicsDevice> devices = getScreens();
+	/**
+	 * Get a screen from the given list that has the specified ID.
+	 * 
+	 * @param devices list of possible screens
+	 * @param screenId the ID to find
+	 */
+	public static GraphicsDevice getScreen(List<GraphicsDevice> devices, String screenId) {
 		for (GraphicsDevice device : devices) {
 			if (StringTools.equals(getScreenId(device), screenId)) {
 				return device;
@@ -32,11 +41,14 @@ public class ScreenHelper {
 		return null;
 	}
 	
+	/**
+	 * Get the ID of a screen.
+	 */
 	public static String getScreenId(GraphicsDevice screen) {
-		if (screen != null) {
-			return screen.getIDstring();
+		if (screen == null) {
+			return null;
 		} else {
-			throw new IllegalArgumentException("screen is null");
+			return screen.getIDstring();
 		}
 	}
 	

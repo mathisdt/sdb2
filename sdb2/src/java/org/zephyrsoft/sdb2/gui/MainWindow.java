@@ -8,6 +8,7 @@ import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.ActionEvent;
@@ -19,9 +20,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
+import javax.imageio.ImageIO;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -51,6 +55,7 @@ import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.gui.renderer.LanguageCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
+import org.zephyrsoft.sdb2.gui.renderer.ScreenDisplayCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
 import org.zephyrsoft.sdb2.importer.ImportFromSDBv1;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
@@ -59,10 +64,15 @@ import org.zephyrsoft.sdb2.model.SettingKey;
 import org.zephyrsoft.sdb2.model.SettingsModel;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
+import org.zephyrsoft.sdb2.presenter.DisplayBlank;
+import org.zephyrsoft.sdb2.presenter.DisplayLogo;
+import org.zephyrsoft.sdb2.presenter.DisplaySong;
+import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.util.CustomFileFilter;
 import org.zephyrsoft.util.gui.ErrorDialog;
 import org.zephyrsoft.util.gui.FixedWidthJList;
 import org.zephyrsoft.util.gui.FocusTraversalOnArray;
+import org.zephyrsoft.util.gui.TransparentComboBoxModel;
 import org.zephyrsoft.util.gui.TransparentListModel;
 
 /**
@@ -85,6 +95,8 @@ public class MainWindow extends JFrame {
 	private static final int TAB_INDEX_SHORTCUTS = 4;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
+	
+	private static final DisplayBlank BLANK_SCREEN = new DisplayBlank();
 	
 	private JPanel contentPane;
 	private JTabbedPane tabbedPane;
@@ -201,6 +213,8 @@ public class MainWindow extends JFrame {
 		// add renderer for screen contents
 		comboPresentationScreen1Contents.setRenderer(new ScreenContentsCellRenderer());
 		comboPresentationScreen2Contents.setRenderer(new ScreenContentsCellRenderer());
+		comboPresentationScreen1Display.setRenderer(new ScreenDisplayCellRenderer());
+		comboPresentationScreen2Display.setRenderer(new ScreenDisplayCellRenderer());
 	}
 	
 	public void setModels(SongsModel songs, SettingsModel settings) {
@@ -208,6 +222,11 @@ public class MainWindow extends JFrame {
 		this.settingsModel = settings;
 		songsListModel = songs.getListModel();
 		songsList.setModel(songsListModel);
+		
+		// prepare for settings
+		controller.detectScreens();
+		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<GraphicsDevice>(controller.getScreens()));
+		comboPresentationScreen2Display.setModel(new TransparentComboBoxModel<GraphicsDevice>(controller.getScreens()));
 		
 		// load values for instantly displayed settings
 		setSpinnerValue(spinnerTopMargin, settingsModel.getInteger(SettingKey.TOP_MARGIN));
@@ -217,9 +236,11 @@ public class MainWindow extends JFrame {
 		setSpinnerValue(spinnerDistanceTitleText, settingsModel.getInteger(SettingKey.DISTANCE_TITLE_TEXT));
 		setSpinnerValue(spinnerDistanceTextCopyright, settingsModel.getInteger(SettingKey.DISTANCE_TEXT_COPYRIGHT));
 		comboSongListFiltering.setSelectedItem(settingsModel.get(SettingKey.SONG_LIST_FILTER));
-		comboPresentationScreen1Display.setSelectedItem(settingsModel.get(SettingKey.SCREEN_1_DISPLAY));
+		comboPresentationScreen1Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
+			(String) settingsModel.get(SettingKey.SCREEN_1_DISPLAY)));
 		comboPresentationScreen1Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_1_CONTENTS));
-		comboPresentationScreen2Display.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_DISPLAY));
+		comboPresentationScreen2Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
+			(String) settingsModel.get(SettingKey.SCREEN_2_DISPLAY)));
 		comboPresentationScreen2Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_CONTENTS));
 		setSpinnerValue(spinnerCountAsDisplayedAfter, settingsModel.getInteger(SettingKey.SECONDS_UNTIL_COUNTED));
 	}
@@ -230,7 +251,7 @@ public class MainWindow extends JFrame {
 	
 	protected void handleSettingsUnlock() {
 		// reload screens
-		// TODO
+		controller.detectScreens();
 		
 		// enable controls
 		setSettingsEnabled(true);
@@ -250,9 +271,11 @@ public class MainWindow extends JFrame {
 			settingsModel.put(SettingKey.DISTANCE_TITLE_TEXT, spinnerDistanceTitleText.getValue());
 			settingsModel.put(SettingKey.DISTANCE_TEXT_COPYRIGHT, spinnerDistanceTextCopyright.getValue());
 			settingsModel.put(SettingKey.SONG_LIST_FILTER, comboSongListFiltering.getSelectedItem());
-			settingsModel.put(SettingKey.SCREEN_1_DISPLAY, comboPresentationScreen1Display.getSelectedItem());
+			settingsModel.put(SettingKey.SCREEN_1_DISPLAY,
+				ScreenHelper.getScreenId((GraphicsDevice) comboPresentationScreen1Display.getSelectedItem()));
 			settingsModel.put(SettingKey.SCREEN_1_CONTENTS, comboPresentationScreen1Contents.getSelectedItem());
-			settingsModel.put(SettingKey.SCREEN_2_DISPLAY, comboPresentationScreen2Display.getSelectedItem());
+			settingsModel.put(SettingKey.SCREEN_2_DISPLAY,
+				ScreenHelper.getScreenId((GraphicsDevice) comboPresentationScreen2Display.getSelectedItem()));
 			settingsModel.put(SettingKey.SCREEN_2_CONTENTS, comboPresentationScreen2Contents.getSelectedItem());
 			settingsModel.put(SettingKey.SECONDS_UNTIL_COUNTED, spinnerCountAsDisplayedAfter.getValue());
 			// copying is not necessary for fonts, colors and the logo file name
@@ -515,6 +538,36 @@ public class MainWindow extends JFrame {
 			presentModel.insertSong(newIndex, song);
 			presentList.setSelectedIndex(newIndex);
 		}
+	}
+	
+	protected void handleSongPresent() {
+		controller.present(new DisplaySong(songsListSelected));
+	}
+	
+	protected void handleBlankScreen() {
+		controller.present(BLANK_SCREEN);
+	}
+	
+	protected void handleLogoPresent() {
+		controller.present(new DisplayLogo(loadLogo()));
+	}
+	
+	private Image loadLogo() {
+		String logoPath = settingsModel.getString(SettingKey.LOGO_FILE);
+		if (logoPath != null && !logoPath.equals("")) {
+			File logoFile = new File(logoPath);
+			// Logo-Datei lesbar?
+			if (logoFile.isFile() && logoFile.canRead()) {
+				Image logo = null;
+				try {
+					logo = ImageIO.read(logoFile);
+				} catch (IOException ex) {
+					handleError(ex);
+				}
+				return logo;
+			}
+		}
+		return null;
 	}
 	
 	protected void handleImportFromSDBv1() {
@@ -1352,6 +1405,16 @@ public class MainWindow extends JFrame {
 		panelPresentationButtons.setLayout(gbl_panelPresentationButtons);
 		
 		btnShowLogo = new JButton("Show logo");
+		btnShowLogo.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleLogoPresent();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
 		GridBagConstraints gbc_btnShowLogo = new GridBagConstraints();
 		gbc_btnShowLogo.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnShowLogo.insets = new Insets(0, 0, 5, 0);
@@ -1360,6 +1423,16 @@ public class MainWindow extends JFrame {
 		panelPresentationButtons.add(btnShowLogo, gbc_btnShowLogo);
 		
 		btnShowBlankScreen = new JButton("Blank screen");
+		btnShowBlankScreen.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleBlankScreen();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
 		GridBagConstraints gbc_btnShowBlankScreen = new GridBagConstraints();
 		gbc_btnShowBlankScreen.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnShowBlankScreen.insets = new Insets(0, 0, 5, 0);
@@ -1368,6 +1441,16 @@ public class MainWindow extends JFrame {
 		panelPresentationButtons.add(btnShowBlankScreen, gbc_btnShowBlankScreen);
 		
 		btnPresentSelectedSong = new JButton("Present selected song");
+		btnPresentSelectedSong.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleSongPresent();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
 		GridBagConstraints gbc_btnPresentSelectedSong = new GridBagConstraints();
 		gbc_btnPresentSelectedSong.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnPresentSelectedSong.insets = new Insets(0, 0, 5, 0);
@@ -1806,7 +1889,7 @@ public class MainWindow extends JFrame {
 		gbc_comboSongListFiltering.gridy = 15;
 		panel.add(comboSongListFiltering, gbc_comboSongListFiltering);
 		
-		JLabel lblPresentationScreen1Display = new JLabel("Presentation screen 1 display");
+		JLabel lblPresentationScreen1Display = new JLabel("PresenterBundle screen 1 display");
 		GridBagConstraints gbc_lblPresentationScreen1Display = new GridBagConstraints();
 		gbc_lblPresentationScreen1Display.anchor = GridBagConstraints.EAST;
 		gbc_lblPresentationScreen1Display.insets = new Insets(0, 0, 5, 5);
@@ -1822,7 +1905,7 @@ public class MainWindow extends JFrame {
 		gbc_comboPresentationScreen1Display.gridy = 16;
 		panel.add(comboPresentationScreen1Display, gbc_comboPresentationScreen1Display);
 		
-		JLabel lblPresentationScreen1Contents = new JLabel("Presentation screen 1 contents");
+		JLabel lblPresentationScreen1Contents = new JLabel("PresenterBundle screen 1 contents");
 		GridBagConstraints gbc_lblPresentationScreen1Contents = new GridBagConstraints();
 		gbc_lblPresentationScreen1Contents.anchor = GridBagConstraints.EAST;
 		gbc_lblPresentationScreen1Contents.insets = new Insets(0, 0, 5, 5);
@@ -1838,7 +1921,7 @@ public class MainWindow extends JFrame {
 		gbc_comboPresentationScreen1Contents.gridy = 17;
 		panel.add(comboPresentationScreen1Contents, gbc_comboPresentationScreen1Contents);
 		
-		JLabel lblPresentationScreen2Display = new JLabel("Presentation screen 2 display");
+		JLabel lblPresentationScreen2Display = new JLabel("PresenterBundle screen 2 display");
 		GridBagConstraints gbc_lblPresentationScreen2Display = new GridBagConstraints();
 		gbc_lblPresentationScreen2Display.anchor = GridBagConstraints.EAST;
 		gbc_lblPresentationScreen2Display.insets = new Insets(0, 0, 5, 5);
@@ -1854,7 +1937,7 @@ public class MainWindow extends JFrame {
 		gbc_comboPresentationScreen2Display.gridy = 18;
 		panel.add(comboPresentationScreen2Display, gbc_comboPresentationScreen2Display);
 		
-		JLabel lblPresentationScreen2Contents = new JLabel("Presentation screen 2 contents");
+		JLabel lblPresentationScreen2Contents = new JLabel("PresenterBundle screen 2 contents");
 		GridBagConstraints gbc_lblPresentationScreen2Contents = new GridBagConstraints();
 		gbc_lblPresentationScreen2Contents.anchor = GridBagConstraints.EAST;
 		gbc_lblPresentationScreen2Contents.insets = new Insets(0, 0, 5, 5);

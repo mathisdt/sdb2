@@ -46,4 +46,9 @@ public class Setting<T> implements Comparable<Setting<T>> {
 		}
 	}
 	
+	@Override
+	public String toString() {
+		return "Setting[key=" + key + ",value=" + value + "]";
+	}
+	
 }
