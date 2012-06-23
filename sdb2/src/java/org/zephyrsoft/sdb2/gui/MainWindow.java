@@ -22,9 +22,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.ImageIcon;
@@ -69,6 +71,7 @@ import org.zephyrsoft.sdb2.presenter.DisplayLogo;
 import org.zephyrsoft.sdb2.presenter.DisplaySong;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.util.CustomFileFilter;
+import org.zephyrsoft.util.JarTools;
 import org.zephyrsoft.util.gui.ErrorDialog;
 import org.zephyrsoft.util.gui.FixedWidthJList;
 import org.zephyrsoft.util.gui.FocusTraversalOnArray;
@@ -158,6 +161,7 @@ public class MainWindow extends JFrame {
 	private JButton btnExportCompletePdfAll;
 	private JButton btnExportStatisticsAll;
 	private JButton btnImportFromSdb1;
+	private JLabel lblProgramVersion;
 	
 	private JButton btnUnlock;
 	private JButton btnSelectTitleFont;
@@ -181,6 +185,27 @@ public class MainWindow extends JFrame {
 	private JSpinner spinnerCountAsDisplayedAfter;
 	
 	private void afterConstruction() {
+		// read program version
+		String version = JarTools.getAttributeFromManifest("Song-Database-Version");
+		if (version == null) {
+			// use version without build date and time from properties file
+			InputStream propsStream = getClass().getResourceAsStream("org/zephyrsoft/sdb2/version.properties");
+			if (propsStream == null) {
+				// try again using a "root" slash
+				propsStream = getClass().getResourceAsStream("/org/zephyrsoft/sdb2/version.properties");
+			}
+			if (propsStream != null) {
+				Properties props = new Properties();
+				try {
+					props.load(propsStream);
+					version = props.getProperty("programVersion");
+				} catch (IOException e) {
+					// swallow exception here and just leave version empty
+				}
+			}
+		}
+		lblProgramVersion.setText(version);
+		
 		// fill in available values for language
 		for (LanguageEnum item : LanguageEnum.values()) {
 			comboBoxLanguage.addItem(item);
@@ -1513,10 +1538,10 @@ public class MainWindow extends JFrame {
 		tabbedPane.addTab("Import / Export / Statistics", null, panelImportExportStatistics, null);
 		GridBagLayout gbl_panelImportExportStatistics = new GridBagLayout();
 		gbl_panelImportExportStatistics.columnWidths = new int[] {0, 70, 0, 0};
-		gbl_panelImportExportStatistics.rowHeights = new int[] {30, 0, 0, 30, 30, 0, 0, 0, 30, 0, 0};
+		gbl_panelImportExportStatistics.rowHeights = new int[] {30, 0, 0, 30, 30, 0, 0, 0, 30, 0, 30, 30, 0};
 		gbl_panelImportExportStatistics.columnWeights = new double[] {1.0, 0.0, 1.0, Double.MIN_VALUE};
 		gbl_panelImportExportStatistics.rowWeights =
-			new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+			new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		panelImportExportStatistics.setLayout(gbl_panelImportExportStatistics);
 		
 		JLabel lblSelectedSong2 = new JLabel("Selected Song");
@@ -1623,10 +1648,32 @@ public class MainWindow extends JFrame {
 		});
 		GridBagConstraints gbc_btnImportFromSdb1 = new GridBagConstraints();
 		gbc_btnImportFromSdb1.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnImportFromSdb1.insets = new Insets(0, 0, 0, 5);
+		gbc_btnImportFromSdb1.insets = new Insets(0, 0, 5, 5);
 		gbc_btnImportFromSdb1.gridx = 0;
 		gbc_btnImportFromSdb1.gridy = 9;
 		panelImportExportStatistics.add(btnImportFromSdb1, gbc_btnImportFromSdb1);
+		
+		JLabel lblProgramVersionTitle = new JLabel("Program Version");
+		lblProgramVersionTitle.setFont(new Font("DejaVu Sans", Font.ITALIC, 12));
+		GridBagConstraints gbc_lblProgramVersionTitle = new GridBagConstraints();
+		gbc_lblProgramVersionTitle.gridwidth = 3;
+		gbc_lblProgramVersionTitle.fill = GridBagConstraints.HORIZONTAL;
+		gbc_lblProgramVersionTitle.anchor = GridBagConstraints.SOUTH;
+		gbc_lblProgramVersionTitle.insets = new Insets(0, 0, 5, 5);
+		gbc_lblProgramVersionTitle.gridx = 0;
+		gbc_lblProgramVersionTitle.gridy = 10;
+		panelImportExportStatistics.add(lblProgramVersionTitle, gbc_lblProgramVersionTitle);
+		
+		lblProgramVersion = new JLabel("<PROGRAM VERSION>");
+		lblProgramVersion.setBorder(new EmptyBorder(0, 0, 0, 0));
+		lblProgramVersion.setFont(new Font("DejaVu Sans", Font.ITALIC, 12));
+		GridBagConstraints gbc_lblProgramVersion = new GridBagConstraints();
+		gbc_lblProgramVersion.fill = GridBagConstraints.HORIZONTAL;
+		gbc_lblProgramVersion.anchor = GridBagConstraints.NORTH;
+		gbc_lblProgramVersion.gridwidth = 3;
+		gbc_lblProgramVersion.gridx = 0;
+		gbc_lblProgramVersion.gridy = 11;
+		panelImportExportStatistics.add(lblProgramVersion, gbc_lblProgramVersion);
 		
 		JPanel panelSettings = new JPanel();
 		panelSettings.setBorder(null);

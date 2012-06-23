@@ -111,6 +111,8 @@ java -jar $$SCRIPTDIR/sdb.jar $$*
 				<attribute name="Implementation-Vendor" value="zephyrsoft.net" />
 				<attribute name="Implementation-Title" value="Song Database" />
 				<attribute name="Implementation-Version" value="${programVersion} built on ${build.date} at ${build.time}" />
+				<!-- use also a custom attribute to prevent name collision with a library jar (sometimes a problem in development) -->
+				<attribute name="Song-Database-Version" value="${programVersion} built on ${build.date} at ${build.time}" />
 			</manifest>
 		</jar>
 	</target>

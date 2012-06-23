@@ -12,6 +12,10 @@ import org.apache.commons.lang3.text.WordUtils;
  */
 public class StringTools {
 	
+	private StringTools() {
+		// this class is not intended for instantiation
+	}
+	
 	/**
 	 * Convert a string which is in camel case to all caps, separated with underscores. Example:
 	 * "camelCaseStringExample" => "CAMEL_CASE_STRING_EXAMPLE"
