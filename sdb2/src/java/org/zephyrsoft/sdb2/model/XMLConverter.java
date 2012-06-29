@@ -5,7 +5,7 @@ import java.io.OutputStream;
 import com.thoughtworks.xstream.XStream;
 
 /**
- * Converts the {@link SongsModel} to and from XML.
+ * Converts models to and from XML.
  * 
  * @author Mathis Dirksen-Thedens
  */
@@ -41,10 +41,11 @@ public class XMLConverter {
 		xstream.processAnnotations(SettingsModel.class);
 		xstream.processAnnotations(SongsModel.class);
 		xstream.processAnnotations(Song.class);
-		// custom converters for enums
+		// custom converters
 		xstream.registerConverter(new GenericEnumConverter<>(FilterTypeEnum.class));
 		xstream.registerConverter(new GenericEnumConverter<>(LanguageEnum.class));
 		xstream.registerConverter(new GenericEnumConverter<>(ScreenContentsEnum.class));
+		xstream.registerConverter(new FontConverter());
 		return xstream;
 	}
 	

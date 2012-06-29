@@ -26,11 +26,13 @@ import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JEditorPane;
@@ -55,11 +57,13 @@ import javax.swing.text.JTextComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.MainController;
+import org.zephyrsoft.sdb2.gui.renderer.FilterTypeCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.LanguageCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenDisplayCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
 import org.zephyrsoft.sdb2.importer.ImportFromSDBv1;
+import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SettingKey;
@@ -75,8 +79,10 @@ import org.zephyrsoft.util.JarTools;
 import org.zephyrsoft.util.gui.ErrorDialog;
 import org.zephyrsoft.util.gui.FixedWidthJList;
 import org.zephyrsoft.util.gui.FocusTraversalOnArray;
+import org.zephyrsoft.util.gui.ImagePreview;
 import org.zephyrsoft.util.gui.TransparentComboBoxModel;
 import org.zephyrsoft.util.gui.TransparentListModel;
+import say.swing.JFontChooser;
 
 /**
  * Main window of the application.
@@ -177,7 +183,7 @@ public class MainWindow extends JFrame {
 	private JSpinner spinnerBottomMargin;
 	private JSpinner spinnerDistanceTitleText;
 	private JSpinner spinnerDistanceTextCopyright;
-	private JComboBox<Object> comboSongListFiltering;
+	private JComboBox<FilterTypeEnum> comboSongListFiltering;
 	private JComboBox<GraphicsDevice> comboPresentationScreen1Display;
 	private JComboBox<ScreenContentsEnum> comboPresentationScreen1Contents;
 	private JComboBox<GraphicsDevice> comboPresentationScreen2Display;
@@ -210,9 +216,15 @@ public class MainWindow extends JFrame {
 		for (LanguageEnum item : LanguageEnum.values()) {
 			comboBoxLanguage.addItem(item);
 		}
+		// fill in available values for filter type
+		for (FilterTypeEnum item : FilterTypeEnum.values()) {
+			comboSongListFiltering.addItem(item);
+		}
 		clearSongData();
 		// add renderer for language
 		comboBoxLanguage.setRenderer(new LanguageCellRenderer());
+		// add renderer for filter type
+		comboSongListFiltering.setRenderer(new FilterTypeCellRenderer());
 		// disable editing fields
 		setSongEditingEnabled(false);
 		// disable delete and select buttons below songs list
@@ -309,6 +321,112 @@ public class MainWindow extends JFrame {
 			// apply settings
 			// TODO
 		}
+	}
+	
+	/**
+	 * Let the user select a font and save it into the {@link SettingsModel}.
+	 * 
+	 * @param target the target setting for the newly selected font
+	 * @return {@code true} if the font was changed, {@code false} else
+	 */
+	private boolean selectFont(SettingKey target) {
+		JFontChooser fontChooser = new JFontChooser();
+		// take care of JFontChoosers quirky resource bundle mechanism
+		// TODO add code AND RESOURCE BUNDLES to handle other languages
+		fontChooser.setLocale(Locale.US);
+		Font font = settingsModel.getFont(target);
+		if (font != null) {
+			fontChooser.setSelectedFont(font);
+		}
+		int result = fontChooser.showDialog(this);
+		if (result == JFontChooser.OK_OPTION) {
+			settingsModel.put(target, fontChooser.getSelectedFont());
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	protected void handleSelectTitleFont() {
+		selectFont(SettingKey.TITLE_FONT);
+		// TODO perhaps apply the new settings?
+		setSettingsEnabled(true);
+	}
+	
+	protected void handleSelectLyricsFont() {
+		selectFont(SettingKey.LYRICS_FONT);
+		// TODO perhaps apply the new settings?
+		setSettingsEnabled(true);
+	}
+	
+	protected void handleSelectTranslationFont() {
+		selectFont(SettingKey.TRANSLATION_FONT);
+		// TODO perhaps apply the new settings?
+		setSettingsEnabled(true);
+	}
+	
+	protected void handleSelectCopyrightFont() {
+		selectFont(SettingKey.COPYRIGHT_FONT);
+		// TODO perhaps apply the new settings?
+		setSettingsEnabled(true);
+	}
+	
+	private boolean selectColor(SettingKey target, Color defaultColor, String title) {
+		Color color = settingsModel.getColor(target);
+		if (color == null) {
+			color = defaultColor;
+		}
+		Color result = JColorChooser.showDialog(this, title, color);
+		if (result != null) {
+			settingsModel.put(target, result);
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	protected void handleSelectTextColor() {
+		selectColor(SettingKey.TEXT_COLOR, Color.WHITE, "Select Text Color");
+		// TODO perhaps apply the new settings?
+		setSettingsEnabled(true);
+	}
+	
+	protected void handleSelectBackgroundColor() {
+		selectColor(SettingKey.BACKGROUND_COLOR, Color.BLACK, "Select Background Color");
+		// TODO perhaps apply the new settings?
+		setSettingsEnabled(true);
+	}
+	
+	protected void handleSelectLogo() {
+		JFileChooser fileChooser = new JFileChooser();
+		String pathname = settingsModel.getString(SettingKey.LOGO_FILE);
+		if (pathname != null) {
+			File currentFile = new File(pathname);
+			if (currentFile.isFile() && currentFile.canRead()) {
+				fileChooser.setSelectedFile(currentFile);
+			}
+		}
+		fileChooser.setApproveButtonText("Select");
+		fileChooser.setDialogTitle("Select Logo");
+		
+		// set a custom file filter but also keep the "accept all" filter
+		fileChooser.setFileFilter(new CustomFileFilter("Images", ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".gif"));
+		
+		// add the preview pane
+		fileChooser.setAccessory(new ImagePreview(fileChooser));
+		
+		int returnVal = fileChooser.showDialog(this, null);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			File file = fileChooser.getSelectedFile();
+			if (file.isFile() && file.canRead()) {
+				settingsModel.put(SettingKey.LOGO_FILE, file.getAbsolutePath());
+				// TODO perhaps apply the new settings?
+			} else {
+				// error: can't access file
+				showErrorDialog("Couldn't access the file:\n" + file.getAbsolutePath());
+			}
+		}
+		setSettingsEnabled(true);
 	}
 	
 	private static void commitSpinners(JSpinner... spinners) {
@@ -652,13 +770,17 @@ public class MainWindow extends JFrame {
 	}
 	
 	public void handleError(Throwable ex) {
-		ErrorDialog dialog = new ErrorDialog(this);
 		StringBuilder ret = new StringBuilder();
 		ret.append(ex.getMessage());
 		ret.append(NEWLINE);
 		ret.append(NEWLINE);
 		buildStackTraceText(ex, ret);
-		dialog.setText(ret.toString());
+		showErrorDialog(ret.toString());
+	}
+	
+	public void showErrorDialog(String text) {
+		ErrorDialog dialog = new ErrorDialog(this);
+		dialog.setText(text);
 		dialog.setVisible(true);
 	}
 	
@@ -1701,7 +1823,11 @@ public class MainWindow extends JFrame {
 		btnUnlock.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				handleSettingsUnlock();
+				try {
+					handleSettingsUnlock();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
 			}
 		});
 		GridBagConstraints gbc_btnUnlock = new GridBagConstraints();
@@ -1721,6 +1847,16 @@ public class MainWindow extends JFrame {
 		panel.add(lblTitleFont, gbc_lblTitleFont);
 		
 		btnSelectTitleFont = new JButton("Select...");
+		btnSelectTitleFont.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleSelectTitleFont();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
 		GridBagConstraints gbc_btnSelectTitleFont = new GridBagConstraints();
 		gbc_btnSelectTitleFont.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSelectTitleFont.fill = GridBagConstraints.HORIZONTAL;
@@ -1737,6 +1873,16 @@ public class MainWindow extends JFrame {
 		panel.add(lblLyricsFont, gbc_lblLyricsFont);
 		
 		btnSelectLyricsFont = new JButton("Select...");
+		btnSelectLyricsFont.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleSelectLyricsFont();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
 		GridBagConstraints gbc_btnSelectLyricsFont = new GridBagConstraints();
 		gbc_btnSelectLyricsFont.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnSelectLyricsFont.insets = new Insets(0, 0, 5, 5);
@@ -1753,6 +1899,16 @@ public class MainWindow extends JFrame {
 		panel.add(lblTranslationFont, gbc_lblTranslationFont);
 		
 		btnSelectTranslationFont = new JButton("Select...");
+		btnSelectTranslationFont.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleSelectTranslationFont();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
 		GridBagConstraints gbc_btnSelectTranslationFont = new GridBagConstraints();
 		gbc_btnSelectTranslationFont.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSelectTranslationFont.fill = GridBagConstraints.HORIZONTAL;
@@ -1769,6 +1925,16 @@ public class MainWindow extends JFrame {
 		panel.add(lblCopyrightFont, gbc_lblCopyrightFont);
 		
 		btnSelectCopyrightFont = new JButton("Select...");
+		btnSelectCopyrightFont.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleSelectCopyrightFont();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
 		GridBagConstraints gbc_btnSelectCopyrightFont = new GridBagConstraints();
 		gbc_btnSelectCopyrightFont.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSelectCopyrightFont.fill = GridBagConstraints.HORIZONTAL;
@@ -1785,6 +1951,16 @@ public class MainWindow extends JFrame {
 		panel.add(lblTextColor, gbc_lblTextColor);
 		
 		btnSelectTextColor = new JButton("Select...");
+		btnSelectTextColor.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleSelectTextColor();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
 		GridBagConstraints gbc_btnSelectTextColor = new GridBagConstraints();
 		gbc_btnSelectTextColor.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnSelectTextColor.insets = new Insets(0, 0, 5, 5);
@@ -1801,6 +1977,16 @@ public class MainWindow extends JFrame {
 		panel.add(lblBackgroundColor, gbc_lblBackgroundColor);
 		
 		btnSelectBackgroundColor = new JButton("Select...");
+		btnSelectBackgroundColor.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleSelectBackgroundColor();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
 		GridBagConstraints gbc_btnSelectBackgroundColor = new GridBagConstraints();
 		gbc_btnSelectBackgroundColor.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSelectBackgroundColor.fill = GridBagConstraints.HORIZONTAL;
@@ -1817,6 +2003,16 @@ public class MainWindow extends JFrame {
 		panel.add(lblLogo, gbc_lblLogo);
 		
 		btnSelectLogo = new JButton("Select...");
+		btnSelectLogo.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleSelectLogo();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
 		GridBagConstraints gbc_btnSelectLogo = new GridBagConstraints();
 		gbc_btnSelectLogo.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSelectLogo.fill = GridBagConstraints.HORIZONTAL;
@@ -1928,7 +2124,7 @@ public class MainWindow extends JFrame {
 		gbc_lblSongListFiltering.gridy = 15;
 		panel.add(lblSongListFiltering, gbc_lblSongListFiltering);
 		
-		comboSongListFiltering = new JComboBox<Object>();
+		comboSongListFiltering = new JComboBox<FilterTypeEnum>();
 		GridBagConstraints gbc_comboSongListFiltering = new GridBagConstraints();
 		gbc_comboSongListFiltering.insets = new Insets(0, 0, 5, 5);
 		gbc_comboSongListFiltering.fill = GridBagConstraints.HORIZONTAL;
