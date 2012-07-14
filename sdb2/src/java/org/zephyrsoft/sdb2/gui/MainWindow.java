@@ -1,3 +1,19 @@
+/*
+ * This file is part of the Song Database (SDB).
+ *
+ * SDB is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * SDB is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with SDB. If not, see <http://www.gnu.org/licenses/>.
+ */
 package org.zephyrsoft.sdb2.gui;
 
 import java.awt.BorderLayout;
@@ -738,20 +754,12 @@ public class MainWindow extends JFrame {
 		focusManager.addKeyEventDispatcher(shortcutManager);
 		
 		/*
-		 * TODO perhaps better use this construct for globally binding a shortcut manager?
-		 * AWTEventListener keyListener = new AWTEventListener() {
-		 * @Override
-		 * public void eventDispatched(AWTEvent event) {
-		 * KeyEvent evt = (KeyEvent) event;
-		 * if(evt.getID() == KeyEvent.KEY_PRESSED) {
-		 * String mods = KeyEvent.getKeyModifiersText(evt.getModifiers());
-		 * String keytext = mods + " " + KeyEvent.getKeyText(evt.getKeyCode());
-		 * // do anything with the information now
-		 * }
-		 * }
-		 * };
-		 * long mask = AWTEvent.KEY_EVENT_MASK;
-		 * Toolkit.getDefaultToolkit().addAWTEventListener(keyListener, mask);
+		 * TODO perhaps better use this construct for globally binding a shortcut manager? AWTEventListener keyListener
+		 * = new AWTEventListener() {
+		 * @Override public void eventDispatched(AWTEvent event) { KeyEvent evt = (KeyEvent) event; if(evt.getID() ==
+		 * KeyEvent.KEY_PRESSED) { String mods = KeyEvent.getKeyModifiersText(evt.getModifiers()); String keytext = mods
+		 * + " " + KeyEvent.getKeyText(evt.getKeyCode()); // do anything with the information now } } }; long mask =
+		 * AWTEvent.KEY_EVENT_MASK; Toolkit.getDefaultToolkit().addAWTEventListener(keyListener, mask);
 		 */
 		
 		shortcutManager.add(new KeyboardShortcut(KeyEvent.VK_ESCAPE, false, false, false) {
