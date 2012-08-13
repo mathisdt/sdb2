@@ -45,6 +45,8 @@ public class PresenterWindow extends JFrame implements Presenter {
 	 */
 	public PresenterWindow(GraphicsDevice screen, ScreenContentsEnum contents, Presentable presentable) {
 		super(screen.getDefaultConfiguration());
+		setIconImage(Toolkit.getDefaultToolkit().getImage(
+			PresenterWindow.class.getResource("/org/zephyrsoft/sdb2/icon-16.png")));
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
