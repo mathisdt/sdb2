@@ -16,18 +16,31 @@
  */
 package org.zephyrsoft.sdb2.presenter;
 
-import java.util.List;
+import java.awt.Image;
 
 /**
- * Something that can be moved (vertically).
+ * The representation of an empty screen.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public interface Movable {
+public class PresentableBlank implements Presentable {
 	
 	/**
-	 * Get the parts of this movable object so a specific part can be targeted.
+	 * @see org.zephyrsoft.sdb2.presenter.Presentable#getText()
 	 */
-	List<String> getParts();
+	@Override
+	public String getText() {
+		// no text
+		return null;
+	}
+	
+	/**
+	 * @see org.zephyrsoft.sdb2.presenter.Presentable#getBackground()
+	 */
+	@Override
+	public Image getBackground() {
+		// no logo
+		return null;
+	}
 	
 }

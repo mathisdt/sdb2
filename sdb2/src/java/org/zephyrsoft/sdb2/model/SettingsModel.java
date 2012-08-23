@@ -90,6 +90,14 @@ public class SettingsModel {
 		return (Font) value;
 	}
 	
+	public Boolean getBoolean(SettingKey key) {
+		Object value = get(key);
+		if (key.getType() != Boolean.class) {
+			throw new ClassCastException("wrong setting type");
+		}
+		return (Boolean) value;
+	}
+	
 	public void put(SettingKey key, Object value) {
 		Setting<Object> toSet = null;
 		for (Setting<Object> setting : store) {

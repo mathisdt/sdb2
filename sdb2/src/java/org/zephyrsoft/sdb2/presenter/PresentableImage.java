@@ -23,11 +23,11 @@ import java.awt.Image;
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class DisplayLogo implements Presentable {
+public class PresentableImage implements Presentable {
 	
 	private Image logo;
 	
-	public DisplayLogo(Image logo) {
+	public PresentableImage(Image logo) {
 		this.logo = logo;
 	}
 	

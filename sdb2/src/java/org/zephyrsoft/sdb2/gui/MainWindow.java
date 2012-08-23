@@ -49,6 +49,7 @@ import javax.imageio.ImageIO;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -65,6 +66,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -87,9 +89,9 @@ import org.zephyrsoft.sdb2.model.SettingKey;
 import org.zephyrsoft.sdb2.model.SettingsModel;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
-import org.zephyrsoft.sdb2.presenter.DisplayBlank;
-import org.zephyrsoft.sdb2.presenter.DisplayLogo;
-import org.zephyrsoft.sdb2.presenter.DisplaySong;
+import org.zephyrsoft.sdb2.presenter.PresentableBlank;
+import org.zephyrsoft.sdb2.presenter.PresentableImage;
+import org.zephyrsoft.sdb2.presenter.PresentableSong;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.util.CustomFileFilter;
 import org.zephyrsoft.util.JarTools;
@@ -122,7 +124,7 @@ public class MainWindow extends JFrame {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 	
-	private static final DisplayBlank BLANK_SCREEN = new DisplayBlank();
+	private static final PresentableBlank BLANK_SCREEN = new PresentableBlank();
 	
 	private JPanel contentPane;
 	private JTabbedPane tabbedPane;
@@ -198,6 +200,7 @@ public class MainWindow extends JFrame {
 	private JSpinner spinnerLeftMargin;
 	private JSpinner spinnerRightMargin;
 	private JSpinner spinnerBottomMargin;
+	private JCheckBox checkboxShowTitle;
 	private JSpinner spinnerDistanceTitleText;
 	private JSpinner spinnerDistanceTextCopyright;
 	private JComboBox<FilterTypeEnum> comboSongListFiltering;
@@ -283,6 +286,8 @@ public class MainWindow extends JFrame {
 		comboPresentationScreen2Display.setModel(new TransparentComboBoxModel<GraphicsDevice>(controller.getScreens()));
 		
 		// load values for instantly displayed settings
+		Boolean showTitle = settingsModel.getBoolean(SettingKey.SHOW_TITLE);
+		checkboxShowTitle.setSelected(showTitle == null ? false : showTitle.booleanValue());
 		setSpinnerValue(spinnerTopMargin, settingsModel.getInteger(SettingKey.TOP_MARGIN));
 		setSpinnerValue(spinnerLeftMargin, settingsModel.getInteger(SettingKey.LEFT_MARGIN));
 		setSpinnerValue(spinnerRightMargin, settingsModel.getInteger(SettingKey.RIGHT_MARGIN));
@@ -318,6 +323,7 @@ public class MainWindow extends JFrame {
 			// disable controls
 			setSettingsEnabled(false);
 			// copy changed settings to the model
+			settingsModel.put(SettingKey.SHOW_TITLE, checkboxShowTitle.getModel().isSelected());
 			settingsModel.put(SettingKey.TOP_MARGIN, spinnerTopMargin.getValue());
 			settingsModel.put(SettingKey.LEFT_MARGIN, spinnerLeftMargin.getValue());
 			settingsModel.put(SettingKey.RIGHT_MARGIN, spinnerRightMargin.getValue());
@@ -464,6 +470,7 @@ public class MainWindow extends JFrame {
 		setEnabledIfNotNull(btnSelectTextColor, enabled);
 		setEnabledIfNotNull(btnSelectBackgroundColor, enabled);
 		setEnabledIfNotNull(btnSelectLogo, enabled);
+		setEnabledIfNotNull(checkboxShowTitle, enabled);
 		setEnabledIfNotNull(spinnerTopMargin, enabled);
 		setEnabledIfNotNull(spinnerLeftMargin, enabled);
 		setEnabledIfNotNull(spinnerRightMargin, enabled);
@@ -701,7 +708,7 @@ public class MainWindow extends JFrame {
 	}
 	
 	protected void handleSongPresent() {
-		controller.present(new DisplaySong(songsListSelected));
+		controller.present(new PresentableSong(songsListSelected));
 	}
 	
 	protected void handleBlankScreen() {
@@ -709,7 +716,7 @@ public class MainWindow extends JFrame {
 	}
 	
 	protected void handleLogoPresent() {
-		controller.present(new DisplayLogo(loadLogo()));
+		controller.present(new PresentableImage(loadLogo()));
 	}
 	
 	private Image loadLogo() {
@@ -1823,11 +1830,11 @@ public class MainWindow extends JFrame {
 		scrollPaneSettings.setViewportView(panel);
 		GridBagLayout gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[] {0, 0, 0, 0, 0};
-		gbl_panel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		gbl_panel.rowHeights = new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		gbl_panel.columnWeights = new double[] {0.0, 0.0, 0.0, 1.0, 0.0};
 		gbl_panel.rowWeights =
 			new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-				0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+				0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		panel.setLayout(gbl_panel);
 		
 		btnUnlock = new JButton("Unlock");
@@ -2095,12 +2102,28 @@ public class MainWindow extends JFrame {
 		gbc_spinnerBottomMargin.gridy = 12;
 		panel.add(spinnerBottomMargin, gbc_spinnerBottomMargin);
 		
+		JLabel lblShowTitle = new JLabel("Show title in presentation");
+		lblShowTitle.setHorizontalAlignment(SwingConstants.TRAILING);
+		GridBagConstraints gbc_lblShowTitle = new GridBagConstraints();
+		gbc_lblShowTitle.anchor = GridBagConstraints.EAST;
+		gbc_lblShowTitle.insets = new Insets(0, 0, 5, 5);
+		gbc_lblShowTitle.gridx = 1;
+		gbc_lblShowTitle.gridy = 13;
+		panel.add(lblShowTitle, gbc_lblShowTitle);
+		
+		checkboxShowTitle = new JCheckBox("");
+		GridBagConstraints gbc_checkboxShowTitle = new GridBagConstraints();
+		gbc_checkboxShowTitle.insets = new Insets(0, 0, 5, 5);
+		gbc_checkboxShowTitle.gridx = 3;
+		gbc_checkboxShowTitle.gridy = 13;
+		panel.add(checkboxShowTitle, gbc_checkboxShowTitle);
+		
 		JLabel lblDistanceBetweenTitle = new JLabel("Distance between title and text");
 		GridBagConstraints gbc_lblDistanceBetweenTitle = new GridBagConstraints();
 		gbc_lblDistanceBetweenTitle.anchor = GridBagConstraints.EAST;
 		gbc_lblDistanceBetweenTitle.insets = new Insets(0, 0, 5, 5);
 		gbc_lblDistanceBetweenTitle.gridx = 1;
-		gbc_lblDistanceBetweenTitle.gridy = 13;
+		gbc_lblDistanceBetweenTitle.gridy = 14;
 		panel.add(lblDistanceBetweenTitle, gbc_lblDistanceBetweenTitle);
 		
 		spinnerDistanceTitleText = new JSpinner();
@@ -2108,7 +2131,7 @@ public class MainWindow extends JFrame {
 		gbc_spinnerDistanceTitleText.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerDistanceTitleText.insets = new Insets(0, 0, 5, 5);
 		gbc_spinnerDistanceTitleText.gridx = 3;
-		gbc_spinnerDistanceTitleText.gridy = 13;
+		gbc_spinnerDistanceTitleText.gridy = 14;
 		panel.add(spinnerDistanceTitleText, gbc_spinnerDistanceTitleText);
 		
 		JLabel lblDistanceBetweenText = new JLabel("Distance between text and copyright");
@@ -2116,7 +2139,7 @@ public class MainWindow extends JFrame {
 		gbc_lblDistanceBetweenText.anchor = GridBagConstraints.EAST;
 		gbc_lblDistanceBetweenText.insets = new Insets(0, 0, 5, 5);
 		gbc_lblDistanceBetweenText.gridx = 1;
-		gbc_lblDistanceBetweenText.gridy = 14;
+		gbc_lblDistanceBetweenText.gridy = 15;
 		panel.add(lblDistanceBetweenText, gbc_lblDistanceBetweenText);
 		
 		spinnerDistanceTextCopyright = new JSpinner();
@@ -2124,7 +2147,7 @@ public class MainWindow extends JFrame {
 		gbc_spinnerDistanceTextCopyright.insets = new Insets(0, 0, 5, 5);
 		gbc_spinnerDistanceTextCopyright.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerDistanceTextCopyright.gridx = 3;
-		gbc_spinnerDistanceTextCopyright.gridy = 14;
+		gbc_spinnerDistanceTextCopyright.gridy = 15;
 		panel.add(spinnerDistanceTextCopyright, gbc_spinnerDistanceTextCopyright);
 		
 		JLabel lblSongListFiltering = new JLabel("Song list filter");
@@ -2132,7 +2155,7 @@ public class MainWindow extends JFrame {
 		gbc_lblSongListFiltering.anchor = GridBagConstraints.EAST;
 		gbc_lblSongListFiltering.insets = new Insets(0, 0, 5, 5);
 		gbc_lblSongListFiltering.gridx = 1;
-		gbc_lblSongListFiltering.gridy = 15;
+		gbc_lblSongListFiltering.gridy = 16;
 		panel.add(lblSongListFiltering, gbc_lblSongListFiltering);
 		
 		comboSongListFiltering = new JComboBox<FilterTypeEnum>();
@@ -2140,15 +2163,15 @@ public class MainWindow extends JFrame {
 		gbc_comboSongListFiltering.insets = new Insets(0, 0, 5, 5);
 		gbc_comboSongListFiltering.fill = GridBagConstraints.HORIZONTAL;
 		gbc_comboSongListFiltering.gridx = 3;
-		gbc_comboSongListFiltering.gridy = 15;
+		gbc_comboSongListFiltering.gridy = 16;
 		panel.add(comboSongListFiltering, gbc_comboSongListFiltering);
 		
-		JLabel lblPresentationScreen1Display = new JLabel("PresenterBundle screen 1 display");
+		JLabel lblPresentationScreen1Display = new JLabel("Presentation screen 1 display");
 		GridBagConstraints gbc_lblPresentationScreen1Display = new GridBagConstraints();
 		gbc_lblPresentationScreen1Display.anchor = GridBagConstraints.EAST;
 		gbc_lblPresentationScreen1Display.insets = new Insets(0, 0, 5, 5);
 		gbc_lblPresentationScreen1Display.gridx = 1;
-		gbc_lblPresentationScreen1Display.gridy = 16;
+		gbc_lblPresentationScreen1Display.gridy = 17;
 		panel.add(lblPresentationScreen1Display, gbc_lblPresentationScreen1Display);
 		
 		comboPresentationScreen1Display = new JComboBox<GraphicsDevice>();
@@ -2156,15 +2179,15 @@ public class MainWindow extends JFrame {
 		gbc_comboPresentationScreen1Display.insets = new Insets(0, 0, 5, 5);
 		gbc_comboPresentationScreen1Display.fill = GridBagConstraints.HORIZONTAL;
 		gbc_comboPresentationScreen1Display.gridx = 3;
-		gbc_comboPresentationScreen1Display.gridy = 16;
+		gbc_comboPresentationScreen1Display.gridy = 17;
 		panel.add(comboPresentationScreen1Display, gbc_comboPresentationScreen1Display);
 		
-		JLabel lblPresentationScreen1Contents = new JLabel("PresenterBundle screen 1 contents");
+		JLabel lblPresentationScreen1Contents = new JLabel("Presentation screen 1 contents");
 		GridBagConstraints gbc_lblPresentationScreen1Contents = new GridBagConstraints();
 		gbc_lblPresentationScreen1Contents.anchor = GridBagConstraints.EAST;
 		gbc_lblPresentationScreen1Contents.insets = new Insets(0, 0, 5, 5);
 		gbc_lblPresentationScreen1Contents.gridx = 1;
-		gbc_lblPresentationScreen1Contents.gridy = 17;
+		gbc_lblPresentationScreen1Contents.gridy = 18;
 		panel.add(lblPresentationScreen1Contents, gbc_lblPresentationScreen1Contents);
 		
 		comboPresentationScreen1Contents = new JComboBox<ScreenContentsEnum>();
@@ -2172,15 +2195,15 @@ public class MainWindow extends JFrame {
 		gbc_comboPresentationScreen1Contents.insets = new Insets(0, 0, 5, 5);
 		gbc_comboPresentationScreen1Contents.fill = GridBagConstraints.HORIZONTAL;
 		gbc_comboPresentationScreen1Contents.gridx = 3;
-		gbc_comboPresentationScreen1Contents.gridy = 17;
+		gbc_comboPresentationScreen1Contents.gridy = 18;
 		panel.add(comboPresentationScreen1Contents, gbc_comboPresentationScreen1Contents);
 		
-		JLabel lblPresentationScreen2Display = new JLabel("PresenterBundle screen 2 display");
+		JLabel lblPresentationScreen2Display = new JLabel("Presentation screen 2 display");
 		GridBagConstraints gbc_lblPresentationScreen2Display = new GridBagConstraints();
 		gbc_lblPresentationScreen2Display.anchor = GridBagConstraints.EAST;
 		gbc_lblPresentationScreen2Display.insets = new Insets(0, 0, 5, 5);
 		gbc_lblPresentationScreen2Display.gridx = 1;
-		gbc_lblPresentationScreen2Display.gridy = 18;
+		gbc_lblPresentationScreen2Display.gridy = 19;
 		panel.add(lblPresentationScreen2Display, gbc_lblPresentationScreen2Display);
 		
 		comboPresentationScreen2Display = new JComboBox<GraphicsDevice>();
@@ -2188,15 +2211,15 @@ public class MainWindow extends JFrame {
 		gbc_comboPresentationScreen2Display.insets = new Insets(0, 0, 5, 5);
 		gbc_comboPresentationScreen2Display.fill = GridBagConstraints.HORIZONTAL;
 		gbc_comboPresentationScreen2Display.gridx = 3;
-		gbc_comboPresentationScreen2Display.gridy = 18;
+		gbc_comboPresentationScreen2Display.gridy = 19;
 		panel.add(comboPresentationScreen2Display, gbc_comboPresentationScreen2Display);
 		
-		JLabel lblPresentationScreen2Contents = new JLabel("PresenterBundle screen 2 contents");
+		JLabel lblPresentationScreen2Contents = new JLabel("Presentation screen 2 contents");
 		GridBagConstraints gbc_lblPresentationScreen2Contents = new GridBagConstraints();
 		gbc_lblPresentationScreen2Contents.anchor = GridBagConstraints.EAST;
 		gbc_lblPresentationScreen2Contents.insets = new Insets(0, 0, 5, 5);
 		gbc_lblPresentationScreen2Contents.gridx = 1;
-		gbc_lblPresentationScreen2Contents.gridy = 19;
+		gbc_lblPresentationScreen2Contents.gridy = 20;
 		panel.add(lblPresentationScreen2Contents, gbc_lblPresentationScreen2Contents);
 		
 		comboPresentationScreen2Contents = new JComboBox<ScreenContentsEnum>();
@@ -2204,7 +2227,7 @@ public class MainWindow extends JFrame {
 		gbc_comboPresentationScreen2Contents.insets = new Insets(0, 0, 5, 5);
 		gbc_comboPresentationScreen2Contents.fill = GridBagConstraints.HORIZONTAL;
 		gbc_comboPresentationScreen2Contents.gridx = 3;
-		gbc_comboPresentationScreen2Contents.gridy = 19;
+		gbc_comboPresentationScreen2Contents.gridy = 20;
 		panel.add(comboPresentationScreen2Contents, gbc_comboPresentationScreen2Contents);
 		
 		JLabel lblSecondsToCount = new JLabel("Seconds to count a song as displayed after");
@@ -2212,7 +2235,7 @@ public class MainWindow extends JFrame {
 		gbc_lblSecondsToCount.anchor = GridBagConstraints.EAST;
 		gbc_lblSecondsToCount.insets = new Insets(0, 0, 5, 5);
 		gbc_lblSecondsToCount.gridx = 1;
-		gbc_lblSecondsToCount.gridy = 20;
+		gbc_lblSecondsToCount.gridy = 21;
 		panel.add(lblSecondsToCount, gbc_lblSecondsToCount);
 		
 		spinnerCountAsDisplayedAfter = new JSpinner();
@@ -2220,7 +2243,7 @@ public class MainWindow extends JFrame {
 		gbc_spinnerCountAsDisplayedAfter.insets = new Insets(0, 0, 5, 5);
 		gbc_spinnerCountAsDisplayedAfter.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerCountAsDisplayedAfter.gridx = 3;
-		gbc_spinnerCountAsDisplayedAfter.gridy = 20;
+		gbc_spinnerCountAsDisplayedAfter.gridy = 21;
 		panel.add(spinnerCountAsDisplayedAfter, gbc_spinnerCountAsDisplayedAfter);
 		
 		JPanel panelShortcuts = new JPanel();

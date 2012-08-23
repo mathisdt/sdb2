@@ -28,6 +28,8 @@ import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.border.EmptyBorder;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
+import org.zephyrsoft.sdb2.model.SettingKey;
+import org.zephyrsoft.sdb2.model.SettingsModel;
 
 /**
  * The presentation display for the lyrics.
@@ -40,11 +42,19 @@ public class PresenterWindow extends JFrame implements Presenter {
 	
 	private JPanel contentPane;
 	
+	private final SettingsModel settings;
+	private final ScreenContentsEnum contents;
+	private final Presentable presentable;
+	
 	/**
 	 * Create the frame.
 	 */
-	public PresenterWindow(GraphicsDevice screen, ScreenContentsEnum contents, Presentable presentable) {
+	public PresenterWindow(GraphicsDevice screen, Presentable presentable, ScreenContentsEnum contents,
+		SettingsModel settings) {
 		super(screen.getDefaultConfiguration());
+		this.presentable = presentable;
+		this.contents = contents;
+		this.settings = settings;
 		setIconImage(Toolkit.getDefaultToolkit().getImage(
 			PresenterWindow.class.getResource("/org/zephyrsoft/sdb2/icon-16.png")));
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -67,11 +77,12 @@ public class PresenterWindow extends JFrame implements Presenter {
 //		Dimension dim = new Dimension(screen.getDisplayMode().getWidth(), screen.getDisplayMode().getHeight());
 //		setSize(dim);
 		
-		prepareContent(contents, presentable);
+		prepareContent();
 	}
 	
-	private void prepareContent(ScreenContentsEnum contents, Presentable presentable) {
-		// TODO determine what to present
+	private void prepareContent() {
+		// TODO determine WHAT to present (title? chords?) and HOW to present it (fonts, margins, colors)
+		boolean showTitle = settings.getBoolean(SettingKey.SHOW_TITLE).booleanValue();
 		
 	}
 	

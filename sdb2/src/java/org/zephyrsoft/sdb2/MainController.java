@@ -74,14 +74,14 @@ public class MainController {
 		
 		Presenter presenter1 =
 			createPresenter(ScreenHelper.getScreen(screens, settings.getString(SettingKey.SCREEN_1_DISPLAY)),
-				(ScreenContentsEnum) settings.get(SettingKey.SCREEN_1_CONTENTS), presentable);
+				presentable, (ScreenContentsEnum) settings.get(SettingKey.SCREEN_1_CONTENTS));
 		if (presenter1 != null) {
 			presentationControl.addPresenter(presenter1);
 		}
 		
 		Presenter presenter2 =
 			createPresenter(ScreenHelper.getScreen(screens, settings.getString(SettingKey.SCREEN_2_DISPLAY)),
-				(ScreenContentsEnum) settings.get(SettingKey.SCREEN_2_CONTENTS), presentable);
+				presentable, (ScreenContentsEnum) settings.get(SettingKey.SCREEN_2_CONTENTS));
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
 		}
@@ -94,12 +94,12 @@ public class MainController {
 		presentationControl.moveToPart(part);
 	}
 	
-	private PresenterWindow createPresenter(GraphicsDevice screen, ScreenContentsEnum contents, Presentable presentable) {
+	private PresenterWindow createPresenter(GraphicsDevice screen, Presentable presentable, ScreenContentsEnum contents) {
 		if (screen == null) {
 			// nothing to be done
 			return null;
 		}
-		return new PresenterWindow(screen, contents, presentable);
+		return new PresenterWindow(screen, presentable, contents, settings);
 	}
 	
 	public List<GraphicsDevice> getScreens() {
