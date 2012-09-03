@@ -14,38 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.presenter;
-
-import java.awt.Image;
+package org.zephyrsoft.sdb2.model;
 
 /**
- * The representation of a logo.
+ * Indicates specific elements of a {@link Song}.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class PresentableImage implements Presentable {
-	
-	private Image logo;
-	
-	public PresentableImage(Image logo) {
-		this.logo = logo;
-	}
-	
-	/**
-	 * @see org.zephyrsoft.sdb2.presenter.Presentable#getText()
-	 */
-	@Override
-	public String getText() {
-		// no text
-		return null;
-	}
-	
-	/**
-	 * @see org.zephyrsoft.sdb2.presenter.Presentable#getBackground()
-	 */
-	@Override
-	public Image getBackground() {
-		return logo;
-	}
-	
+public enum SongElementEnum {
+	/** the title (if present, it is always exactly one line) */
+	TITLE,
+	/** a lyrics element (not always a whole line, see NEW_LINE) */
+	LYRICS,
+	/** a chord element (not always a whole line, see NEW_LINE) */
+	CHORDS,
+	/** a translation element (not always a whole line, see NEW_LINE) */
+	TRANSLATION,
+	/** a copyright element (always a whole line) */
+	COPYRIGHT,
+	/** indicates a line break between LYRICS, CHORDS and TRANSLATION elements - this element is only used there! */
+	NEW_LINE;
 }

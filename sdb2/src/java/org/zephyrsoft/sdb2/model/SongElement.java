@@ -14,33 +14,29 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.presenter;
-
-import java.awt.Image;
+package org.zephyrsoft.sdb2.model;
 
 /**
- * The representation of an empty screen.
+ * Holds one element of a {@link Song}, e.g. one lyrics line or the title.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class PresentableBlank implements Presentable {
+public class SongElement {
 	
-	/**
-	 * @see org.zephyrsoft.sdb2.presenter.Presentable#getText()
-	 */
-	@Override
-	public String getText() {
-		// no text
-		return null;
+	private SongElementEnum type;
+	private String element;
+	
+	public SongElement(SongElementEnum type, String element) {
+		this.type = type;
+		this.element = element;
 	}
 	
-	/**
-	 * @see org.zephyrsoft.sdb2.presenter.Presentable#getBackground()
-	 */
-	@Override
-	public Image getBackground() {
-		// no logo
-		return null;
+	public SongElementEnum getType() {
+		return type;
+	}
+	
+	public String getElement() {
+		return element;
 	}
 	
 }

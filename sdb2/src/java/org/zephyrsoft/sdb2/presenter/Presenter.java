@@ -21,7 +21,7 @@ package org.zephyrsoft.sdb2.presenter;
  * 
  * @author Mathis Dirksen-Thedens
  */
-public interface Presenter {
+public interface Presenter extends Scroller {
 	
 	/**
 	 * Show the presenter.
@@ -32,11 +32,5 @@ public interface Presenter {
 	 * Hide the presenter.
 	 */
 	void hidePresenter();
-	
-	/**
-	 * Start the transition to a specific part of the {@link Presentable}. This method should return immediately, even
-	 * if the transition is not finished yet!
-	 */
-	void moveToPart(Integer part);
 	
 }

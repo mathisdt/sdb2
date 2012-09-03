@@ -70,4 +70,14 @@ public class PresenterBundle implements Presenter {
 			presenter.moveToPart(part);
 		}
 	}
+	
+	/**
+	 * @see org.zephyrsoft.sdb2.presenter.Scroller#moveToLine(java.lang.Integer)
+	 */
+	@Override
+	public void moveToLine(Integer line) {
+		for (Presenter presenter : presenters) {
+			presenter.moveToLine(line);
+		}
+	}
 }

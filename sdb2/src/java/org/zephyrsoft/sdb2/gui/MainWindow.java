@@ -89,9 +89,7 @@ import org.zephyrsoft.sdb2.model.SettingKey;
 import org.zephyrsoft.sdb2.model.SettingsModel;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
-import org.zephyrsoft.sdb2.presenter.PresentableBlank;
-import org.zephyrsoft.sdb2.presenter.PresentableImage;
-import org.zephyrsoft.sdb2.presenter.PresentableSong;
+import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.util.CustomFileFilter;
 import org.zephyrsoft.util.JarTools;
@@ -110,6 +108,8 @@ import say.swing.JFontChooser;
  */
 public class MainWindow extends JFrame {
 	
+	private static final Presentable BLANK_SCREEN = new Presentable(null, null);
+	
 	private static final long serialVersionUID = -6874196690375696416L;
 	
 	private static final String NEWLINE = "\n";
@@ -123,8 +123,6 @@ public class MainWindow extends JFrame {
 	private static final int TAB_INDEX_SHORTCUTS = 4;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
-	
-	private static final PresentableBlank BLANK_SCREEN = new PresentableBlank();
 	
 	private JPanel contentPane;
 	private JTabbedPane tabbedPane;
@@ -708,7 +706,7 @@ public class MainWindow extends JFrame {
 	}
 	
 	protected void handleSongPresent() {
-		controller.present(new PresentableSong(songsListSelected));
+		controller.present(new Presentable(songsListSelected, null));
 	}
 	
 	protected void handleBlankScreen() {
@@ -716,7 +714,7 @@ public class MainWindow extends JFrame {
 	}
 	
 	protected void handleLogoPresent() {
-		controller.present(new PresentableImage(loadLogo()));
+		controller.present(new Presentable(null, loadLogo()));
 	}
 	
 	private Image loadLogo() {

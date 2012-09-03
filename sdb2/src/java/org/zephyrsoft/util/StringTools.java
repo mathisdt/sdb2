@@ -169,4 +169,29 @@ public class StringTools {
 	public static boolean equals(String one, String two) {
 		return (one == null && two == null) || (one != null && one.equals(two));
 	}
+	
+	/**
+	 * Tests is a string is null or empty.
+	 * 
+	 * @param in the string to test
+	 * @return {@code true} if the string is null or empty, {@code false} else
+	 */
+	public static boolean isEmpty(String in) {
+		return in == null || in.isEmpty();
+	}
+	
+	/**
+	 * Returns exactly the argument, unless the argument is {@code null}. In this case, this method returns the empty
+	 * string.
+	 * 
+	 * @param in the string to check
+	 * @return a non-null value
+	 */
+	public static String nullAsEmptyString(String in) {
+		if (in == null) {
+			return "";
+		} else {
+			return in;
+		}
+	}
 }

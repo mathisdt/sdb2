@@ -29,7 +29,7 @@ public enum SettingKey {
 	SHOW_TITLE(Boolean.class),
 	/** font of song title */
 	TITLE_FONT(Font.class),
-	/** font of song lyrics */
+	/** font of song lyrics (also used for chords if they are shown) */
 	LYRICS_FONT(Font.class),
 	/** font of song lyrics translation */
 	TRANSLATION_FONT(Font.class),

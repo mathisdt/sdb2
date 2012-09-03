@@ -16,38 +16,26 @@
  */
 package org.zephyrsoft.sdb2.presenter;
 
-import java.awt.Image;
 import org.zephyrsoft.sdb2.model.Song;
 
 /**
- * The representation of a {@link Song} for presentation.
+ * Control the scrolling inside a {@link Song}.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class PresentableSong implements Presentable {
-	
-	private Song song;
-	
-	public PresentableSong(Song song) {
-		this.song = song;
-	}
+public interface Scroller {
 	
 	/**
-	 * @see org.zephyrsoft.sdb2.presenter.Presentable#getText()
+	 * Start the transition to a specific part of the {@link Presentable}. This method should return immediately, even
+	 * if the transition is not finished yet!
 	 */
-	@Override
-	public String getText() {
-		// TODO respect display content selection in the settings: maybe cut out the chord lines
-		return song.getLyrics();
-	}
+	public void moveToPart(Integer part);
 	
 	/**
-	 * @see org.zephyrsoft.sdb2.presenter.Presentable#getBackground()
+	 * Start the transition to a specific text line of the {@link Song} in the {@link Presentable}. Only lyrics lines
+	 * count for this method - translation, chord and blank lines are ignored! This method should return immediately,
+	 * even if the transition is not finished yet!
 	 */
-	@Override
-	public Image getBackground() {
-		// no image
-		return null;
-	}
+	public void moveToLine(Integer line);
 	
 }

@@ -17,22 +17,41 @@
 package org.zephyrsoft.sdb2.presenter;
 
 import java.awt.Image;
+import org.zephyrsoft.sdb2.model.Song;
 
 /**
- * Something that can be presented on a digital projector.
+ * Something that can be presented on a digital projector: a song, an image or nothing (blank screen).
  * 
  * @author Mathis Dirksen-Thedens
  */
-public interface Presentable {
+public class Presentable {
+	
+	final Song song;
+	final Image image;
+	
+	public Presentable(Song song, Image image) {
+		// check arguments
+		if (song != null && image != null) {
+			throw new IllegalArgumentException(
+				"you cant't display a song and a logo image simultaneously, it's either or!");
+		}
+		
+		this.song = song;
+		this.image = image;
+	}
 	
 	/**
-	 * Get the foreground text.
+	 * Get the song.
 	 */
-	String getText();
+	Song getSong() {
+		return song;
+	}
 	
 	/**
-	 * Get the background image.
+	 * Get the logo image.
 	 */
-	Image getBackground();
+	Image getImage() {
+		return image;
+	}
 	
 }
