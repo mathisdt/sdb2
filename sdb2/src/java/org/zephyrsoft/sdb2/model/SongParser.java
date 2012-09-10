@@ -18,6 +18,8 @@ package org.zephyrsoft.sdb2.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.zephyrsoft.util.StringTools;
 
 /**
@@ -26,6 +28,9 @@ import org.zephyrsoft.util.StringTools;
  * @author Mathis Dirksen-Thedens
  */
 public class SongParser {
+	
+	private static final String TRANSLATION_REGEX = "^(.*)\\[(.*)\\](.*)$";
+	private static final Pattern TRANSLATION_PATTERN = Pattern.compile(TRANSLATION_REGEX);
 	
 	private SongParser() {
 		// this class should only be used statically
@@ -61,7 +66,27 @@ public class SongParser {
 				} else {
 					ret.add(new SongElement(SongElementEnum.NEW_LINE, null));
 				}
-				// TODO
+				if (Pattern.matches(TRANSLATION_REGEX, line)) {
+					Matcher translationMatcher = TRANSLATION_PATTERN.matcher(line);
+					String prefix = translationMatcher.group(1);
+					String translation = translationMatcher.group(2);
+					String suffix = translationMatcher.group(3);
+					if (!StringTools.isEmpty(prefix)) {
+						ret.add(new SongElement(SongElementEnum.LYRICS, prefix));
+					}
+					if (!StringTools.isEmpty(translation)) {
+						ret.add(new SongElement(SongElementEnum.TRANSLATION, translation));
+					}
+					if (!StringTools.isEmpty(suffix)) {
+						ret.add(new SongElement(SongElementEnum.LYRICS, suffix));
+					}
+				} else if (isChordsLine(line)) {
+					if (includeChords) {
+						ret.add(new SongElement(SongElementEnum.CHORDS, line));
+					}
+				} else {
+					ret.add(new SongElement(SongElementEnum.LYRICS, line));
+				}
 				
 			}
 		}
@@ -84,6 +109,32 @@ public class SongParser {
 		}
 		
 		return ret;
+	}
+	
+	/**
+	 * Determines if the given line contains only guitar chords.
+	 */
+	private static boolean isChordsLine(String line) {
+		return percentOfSpaces(line) >= 0.5;
+	}
+	
+	/**
+	 * Calculates the percentage of spaces in the given string.
+	 * 
+	 * @return a value between 0.0 and 1.0
+	 */
+	private static double percentOfSpaces(String in) {
+		int spacesCount = 0;
+		for (int i = 0; i < in.length(); i++) {
+			if (in.substring(i, i + 1).equals(" ")) {
+				spacesCount++;
+			}
+		}
+		if (in.length() != 0) {
+			return (double) spacesCount / (double) in.length();
+		} else {
+			return 0.0;
+		}
 	}
 	
 }
