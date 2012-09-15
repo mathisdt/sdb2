@@ -19,10 +19,13 @@ package org.zephyrsoft.sdb2.presenter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
+import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JTextPane;
 import javax.swing.text.DefaultCaret;
 import org.zephyrsoft.sdb2.model.Song;
+import org.zephyrsoft.sdb2.model.SongElement;
+import org.zephyrsoft.sdb2.model.SongParser;
 
 /**
  * Renders the contents of a {@link Song} in order to display it on a screen. Scrolling is handled internally - no
@@ -80,6 +83,7 @@ public class SongView extends JComponent implements Scroller {
 	 * a list of parts (paragraphs) and lines for the {@link Scroller} methods.
 	 */
 	private void render() {
+		List<SongElement> toDisplay = SongParser.parse(song, showTitle, showChords);
 		
 	}
 	

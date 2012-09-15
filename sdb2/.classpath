@@ -2,7 +2,9 @@
 <classpath>
 	<classpathentry kind="src" path="src/java"/>
 	<classpathentry kind="src" path="src/resources"/>
+	<classpathentry kind="src" path="test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="lib/logback-access-0.9.29.jar" sourcepath="lib/logback-access-0.9.29-src.zip"/>
 	<classpathentry kind="lib" path="lib/logback-classic-0.9.29.jar" sourcepath="lib/logback-classic-0.9.29-src.zip"/>
 	<classpathentry kind="lib" path="lib/logback-core-0.9.29.jar" sourcepath="lib/logback-core-0.9.29-src.zip"/>
@@ -15,5 +17,6 @@
 	<classpathentry kind="lib" path="lib/args4j-2.0.18.jar" sourcepath="lib/args4j-2.0.18-src.zip"/>
 	<classpathentry kind="lib" path="lib/commons-lang3-3.1.jar" sourcepath="lib/commons-lang3-3.1-src.zip"/>
 	<classpathentry kind="lib" path="lib/jfontchooser-1.0.5.jar" sourcepath="lib/jfontchooser-1.0.5-src.zip"/>
+	<classpathentry kind="lib" path="lib/mockito-all-1.9.5-rc1.jar" sourcepath="lib/mockito-all-1.9.5-rc1-src.zip"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

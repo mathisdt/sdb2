@@ -3,11 +3,14 @@
 	Creates the project's release bundle.
 	This script does NOT compile the source files but relies on Eclipse for compilation.
 -->
-<project default="completeBuild" basedir=".">
+<project default="completeBuild" basedir="." xmlns:ant4eclipse="antlib:org.ant4eclipse">
 
 	<property name="start.dir" value="${basedir}" />
-	<property name="resources.dir" value="${start.dir}/src/resources" />
+	<property name="src.java.dir" value="${start.dir}/src/java" />
+	<property name="src.resources.dir" value="${start.dir}/src/resources" />
+	<property name="test.java.dir" value="${start.dir}/test/java" />
 	<property name="bin.dir" value="${start.dir}/bin" />
+	<property name="etc.dir" value="${start.dir}/etc" />
 	<property name="lib.dir" value="${start.dir}/lib" />
 	<property name="target.dir" value="${start.dir}/target" />
 	<property name="release.dir" value="${start.dir}/release" />
@@ -27,25 +30,79 @@
 		<format property="build.time.dashed" pattern="HH-mm" />
 	</tstamp>
 
-	<target name="completeBuild">
-		<!-- read version information -->
-		<property file="${resources.dir}/org/zephyrsoft/sdb2/version.properties" />
-		<echo message="read from properties file: version=${programVersion}" />
+	<!-- prepare ant4eclipse -->
+	<path id="lib.path">
+		<fileset dir="${lib.dir}" includes="*.jar" />
+	</path>
+	<taskdef classpathref="lib.path" uri="antlib:org.ant4eclipse" resource="org/ant4eclipse/antlib.xml" />
+	<property name="workspace.dir" value="${start.dir}/.." />
+	<dirname property="project.dir" file="${start.dir}/build.xml"/>
+	<basename property="project.name" file="${start.dir}"/>
+	<ant4eclipse:jdtClassPathLibrary name="org.eclipse.jdt.junit.JUNIT_CONTAINER/4">
+		<fileset dir="${lib.dir}">
+			<include name="junit-4*.jar" />
+		</fileset>
+	</ant4eclipse:jdtClassPathLibrary >
 
+	<target name="completeBuild">
 		<!-- make sure that needed directories exist as expected -->
 		<antcall target="prepare" />
+
+		<!-- extract the classpath defined in Eclipse (using ant4eclipse) -->
+		<ant4eclipse:getJdtClassPath
+		         property="classpath"
+		         pathId="classpathref"
+		         workspaceDirectory="${workspace.dir}"
+		         projectName="${project.name}" />
+
+		<!-- compile java source files-->
+		<javac destdir="${bin.dir}" classpathref="classpathref" target="1.7" includeantruntime="false">
+			<src>
+				<pathelement path="${src.java.dir}" />
+				<pathelement path="${test.java.dir}" />
+			</src>
+		</javac>
+
+		<!-- copy resources to ${bin.dir} -->
+		<copy todir="${bin.dir}">
+			<fileset dir="${src.resources.dir}">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+
+		<!-- run junit tests -->
+		<junit haltonerror="true" haltonfailure="true" printsummary="on" showoutput="true" includeantruntime="false">
+			<classpath>
+				<fileset dir="${lib.dir}">
+					<include name="junit-4*.jar" />
+				</fileset>
+				<pathelement path="${java.class.path}"/>
+			</classpath>
+			<classpath>
+			      <pathelement path="${classpath}"/>
+			      <pathelement location="${lib.dir}/junit-4*.jar"/>
+			    </classpath>
+			<batchtest>
+				<fileset dir="${test.java.dir}" includes="**/*.java" />
+			</batchtest>
+		</junit>
+
+		<!-- read version information -->
+		<property file="${src.resources.dir}/org/zephyrsoft/sdb2/version.properties" />
+		<echo message="read from properties file: version=${programVersion}" />
+
 		<!-- build JAR file -->
 		<antcall target="createJar" />
 		<!-- sign all JAR files (needed for WebStart) -->
 		<antcall target="signJars" />
 		<!-- copy additional resources -->
 		<copy todir="${release.img.dir}">
-			<fileset dir="${resources.dir}/org/zephyrsoft/sdb2">
+			<fileset dir="${src.resources.dir}/org/zephyrsoft/sdb2">
 				<include name="*.png" />
 			</fileset>
 		</copy>
 		<copy todir="${release.dir}">
-			<fileset dir="${resources.dir}">
+			<fileset dir="${src.resources.dir}">
 				<include name="webstart.php" />
 			</fileset>
 		</copy>
@@ -53,15 +110,23 @@
 		<echo file="${release.dir}/run-sdb.bat" append="false">java -jar %~dp0sdb.jar %1 %2 %3 %4 %5 %6 %7 %8 %9
 </echo>
 		<echo file="${release.dir}/run-sdb.sh" append="false">#!/bin/sh
+JAVA_VERSION=$$(java -version 2&gt;&amp;1 | head -n 1)
+JAVA_LOCATION=$$(which java)
+echo using $$JAVA_VERSION at location $$JAVA_LOCATION
 SCRIPT=$$(readlink -f $$0)
 SCRIPTDIR=$$(dirname $$SCRIPT)
 java -jar $$SCRIPTDIR/sdb.jar $$*
 </echo>
 		<!-- create package for distribution -->
 		<antcall target="buildPackage" />
+
 	</target>
 
 	<target name="prepare">
+		<mkdir dir="${bin.dir}" />
+		<delete includeemptydirs="true">
+			<fileset dir="${bin.dir}" includes="**/*" />
+		</delete>
 		<mkdir dir="${target.dir}" />
 		<delete includeemptydirs="true">
 			<fileset dir="${target.dir}" includes="**/*" />

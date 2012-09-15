@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.Validate;
 import org.zephyrsoft.util.StringTools;
 
 /**
@@ -29,8 +30,12 @@ import org.zephyrsoft.util.StringTools;
  */
 public class SongParser {
 	
-	private static final String TRANSLATION_REGEX = "^(.*)\\[(.*)\\](.*)$";
-	private static final Pattern TRANSLATION_PATTERN = Pattern.compile(TRANSLATION_REGEX);
+	protected static final String LABEL_MUSIC = "Music: ";
+	protected static final String LABEL_TEXT = "Text: ";
+	protected static final String LABEL_TRANSLATION = "Translation: ";
+	protected static final String LABEL_PUBLISHER = "Publisher: ";
+	
+	private static final Pattern TRANSLATION_PATTERN = Pattern.compile("^(.*)\\[(.*)\\](.*)$");
 	
 	private SongParser() {
 		// this class should only be used statically
@@ -46,9 +51,7 @@ public class SongParser {
 	 * @return a list containing the elements, marked up using {@link SongElementEnum}s
 	 */
 	public static List<SongElement> parse(Song song, boolean includeTitle, boolean includeChords) {
-		if (song == null) {
-			throw new IllegalArgumentException("the song may not be null");
-		}
+		Validate.notNull(song, "song may not be null");
 		
 		List<SongElement> ret = new ArrayList<>();
 		
@@ -64,10 +67,10 @@ public class SongParser {
 				if (isFirst) {
 					isFirst = false;
 				} else {
-					ret.add(new SongElement(SongElementEnum.NEW_LINE, null));
+					ret.add(new SongElement(SongElementEnum.NEW_LINE));
 				}
-				if (Pattern.matches(TRANSLATION_REGEX, line)) {
-					Matcher translationMatcher = TRANSLATION_PATTERN.matcher(line);
+				Matcher translationMatcher = TRANSLATION_PATTERN.matcher(line);
+				if (translationMatcher.matches()) {
 					String prefix = translationMatcher.group(1);
 					String translation = translationMatcher.group(2);
 					String suffix = translationMatcher.group(3);
@@ -93,16 +96,16 @@ public class SongParser {
 		
 		// copyright
 		if (!StringTools.isEmpty(song.getComposer())) {
-			ret.add(new SongElement(SongElementEnum.COPYRIGHT, "Music: " + song.getComposer()));
+			ret.add(new SongElement(SongElementEnum.COPYRIGHT, LABEL_MUSIC + song.getComposer()));
 		}
 		if (!StringTools.isEmpty(song.getAuthorText())) {
-			ret.add(new SongElement(SongElementEnum.COPYRIGHT, "Text: " + song.getAuthorText()));
+			ret.add(new SongElement(SongElementEnum.COPYRIGHT, LABEL_TEXT + song.getAuthorText()));
 		}
 		if (!StringTools.isEmpty(song.getAuthorTranslation())) {
-			ret.add(new SongElement(SongElementEnum.COPYRIGHT, "Translation: " + song.getAuthorTranslation()));
+			ret.add(new SongElement(SongElementEnum.COPYRIGHT, LABEL_TRANSLATION + song.getAuthorTranslation()));
 		}
 		if (!StringTools.isEmpty(song.getPublisher())) {
-			ret.add(new SongElement(SongElementEnum.COPYRIGHT, "Publisher: " + song.getPublisher()));
+			ret.add(new SongElement(SongElementEnum.COPYRIGHT, LABEL_PUBLISHER + song.getPublisher()));
 		}
 		if (!StringTools.isEmpty(song.getAdditionalCopyrightNotes())) {
 			ret.add(new SongElement(SongElementEnum.COPYRIGHT, song.getAdditionalCopyrightNotes()));

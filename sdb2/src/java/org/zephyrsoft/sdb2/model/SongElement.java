@@ -16,6 +16,8 @@
  */
 package org.zephyrsoft.sdb2.model;
 
+import org.zephyrsoft.util.StringTools;
+
 /**
  * Holds one element of a {@link Song}, e.g. one lyrics line or the title.
  * 
@@ -31,12 +33,27 @@ public class SongElement {
 		this.element = element;
 	}
 	
+	public SongElement(SongElementEnum type) {
+		this(type, null);
+	}
+	
 	public SongElementEnum getType() {
 		return type;
 	}
 	
 	public String getElement() {
 		return element;
+	}
+	
+	@Override
+	public String toString() {
+		return type + (element != null ? "[" + element + "]" : "");
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof SongElement && type == ((SongElement) obj).getType()
+			&& StringTools.equals(element, ((SongElement) obj).getElement());
 	}
 	
 }
