@@ -32,6 +32,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -1449,6 +1450,31 @@ public class MainWindow extends JFrame {
 					handlePresentListSelectionChanged(e);
 				} catch (Throwable ex) {
 					handleError(ex);
+				}
+			}
+		});
+		presentList.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				try {
+					if (e.getClickCount() >= 2) {
+						// double-clicked: present this song
+						handleSongPresent();
+					}
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
+		presentList.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+					try {
+						handleSongUnselect();
+					} catch (Throwable ex) {
+						handleError(ex);
+					}
 				}
 			}
 		});

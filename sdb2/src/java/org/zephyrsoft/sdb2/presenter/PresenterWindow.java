@@ -100,6 +100,8 @@ public class PresenterWindow extends JFrame implements Presenter {
 			int leftMargin = settings.getInteger(SettingKey.LEFT_MARGIN);
 			int rightMargin = settings.getInteger(SettingKey.RIGHT_MARGIN);
 			int bottomMargin = settings.getInteger(SettingKey.BOTTOM_MARGIN);
+			int titleLyricsDistance = settings.getInteger(SettingKey.DISTANCE_TITLE_TEXT);
+			int lyricsCopyrightDistance = settings.getInteger(SettingKey.DISTANCE_TEXT_COPYRIGHT);
 			Color foregroundColor = settings.getColor(SettingKey.TEXT_COLOR);
 			
 			// create a SongView to render the song
@@ -107,8 +109,9 @@ public class PresenterWindow extends JFrame implements Presenter {
 				new SongView.Builder(presentable.getSong()).showTitle(showTitle).showChords(showChords)
 					.titleFont(titleFont).lyricsFont(lyricsFont).translationFont(translationFont)
 					.copyrightFont(copyrightFont).topMargin(topMargin).leftMargin(leftMargin).rightMargin(rightMargin)
-					.bottomMargin(bottomMargin).foregroundColor(foregroundColor).backgroundColor(backgroundColor)
-					.build();
+					.bottomMargin(bottomMargin).titleLyricsDistance(titleLyricsDistance)
+					.lyricsCopyrightDistance(lyricsCopyrightDistance).foregroundColor(foregroundColor)
+					.backgroundColor(backgroundColor).build();
 			songView.setOpaque(true);
 			contentPane.add(songView, BorderLayout.CENTER);
 		} else if (presentable.getImage() != null) {

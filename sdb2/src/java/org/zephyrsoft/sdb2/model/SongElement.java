@@ -33,10 +33,6 @@ public class SongElement {
 		this.element = element;
 	}
 	
-	public SongElement(SongElementEnum type) {
-		this(type, null);
-	}
-	
 	public SongElementEnum getType() {
 		return type;
 	}

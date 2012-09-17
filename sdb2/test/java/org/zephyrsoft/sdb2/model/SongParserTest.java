@@ -86,16 +86,16 @@ public class SongParserTest {
 		Assert.assertEquals(new SongElement(SongElementEnum.TITLE, TITLE), result.get(0));
 		
 		Assert.assertEquals(new SongElement(SongElementEnum.CHORDS, CHORDS_1), result.get(1));
-		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE), result.get(2));
+		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(2));
 		Assert.assertEquals(new SongElement(SongElementEnum.LYRICS, LYRICS_1), result.get(3));
-		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE), result.get(4));
+		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(4));
 		Assert.assertEquals(new SongElement(SongElementEnum.TRANSLATION, TRANSLATION_1), result.get(5));
-		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE), result.get(6));
+		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(6));
 		
 		Assert.assertEquals(new SongElement(SongElementEnum.CHORDS, CHORDS_2), result.get(7));
-		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE), result.get(8));
+		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(8));
 		Assert.assertEquals(new SongElement(SongElementEnum.LYRICS, LYRICS_2), result.get(9));
-		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE), result.get(10));
+		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(10));
 		Assert.assertEquals(new SongElement(SongElementEnum.LYRICS, SPACES_1), result.get(11));
 		Assert.assertEquals(new SongElement(SongElementEnum.TRANSLATION, TRANSLATION_2), result.get(12));
 		Assert.assertEquals(new SongElement(SongElementEnum.LYRICS, SPACES_2), result.get(13));

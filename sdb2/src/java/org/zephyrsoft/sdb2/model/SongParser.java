@@ -67,7 +67,7 @@ public class SongParser {
 				if (isFirst) {
 					isFirst = false;
 				} else {
-					ret.add(new SongElement(SongElementEnum.NEW_LINE));
+					ret.add(new SongElement(SongElementEnum.NEW_LINE, "\n"));
 				}
 				Matcher translationMatcher = TRANSLATION_PATTERN.matcher(line);
 				if (translationMatcher.matches()) {
