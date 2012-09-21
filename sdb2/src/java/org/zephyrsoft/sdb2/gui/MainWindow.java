@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import javax.imageio.ImageIO;
+import javax.swing.BoxLayout;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -83,6 +84,7 @@ import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenDisplayCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
 import org.zephyrsoft.sdb2.importer.ImportFromSDBv1;
+import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
@@ -677,6 +679,7 @@ public class MainWindow extends JFrame {
 		if (presentListSelected != null) {
 			// use index because there could be multiple instances of one song in the list
 			presentModel.removeSong(presentList.getSelectedIndex());
+			presentList.clearSelection();
 		}
 	}
 	
@@ -707,22 +710,47 @@ public class MainWindow extends JFrame {
 	}
 	
 	protected void handleSongPresent() {
-		controller.present(new Presentable(songsListSelected, null));
+		controller.present(new Presentable(presentListSelected, null));
+		clearSectionButtons();
+		List<AddressablePart> parts = controller.getParts();
+		int partIndex = 0;
+		// TODO also insert buttons for single lines, probably somehow indented or integrated
+		for (AddressablePart part : parts) {
+			JButton button = new JButton(part.get(0).getText());
+			button.addActionListener(createMoveToPartActionListener(partIndex));
+			panelSectionButtons.add(button);
+			partIndex++;
+		}
+		panelSectionButtons.revalidate();
+	}
+	
+	private ActionListener createMoveToPartActionListener(final int partIndex) {
+		return new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				controller.moveToPart(partIndex);
+			}
+		};
 	}
 	
 	protected void handleBlankScreen() {
 		controller.present(BLANK_SCREEN);
+		clearSectionButtons();
 	}
 	
 	protected void handleLogoPresent() {
 		controller.present(new Presentable(null, loadLogo()));
+		clearSectionButtons();
+	}
+	
+	private void clearSectionButtons() {
+		panelSectionButtons.removeAll();
 	}
 	
 	private Image loadLogo() {
 		String logoPath = settingsModel.getString(SettingKey.LOGO_FILE);
 		if (logoPath != null && !logoPath.equals("")) {
 			File logoFile = new File(logoPath);
-			// Logo-Datei lesbar?
 			if (logoFile.isFile() && logoFile.canRead()) {
 				Image logo = null;
 				try {
@@ -759,15 +787,6 @@ public class MainWindow extends JFrame {
 		shortcutManager = new KeyboardShortcutManager();
 		KeyboardFocusManager focusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		focusManager.addKeyEventDispatcher(shortcutManager);
-		
-		/*
-		 * TODO perhaps better use this construct for globally binding a shortcut manager? AWTEventListener keyListener
-		 * = new AWTEventListener() {
-		 * @Override public void eventDispatched(AWTEvent event) { KeyEvent evt = (KeyEvent) event; if(evt.getID() ==
-		 * KeyEvent.KEY_PRESSED) { String mods = KeyEvent.getKeyModifiersText(evt.getModifiers()); String keytext = mods
-		 * + " " + KeyEvent.getKeyText(evt.getKeyCode()); // do anything with the information now } } }; long mask =
-		 * AWTEvent.KEY_EVENT_MASK; Toolkit.getDefaultToolkit().addAWTEventListener(keyListener, mask);
-		 */
 		
 		shortcutManager.add(new KeyboardShortcut(KeyEvent.VK_ESCAPE, false, false, false) {
 			@Override
@@ -909,7 +928,7 @@ public class MainWindow extends JFrame {
 		panelFilter.add(btnClearFilter, gbc_btnClearFilter);
 		
 		JScrollPane scrollPaneSongList = new JScrollPane();
-		scrollPaneSongList.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+		scrollPaneSongList.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		panelSongList.add(scrollPaneSongList, BorderLayout.CENTER);
 		
 		songsList = new FixedWidthJList<Song>();
@@ -1440,6 +1459,7 @@ public class MainWindow extends JFrame {
 		panelPresentLeft.setLayout(new BorderLayout(0, 0));
 		
 		JScrollPane scrollPanePresentSongList = new JScrollPane();
+		scrollPanePresentSongList.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		panelPresentLeft.add(scrollPanePresentSongList, BorderLayout.CENTER);
 		
 		presentList = new FixedWidthJList<Song>();
@@ -1664,12 +1684,7 @@ public class MainWindow extends JFrame {
 		
 		panelSectionButtons = new JPanel();
 		scrollPaneSectionButtons.setViewportView(panelSectionButtons);
-		GridBagLayout gbl_panelSectionButtons = new GridBagLayout();
-		gbl_panelSectionButtons.columnWidths = new int[] {0};
-		gbl_panelSectionButtons.rowHeights = new int[] {0};
-		gbl_panelSectionButtons.columnWeights = new double[] {Double.MIN_VALUE};
-		gbl_panelSectionButtons.rowWeights = new double[] {Double.MIN_VALUE};
-		panelSectionButtons.setLayout(gbl_panelSectionButtons);
+		panelSectionButtons.setLayout(new BoxLayout(panelSectionButtons, BoxLayout.Y_AXIS));
 		
 		JPanel panelPresentedMetadata = new JPanel();
 		panelPresentRight.add(panelPresentedMetadata, BorderLayout.SOUTH);

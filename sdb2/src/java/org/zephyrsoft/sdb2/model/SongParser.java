@@ -64,13 +64,9 @@ public class SongParser {
 		if (song.getLyrics() != null) {
 			boolean isFirst = true;
 			for (String line : song.getLyrics().split("\n")) {
-				if (isFirst) {
-					isFirst = false;
-				} else {
-					ret.add(new SongElement(SongElementEnum.NEW_LINE, "\n"));
-				}
 				Matcher translationMatcher = TRANSLATION_PATTERN.matcher(line);
 				if (translationMatcher.matches()) {
+					isFirst = addNewlineIfNotFirstLine(ret, isFirst);
 					String prefix = translationMatcher.group(1);
 					String translation = translationMatcher.group(2);
 					String suffix = translationMatcher.group(3);
@@ -85,9 +81,11 @@ public class SongParser {
 					}
 				} else if (isChordsLine(line)) {
 					if (includeChords) {
+						isFirst = addNewlineIfNotFirstLine(ret, isFirst);
 						ret.add(new SongElement(SongElementEnum.CHORDS, line));
 					}
 				} else {
+					isFirst = addNewlineIfNotFirstLine(ret, isFirst);
 					ret.add(new SongElement(SongElementEnum.LYRICS, line));
 				}
 				
@@ -112,6 +110,33 @@ public class SongParser {
 		}
 		
 		return ret;
+	}
+	
+	private static boolean addNewlineIfNotFirstLine(List<SongElement> elementList, boolean isFirst) {
+		boolean ret = isFirst;
+		if (ret) {
+			ret = false;
+		} else {
+			elementList.add(new SongElement(SongElementEnum.NEW_LINE, "\n"));
+		}
+		return ret;
+	}
+	
+	/**
+	 * Extract the first lyrics-only line from a song.
+	 */
+	public static String getFirstLyricsLine(Song song) {
+		Validate.notNull(song, "song may not be null");
+		
+		if (song.getLyrics() != null) {
+			for (String line : song.getLyrics().split("\n")) {
+				Matcher translationMatcher = TRANSLATION_PATTERN.matcher(line);
+				if (!translationMatcher.matches() && !isChordsLine(line)) {
+					return line;
+				}
+			}
+		}
+		return "";
 	}
 	
 	/**

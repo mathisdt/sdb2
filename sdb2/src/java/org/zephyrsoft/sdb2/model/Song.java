@@ -84,16 +84,6 @@ public class Song implements Serializable, Cloneable, Comparable<Song> {
 		return lyrics;
 	}
 	
-	public String getLyricsFirstLine() {
-		if (lyrics == null) {
-			return null;
-		} else if (lyrics.contains("\n")) {
-			return lyrics.substring(0, lyrics.indexOf("\n"));
-		} else {
-			return lyrics;
-		}
-	}
-	
 	public String getTonality() {
 		return tonality;
 	}
@@ -209,6 +199,11 @@ public class Song implements Serializable, Cloneable, Comparable<Song> {
 		}
 		
 		return ret;
+	}
+	
+	@Override
+	public String toString() {
+		return "SONG[" + title + "]";
 	}
 	
 }

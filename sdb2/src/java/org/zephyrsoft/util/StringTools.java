@@ -194,4 +194,14 @@ public class StringTools {
 			return in;
 		}
 	}
+	
+	/**
+	 * Tests is a string is null, empty or only contains whitespace.
+	 * 
+	 * @param in the string to test
+	 * @return {@code true} if the string is null, empty or only contains whitespace; {@code false} else
+	 */
+	public static boolean isBlank(String in) {
+		return isEmpty(in) || in.trim().length() == 0;
+	}
 }

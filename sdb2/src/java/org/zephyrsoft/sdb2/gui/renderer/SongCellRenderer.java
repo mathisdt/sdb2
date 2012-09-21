@@ -22,6 +22,7 @@ import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 import org.zephyrsoft.sdb2.gui.SongCell;
 import org.zephyrsoft.sdb2.model.Song;
+import org.zephyrsoft.sdb2.model.SongParser;
 
 /**
  * A {@link ListCellRenderer} for {@link Song} values.
@@ -38,7 +39,7 @@ public class SongCellRenderer implements ListCellRenderer<Song> {
 		
 		SongCell ret = new SongCell(30);
 		ret.setSongTitle(value.getTitle());
-		ret.setFirstLine(value.getLyricsFirstLine());
+		ret.setFirstLine(SongParser.getFirstLyricsLine(value));
 		
 		if (isSelected) {
 			ret.setForeground(list.getSelectionForeground());

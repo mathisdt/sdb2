@@ -29,9 +29,11 @@ import java.util.List;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.gui.MainWindow;
+import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SettingKey;
 import org.zephyrsoft.sdb2.model.SettingsModel;
@@ -42,13 +44,14 @@ import org.zephyrsoft.sdb2.presenter.Presenter;
 import org.zephyrsoft.sdb2.presenter.PresenterBundle;
 import org.zephyrsoft.sdb2.presenter.PresenterWindow;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
+import org.zephyrsoft.sdb2.presenter.Scroller;
 
 /**
  * Controller for {@link MainWindow}.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class MainController {
+public class MainController implements Scroller {
 	
 	public static final String BASE_DIR_STRING = System.getProperty("user.home") + File.separator + ".songdatabase";
 	public static final String SONGS_SUBDIR_STRING = "songs";
@@ -90,8 +93,20 @@ public class MainController {
 		presentationControl.showPresenter();
 	}
 	
+	@Override
+	public List<AddressablePart> getParts() {
+		Validate.notNull(presentationControl, "there is no active presentation");
+		return presentationControl.getParts();
+	}
+	
+	@Override
 	public void moveToPart(Integer part) {
 		presentationControl.moveToPart(part);
+	}
+	
+	@Override
+	public void moveToLine(Integer part, Integer line) {
+		presentationControl.moveToLine(part, line);
 	}
 	
 	private PresenterWindow createPresenter(GraphicsDevice screen, Presentable presentable, ScreenContentsEnum contents) {

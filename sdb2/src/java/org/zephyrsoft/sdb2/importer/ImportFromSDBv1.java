@@ -48,7 +48,9 @@ public class ImportFromSDBv1 implements Importer {
 		for (org.zephyrsoft.sdb.structure.Song oldSong : imported.getSongs()) {
 			Song newSong = new Song();
 			newSong.setTitle(oldSong.getTitel());
-			newSong.setLyrics(oldSong.getText());
+			String lyrics = oldSong.getText();
+			lyrics = lyrics.replaceAll("###", "");
+			newSong.setLyrics(lyrics);
 			newSong.setTonality(oldSong.getTonart());
 			String additionalCopyrightNotes = oldSong.getCopyright();
 			if (additionalCopyrightNotes != null) {

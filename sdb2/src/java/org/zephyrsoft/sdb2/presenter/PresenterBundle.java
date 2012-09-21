@@ -19,6 +19,7 @@ package org.zephyrsoft.sdb2.presenter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.zephyrsoft.sdb2.model.AddressablePart;
 
 /**
  * Provide control over any number of running presenter windows.
@@ -41,9 +42,6 @@ public class PresenterBundle implements Presenter {
 		presenters.add(presenter);
 	}
 	
-	/**
-	 * @see org.zephyrsoft.sdb2.presenter.Presenter#showPresenter()
-	 */
 	@Override
 	public void showPresenter() {
 		for (Presenter presenter : presenters) {
@@ -51,9 +49,6 @@ public class PresenterBundle implements Presenter {
 		}
 	}
 	
-	/**
-	 * @see org.zephyrsoft.sdb2.presenter.Presenter#hidePresenter()
-	 */
 	@Override
 	public void hidePresenter() {
 		for (Presenter presenter : presenters) {
@@ -61,9 +56,14 @@ public class PresenterBundle implements Presenter {
 		}
 	}
 	
-	/**
-	 * @see org.zephyrsoft.sdb2.presenter.Presenter#moveToPart(java.lang.Integer)
-	 */
+	@Override
+	public List<AddressablePart> getParts() {
+		if (presenters.isEmpty()) {
+			throw new IllegalStateException("there has to be at least one real presenter in a presenter bundle");
+		}
+		return presenters.get(0).getParts();
+	}
+	
 	@Override
 	public void moveToPart(Integer part) {
 		for (Presenter presenter : presenters) {
@@ -71,13 +71,10 @@ public class PresenterBundle implements Presenter {
 		}
 	}
 	
-	/**
-	 * @see org.zephyrsoft.sdb2.presenter.Scroller#moveToLine(java.lang.Integer)
-	 */
 	@Override
-	public void moveToLine(Integer line) {
+	public void moveToLine(Integer part, Integer line) {
 		for (Presenter presenter : presenters) {
-			presenter.moveToLine(line);
+			presenter.moveToLine(part, line);
 		}
 	}
 }
