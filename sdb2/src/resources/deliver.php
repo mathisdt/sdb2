@@ -38,10 +38,11 @@ if ($versionId==BUILD_TIMESTAMP) {
 	if (file_exists($path) && is_readable($path) ) {
 		header('Content-Type: application/java-archive');
 		header('x-java-jnlp-version-id: ' . BUILD_TIMESTAMP);
+		header("Content-length: ".filesize($path));
 		readfile($path);
 	} else {
 		header("HTTP/1.0 404 Not Found");
-		die('JAR file with version-id "' . $versionId . '" not available. Try requesting version-id "' . BUILD_TIMESTAMP . '".');
+		die('JAR file not available.');
 	}
 } else {
 	header("HTTP/1.0 404 Not Found");
