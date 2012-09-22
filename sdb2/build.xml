@@ -61,8 +61,8 @@
 		         projectName="${project.name}" />
 
 		<!-- remove some libraries from the global classpath
-		     to get the libraries which are necessary at runtime
-		     (only these need to be packaged later) -->
+		     to calculate the libraries which are necessary at runtime
+		     (only those need to be packaged later) -->
 		<restrict id="runtimeclasspathref1">
 			<path refid="classpathref"/>
 			<and>

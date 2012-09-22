@@ -58,7 +58,7 @@ $libdir = dirname(__FILE__) . DIRECTORY_SEPARATOR . "lib";
 $handle = opendir($libdir);
 while (false !== ($file = readdir($handle))) {
 	if ($file != "." && $file != ".." && strlen($file)>4 && substr($file, -4)==".jar") {
-		echo "		<jar href=\"deliver.php/$file\"";
+		echo "		<jar href=\"deliver.php/$file\" ";
 		if (defined('BUILD_TIMESTAMP')) {
 			echo 'version="' . BUILD_TIMESTAMP . '"';
 		}
