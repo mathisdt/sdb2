@@ -3,7 +3,10 @@
 	Creates the project's release bundle.
 	This script does NOT compile the source files but relies on Eclipse for compilation.
 -->
-<project default="completeBuild" basedir="." xmlns:ant4eclipse="antlib:org.ant4eclipse">
+<project
+	default="completeBuild"
+	basedir="."
+	xmlns:ant4eclipse="antlib:org.ant4eclipse">
 
 	<property name="start.dir" value="${basedir}" />
 	<property name="src.java.dir" value="${start.dir}/src/java" />
@@ -49,14 +52,35 @@
 
 	<target name="completeBuild">
 		<!-- make sure that needed directories exist as expected -->
-		<antcall target="prepare" />
+		<antcall target="prepare" inheritRefs="true" />
 
 		<!-- extract the classpath defined in Eclipse (using ant4eclipse) -->
 		<ant4eclipse:getJdtClassPath
-		         property="classpath"
 		         pathId="classpathref"
 		         workspaceDirectory="${workspace.dir}"
 		         projectName="${project.name}" />
+
+		<!-- remove some libraries from the global classpath
+		     to get the libraries which are necessary at runtime
+		     (only these need to be packaged later) -->
+		<restrict id="runtimeclasspathref1">
+			<path refid="classpathref"/>
+			<and>
+				<not>
+					<name name="**/bin" />
+				</not>
+				<not>
+					<name name="**/junit*.jar" />
+				</not>
+				<not>
+					<name name="**/mockito*.jar" />
+				</not>
+			</and>
+		</restrict>
+		<pathconvert refid="runtimeclasspathref1" property="runtimeclasspath" pathsep=",">
+		   <globmapper from="${lib.dir}/*" to="*" handledirsep="true" />
+		</pathconvert>
+		<fileset id="runtimeclasspathref" dir="${lib.dir}" includes="${runtimeclasspath}" />
 
 		<!-- compile java source files-->
 		<javac destdir="${bin.dir}" classpathref="classpathref" target="1.7" includeantruntime="false">
@@ -75,16 +99,7 @@
 
 		<!-- run junit tests -->
 		<junit haltonerror="true" haltonfailure="true" printsummary="on" showoutput="true" includeantruntime="false">
-			<classpath>
-				<fileset dir="${lib.dir}">
-					<include name="junit-4*.jar" />
-				</fileset>
-				<pathelement path="${java.class.path}"/>
-			</classpath>
-			<classpath>
-				<pathelement path="${classpath}"/>
-				<pathelement location="${lib.dir}/junit-4*.jar"/>
-			</classpath>
+			<classpath refid="classpathref"/>
 			<batchtest>
 				<fileset dir="${test.java.dir}" includes="**/*.java" />
 			</batchtest>
@@ -95,9 +110,9 @@
 		<echo message="read from properties file: version=${programVersion}" />
 
 		<!-- build JAR file -->
-		<antcall target="createJar" />
+		<antcall target="createJar" inheritRefs="true" />
 		<!-- sign all JAR files (needed for WebStart) -->
-		<antcall target="signJars" />
+		<antcall target="signJars" inheritRefs="true" />
 		<!-- copy additional resources -->
 		<copy todir="${release.img.dir}">
 			<fileset dir="${src.resources.dir}/org/zephyrsoft/sdb2">
@@ -127,7 +142,7 @@ SCRIPTDIR=$$(dirname $$SCRIPT)
 java -jar $$SCRIPTDIR/sdb.jar $$*
 </echo>
 		<!-- create package for distribution -->
-		<antcall target="buildPackage" />
+		<antcall target="buildPackage" inheritRefs="true" />
 
 	</target>
 
@@ -153,19 +168,13 @@ java -jar $$SCRIPTDIR/sdb.jar $$*
 	<target name="createJar">
 		<!-- copy libraries -->
 		<copy todir="${release.lib.dir}">
-			<fileset dir="${lib.dir}">
-				<include name="*.jar" />
-			</fileset>
+			<fileset refid="runtimeclasspathref"/>
 		</copy>
 
-		<!-- put together classpath for JAR manifest -->
-		<path id="build-classpath">
-			<fileset dir="${release.lib.dir}">
-				<include name="*.jar" />
-			</fileset>
-		</path>
 		<manifestclasspath property="lib.list" jarfile="${release.jar}">
-			<classpath refid="build-classpath" />
+			<classpath>
+				<fileset dir="${release.lib.dir}" includes="*.jar" />
+			</classpath>
 		</manifestclasspath>
 
 		<!-- copy classes and resources -->
@@ -193,7 +202,7 @@ java -jar $$SCRIPTDIR/sdb.jar $$*
 
 	<target name="signJars">
 		<!-- create keystore if necessary -->
-		<antcall target="createKeystore" />
+		<antcall target="createKeystore" inheritRefs="true" />
 
 		<!-- sign all JAR files -->
 		<signjar keystore="${keystore.file}" alias="sdb" storepass="sdbsdb">
