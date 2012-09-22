@@ -21,6 +21,10 @@
 
 header("Content-Type: application/x-java-jnlp-file");
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+if (file_exists('constants.php'))
+{
+   include('constants.php');
+}
 ?>
 <jnlp spec="1.0+"
 	codebase="<? echo "http" . ((!empty($_SERVER['HTTPS'])) ? "s" : "") . "://".$_SERVER['SERVER_NAME'].preg_replace('/webstart.php$/i', '', $_SERVER['REQUEST_URI']); ?>"
@@ -48,15 +52,17 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 
 	<resources>
 		<j2se version="1.7+" href="http://java.sun.com/products/autodl/j2se" />
-		<jar href="sdb.jar" main="true" />
+		<jar href="deliver.php/sdb.jar" main="true" <?php if (defined('BUILD_TIMESTAMP')) { echo 'version="' . BUILD_TIMESTAMP . '"'; } ?> />
 <?
-// backup for above: echo "version=\"" . filemtime(dirname(__FILE__) . DIRECTORY_SEPARATOR . "sdb.jar") . "\"";
 $libdir = dirname(__FILE__) . DIRECTORY_SEPARATOR . "lib";
 $handle = opendir($libdir);
 while (false !== ($file = readdir($handle))) {
 	if ($file != "." && $file != ".." && strlen($file)>4 && substr($file, -4)==".jar") {
-		echo "		<jar href=\"lib/$file\" />\n";
-		// backup for above: version=\"" . filemtime($libdir . DIRECTORY_SEPARATOR . $file) . "\"
+		echo "		<jar href=\"deliver.php/$file\"";
+		if (defined('BUILD_TIMESTAMP')) {
+			echo 'version="' . BUILD_TIMESTAMP . '"';
+		}
+		echo " />\n";
 	}
 }
 ?>

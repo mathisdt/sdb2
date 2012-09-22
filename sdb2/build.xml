@@ -29,6 +29,9 @@
 	<tstamp>
 		<format property="build.time.dashed" pattern="HH-mm" />
 	</tstamp>
+	<tstamp>
+		<format property="build.timestamp" pattern="yyyyMMddHHmm" />
+	</tstamp>
 
 	<!-- prepare ant4eclipse -->
 	<path id="lib.path">
@@ -79,9 +82,9 @@
 				<pathelement path="${java.class.path}"/>
 			</classpath>
 			<classpath>
-			      <pathelement path="${classpath}"/>
-			      <pathelement location="${lib.dir}/junit-4*.jar"/>
-			    </classpath>
+				<pathelement path="${classpath}"/>
+				<pathelement location="${lib.dir}/junit-4*.jar"/>
+			</classpath>
 			<batchtest>
 				<fileset dir="${test.java.dir}" includes="**/*.java" />
 			</batchtest>
@@ -104,8 +107,14 @@
 		<copy todir="${release.dir}">
 			<fileset dir="${src.resources.dir}">
 				<include name="webstart.php" />
+				<include name="deliver.php" />
 			</fileset>
 		</copy>
+		<!-- create PHP file to preserve build timestamp for Java WebStart -->
+		<echo file="${release.dir}/constants.php">&lt;?php
+define("BUILD_TIMESTAMP", "${build.timestamp}");
+?&gt;</echo>
+
 		<!-- create scripts for easy startup -->
 		<echo file="${release.dir}/run-sdb.bat" append="false">java -jar %~dp0sdb.jar %1 %2 %3 %4 %5 %6 %7 %8 %9
 </echo>
