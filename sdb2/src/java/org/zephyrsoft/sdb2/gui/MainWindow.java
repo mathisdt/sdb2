@@ -22,11 +22,13 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.KeyboardFocusManager;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -871,7 +873,7 @@ public class MainWindow extends JFrame {
 		});
 		setPreferredSize(new Dimension(800, 600));
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		setBounds(100, 100, 965, 659);
+		calculateAndSetBounds();
 		contentPane = new JPanel();
 		contentPane.setBorder(null);
 		setContentPane(contentPane);
@@ -2298,6 +2300,18 @@ public class MainWindow extends JFrame {
 			panelImportExportStatistics, panelSettings}));
 		
 		afterConstruction();
+	}
+	
+	private void calculateAndSetBounds() {
+		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		Rectangle maximumWindowBounds = env.getMaximumWindowBounds();
+		Rectangle screenSize = env.getDefaultScreenDevice().getDefaultConfiguration().getBounds();
+		if (maximumWindowBounds.width != screenSize.width || maximumWindowBounds.height != screenSize.height) {
+			setBounds(maximumWindowBounds);
+		} else {
+			// fallback
+			setBounds(50, 50, 965, 659);
+		}
 	}
 	
 	public JTextField getTextFieldTitle() {
