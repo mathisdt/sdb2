@@ -29,6 +29,7 @@ import com.thoughtworks.xstream.annotations.XStreamOmitField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.gui.MainWindow;
+import org.zephyrsoft.util.gui.TransparentFilterableListModel;
 import org.zephyrsoft.util.gui.TransparentListModel;
 
 /**
@@ -90,6 +91,12 @@ public class SongsModel implements Iterable<Song>, Serializable {
 	
 	public TransparentListModel<Song> getListModel() {
 		TransparentListModel<Song> createdListModel = new TransparentListModel<>(songs);
+		createdListModels.add(createdListModel);
+		return createdListModel;
+	}
+	
+	public TransparentFilterableListModel<Song> getFilterableListModel() {
+		TransparentFilterableListModel<Song> createdListModel = new TransparentFilterableListModel<>(songs);
 		createdListModels.add(createdListModel);
 		return createdListModel;
 	}

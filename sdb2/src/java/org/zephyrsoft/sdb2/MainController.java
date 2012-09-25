@@ -37,6 +37,7 @@ import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SettingKey;
 import org.zephyrsoft.sdb2.model.SettingsModel;
+import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.XMLConverter;
 import org.zephyrsoft.sdb2.presenter.Presentable;
@@ -66,6 +67,7 @@ public class MainController implements Scroller {
 	private SettingsModel settings = null;
 	private List<GraphicsDevice> screens;
 	private PresenterBundle presentationControl;
+	private Song currentlyPresentedSong = null;
 	
 	public void present(Presentable presentable) {
 		// end old presentation (if any)
@@ -88,6 +90,8 @@ public class MainController implements Scroller {
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
 		}
+		
+		currentlyPresentedSong = presentable.getSong();
 		
 		// start presentation
 		presentationControl.showPresenter();
@@ -281,6 +285,10 @@ public class MainController implements Scroller {
 			LOG.warn("could not apply the look-and-feel");
 			return false;
 		}
+	}
+	
+	public Song getCurrentlyPresentedSong() {
+		return currentlyPresentedSong;
 	}
 	
 }

@@ -17,6 +17,7 @@
 package org.zephyrsoft.sdb2.model;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -24,7 +25,7 @@ import java.util.List;
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class AddressablePart implements Addressable {
+public class AddressablePart implements Addressable, Iterable<AddressableLine> {
 	
 	private List<AddressableLine> lines = new ArrayList<>();
 	
@@ -66,6 +67,11 @@ public class AddressablePart implements Addressable {
 		}
 		ret.append("]");
 		return ret.toString();
+	}
+	
+	@Override
+	public Iterator<AddressableLine> iterator() {
+		return lines.iterator();
 	}
 	
 }

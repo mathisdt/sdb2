@@ -14,44 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.presenter;
-
-import java.awt.Image;
-import org.zephyrsoft.sdb2.model.Song;
+package org.zephyrsoft.util.gui;
 
 /**
- * Something that can be presented on a digital projector: a song, an image or nothing (blank screen).
+ * A filter template for {@link TransparentFilterableListModel}.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class Presentable {
-	
-	final Song song;
-	final Image image;
-	
-	public Presentable(Song song, Image image) {
-		// check arguments
-		if (song != null && image != null) {
-			throw new IllegalArgumentException(
-				"you cant't display a song and a logo image simultaneously, it's either or!");
-		}
-		
-		this.song = song;
-		this.image = image;
-	}
+public abstract class ListFilter<T> {
 	
 	/**
-	 * Get the song.
+	 * Check an object to see if it should be in the filtered list.
+	 * 
+	 * @param object the object to check
+	 * @return {@code true} if the object should be in the filtered list; {@code false} otherwise
 	 */
-	public Song getSong() {
-		return song;
-	}
-	
-	/**
-	 * Get the logo image.
-	 */
-	public Image getImage() {
-		return image;
-	}
+	public abstract boolean isAccepted(T object);
 	
 }

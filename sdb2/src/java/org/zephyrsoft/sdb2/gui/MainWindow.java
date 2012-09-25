@@ -18,7 +18,6 @@ package org.zephyrsoft.sdb2.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GraphicsDevice;
@@ -74,6 +73,8 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.JTextComponent;
@@ -98,11 +99,13 @@ import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.util.CustomFileFilter;
 import org.zephyrsoft.util.JarTools;
+import org.zephyrsoft.util.StringTools;
 import org.zephyrsoft.util.gui.ErrorDialog;
 import org.zephyrsoft.util.gui.FixedWidthJList;
-import org.zephyrsoft.util.gui.FocusTraversalOnArray;
 import org.zephyrsoft.util.gui.ImagePreview;
+import org.zephyrsoft.util.gui.ListFilter;
 import org.zephyrsoft.util.gui.TransparentComboBoxModel;
+import org.zephyrsoft.util.gui.TransparentFilterableListModel;
 import org.zephyrsoft.util.gui.TransparentListModel;
 import say.swing.JFontChooser;
 
@@ -125,7 +128,6 @@ public class MainWindow extends JFrame {
 	private static final int TAB_INDEX_PRESENT = 1;
 	private static final int TAB_INDEX_STATS = 2;
 	private static final int TAB_INDEX_SETTINGS = 3;
-	private static final int TAB_INDEX_SHORTCUTS = 4;
 	
 	private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 	
@@ -151,7 +153,7 @@ public class MainWindow extends JFrame {
 	
 	private FixedWidthJList<Song> songsList;
 	private SongsModel songsModel;
-	private TransparentListModel<Song> songsListModel;
+	private TransparentFilterableListModel<Song> songsListModel;
 	private Song songsListSelected;
 	
 	private FixedWidthJList<Song> presentList;
@@ -174,12 +176,12 @@ public class MainWindow extends JFrame {
 	private JPanel panelSectionButtons;
 	private JButton btnAddLinkedSong;
 	private JButton btnRemoveLinkedSong;
-	
-	private JLabel lblSelectedSongMetadata;
-	private JLabel lblPresentedSongMetadata;
+	private JButton btnJumpToSelected;
 	private JButton btnShowLogo;
 	private JButton btnShowBlankScreen;
 	private JButton btnPresentSelectedSong;
+	private JScrollPane scrollPaneSectionButtons;
+	private JButton btnJumpToPresented;
 	
 	private JLabel lblStatistics;
 	private JButton btnExportLyricsOnlyPdfSelected;
@@ -257,8 +259,14 @@ public class MainWindow extends JFrame {
 		btnUp.setEnabled(false);
 		btnUnselect.setEnabled(false);
 		btnDown.setEnabled(false);
-		// disable "present this song" button
+		// disable "present this song" and "jump to" buttons
 		btnPresentSelectedSong.setEnabled(false);
+		btnJumpToSelected.setEnabled(false);
+		btnJumpToPresented.setEnabled(false);
+		// disable single-song export and stats buttons
+		btnExportLyricsOnlyPdfSelected.setEnabled(false);
+		btnExportCompletePdfSelected.setEnabled(false);
+		btnExportStatisticsSelected.setEnabled(false);
 		// create empty songsModel for the "selected songs" list
 		presentModel = new SongsModel();
 		presentModel.setAutoSort(false);
@@ -280,8 +288,42 @@ public class MainWindow extends JFrame {
 	public void setModels(SongsModel songs, SettingsModel settings) {
 		this.songsModel = songs;
 		this.settingsModel = settings;
-		songsListModel = songs.getListModel();
+		songsListModel = songs.getFilterableListModel();
 		songsList.setModel(songsListModel);
+		
+		// song list filtering
+		ListFilter<Song> filter = new ListFilter<Song>() {
+			@Override
+			public boolean isAccepted(Song object) {
+				String filterText = textFieldFilter.getText();
+				if (StringTools.isBlank(filterText)) {
+					return true;
+				} else {
+					String lyrics = object.getLyrics();
+					return lyrics == null
+						|| StringTools.toEasilyComparable(lyrics).contains(
+							StringTools.toEasilyComparable(textFieldFilter.getText()));
+				}
+			}
+		};
+		songsListModel.setFilter(filter);
+		textFieldFilter.getDocument().addDocumentListener(new DocumentListener() {
+			
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				songsListModel.refilter();
+			}
+			
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				songsListModel.refilter();
+			}
+			
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				songsListModel.refilter();
+			}
+		});
 		
 		// prepare for settings
 		controller.detectScreens();
@@ -504,17 +546,23 @@ public class MainWindow extends JFrame {
 				saveSongData(songsListSelected);
 				clearSongData();
 				setSongEditingEnabled(false);
-				// disable delete and select buttons below songs list
+				// disable buttons
 				btnDeleteSong.setEnabled(false);
 				btnSelectSong.setEnabled(false);
+				btnExportLyricsOnlyPdfSelected.setEnabled(false);
+				btnExportCompletePdfSelected.setEnabled(false);
+				btnExportStatisticsSelected.setEnabled(false);
 			}
 			songsListSelected = songsList.getSelectedValue();
 			if (songsListSelected != null) {
 				loadSongData(songsListSelected);
 				setSongEditingEnabled(true);
-				// enable delete and select buttons below songs list
+				// enable buttons
 				btnDeleteSong.setEnabled(true);
 				btnSelectSong.setEnabled(true);
+				btnExportLyricsOnlyPdfSelected.setEnabled(true);
+				btnExportCompletePdfSelected.setEnabled(true);
+				btnExportStatisticsSelected.setEnabled(true);
 			}
 		}
 	}
@@ -530,8 +578,9 @@ public class MainWindow extends JFrame {
 				btnUp.setEnabled(presentList.getSelectedIndex() > 0);
 				btnUnselect.setEnabled(true);
 				btnDown.setEnabled(presentList.getSelectedIndex() < presentModel.getSize() - 1);
-				// enable "present this song" button
+				// enable "present this song" and "jump to selected" buttons
 				btnPresentSelectedSong.setEnabled(true);
+				btnJumpToSelected.setEnabled(true);
 			} else {
 				// clear presentation console
 				// TODO
@@ -539,8 +588,9 @@ public class MainWindow extends JFrame {
 				btnUp.setEnabled(false);
 				btnUnselect.setEnabled(false);
 				btnDown.setEnabled(false);
-				// disable "present this song" button
+				// disable "present this song" and "jump to selected" buttons
 				btnPresentSelectedSong.setEnabled(false);
+				btnJumpToSelected.setEnabled(false);
 			}
 		}
 	}
@@ -711,42 +761,51 @@ public class MainWindow extends JFrame {
 		}
 	}
 	
+	protected void handleJumpToSelectedSong() {
+		if (presentListSelected != null) {
+			songsList.setSelectedValue(presentListSelected, true);
+		}
+	}
+	
+	protected void handleJumpToPresentedSong() {
+		Song currentlyPresentedSong = controller.getCurrentlyPresentedSong();
+		if (currentlyPresentedSong != null) {
+			presentList.setSelectedValue(currentlyPresentedSong, true);
+			handleJumpToSelectedSong();
+		}
+	}
+	
 	protected void handleSongPresent() {
 		controller.present(new Presentable(presentListSelected, null));
 		clearSectionButtons();
 		List<AddressablePart> parts = controller.getParts();
 		int partIndex = 0;
-		// TODO also insert buttons for single lines, probably somehow indented or integrated
 		for (AddressablePart part : parts) {
-			JButton button = new JButton(part.get(0).getText());
-			button.addActionListener(createMoveToPartActionListener(partIndex));
-			panelSectionButtons.add(button);
+			PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller);
+			panelSectionButtons.add(buttonGroup);
 			partIndex++;
 		}
 		panelSectionButtons.revalidate();
-	}
-	
-	private ActionListener createMoveToPartActionListener(final int partIndex) {
-		return new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				controller.moveToPart(partIndex);
-			}
-		};
+		panelSectionButtons.repaint();
+		btnJumpToPresented.setEnabled(true);
 	}
 	
 	protected void handleBlankScreen() {
 		controller.present(BLANK_SCREEN);
 		clearSectionButtons();
+		btnJumpToPresented.setEnabled(false);
 	}
 	
 	protected void handleLogoPresent() {
 		controller.present(new Presentable(null, loadLogo()));
 		clearSectionButtons();
+		btnJumpToPresented.setEnabled(false);
 	}
 	
 	private void clearSectionButtons() {
 		panelSectionButtons.removeAll();
+		panelSectionButtons.revalidate();
+		panelSectionButtons.repaint();
 	}
 	
 	private Image loadLogo() {
@@ -916,13 +975,15 @@ public class MainWindow extends JFrame {
 		textFieldFilter.setColumns(10);
 		
 		btnClearFilter = new JButton("");
+		btnClearFilter.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				textFieldFilter.setText("");
+				textFieldFilter.requestFocusInWindow();
+			}
+		});
 		btnClearFilter.setMargin(new Insets(0, 0, 0, 0));
-		btnClearFilter.setRolloverIcon(new ImageIcon(MainWindow.class
-			.getResource("/org/jdesktop/swingx/plaf/basic/resources/clear_rollover.gif")));
-		btnClearFilter.setPressedIcon(new ImageIcon(MainWindow.class
-			.getResource("/org/jdesktop/swingx/plaf/basic/resources/clear_pressed.gif")));
-		btnClearFilter.setIcon(new ImageIcon(MainWindow.class
-			.getResource("/org/jdesktop/swingx/plaf/basic/resources/clear.gif")));
+		btnClearFilter.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/clear.gif")));
 		GridBagConstraints gbc_btnClearFilter = new GridBagConstraints();
 		gbc_btnClearFilter.anchor = GridBagConstraints.NORTHWEST;
 		gbc_btnClearFilter.gridx = 2;
@@ -938,7 +999,7 @@ public class MainWindow extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				try {
-					if (e.getClickCount() >= 2) {
+					if (e.getClickCount() >= 2 && songsListSelected != null) {
 						// double-clicked: put into present list
 						handleSongSelect();
 					}
@@ -982,8 +1043,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		btnNewSong.setIcon(new ImageIcon(MainWindow.class
-			.getResource("/org/jdesktop/swingx/editors/newHighlighter.gif")));
+		btnNewSong.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/newHighlighter.gif")));
 		GridBagConstraints gbc_btnNewSong = new GridBagConstraints();
 		gbc_btnNewSong.fill = GridBagConstraints.VERTICAL;
 		gbc_btnNewSong.anchor = GridBagConstraints.WEST;
@@ -1003,8 +1063,8 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		btnDeleteSong.setIcon(new ImageIcon(MainWindow.class
-			.getResource("/org/jdesktop/swingx/editors/deleteHighlighter.gif")));
+		btnDeleteSong
+			.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/deleteHighlighter.gif")));
 		GridBagConstraints gbc_btnDeleteSong = new GridBagConstraints();
 		gbc_btnDeleteSong.fill = GridBagConstraints.VERTICAL;
 		gbc_btnDeleteSong.anchor = GridBagConstraints.WEST;
@@ -1024,8 +1084,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		btnSelectSong.setIcon(new ImageIcon(MainWindow.class
-			.getResource("/org/jdesktop/swingx/plaf/basic/resources/month-up.png")));
+		btnSelectSong.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/month-up.png")));
 		GridBagConstraints gbc_btnSelectSong = new GridBagConstraints();
 		gbc_btnSelectSong.fill = GridBagConstraints.VERTICAL;
 		gbc_btnSelectSong.anchor = GridBagConstraints.EAST;
@@ -1416,8 +1475,8 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		btnAddLinkedSong.setIcon(new ImageIcon(MainWindow.class
-			.getResource("/org/jdesktop/swingx/editors/newHighlighter.gif")));
+		btnAddLinkedSong
+			.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/newHighlighter.gif")));
 		GridBagConstraints gbc_btnAdd = new GridBagConstraints();
 		gbc_btnAdd.fill = GridBagConstraints.BOTH;
 		gbc_btnAdd.insets = new Insets(0, 0, 0, 5);
@@ -1440,7 +1499,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		btnRemoveLinkedSong.setIcon(new ImageIcon(MainWindow.class
-			.getResource("/org/jdesktop/swingx/editors/deleteHighlighter.gif")));
+			.getResource("/org/jdesktop/swingx/deleteHighlighter.gif")));
 		GridBagConstraints gbc_btnRemove = new GridBagConstraints();
 		gbc_btnRemove.fill = GridBagConstraints.BOTH;
 		gbc_btnRemove.gridx = 1;
@@ -1479,7 +1538,7 @@ public class MainWindow extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				try {
-					if (e.getClickCount() >= 2) {
+					if (e.getClickCount() >= 2 && presentListSelected != null) {
 						// double-clicked: present this song
 						handleSongPresent();
 					}
@@ -1502,32 +1561,6 @@ public class MainWindow extends JFrame {
 		});
 		presentList.setCellRenderer(new SongCellRenderer());
 		scrollPanePresentSongList.setViewportView(presentList);
-		
-		JPanel panelSelectedMetadata = new JPanel();
-		panelPresentLeft.add(panelSelectedMetadata, BorderLayout.SOUTH);
-		GridBagLayout gbl_panelSelectedMetadata = new GridBagLayout();
-		gbl_panelSelectedMetadata.columnWidths = new int[] {258, 0};
-		gbl_panelSelectedMetadata.rowHeights = new int[] {14, 14, 0};
-		gbl_panelSelectedMetadata.columnWeights = new double[] {0.0, Double.MIN_VALUE};
-		gbl_panelSelectedMetadata.rowWeights = new double[] {0.0, 0.0, Double.MIN_VALUE};
-		panelSelectedMetadata.setLayout(gbl_panelSelectedMetadata);
-		
-		JLabel lblSelectedSong = new JLabel("Selected song:");
-		GridBagConstraints gbc_lblSelectedSong = new GridBagConstraints();
-		gbc_lblSelectedSong.anchor = GridBagConstraints.NORTH;
-		gbc_lblSelectedSong.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblSelectedSong.insets = new Insets(0, 0, 5, 0);
-		gbc_lblSelectedSong.gridx = 0;
-		gbc_lblSelectedSong.gridy = 0;
-		panelSelectedMetadata.add(lblSelectedSong, gbc_lblSelectedSong);
-		
-		lblSelectedSongMetadata = new JLabel("<SONG METADATA>");
-		GridBagConstraints gbc_lblSelectedSongMetadata = new GridBagConstraints();
-		gbc_lblSelectedSongMetadata.anchor = GridBagConstraints.NORTH;
-		gbc_lblSelectedSongMetadata.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblSelectedSongMetadata.gridx = 0;
-		gbc_lblSelectedSongMetadata.gridy = 1;
-		panelSelectedMetadata.add(lblSelectedSongMetadata, gbc_lblSelectedSongMetadata);
 		
 		JPanel panelSelectedSongListButtons = new JPanel();
 		panelPresentLeft.add(panelSelectedSongListButtons, BorderLayout.EAST);
@@ -1571,8 +1604,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		btnUnselect.setIcon(new ImageIcon(MainWindow.class
-			.getResource("/org/jdesktop/swingx/resources/JXErrorPane16.png")));
+		btnUnselect.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/JXErrorPane16.png")));
 		GridBagConstraints gbc_btnUnselect = new GridBagConstraints();
 		gbc_btnUnselect.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnUnselect.insets = new Insets(0, 0, 5, 0);
@@ -1600,6 +1632,19 @@ public class MainWindow extends JFrame {
 		gbc_btnDown.gridx = 0;
 		gbc_btnDown.gridy = 3;
 		panelSelectedSongListButtons.add(btnDown, gbc_btnDown);
+		
+		btnJumpToSelected = new JButton("Jump to selected song");
+		btnJumpToSelected.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleJumpToSelectedSong();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
+		panelPresentLeft.add(btnJumpToSelected, BorderLayout.SOUTH);
 		
 		JPanel panelPresentRight = new JPanel();
 		panelPresentRight.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -1677,7 +1722,7 @@ public class MainWindow extends JFrame {
 		gbc_lblSections.gridy = 3;
 		panelPresentationButtons.add(lblSections, gbc_lblSections);
 		
-		JScrollPane scrollPaneSectionButtons = new JScrollPane();
+		scrollPaneSectionButtons = new JScrollPane();
 		GridBagConstraints gbc_scrollPaneSectionButtons = new GridBagConstraints();
 		gbc_scrollPaneSectionButtons.fill = GridBagConstraints.BOTH;
 		gbc_scrollPaneSectionButtons.gridx = 0;
@@ -1686,33 +1731,21 @@ public class MainWindow extends JFrame {
 		
 		panelSectionButtons = new JPanel();
 		scrollPaneSectionButtons.setViewportView(panelSectionButtons);
+		scrollPaneSectionButtons.getVerticalScrollBar().setUnitIncrement(30);
 		panelSectionButtons.setLayout(new BoxLayout(panelSectionButtons, BoxLayout.Y_AXIS));
 		
-		JPanel panelPresentedMetadata = new JPanel();
-		panelPresentRight.add(panelPresentedMetadata, BorderLayout.SOUTH);
-		GridBagLayout gbl_panelPresentedMetadata = new GridBagLayout();
-		gbl_panelPresentedMetadata.columnWidths = new int[] {258, 0};
-		gbl_panelPresentedMetadata.rowHeights = new int[] {14, 14, 0};
-		gbl_panelPresentedMetadata.columnWeights = new double[] {0.0, Double.MIN_VALUE};
-		gbl_panelPresentedMetadata.rowWeights = new double[] {0.0, 0.0, Double.MIN_VALUE};
-		panelPresentedMetadata.setLayout(gbl_panelPresentedMetadata);
-		
-		JLabel lblPresentedSong = new JLabel("Presented song:");
-		GridBagConstraints gbc_lblPresentedSong = new GridBagConstraints();
-		gbc_lblPresentedSong.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblPresentedSong.anchor = GridBagConstraints.NORTH;
-		gbc_lblPresentedSong.insets = new Insets(0, 0, 5, 0);
-		gbc_lblPresentedSong.gridx = 0;
-		gbc_lblPresentedSong.gridy = 0;
-		panelPresentedMetadata.add(lblPresentedSong, gbc_lblPresentedSong);
-		
-		lblPresentedSongMetadata = new JLabel("<SONG METADATA>");
-		GridBagConstraints gbc_lblPresentedSongMetadata = new GridBagConstraints();
-		gbc_lblPresentedSongMetadata.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblPresentedSongMetadata.anchor = GridBagConstraints.NORTH;
-		gbc_lblPresentedSongMetadata.gridx = 0;
-		gbc_lblPresentedSongMetadata.gridy = 1;
-		panelPresentedMetadata.add(lblPresentedSongMetadata, gbc_lblPresentedSongMetadata);
+		btnJumpToPresented = new JButton("Jump to presented song");
+		btnJumpToPresented.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleJumpToPresentedSong();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
+		panelPresentRight.add(btnJumpToPresented, BorderLayout.SOUTH);
 		
 		JPanel panelImportExportStatistics = new JPanel();
 		panelImportExportStatistics.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -2287,18 +2320,6 @@ public class MainWindow extends JFrame {
 		gbc_spinnerCountAsDisplayedAfter.gridy = 21;
 		panel.add(spinnerCountAsDisplayedAfter, gbc_spinnerCountAsDisplayedAfter);
 		
-		JPanel panelShortcuts = new JPanel();
-		panelShortcuts.setBorder(new EmptyBorder(0, 5, 5, 5));
-		tabbedPane.addTab("Keyboard Shortcuts", null, panelShortcuts, null);
-		GridBagLayout gbl_panelShortcuts = new GridBagLayout();
-		gbl_panelShortcuts.columnWidths = new int[] {0};
-		gbl_panelShortcuts.rowHeights = new int[] {0};
-		gbl_panelShortcuts.columnWeights = new double[] {Double.MIN_VALUE};
-		gbl_panelShortcuts.rowWeights = new double[] {Double.MIN_VALUE};
-		panelShortcuts.setLayout(gbl_panelShortcuts);
-		tabbedPane.setFocusTraversalPolicy(new FocusTraversalOnArray(new Component[] {panelEdit, panelPresent,
-			panelImportExportStatistics, panelSettings}));
-		
 		afterConstruction();
 	}
 	
@@ -2372,14 +2393,6 @@ public class MainWindow extends JFrame {
 	
 	public JPanel getPanelSectionButtons() {
 		return panelSectionButtons;
-	}
-	
-	public JLabel getLblSelectedSongMetadata() {
-		return lblSelectedSongMetadata;
-	}
-	
-	public JLabel getLblPresentedSongMetadata() {
-		return lblPresentedSongMetadata;
 	}
 	
 	public JLabel getLblStatistics() {

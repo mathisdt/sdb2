@@ -23,6 +23,7 @@ import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.gui.MainWindow;
+import org.zephyrsoft.util.StringTools;
 
 /**
  * Startup class for SDBv2.
@@ -66,7 +67,7 @@ public class Start {
 			try {
 				MainWindow window = new MainWindow(controller);
 				controller.loadSettings();
-				if (songsFile != null) {
+				if (!StringTools.isBlank(songsFile)) {
 					controller.setSongsFileName(songsFile);
 				}
 				controller.initializeSongsModel();

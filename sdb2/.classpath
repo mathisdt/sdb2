@@ -9,8 +9,6 @@
 	<classpathentry kind="lib" path="lib/logback-classic-0.9.29.jar" sourcepath="lib/logback-classic-0.9.29-src.zip"/>
 	<classpathentry kind="lib" path="lib/logback-core-0.9.29.jar" sourcepath="lib/logback-core-0.9.29-src.zip"/>
 	<classpathentry kind="lib" path="lib/slf4j-api-1.6.1.jar" sourcepath="lib/slf4j-api-1.6.1-src.zip"/>
-	<classpathentry kind="lib" path="lib/swingx-beaninfo-1.6.2.jar" sourcepath="lib/swingx-beaninfo-1.6.2-src.zip"/>
-	<classpathentry kind="lib" path="lib/swingx-core-1.6.2.jar" sourcepath="lib/swingx-core-1.6.2-src.zip"/>
 	<classpathentry kind="lib" path="lib/xmlpull-1.1.3.4c.jar" sourcepath="lib/xmlpull-1.1.3.4c-src.zip"/>
 	<classpathentry kind="lib" path="lib/xpp3_min-1.1.4c.jar" sourcepath="lib/xpp3-1.1.4c-src.zip"/>
 	<classpathentry kind="lib" path="lib/xstream-1.4.1.jar" sourcepath="lib/xstream-1.4.1-src.zip"/>

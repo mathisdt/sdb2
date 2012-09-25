@@ -33,6 +33,20 @@ public class StringTools {
 	}
 	
 	/**
+	 * Convert a string to an easily comparable form, especially remove all punctuation and newline characters.
+	 * 
+	 * @param in the input string
+	 * @return the easily comparable form
+	 */
+	public static String toEasilyComparable(String in) {
+		if (in == null) {
+			return null;
+		} else {
+			return in.replaceAll("\\W", " ").replaceAll("  ", " ");
+		}
+	}
+	
+	/**
 	 * Convert a string which is in camel case to all caps, separated with underscores. Example:
 	 * "camelCaseStringExample" => "CAMEL_CASE_STRING_EXAMPLE"
 	 * 
