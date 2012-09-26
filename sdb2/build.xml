@@ -83,7 +83,7 @@
 		<fileset id="runtimeclasspathref" dir="${lib.dir}" includes="${runtimeclasspath}" />
 
 		<!-- compile java source files-->
-		<javac destdir="${bin.dir}" classpathref="classpathref" target="1.7" includeantruntime="false">
+		<javac destdir="${bin.dir}" classpathref="classpathref" target="1.7" debug="true" includeantruntime="false">
 			<src>
 				<pathelement path="${src.java.dir}" />
 				<pathelement path="${test.java.dir}" />
@@ -181,6 +181,7 @@ java -jar $$SCRIPTDIR/sdb.jar $$*
 		<copy todir="${target.dir}">
 			<fileset dir="${bin.dir}">
 				<include name="org/zephyrsoft/**" />
+				<include name="org/jdesktop/swingx/**" /> <!-- icons from SwingX project -->
 				<include name="*.properties" />
 				<include name="logback.xml" />
 			</fileset>
