@@ -54,12 +54,6 @@ import org.zephyrsoft.sdb2.presenter.Scroller;
  */
 public class MainController implements Scroller {
 	
-	public static final String BASE_DIR_STRING = System.getProperty("user.home") + File.separator + ".songdatabase";
-	public static final String SONGS_SUBDIR_STRING = "songs";
-	public static final String SONGS_FILE_STRING = "songs.xml";
-	public static final String SETTINGS_SUBDIR_STRING = "settings";
-	public static final String SETTINGS_FILE_STRING = "settings.xml";
-	
 	private static Logger LOG = LoggerFactory.getLogger(MainController.class);
 	
 	private String songsFileName = null;
@@ -168,7 +162,7 @@ public class MainController implements Scroller {
 	
 	public void loadSettings() {
 		LOG.debug("loading settings from file");
-		File file = new File(getSettingsFileName());
+		File file = new File(FileAndDirectoryLocations.getSettingsFileName());
 		try {
 			InputStream xmlInputStream = new FileInputStream(file);
 			settings = XMLConverter.fromXMLToSettingsModel(xmlInputStream);
@@ -183,7 +177,7 @@ public class MainController implements Scroller {
 	}
 	
 	public boolean saveSettings() {
-		File file = new File(getSettingsFileName());
+		File file = new File(FileAndDirectoryLocations.getSettingsFileName());
 		try {
 			OutputStream xmlOutputStream = new FileOutputStream(file);
 			XMLConverter.fromSettingsModelToXML(settings, xmlOutputStream);
@@ -231,31 +225,10 @@ public class MainController implements Scroller {
 	
 	private String getSongsFileName() {
 		if (songsFileName == null) {
-			return getSongsDir() + File.separator + SONGS_FILE_STRING;
+			return FileAndDirectoryLocations.getDefaultSongsFileName();
 		} else {
 			return songsFileName;
 		}
-	}
-	
-	private String getSettingsFileName() {
-		return getSettingsDir() + File.separator + SETTINGS_FILE_STRING;
-	}
-	
-	private String getSongsDir() {
-		return getDir(SONGS_SUBDIR_STRING);
-	}
-	
-	private String getSettingsDir() {
-		return getDir(SETTINGS_SUBDIR_STRING);
-	}
-	
-	private String getDir(String subDirectory) {
-		String path = BASE_DIR_STRING + File.separator + subDirectory;
-		File dataDir = new File(path);
-		if (!dataDir.exists()) {
-			dataDir.mkdirs();
-		}
-		return path;
 	}
 	
 	/**

@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration scan="true" scanPeriod="30 seconds">
-	
-	<!-- Ausgabe auf die Konsole -->
+
+	<!--  -->
+	<define name="logDirectory" class="org.zephyrsoft.sdb2.LogDirectoryDefiner" />
+
+	<!-- output to console -->
 	<appender name="RootConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
 			<level>debug</level>
@@ -12,16 +15,16 @@
 		</encoder>
 	</appender>
 
-	<!-- Ausgabe in rotierende Dateien -->
+	<!-- output to rotated files -->
 	<appender name="RootFileAppender"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>sdb.log</file>
+		<file>${logDirectory}/sdb.log</file>
 		<append>true</append>
 		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
 			<level>debug</level>
 		</filter>
 		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-			<fileNamePattern>sdb.%i</fileNamePattern>
+			<fileNamePattern>${logDirectory}/sdb.%i</fileNamePattern>
 			<maxIndex>5</maxIndex>
 		</rollingPolicy>
 		<triggeringPolicy
@@ -34,7 +37,7 @@
 		</encoder>
 	</appender>
 
-	<!-- Grund-Konfiguration -->
+	<!-- basic configuration -->
 	<root>
 		<level value="debug" />
 		<appender-ref ref="RootFileAppender" />

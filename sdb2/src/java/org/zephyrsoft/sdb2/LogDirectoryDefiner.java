@@ -14,42 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.util.gui;
+package org.zephyrsoft.sdb2;
 
-import java.util.List;
-import javax.swing.AbstractListModel;
+import ch.qos.logback.core.PropertyDefinerBase;
 
 /**
- * A list model which transparently uses an underlying {@link List}.
+ * Defines the logging directory for use in Logback.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class TransparentListModel<T> extends AbstractListModel<T> {
-	
-	private static final long serialVersionUID = -2952298254786461472L;
-	
-	private final List<T> underlyingList;
-	
-	public TransparentListModel(List<T> underlyingList) {
-		this.underlyingList = underlyingList;
-	}
+public class LogDirectoryDefiner extends PropertyDefinerBase {
 	
 	@Override
-	public int getSize() {
-		return underlyingList.size();
-	}
-	
-	@Override
-	public T getElementAt(int index) {
-		return underlyingList.get(index);
-	}
-	
-	public List<T> getAllElements() {
-		return underlyingList;
-	}
-	
-	public boolean contains(T element) {
-		return underlyingList.contains(element);
+	public String getPropertyValue() {
+		return FileAndDirectoryLocations.getLogDir();
 	}
 	
 }

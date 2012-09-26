@@ -28,7 +28,6 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -43,14 +42,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import javax.imageio.ImageIO;
-import javax.swing.BoxLayout;
 import javax.swing.DefaultListSelectionModel;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JColorChooser;
@@ -94,11 +92,13 @@ import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SettingKey;
 import org.zephyrsoft.sdb2.model.SettingsModel;
 import org.zephyrsoft.sdb2.model.Song;
+import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.util.CustomFileFilter;
 import org.zephyrsoft.util.JarTools;
+import org.zephyrsoft.util.ResourceTools;
 import org.zephyrsoft.util.StringTools;
 import org.zephyrsoft.util.gui.ErrorDialog;
 import org.zephyrsoft.util.gui.FixedWidthJList;
@@ -170,10 +170,13 @@ public class MainWindow extends JFrame {
 	private JButton btnDeleteSong;
 	private JButton btnSelectSong;
 	
+	private JSplitPane splitPanePresent;
 	private JButton btnUp;
 	private JButton btnUnselect;
 	private JButton btnDown;
 	private JPanel panelSectionButtons;
+	private GridBagConstraints panelSectionButtonsHints;
+	private GridBagConstraints panelSectionButtonsLastRowHints;
 	private JButton btnAddLinkedSong;
 	private JButton btnRemoveLinkedSong;
 	private JButton btnJumpToSelected;
@@ -217,14 +220,11 @@ public class MainWindow extends JFrame {
 	
 	private void afterConstruction() {
 		// read program version
-		String version = JarTools.getAttributeFromManifest("Song-Database-Version");
+		String version = JarTools.getAttributeFromManifest(getClass(), "Song-Database-Version");
 		if (version == null) {
 			// use version without build date and time from properties file
-			InputStream propsStream = getClass().getResourceAsStream("org/zephyrsoft/sdb2/version.properties");
-			if (propsStream == null) {
-				// try again using a "root" slash
-				propsStream = getClass().getResourceAsStream("/org/zephyrsoft/sdb2/version.properties");
-			}
+			InputStream propsStream =
+				ResourceTools.getInputStream(getClass(), "/org/zephyrsoft/sdb2/version.properties");
 			if (propsStream != null) {
 				Properties props = new Properties();
 				try {
@@ -299,9 +299,26 @@ public class MainWindow extends JFrame {
 				if (StringTools.isBlank(filterText)) {
 					return true;
 				} else {
-					String lyrics = object.getLyrics();
-					return lyrics == null
-						|| StringTools.toEasilyComparable(lyrics).contains(
+					FilterTypeEnum filterType = (FilterTypeEnum) settingsModel.get(SettingKey.SONG_LIST_FILTER);
+					String toSearch = "";
+					switch (filterType) {
+						case ONLY_LYRICS:
+							toSearch = object.getLyrics();
+							break;
+						case ONLY_TITLE:
+							toSearch = object.getTitle();
+							break;
+						case TITLE_AND_FIRST_LYRICS_LINE:
+							toSearch = object.getTitle() + " " + SongParser.getFirstLyricsLine(object);
+							break;
+						case TITLE_AND_LYRICS:
+							toSearch = object.getTitle() + " " + object.getLyrics();
+							break;
+						default:
+							throw new IllegalStateException("unknown song list filter type");
+					}
+					return toSearch == null
+						|| StringTools.toEasilyComparable(toSearch).contains(
 							StringTools.toEasilyComparable(textFieldFilter.getText()));
 				}
 			}
@@ -572,8 +589,6 @@ public class MainWindow extends JFrame {
 		if (!e.getValueIsAdjusting()) {
 			presentListSelected = presentList.getSelectedValue();
 			if (presentListSelected != null) {
-				// load data into presentation console
-				// TODO
 				// enable buttons beneath the present list
 				btnUp.setEnabled(presentList.getSelectedIndex() > 0);
 				btnUnselect.setEnabled(true);
@@ -582,8 +597,6 @@ public class MainWindow extends JFrame {
 				btnPresentSelectedSong.setEnabled(true);
 				btnJumpToSelected.setEnabled(true);
 			} else {
-				// clear presentation console
-				// TODO
 				// disable buttons beneath the present list
 				btnUp.setEnabled(false);
 				btnUnselect.setEnabled(false);
@@ -763,6 +776,9 @@ public class MainWindow extends JFrame {
 	
 	protected void handleJumpToSelectedSong() {
 		if (presentListSelected != null) {
+			if (!songsListModel.contains(presentListSelected)) {
+				textFieldFilter.setText("");
+			}
 			songsList.setSelectedValue(presentListSelected, true);
 		}
 	}
@@ -782,9 +798,13 @@ public class MainWindow extends JFrame {
 		int partIndex = 0;
 		for (AddressablePart part : parts) {
 			PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller);
-			panelSectionButtons.add(buttonGroup);
+			panelSectionButtons.add(buttonGroup, panelSectionButtonsHints);
 			partIndex++;
 		}
+		
+		// add an empty panel to consume any space that is left (so the parts appear at the top of the scrollpane view)
+		panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
+		
 		panelSectionButtons.revalidate();
 		panelSectionButtons.repaint();
 		btnJumpToPresented.setEnabled(true);
@@ -897,14 +917,11 @@ public class MainWindow extends JFrame {
 		}
 	}
 	
-	/**
-	 * Create the frame.
-	 * 
-	 * @param mainController
-	 */
 	public MainWindow(MainController mainController) {
-		setIconImage(Toolkit.getDefaultToolkit().getImage(
-			MainWindow.class.getResource("/org/zephyrsoft/sdb2/icon-16.png")));
+		setIconImages(Arrays.asList(ResourceTools.getImage(getClass(), "/org/zephyrsoft/sdb2/icon-128.png"),
+			ResourceTools.getImage(getClass(), "/org/zephyrsoft/sdb2/icon-64.png"),
+			ResourceTools.getImage(getClass(), "/org/zephyrsoft/sdb2/icon-32.png"),
+			ResourceTools.getImage(getClass(), "/org/zephyrsoft/sdb2/icon-16.png")));
 		setTitle("Song Database");
 		controller = mainController;
 		defineShortcuts();
@@ -983,7 +1000,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		btnClearFilter.setMargin(new Insets(0, 0, 0, 0));
-		btnClearFilter.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/clear.gif")));
+		btnClearFilter.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/clear.gif"));
 		GridBagConstraints gbc_btnClearFilter = new GridBagConstraints();
 		gbc_btnClearFilter.anchor = GridBagConstraints.NORTHWEST;
 		gbc_btnClearFilter.gridx = 2;
@@ -1043,7 +1060,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		btnNewSong.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/newHighlighter.gif")));
+		btnNewSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/newHighlighter.gif"));
 		GridBagConstraints gbc_btnNewSong = new GridBagConstraints();
 		gbc_btnNewSong.fill = GridBagConstraints.VERTICAL;
 		gbc_btnNewSong.anchor = GridBagConstraints.WEST;
@@ -1063,8 +1080,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		btnDeleteSong
-			.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/deleteHighlighter.gif")));
+		btnDeleteSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/deleteHighlighter.gif"));
 		GridBagConstraints gbc_btnDeleteSong = new GridBagConstraints();
 		gbc_btnDeleteSong.fill = GridBagConstraints.VERTICAL;
 		gbc_btnDeleteSong.anchor = GridBagConstraints.WEST;
@@ -1084,7 +1100,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		btnSelectSong.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/month-up.png")));
+		btnSelectSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/month-up.png"));
 		GridBagConstraints gbc_btnSelectSong = new GridBagConstraints();
 		gbc_btnSelectSong.fill = GridBagConstraints.VERTICAL;
 		gbc_btnSelectSong.anchor = GridBagConstraints.EAST;
@@ -1475,8 +1491,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		btnAddLinkedSong
-			.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/newHighlighter.gif")));
+		btnAddLinkedSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/newHighlighter.gif"));
 		GridBagConstraints gbc_btnAdd = new GridBagConstraints();
 		gbc_btnAdd.fill = GridBagConstraints.BOTH;
 		gbc_btnAdd.insets = new Insets(0, 0, 0, 5);
@@ -1498,8 +1513,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		btnRemoveLinkedSong.setIcon(new ImageIcon(MainWindow.class
-			.getResource("/org/jdesktop/swingx/deleteHighlighter.gif")));
+		btnRemoveLinkedSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/deleteHighlighter.gif"));
 		GridBagConstraints gbc_btnRemove = new GridBagConstraints();
 		gbc_btnRemove.fill = GridBagConstraints.BOTH;
 		gbc_btnRemove.gridx = 1;
@@ -1510,7 +1524,7 @@ public class MainWindow extends JFrame {
 		tabbedPane.addTab("Present Songs", null, panelPresent, null);
 		panelPresent.setLayout(new BorderLayout(0, 0));
 		
-		JSplitPane splitPanePresent = new JSplitPane();
+		splitPanePresent = new JSplitPane();
 		splitPanePresent.setBorder(null);
 		panelPresent.add(splitPanePresent, BorderLayout.CENTER);
 		
@@ -1583,7 +1597,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		btnUp.setToolTipText("Up");
-		btnUp.setIcon(new ImageIcon(MainWindow.class.getResource("/javax/swing/plaf/metal/icons/sortUp.png")));
+		btnUp.setIcon(ResourceTools.getIcon(getClass(), "/javax/swing/plaf/metal/icons/sortUp.png"));
 		GridBagConstraints gbc_btnUp = new GridBagConstraints();
 		gbc_btnUp.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnUp.anchor = GridBagConstraints.SOUTH;
@@ -1604,7 +1618,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		btnUnselect.setIcon(new ImageIcon(MainWindow.class.getResource("/org/jdesktop/swingx/JXErrorPane16.png")));
+		btnUnselect.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/JXErrorPane16.png"));
 		GridBagConstraints gbc_btnUnselect = new GridBagConstraints();
 		gbc_btnUnselect.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnUnselect.insets = new Insets(0, 0, 5, 0);
@@ -1624,7 +1638,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		btnDown.setIcon(new ImageIcon(MainWindow.class.getResource("/javax/swing/plaf/metal/icons/sortDown.png")));
+		btnDown.setIcon(ResourceTools.getIcon(getClass(), "/javax/swing/plaf/metal/icons/sortDown.png"));
 		btnDown.setToolTipText("Down");
 		GridBagConstraints gbc_btnDown = new GridBagConstraints();
 		gbc_btnDown.fill = GridBagConstraints.HORIZONTAL;
@@ -1732,7 +1746,19 @@ public class MainWindow extends JFrame {
 		panelSectionButtons = new JPanel();
 		scrollPaneSectionButtons.setViewportView(panelSectionButtons);
 		scrollPaneSectionButtons.getVerticalScrollBar().setUnitIncrement(30);
-		panelSectionButtons.setLayout(new BoxLayout(panelSectionButtons, BoxLayout.Y_AXIS));
+		panelSectionButtonsHints = new GridBagConstraints();
+		panelSectionButtonsHints.gridx = 0;
+		panelSectionButtonsHints.gridy = GridBagConstraints.RELATIVE;
+		panelSectionButtonsHints.weightx = 1.0;
+		panelSectionButtonsHints.weighty = GridBagConstraints.RELATIVE;
+		panelSectionButtonsHints.fill = GridBagConstraints.HORIZONTAL;
+		panelSectionButtonsLastRowHints = new GridBagConstraints();
+		panelSectionButtonsLastRowHints.gridx = 0;
+		panelSectionButtonsLastRowHints.gridy = GridBagConstraints.RELATIVE;
+		panelSectionButtonsLastRowHints.weightx = 1.0;
+		panelSectionButtonsLastRowHints.weighty = 1.0;
+		panelSectionButtonsLastRowHints.fill = GridBagConstraints.BOTH;
+		panelSectionButtons.setLayout(new GridBagLayout());
 		
 		btnJumpToPresented = new JButton("Jump to presented song");
 		btnJumpToPresented.addActionListener(new ActionListener() {

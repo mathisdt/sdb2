@@ -199,7 +199,8 @@ public class SongView extends JPanel implements Scroller {
 					&& ((prevPrevElement != null && prevPrevElement.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null)) {
 					// two newlines separated by a non-blank lyrics line => save current line and begin a new one
 					currentLineText = prevElement.getElement();
-					AddressableLine currentLine = new AddressableLine(currentLineText, createEndPosition());
+					AddressableLine currentLine =
+						new AddressableLine(currentLineText, createPosition(element, prevElement));
 					currentPart.add(currentLine);
 				}
 			}
@@ -233,15 +234,19 @@ public class SongView extends JPanel implements Scroller {
 	
 	private void handleTitlePosition(SongElement element) {
 		if (element.getType() == SongElementEnum.TITLE) {
-			Integer position = createEndPosition();
+			Integer position = createPosition();
 			AddressablePart titlePart = new AddressablePart();
 			titlePart.add(new AddressableLine(element.getElement(), position));
 			parts.add(titlePart);
 		}
 	}
 	
-	private Integer createEndPosition() {
-		return document.getLength();
+	private Integer createPosition(SongElement... toSubtract) {
+		int toSubtractInt = 0;
+		for (SongElement element : toSubtract) {
+			toSubtractInt += element.getElement() == null ? 0 : element.getElement().length();
+		}
+		return document.getLength() - toSubtractInt + 1;
 	}
 	
 	private void addStyles() {

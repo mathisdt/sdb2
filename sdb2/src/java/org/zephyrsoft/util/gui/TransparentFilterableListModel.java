@@ -43,12 +43,21 @@ public class TransparentFilterableListModel<T> extends TransparentListModel<T> {
 	
 	@Override
 	public T getElementAt(int index) {
-		return filteredList.get(index);
+		if (filteredList.size() > index) {
+			return filteredList.get(index);
+		} else {
+			return null;
+		}
 	}
 	
 	@Override
 	public List<T> getAllElements() {
 		return filteredList;
+	}
+	
+	@Override
+	public boolean contains(T element) {
+		return filteredList.contains(element);
 	}
 	
 	public ListFilter<T> getFilter() {

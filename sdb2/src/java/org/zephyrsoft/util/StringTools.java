@@ -42,7 +42,7 @@ public class StringTools {
 		if (in == null) {
 			return null;
 		} else {
-			return in.replaceAll("\\W", " ").replaceAll("  ", " ");
+			return in.replaceAll("\\W", " ").replaceAll("  ", " ").toLowerCase();
 		}
 	}
 	

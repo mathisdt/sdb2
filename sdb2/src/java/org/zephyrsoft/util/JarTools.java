@@ -32,13 +32,9 @@ public class JarTools {
 		// this class is not intended for instantiation
 	}
 	
-	public static String getAttributeFromManifest(String attributeName) {
+	public static String getAttributeFromManifest(Class<?> classToUse, String attributeName) {
 		String ret = null;
-		InputStream manifestStream = JarTools.class.getResourceAsStream("META-INF/MANIFEST.MF");
-		if (manifestStream == null) {
-			// try again using a "root" slash
-			manifestStream = JarTools.class.getResourceAsStream("/META-INF/MANIFEST.MF");
-		}
+		InputStream manifestStream = ResourceTools.getInputStream(classToUse, "/META-INF/MANIFEST.MF");
 		try {
 			Manifest manifest = new Manifest(manifestStream);
 			Attributes attributes = manifest.getMainAttributes();
