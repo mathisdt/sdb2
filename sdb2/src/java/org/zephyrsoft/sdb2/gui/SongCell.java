@@ -24,6 +24,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import org.zephyrsoft.sdb2.model.Song;
+import org.zephyrsoft.util.StringTools;
 
 /**
  * List entry for a {@link Song}.
@@ -75,7 +76,12 @@ public class SongCell extends JPanel {
 	}
 	
 	public void setSongTitle(String text) {
-		songTitle.setText(text);
+		if (StringTools.isEmpty(text)) {
+			// prevent a 0 pixel height:
+			songTitle.setText(" ");
+		} else {
+			songTitle.setText(text);
+		}
 	}
 	
 	public void setFirstLine(String text) {

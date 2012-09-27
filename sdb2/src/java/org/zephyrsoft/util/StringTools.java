@@ -17,6 +17,7 @@
 package org.zephyrsoft.util;
 
 import java.util.Locale;
+import java.util.UUID;
 import org.apache.commons.lang3.text.WordUtils;
 
 /**
@@ -30,6 +31,13 @@ public class StringTools {
 	
 	private StringTools() {
 		// this class is not intended for instantiation
+	}
+	
+	/**
+	 * Create a random UUID value.
+	 */
+	public static String createUUID() {
+		return UUID.randomUUID().toString();
 	}
 	
 	/**

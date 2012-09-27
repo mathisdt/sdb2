@@ -331,17 +331,17 @@ public class MainWindow extends JFrame {
 			
 			@Override
 			public void changedUpdate(DocumentEvent e) {
-				songsListModel.refilter();
+				applyFilter();
 			}
 			
 			@Override
 			public void insertUpdate(DocumentEvent e) {
-				songsListModel.refilter();
+				applyFilter();
 			}
 			
 			@Override
 			public void removeUpdate(DocumentEvent e) {
-				songsListModel.refilter();
+				applyFilter();
 			}
 		});
 		
@@ -562,29 +562,44 @@ public class MainWindow extends JFrame {
 	protected void handleSongsListSelectionChanged(ListSelectionEvent e) {
 		// only the last event in a row should fire these actions (check valueIsAdjusting)
 		if (!e.getValueIsAdjusting()) {
-			if (songsListSelected != null) {
-				saveSongData(songsListSelected);
-				clearSongData();
-				setSongEditingEnabled(false);
-				// disable buttons
-				btnDeleteSong.setEnabled(false);
-				btnSelectSong.setEnabled(false);
-				btnExportLyricsOnlyPdfSelected.setEnabled(false);
-				btnExportCompletePdfSelected.setEnabled(false);
-				btnExportStatisticsSelected.setEnabled(false);
-			}
+			saveSong();
 			songsListSelected = songsList.getSelectedValue();
-			if (songsListSelected != null) {
-				loadSongData(songsListSelected);
-				setSongEditingEnabled(true);
-				// enable buttons
-				btnDeleteSong.setEnabled(true);
-				btnSelectSong.setEnabled(true);
-				btnExportLyricsOnlyPdfSelected.setEnabled(true);
-				btnExportCompletePdfSelected.setEnabled(true);
-				btnExportStatisticsSelected.setEnabled(true);
-			}
+			loadSong();
 		}
+	}
+	
+	private void saveSong() {
+		if (songsListSelected != null) {
+			saveSongData(songsListSelected);
+			clearSongData();
+			setSongEditingEnabled(false);
+			// disable buttons
+			btnDeleteSong.setEnabled(false);
+			btnSelectSong.setEnabled(false);
+			btnExportLyricsOnlyPdfSelected.setEnabled(false);
+			btnExportCompletePdfSelected.setEnabled(false);
+			btnExportStatisticsSelected.setEnabled(false);
+		}
+	}
+	
+	private void loadSong() {
+		if (songsListSelected != null) {
+			loadSongData(songsListSelected);
+			setSongEditingEnabled(true);
+			// enable buttons
+			btnDeleteSong.setEnabled(true);
+			btnSelectSong.setEnabled(true);
+			btnExportLyricsOnlyPdfSelected.setEnabled(true);
+			btnExportCompletePdfSelected.setEnabled(true);
+			btnExportStatisticsSelected.setEnabled(true);
+		}
+	}
+	
+	private void applyFilter() {
+		saveSong();
+		songsListModel.refilter();
+		songsListSelected = songsList.getSelectedValue();
+		loadSong();
 	}
 	
 	protected void handlePresentListSelectionChanged(ListSelectionEvent e) {
@@ -620,7 +635,7 @@ public class MainWindow extends JFrame {
 	 * 
 	 * @param song the songsModel object to which the data should be written
 	 */
-	private void saveSongData(Song song) {
+	private synchronized void saveSongData(Song song) {
 		LOG.debug("saveSongData");
 		song.setLyrics(editorLyrics.getText());
 		song.setTitle(textFieldTitle.getText());
@@ -685,7 +700,7 @@ public class MainWindow extends JFrame {
 	 * 
 	 * @param song the songsModel object which should be read
 	 */
-	private void loadSongData(final Song song) {
+	private synchronized void loadSongData(final Song song) {
 		LOG.debug("loadSongData");
 		setTextAndRewind(editorLyrics, song.getLyrics());
 		setTextAndRewind(textFieldTitle, song.getTitle());
@@ -721,8 +736,9 @@ public class MainWindow extends JFrame {
 	}
 	
 	protected void handleSongNew() {
-		Song song = new Song();
+		Song song = new Song(StringTools.createUUID());
 		songsModel.addSong(song);
+		applyFilter();
 		songsList.setSelectedValue(song, true);
 	}
 	
@@ -731,6 +747,7 @@ public class MainWindow extends JFrame {
 			Song songToDelete = songsListSelected;
 			songsList.removeSelectionInterval(0, songsModel.getSize() - 1);
 			songsModel.removeSong(songToDelete);
+			applyFilter();
 		}
 	}
 	
@@ -874,6 +891,7 @@ public class MainWindow extends JFrame {
 				for (Song song : imported) {
 					songsModel.addSong(song);
 				}
+				applyFilter();
 			}
 		}
 	}

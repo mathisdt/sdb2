@@ -22,6 +22,7 @@ import java.util.List;
 import org.zephyrsoft.sdb.structure.Structure;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.Song;
+import org.zephyrsoft.util.StringTools;
 
 /**
  * Importer for songs from a SDB v1 database.
@@ -46,7 +47,7 @@ public class ImportFromSDBv1 implements Importer {
 		
 		List<Song> ret = new ArrayList<Song>();
 		for (org.zephyrsoft.sdb.structure.Song oldSong : imported.getSongs()) {
-			Song newSong = new Song();
+			Song newSong = new Song(StringTools.createUUID());
 			newSong.setTitle(oldSong.getTitel());
 			String lyrics = oldSong.getText();
 			lyrics = lyrics.replaceAll("###", "");

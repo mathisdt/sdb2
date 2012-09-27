@@ -41,12 +41,22 @@ public class Song implements Serializable, Cloneable, Comparable<Song> {
 	private String additionalCopyrightNotes;
 	private LanguageEnum language;
 	private String songNotes;
+	private String tonality;
+	private String uuid;
+	private List<Song> linkedSongs = new ArrayList<Song>();
+	private String chordSequence;
 	private String lyrics;
 	
-	private String tonality;
-	private String chordSequence;
-	
-	private List<Song> linkedSongs = new ArrayList<Song>();
+	/**
+	 * Create a song instance. By making this the only constructor, everyone (who doesn't use reflection) has to provide
+	 * a UUID.
+	 * 
+	 * @param uuid a UUID for this song
+	 * @see StringTools#createUUID()
+	 */
+	public Song(String uuid) {
+		this.uuid = uuid;
+	}
 	
 	public String getTitle() {
 		return title;
@@ -167,18 +177,16 @@ public class Song implements Serializable, Cloneable, Comparable<Song> {
 		}
 	}
 	
-	@Override
-	protected Song clone() throws CloneNotSupportedException {
-		Song clone = new Song();
-		
-		// TODO
-		
-		return clone;
+	public String getUUID() {
+		return uuid;
 	}
 	
-	/**
-	 * @see java.lang.Comparable#compareTo(java.lang.Object)
-	 */
+	@Override
+	protected Song clone() throws CloneNotSupportedException {
+		// TODO
+		throw new CloneNotSupportedException();
+	}
+	
 	@Override
 	public int compareTo(Song o) {
 		int ret = 0;
@@ -203,7 +211,7 @@ public class Song implements Serializable, Cloneable, Comparable<Song> {
 	
 	@Override
 	public String toString() {
-		return "SONG[" + title + "]";
+		return "SONG[" + title + "|" + uuid + "]";
 	}
 	
 }
