@@ -202,8 +202,9 @@ public class SongView extends JPanel implements Scroller {
 					&& prevElement != null
 					&& prevElement.getType() == SongElementEnum.LYRICS
 					&& !StringTools.isBlank(prevElement.getElement())
-					&& ((prevPrevElement != null && prevPrevElement.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null)) {
-					// two newlines separated by a non-blank lyrics line =>
+					&& ((prevPrevElement != null && (prevPrevElement.getType() == SongElementEnum.NEW_LINE || prevPrevElement
+						.getType() == SongElementEnum.TITLE)) || prevPrevElement == null)) {
+					// two newlines OR a title element and a newline, separated by a non-blank lyrics line =>
 					// save current line and begin a new one
 					currentLineText = prevElement.getElement();
 					AddressableLine currentLine =
