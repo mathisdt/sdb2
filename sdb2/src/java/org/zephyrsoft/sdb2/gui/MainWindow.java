@@ -164,6 +164,7 @@ public class MainWindow extends JFrame {
 	private FixedWidthJList<Song> linkedSongsList;
 	private TransparentListModel<Song> linkedSongsListModel;
 	
+	private JPanel panelSongList;
 	private JButton btnClearFilter;
 	private JTextField textFieldFilter;
 	private JButton btnNewSong;
@@ -171,6 +172,8 @@ public class MainWindow extends JFrame {
 	private JButton btnSelectSong;
 	
 	private JSplitPane splitPanePresent;
+	private boolean splitPanePresentDividerLocationSet = false;
+	private JPanel selectedSongListButtons;
 	private JButton btnUp;
 	private JButton btnUnselect;
 	private JButton btnDown;
@@ -736,7 +739,18 @@ public class MainWindow extends JFrame {
 			presentModel.addSong(songsListSelected);
 			tabbedPane.setSelectedIndex(TAB_INDEX_PRESENT);
 			presentList.requestFocusInWindow();
+			setDefaultDividerLocation();
 			presentList.setSelectedIndex(presentModel.getSize() - 1);
+		}
+	}
+	
+	private void setDefaultDividerLocation() {
+		if (!splitPanePresentDividerLocationSet) {
+			int desiredMinimumWidth = panelSongList.getWidth() + selectedSongListButtons.getWidth();
+			if (splitPanePresent.getDividerLocation() < desiredMinimumWidth) {
+				splitPanePresent.setDividerLocation(desiredMinimumWidth);
+			}
+			splitPanePresentDividerLocationSet = true;
 		}
 	}
 	
@@ -959,7 +973,7 @@ public class MainWindow extends JFrame {
 		splitPane.setBorder(null);
 		contentPane.add(splitPane, BorderLayout.CENTER);
 		
-		JPanel panelSongList = new JPanel();
+		panelSongList = new JPanel();
 		panelSongList.setBorder(new EmptyBorder(5, 5, 5, 5));
 		splitPane.setLeftComponent(panelSongList);
 		panelSongList.setLayout(new BorderLayout(0, 0));
@@ -1532,6 +1546,7 @@ public class MainWindow extends JFrame {
 		panelPresentLeft.setBorder(new EmptyBorder(5, 5, 5, 5));
 		splitPanePresent.setLeftComponent(panelPresentLeft);
 		panelPresentLeft.setLayout(new BorderLayout(0, 0));
+		splitPanePresent.setDividerLocation(-1);
 		
 		JScrollPane scrollPanePresentSongList = new JScrollPane();
 		scrollPanePresentSongList.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -1576,14 +1591,14 @@ public class MainWindow extends JFrame {
 		presentList.setCellRenderer(new SongCellRenderer());
 		scrollPanePresentSongList.setViewportView(presentList);
 		
-		JPanel panelSelectedSongListButtons = new JPanel();
-		panelPresentLeft.add(panelSelectedSongListButtons, BorderLayout.EAST);
+		selectedSongListButtons = new JPanel();
+		panelPresentLeft.add(selectedSongListButtons, BorderLayout.EAST);
 		GridBagLayout gbl_panelSelectedSongListButtons = new GridBagLayout();
 		gbl_panelSelectedSongListButtons.columnWidths = new int[] {0};
 		gbl_panelSelectedSongListButtons.rowHeights = new int[] {0, 0, 0, 0, 0};
 		gbl_panelSelectedSongListButtons.columnWeights = new double[] {0.0};
 		gbl_panelSelectedSongListButtons.rowWeights = new double[] {1.0, 0.0, 0.0, 0.0, 1.0};
-		panelSelectedSongListButtons.setLayout(gbl_panelSelectedSongListButtons);
+		selectedSongListButtons.setLayout(gbl_panelSelectedSongListButtons);
 		
 		btnUp = new JButton("");
 		btnUp.addActionListener(new ActionListener() {
@@ -1604,7 +1619,7 @@ public class MainWindow extends JFrame {
 		gbc_btnUp.insets = new Insets(0, 0, 5, 0);
 		gbc_btnUp.gridx = 0;
 		gbc_btnUp.gridy = 1;
-		panelSelectedSongListButtons.add(btnUp, gbc_btnUp);
+		selectedSongListButtons.add(btnUp, gbc_btnUp);
 		
 		btnUnselect = new JButton("");
 		btnUnselect.setToolTipText("Unselect");
@@ -1625,7 +1640,7 @@ public class MainWindow extends JFrame {
 		gbc_btnUnselect.anchor = GridBagConstraints.NORTH;
 		gbc_btnUnselect.gridx = 0;
 		gbc_btnUnselect.gridy = 2;
-		panelSelectedSongListButtons.add(btnUnselect, gbc_btnUnselect);
+		selectedSongListButtons.add(btnUnselect, gbc_btnUnselect);
 		
 		btnDown = new JButton("");
 		btnDown.addActionListener(new ActionListener() {
@@ -1645,7 +1660,7 @@ public class MainWindow extends JFrame {
 		gbc_btnDown.anchor = GridBagConstraints.NORTH;
 		gbc_btnDown.gridx = 0;
 		gbc_btnDown.gridy = 3;
-		panelSelectedSongListButtons.add(btnDown, gbc_btnDown);
+		selectedSongListButtons.add(btnDown, gbc_btnDown);
 		
 		btnJumpToSelected = new JButton("Jump to selected song");
 		btnJumpToSelected.addActionListener(new ActionListener() {
