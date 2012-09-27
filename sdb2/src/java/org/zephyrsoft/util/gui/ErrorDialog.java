@@ -29,6 +29,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
+import org.zephyrsoft.sdb2.gui.MainWindow;
 
 /**
  * A dialog for displaying fatal errors (such as uncaught exceptions).
@@ -43,6 +44,7 @@ public class ErrorDialog extends JDialog {
 	private JTextArea txtrAaa;
 	
 	public ErrorDialog(Component parent) {
+		setIconImages(MainWindow.getIconsFromResources(getClass()));
 		setTitle("Error");
 		setSize(400, 250);
 		setLocationRelativeTo(parent);
@@ -59,7 +61,7 @@ public class ErrorDialog extends JDialog {
 				txtrAaa.setBorder(new EmptyBorder(15, 15, 15, 15));
 				txtrAaa.setBackground(new Color(255, 255, 153));
 				txtrAaa.setOpaque(true);
-				txtrAaa.setFont(new Font("Monospaced", Font.PLAIN, 10));
+				txtrAaa.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 10));
 				txtrAaa.setEditable(false);
 				scrollPane.setViewportView(txtrAaa);
 			}
@@ -87,6 +89,18 @@ public class ErrorDialog extends JDialog {
 	public void setText(String t) {
 		txtrAaa.setText(t);
 		txtrAaa.setCaretPosition(0);
+	}
+	
+	/**
+	 * Open an error dialog.
+	 * 
+	 * @param parent the parent component
+	 * @param text the message to display
+	 */
+	public static void openDialog(Component parent, String text) {
+		ErrorDialog dialog = new ErrorDialog(parent);
+		dialog.setText(text);
+		dialog.setVisible(true);
 	}
 	
 }

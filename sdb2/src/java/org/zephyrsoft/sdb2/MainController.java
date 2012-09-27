@@ -16,6 +16,8 @@
  */
 package org.zephyrsoft.sdb2;
 
+import java.awt.Color;
+import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.gui.MainWindow;
 import org.zephyrsoft.sdb2.model.AddressablePart;
+import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SettingKey;
 import org.zephyrsoft.sdb2.model.SettingsModel;
@@ -46,6 +49,7 @@ import org.zephyrsoft.sdb2.presenter.PresenterBundle;
 import org.zephyrsoft.sdb2.presenter.PresenterWindow;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.Scroller;
+import org.zephyrsoft.util.gui.ErrorDialog;
 
 /**
  * Controller for {@link MainWindow}.
@@ -63,7 +67,7 @@ public class MainController implements Scroller {
 	private PresenterBundle presentationControl;
 	private Song currentlyPresentedSong = null;
 	
-	public void present(Presentable presentable) {
+	public boolean present(Presentable presentable) {
 		// end old presentation (if any)
 		if (presentationControl != null) {
 			presentationControl.hidePresenter();
@@ -85,10 +89,19 @@ public class MainController implements Scroller {
 			presentationControl.addPresenter(presenter2);
 		}
 		
-		currentlyPresentedSong = presentable.getSong();
-		
-		// start presentation
-		presentationControl.showPresenter();
+		if (presentationControl.size() == 0) {
+			ErrorDialog
+				.openDialog(null,
+					"You have to specify at least one presentation display.\n\nPlease review your \"Global Settings\" tab!");
+			return false;
+		} else {
+			currentlyPresentedSong = presentable.getSong();
+			
+			// start presentation
+			presentationControl.showPresenter();
+			
+			return true;
+		}
 	}
 	
 	@Override
@@ -173,6 +186,46 @@ public class MainController implements Scroller {
 		if (settings == null) {
 			// there was a problem while reading
 			settings = new SettingsModel();
+		}
+		loadDefaultSettingsForUnsetSettings();
+	}
+	
+	private void loadDefaultSettingsForUnsetSettings() {
+		putDefaultIfKeyIsUnset(SettingKey.BACKGROUND_COLOR, Color.BLACK);
+		putDefaultIfKeyIsUnset(SettingKey.TEXT_COLOR, Color.WHITE);
+		
+		putDefaultIfKeyIsUnset(SettingKey.TOP_MARGIN, Integer.valueOf(10));
+		putDefaultIfKeyIsUnset(SettingKey.LEFT_MARGIN, Integer.valueOf(0));
+		putDefaultIfKeyIsUnset(SettingKey.RIGHT_MARGIN, Integer.valueOf(0));
+		putDefaultIfKeyIsUnset(SettingKey.BOTTOM_MARGIN, Integer.valueOf(20));
+		putDefaultIfKeyIsUnset(SettingKey.DISTANCE_TITLE_TEXT, Integer.valueOf(20));
+		putDefaultIfKeyIsUnset(SettingKey.DISTANCE_TEXT_COPYRIGHT, Integer.valueOf(20));
+		
+		putDefaultIfKeyIsUnset(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.TITLE_AND_LYRICS);
+		putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.ONLY_LYRICS);
+		putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_DISPLAY, "");
+		putDefaultIfKeyIsUnset(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.LYRICS_AND_CHORDS);
+		putDefaultIfKeyIsUnset(SettingKey.SCREEN_2_DISPLAY, "");
+		
+		putDefaultIfKeyIsUnset(SettingKey.SHOW_TITLE, Boolean.TRUE);
+		putDefaultIfKeyIsUnset(SettingKey.TITLE_FONT, new Font(Font.SERIF, Font.BOLD, 10));
+		putDefaultIfKeyIsUnset(SettingKey.LYRICS_FONT, new Font(Font.SERIF, Font.PLAIN, 10));
+		putDefaultIfKeyIsUnset(SettingKey.TRANSLATION_FONT, new Font(Font.SERIF, Font.PLAIN, 10));
+		putDefaultIfKeyIsUnset(SettingKey.COPYRIGHT_FONT, new Font(Font.SERIF, Font.ITALIC, 10));
+		putDefaultIfKeyIsUnset(SettingKey.LOGO_FILE, "");
+		putDefaultIfKeyIsUnset(SettingKey.SECONDS_UNTIL_COUNTED, Integer.valueOf(60));
+		
+		// check that really all settings are set
+		for (SettingKey key : SettingKey.values()) {
+			if (!settings.isSet(key)) {
+				throw new IllegalStateException("unset value for setting key: " + key);
+			}
+		}
+	}
+	
+	private void putDefaultIfKeyIsUnset(SettingKey key, Object defaultValue) {
+		if (!settings.isSet(key)) {
+			settings.put(key, defaultValue);
 		}
 	}
 	

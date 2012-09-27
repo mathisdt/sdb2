@@ -68,6 +68,8 @@ public class SongView extends JPanel implements Scroller {
 		StyleContext.DEFAULT_STYLE);
 	private static final String TITLE_LYRICS_DISTANCE = "TITLE_LYRICS_DISTANCE";
 	private static final String LYRICS_COPYRIGHT_DISTANCE = "LYRICS_COPYRIGHT_DISTANCE";
+	private static final String LYRICS_FINAL_NEWLINE = "\n";
+	private static final String LYRICS_COPYRIGHT_DISTANCE_TEXT = " \n";
 	
 	private Song song;
 	private boolean showTitle;
@@ -164,6 +166,10 @@ public class SongView extends JPanel implements Scroller {
 	 */
 	private void render() {
 		List<SongElement> toDisplay = SongParser.parse(song, showTitle, showChords);
+		if (toDisplay.size() > 0 && toDisplay.get(toDisplay.size() - 1).getType() != SongElementEnum.COPYRIGHT) {
+			// add final newline to fetch the last line of the last part always
+			toDisplay.add(new SongElement(SongElementEnum.NEW_LINE, LYRICS_FINAL_NEWLINE));
+		}
 		
 		// TODO chord lines: correct font and correct spacing to correspond to the words below the chords!
 		
@@ -197,12 +203,25 @@ public class SongView extends JPanel implements Scroller {
 					&& prevElement.getType() == SongElementEnum.LYRICS
 					&& !StringTools.isBlank(prevElement.getElement())
 					&& ((prevPrevElement != null && prevPrevElement.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null)) {
-					// two newlines separated by a non-blank lyrics line => save current line and begin a new one
+					// two newlines separated by a non-blank lyrics line =>
+					// save current line and begin a new one
 					currentLineText = prevElement.getElement();
 					AddressableLine currentLine =
 						new AddressableLine(currentLineText, createPosition(element, prevElement));
 					currentPart.add(currentLine);
 				}
+			} else if (element.getType() == SongElementEnum.COPYRIGHT
+				&& prevElement != null
+				&& prevElement.getType() == SongElementEnum.LYRICS
+				&& !StringTools.isBlank(prevElement.getElement())
+				&& ((prevPrevElement != null && prevPrevElement.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null)) {
+				// a newline and a copyright element, separated by a non-blank lyrics line =>
+				// save current line and begin a new one
+				currentLineText = prevElement.getElement();
+				AddressableLine currentLine =
+					new AddressableLine(currentLineText, createPosition(prevElement)
+						- LYRICS_COPYRIGHT_DISTANCE_TEXT.length() - LYRICS_FINAL_NEWLINE.length());
+				currentPart.add(currentLine);
 			}
 			
 			String type = element.getType().name();
@@ -261,8 +280,8 @@ public class SongView extends JPanel implements Scroller {
 	private void handleTitleLine(SongElement element) {
 		if (isTitleLine(element)) {
 			// append space
-			appendText("\n", SongElementEnum.NEW_LINE.name());
-			appendText(" \n", TITLE_LYRICS_DISTANCE);
+			appendText(LYRICS_FINAL_NEWLINE, SongElementEnum.NEW_LINE.name());
+			appendText(LYRICS_COPYRIGHT_DISTANCE_TEXT, TITLE_LYRICS_DISTANCE);
 		}
 	}
 	
@@ -278,11 +297,11 @@ public class SongView extends JPanel implements Scroller {
 	private void handleCopyrightLine(SongElement previousElement, SongElement element) {
 		if (isFirstCopyrightLine(previousElement, element)) {
 			// prepend space
-			appendText("\n", SongElementEnum.NEW_LINE.name());
-			appendText(" \n", LYRICS_COPYRIGHT_DISTANCE);
+			appendText(LYRICS_FINAL_NEWLINE, SongElementEnum.NEW_LINE.name());
+			appendText(LYRICS_COPYRIGHT_DISTANCE_TEXT, LYRICS_COPYRIGHT_DISTANCE);
 		} else if (isCopyrightLineButNotFirstOne(previousElement, element)) {
 			// prepend newline
-			appendText("\n", SongElementEnum.NEW_LINE.name());
+			appendText(LYRICS_FINAL_NEWLINE, SongElementEnum.NEW_LINE.name());
 		}
 	}
 	

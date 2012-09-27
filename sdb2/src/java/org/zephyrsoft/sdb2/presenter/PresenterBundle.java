@@ -77,4 +77,8 @@ public class PresenterBundle implements Presenter {
 			presenter.moveToLine(part, line);
 		}
 	}
+	
+	public int size() {
+		return presenters.size();
+	}
 }

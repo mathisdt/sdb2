@@ -690,8 +690,8 @@ public class MainWindow extends JFrame {
 		btnAddLinkedSong.setEnabled(state);
 		btnRemoveLinkedSong.setEnabled(state);
 		if (state) {
-			editorLyrics.requestFocusInWindow();
 			editorLyrics.setCaretPosition(0);
+			textFieldFilter.requestFocusInWindow();
 		}
 	}
 	
@@ -823,34 +823,41 @@ public class MainWindow extends JFrame {
 	}
 	
 	protected void handleSongPresent() {
-		controller.present(new Presentable(presentListSelected, null));
-		clearSectionButtons();
-		List<AddressablePart> parts = controller.getParts();
-		int partIndex = 0;
-		for (AddressablePart part : parts) {
-			PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller);
-			panelSectionButtons.add(buttonGroup, panelSectionButtonsHints);
-			partIndex++;
+		boolean success = controller.present(new Presentable(presentListSelected, null));
+		if (success) {
+			clearSectionButtons();
+			List<AddressablePart> parts = controller.getParts();
+			int partIndex = 0;
+			for (AddressablePart part : parts) {
+				PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller);
+				panelSectionButtons.add(buttonGroup, panelSectionButtonsHints);
+				partIndex++;
+			}
+			
+			// add empty component to consume any space that is left (so the parts appear at the top of the scrollpane
+			// view)
+			panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
+			
+			panelSectionButtons.revalidate();
+			panelSectionButtons.repaint();
+			btnJumpToPresented.setEnabled(true);
 		}
-		
-		// add empty component to consume any space that is left (so the parts appear at the top of the scrollpane view)
-		panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
-		
-		panelSectionButtons.revalidate();
-		panelSectionButtons.repaint();
-		btnJumpToPresented.setEnabled(true);
 	}
 	
 	protected void handleBlankScreen() {
-		controller.present(BLANK_SCREEN);
-		clearSectionButtons();
-		btnJumpToPresented.setEnabled(false);
+		boolean success = controller.present(BLANK_SCREEN);
+		if (success) {
+			clearSectionButtons();
+			btnJumpToPresented.setEnabled(false);
+		}
 	}
 	
 	protected void handleLogoPresent() {
-		controller.present(new Presentable(null, loadLogo()));
-		clearSectionButtons();
-		btnJumpToPresented.setEnabled(false);
+		boolean success = controller.present(new Presentable(null, loadLogo()));
+		if (success) {
+			clearSectionButtons();
+			btnJumpToPresented.setEnabled(false);
+		}
 	}
 	
 	private void clearSectionButtons() {
@@ -929,9 +936,7 @@ public class MainWindow extends JFrame {
 	}
 	
 	public void showErrorDialog(String text) {
-		ErrorDialog dialog = new ErrorDialog(this);
-		dialog.setText(text);
-		dialog.setVisible(true);
+		ErrorDialog.openDialog(this, text);
 	}
 	
 	private static void buildStackTraceText(Throwable ex, StringBuilder sb) {
@@ -953,10 +958,7 @@ public class MainWindow extends JFrame {
 	}
 	
 	public MainWindow(MainController mainController) {
-		setIconImages(Arrays.asList(ResourceTools.getImage(getClass(), "/org/zephyrsoft/sdb2/icon-128.png"),
-			ResourceTools.getImage(getClass(), "/org/zephyrsoft/sdb2/icon-64.png"),
-			ResourceTools.getImage(getClass(), "/org/zephyrsoft/sdb2/icon-32.png"),
-			ResourceTools.getImage(getClass(), "/org/zephyrsoft/sdb2/icon-16.png")));
+		setIconImages(getIconsFromResources(getClass()));
 		setTitle("Song Database");
 		controller = mainController;
 		defineShortcuts();
@@ -2383,6 +2385,13 @@ public class MainWindow extends JFrame {
 		panel.add(spinnerCountAsDisplayedAfter, gbc_spinnerCountAsDisplayedAfter);
 		
 		afterConstruction();
+	}
+	
+	public static List<Image> getIconsFromResources(Class<?> classToUse) {
+		return Arrays.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"),
+			ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-64.png"),
+			ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-32.png"),
+			ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {

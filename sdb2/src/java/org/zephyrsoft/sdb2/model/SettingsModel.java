@@ -98,6 +98,15 @@ public class SettingsModel {
 		return (Boolean) value;
 	}
 	
+	public boolean isSet(SettingKey key) {
+		for (Setting<Object> setting : store) {
+			if (setting.getKey() == key) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public void put(SettingKey key, Object value) {
 		Setting<Object> toSet = null;
 		for (Setting<Object> setting : store) {

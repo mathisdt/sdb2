@@ -51,7 +51,7 @@ public class StringTools {
 		if (in == null) {
 			return null;
 		} else {
-			return in.replaceAll("\\W", " ").replaceAll("  ", " ").toLowerCase();
+			return in.replaceAll("[^\\wäöüÄÖÜß]", " ").replaceAll("  ", " ").toLowerCase();
 		}
 	}
 	
