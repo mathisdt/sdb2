@@ -182,6 +182,7 @@ java -jar $$SCRIPTDIR/sdb.jar $$*
 			<fileset dir="${bin.dir}">
 				<include name="org/zephyrsoft/**" />
 				<include name="org/jdesktop/swingx/**" /> <!-- icons from SwingX project -->
+				<include name="javax/swing/plaf/**" /> <!-- icons from JDK -->
 				<include name="*.properties" />
 				<include name="logback.xml" />
 			</fileset>

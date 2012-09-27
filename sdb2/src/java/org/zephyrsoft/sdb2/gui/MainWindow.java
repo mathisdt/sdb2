@@ -833,7 +833,7 @@ public class MainWindow extends JFrame {
 			partIndex++;
 		}
 		
-		// add an empty panel to consume any space that is left (so the parts appear at the top of the scrollpane view)
+		// add empty component to consume any space that is left (so the parts appear at the top of the scrollpane view)
 		panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
 		
 		panelSectionButtons.revalidate();
@@ -904,12 +904,15 @@ public class MainWindow extends JFrame {
 		shortcutManager.add(new KeyboardShortcut(KeyEvent.VK_ESCAPE, false, false, false) {
 			@Override
 			public void doAction() {
-				LOG.debug("Escape-Action");
+				LOG.debug("escape action");
 				if (textFieldFilter.isFocusOwner()) {
 					// empty the search field
 					textFieldFilter.setText("");
 				} else {
-					// focus the search field
+					// focus the search field:
+					// NOT using requestFocusInWindow() because then the presentation
+					// could prevent the field from being focused (if the user configured
+					// a presentation to be on the primary display)
 					textFieldFilter.requestFocus();
 				}
 			}

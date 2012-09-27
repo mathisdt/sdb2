@@ -16,6 +16,7 @@
  */
 package org.zephyrsoft.util;
 
+import java.text.Collator;
 import java.util.Locale;
 import java.util.UUID;
 import org.apache.commons.lang3.text.WordUtils;
@@ -105,6 +106,31 @@ public class StringTools {
 			return 0;
 		} else if (one != null && two != null) {
 			return one.compareTo(two);
+		} else {
+			// to silence the Eclipse warning, will never be executed:
+			throw new IllegalStateException();
+		}
+	}
+	
+	/**
+	 * Compare two Strings with regards to the current default locale. If one of the Strings is {@code null}, it is
+	 * assumed "smaller" than the non-null String.
+	 * 
+	 * @see String#compareTo(String)
+	 * @param one first parameter to compare
+	 * @param two second parameter to compare
+	 * @return the same scheme as in {@link String#compareTo(String)}
+	 */
+	public static int compareLocaleBasedWithNullFirst(String one, String two) {
+		if (one == null && two != null) {
+			return -1;
+		} else if (one != null && two == null) {
+			return 1;
+		} else if (one == null && two == null) {
+			return 0;
+		} else if (one != null && two != null) {
+			Collator collator = Collator.getInstance();
+			return collator.compare(one, two);
 		} else {
 			// to silence the Eclipse warning, will never be executed:
 			throw new IllegalStateException();

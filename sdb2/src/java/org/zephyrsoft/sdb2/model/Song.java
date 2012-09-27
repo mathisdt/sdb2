@@ -29,7 +29,7 @@ import org.zephyrsoft.util.StringTools;
  * @author Mathis Dirksen-Thedens
  */
 @XStreamAlias("song")
-public class Song implements Serializable, Cloneable, Comparable<Song> {
+public class Song implements Serializable, Comparable<Song> {
 	
 	private static final long serialVersionUID = -7133402923581521674L;
 	
@@ -182,26 +182,20 @@ public class Song implements Serializable, Cloneable, Comparable<Song> {
 	}
 	
 	@Override
-	protected Song clone() throws CloneNotSupportedException {
-		// TODO
-		throw new CloneNotSupportedException();
-	}
-	
-	@Override
 	public int compareTo(Song o) {
 		int ret = 0;
 		
-		ret = StringTools.compareWithNullFirst(getTitle(), o.getTitle());
+		ret = StringTools.compareLocaleBasedWithNullFirst(getTitle(), o.getTitle());
 		if (ret != 0) {
 			return ret;
 		}
 		
-		ret = StringTools.compareWithNullFirst(getLyrics(), o.getLyrics());
+		ret = StringTools.compareLocaleBasedWithNullFirst(getLyrics(), o.getLyrics());
 		if (ret != 0) {
 			return ret;
 		}
 		
-		ret = StringTools.compareWithNullFirst(getChordSequence(), o.getChordSequence());
+		ret = StringTools.compareLocaleBasedWithNullFirst(getChordSequence(), o.getChordSequence());
 		if (ret != 0) {
 			return ret;
 		}
