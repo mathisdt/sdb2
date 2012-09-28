@@ -117,6 +117,9 @@ import say.swing.JFontChooser;
  */
 public class MainWindow extends JFrame {
 	
+	private static final String PROBLEM_WHILE_SAVING =
+		"There was a problem while saving the data.\n\nPlease examine the log file at:\n";
+	
 	private static final Presentable BLANK_SCREEN = new Presentable(null, null);
 	
 	private static final long serialVersionUID = -6874196690375696416L;
@@ -571,7 +574,7 @@ public class MainWindow extends JFrame {
 	
 	private void saveSong() {
 		if (songsListSelected != null) {
-			saveSongData(songsListSelected);
+			saveSongWithoutChangingGUI();
 			clearSongData();
 			setSongEditingEnabled(false);
 			// disable buttons
@@ -581,6 +584,10 @@ public class MainWindow extends JFrame {
 			btnExportCompletePdfSelected.setEnabled(false);
 			btnExportStatisticsSelected.setEnabled(false);
 		}
+	}
+	
+	private void saveSongWithoutChangingGUI() {
+		saveSongData(songsListSelected);
 	}
 	
 	private void loadSong() {
@@ -628,7 +635,7 @@ public class MainWindow extends JFrame {
 	}
 	
 	protected void handleSongDataFocusLost() {
-		saveSongData(songsListSelected);
+		saveSongWithoutChangingGUI();
 	}
 	
 	/**
@@ -725,7 +732,7 @@ public class MainWindow extends JFrame {
 	
 	protected void handleWindowClosing() {
 		if (songsListSelected != null) {
-			saveSongData(songsListSelected);
+			saveSongWithoutChangingGUI();
 		}
 		handleSettingsSaveAndLock();
 		boolean mayClose = controller.prepareClose();
@@ -734,9 +741,7 @@ public class MainWindow extends JFrame {
 			dispose();
 			controller.shutdown();
 		} else {
-			ErrorDialog.openDialog(this,
-				"There was a problem while saving the data.\n\nPlease examine the log file at:\n"
-					+ FileAndDirectoryLocations.getLogDir());
+			ErrorDialog.openDialog(this, PROBLEM_WHILE_SAVING + FileAndDirectoryLocations.getLogDir());
 		}
 	}
 	
@@ -926,6 +931,19 @@ public class MainWindow extends JFrame {
 					// could prevent the field from being focused (if the user configured
 					// a presentation to be on the primary display)
 					textFieldFilter.requestFocus();
+				}
+			}
+		});
+		
+		shortcutManager.add(new KeyboardShortcut(KeyEvent.VK_S, false, false, true) {
+			@Override
+			public void doAction() {
+				LOG.debug("ctrl-s action");
+				saveSongWithoutChangingGUI();
+				boolean success = controller.saveAll();
+				if (!success) {
+					ErrorDialog.openDialog(MainWindow.this,
+						PROBLEM_WHILE_SAVING + FileAndDirectoryLocations.getLogDir());
 				}
 			}
 		});

@@ -188,6 +188,10 @@ public class MainController implements Scroller {
 	
 	public boolean prepareClose() {
 		LOG.debug("preparing to close application");
+		return saveAll();
+	}
+	
+	public boolean saveAll() {
 		boolean successfullySavedSongs = saveSongs();
 		boolean successfullySavedSettings = saveSettings();
 		boolean successfullySavedStatistics = saveStatistics();
@@ -290,7 +294,7 @@ public class MainController implements Scroller {
 		statistics.addStatisticsEntry(song, new Date());
 	}
 	
-	public boolean saveStatistics() {
+	public synchronized boolean saveStatistics() {
 		File file = new File(FileAndDirectoryLocations.getStatisticsFileName());
 		try {
 			OutputStream xmlOutputStream = new FileOutputStream(file);
@@ -303,7 +307,7 @@ public class MainController implements Scroller {
 		}
 	}
 	
-	public boolean saveSettings() {
+	public synchronized boolean saveSettings() {
 		File file = new File(FileAndDirectoryLocations.getSettingsFileName());
 		try {
 			OutputStream xmlOutputStream = new FileOutputStream(file);
@@ -329,7 +333,7 @@ public class MainController implements Scroller {
 		}
 	}
 	
-	private boolean saveSongs() {
+	public synchronized boolean saveSongs() {
 		File file = new File(getSongsFileName());
 		try {
 			OutputStream xmlOutputStream = new FileOutputStream(file);
