@@ -32,8 +32,8 @@ import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
-import org.zephyrsoft.sdb2.model.SettingKey;
-import org.zephyrsoft.sdb2.model.SettingsModel;
+import org.zephyrsoft.sdb2.model.settings.SettingKey;
+import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.util.gui.ImagePanel;
 
 /**

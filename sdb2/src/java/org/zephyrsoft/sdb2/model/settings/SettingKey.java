@@ -14,10 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.model;
+package org.zephyrsoft.sdb2.model.settings;
 
 import java.awt.Color;
 import java.awt.Font;
+import org.zephyrsoft.sdb2.model.FilterTypeEnum;
+import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 
 /**
  * The keys to use with the {@link SettingsModel}.

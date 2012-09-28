@@ -67,6 +67,7 @@ public class Start {
 			try {
 				MainWindow window = new MainWindow(controller);
 				controller.loadSettings();
+				controller.loadStatistics();
 				if (!StringTools.isBlank(songsFile)) {
 					controller.setSongsFileName(songsFile);
 				}

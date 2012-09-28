@@ -31,6 +31,7 @@ public class FileAndDirectoryLocations {
 	public static final String SETTINGS_SUBDIR_STRING = "settings";
 	public static final String SETTINGS_FILE_STRING = "settings.xml";
 	public static final String STATISTICS_SUBDIR_STRING = "statistics";
+	public static final String STATISTICS_FILE_STRING = "statistics.xml";
 	public static final String LOG_SUBDIR_STRING = "log";
 	
 	static String getDefaultSongsFileName() {
@@ -39,6 +40,10 @@ public class FileAndDirectoryLocations {
 	
 	static String getSettingsFileName() {
 		return getSettingsDir() + File.separator + SETTINGS_FILE_STRING;
+	}
+	
+	static String getStatisticsFileName() {
+		return getStatisticsDir() + File.separator + STATISTICS_FILE_STRING;
 	}
 	
 	private static String getSongsDir() {
@@ -53,7 +58,7 @@ public class FileAndDirectoryLocations {
 		return getDir(STATISTICS_SUBDIR_STRING);
 	}
 	
-	static String getLogDir() {
+	public static String getLogDir() {
 		return getDir(LOG_SUBDIR_STRING);
 	}
 	

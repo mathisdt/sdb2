@@ -27,7 +27,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -38,11 +42,12 @@ import org.zephyrsoft.sdb2.gui.MainWindow;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
-import org.zephyrsoft.sdb2.model.SettingKey;
-import org.zephyrsoft.sdb2.model.SettingsModel;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.XMLConverter;
+import org.zephyrsoft.sdb2.model.settings.SettingKey;
+import org.zephyrsoft.sdb2.model.settings.SettingsModel;
+import org.zephyrsoft.sdb2.model.statistics.StatisticsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.Presenter;
 import org.zephyrsoft.sdb2.presenter.PresenterBundle;
@@ -63,9 +68,13 @@ public class MainController implements Scroller {
 	private String songsFileName = null;
 	private SongsModel songs = null;
 	private SettingsModel settings = null;
+	private StatisticsModel statistics = null;
 	private List<GraphicsDevice> screens;
 	private PresenterBundle presentationControl;
 	private Song currentlyPresentedSong = null;
+	
+	private ExecutorService executor = Executors.newSingleThreadExecutor();
+	private Future<?> countDownFuture;
 	
 	public boolean present(Presentable presentable) {
 		// end old presentation (if any)
@@ -97,10 +106,39 @@ public class MainController implements Scroller {
 		} else {
 			currentlyPresentedSong = presentable.getSong();
 			
+			if (currentlyPresentedSong != null) {
+				startCountDown(settings.getInteger(SettingKey.SECONDS_UNTIL_COUNTED), currentlyPresentedSong);
+			} else {
+				stopCountDown();
+			}
+			
 			// start presentation
 			presentationControl.showPresenter();
 			
 			return true;
+		}
+	}
+	
+	public void startCountDown(final int seconds, final Song song) {
+		Runnable countDownRunnable = new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(seconds * 1000);
+					countSongAsPresentedToday(song);
+				} catch (InterruptedException e) {
+					// if interrupted, do nothing (the countdown was stopped)
+				}
+			}
+		};
+		stopCountDown();
+		countDownFuture = executor.submit(countDownRunnable);
+	}
+	
+	public void stopCountDown() {
+		if (countDownFuture != null) {
+			countDownFuture.cancel(true);
+			countDownFuture = null;
 		}
 	}
 	
@@ -152,7 +190,8 @@ public class MainController implements Scroller {
 		LOG.debug("preparing to close application");
 		boolean successfullySavedSongs = saveSongs();
 		boolean successfullySavedSettings = saveSettings();
-		return successfullySavedSongs && successfullySavedSettings;
+		boolean successfullySavedStatistics = saveStatistics();
+		return successfullySavedSongs && successfullySavedSettings && successfullySavedStatistics;
 	}
 	
 	public void shutdown() {
@@ -170,6 +209,22 @@ public class MainController implements Scroller {
 		if (songs == null) {
 			// there was a problem while reading
 			songs = new SongsModel();
+		}
+	}
+	
+	public void loadStatistics() {
+		LOG.debug("loading statistics from file");
+		File file = new File(FileAndDirectoryLocations.getStatisticsFileName());
+		try {
+			InputStream xmlInputStream = new FileInputStream(file);
+			statistics = XMLConverter.fromXMLToStatisticsModel(xmlInputStream);
+			xmlInputStream.close();
+		} catch (IOException e) {
+			LOG.error("could not read statistics from \"" + file.getAbsolutePath() + "\"");
+		}
+		if (statistics == null) {
+			// there was a problem while reading
+			statistics = new StatisticsModel();
 		}
 	}
 	
@@ -226,6 +281,25 @@ public class MainController implements Scroller {
 	private void putDefaultIfKeyIsUnset(SettingKey key, Object defaultValue) {
 		if (!settings.isSet(key)) {
 			settings.put(key, defaultValue);
+		}
+	}
+	
+	public void countSongAsPresentedToday(Song song) {
+		Validate.notNull(song, "counted song must be different from null");
+		LOG.info("counting song \"{}\" as presented today", song.getTitle());
+		statistics.addStatisticsEntry(song, new Date());
+	}
+	
+	public boolean saveStatistics() {
+		File file = new File(FileAndDirectoryLocations.getStatisticsFileName());
+		try {
+			OutputStream xmlOutputStream = new FileOutputStream(file);
+			XMLConverter.fromStatisticsModelToXML(statistics, xmlOutputStream);
+			xmlOutputStream.close();
+			return true;
+		} catch (IOException e) {
+			LOG.error("could not write statistics to \"" + file.getAbsolutePath() + "\"");
+			return false;
 		}
 	}
 	

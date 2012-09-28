@@ -78,6 +78,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.JTextComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zephyrsoft.sdb2.FileAndDirectoryLocations;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.gui.renderer.FilterTypeCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.LanguageCellRenderer;
@@ -89,11 +90,11 @@ import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
-import org.zephyrsoft.sdb2.model.SettingKey;
-import org.zephyrsoft.sdb2.model.SettingsModel;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.sdb2.model.SongsModel;
+import org.zephyrsoft.sdb2.model.settings.SettingKey;
+import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.util.CustomFileFilter;
@@ -732,6 +733,10 @@ public class MainWindow extends JFrame {
 			setVisible(false);
 			dispose();
 			controller.shutdown();
+		} else {
+			ErrorDialog.openDialog(this,
+				"There was a problem while saving the data.\n\nPlease examine the log file at:\n"
+					+ FileAndDirectoryLocations.getLogDir());
 		}
 	}
 	

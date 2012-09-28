@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.model;
+package org.zephyrsoft.sdb2.model.settings;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -22,6 +22,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
+import org.zephyrsoft.sdb2.model.XMLConverter;
 
 /**
  * Global settings of the Song Database.

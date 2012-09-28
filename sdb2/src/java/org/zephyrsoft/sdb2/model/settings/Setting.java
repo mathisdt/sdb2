@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.model;
+package org.zephyrsoft.sdb2.model.settings;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import org.zephyrsoft.util.StringTools;
