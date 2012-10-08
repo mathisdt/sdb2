@@ -123,11 +123,13 @@ public class MainController implements Scroller {
 		Runnable countDownRunnable = new Runnable() {
 			@Override
 			public void run() {
+				LOG.debug("start sleeping for {} seconds", seconds);
 				try {
 					Thread.sleep(seconds * 1000);
 					countSongAsPresentedToday(song);
 				} catch (InterruptedException e) {
 					// if interrupted, do nothing (the countdown was stopped)
+					LOG.debug("interrupted");
 				}
 			}
 		};
@@ -137,8 +139,11 @@ public class MainController implements Scroller {
 	
 	public void stopCountDown() {
 		if (countDownFuture != null) {
+			LOG.debug("stopping countdown");
 			countDownFuture.cancel(true);
 			countDownFuture = null;
+		} else {
+			LOG.debug("wanted to stop countdown, but nothing to do");
 		}
 	}
 	

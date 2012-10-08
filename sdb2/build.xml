@@ -41,12 +41,24 @@
 		<fileset dir="${lib.dir}" includes="*.jar" />
 	</path>
 	<taskdef classpathref="lib.path" uri="antlib:org.ant4eclipse" resource="org/ant4eclipse/antlib.xml" />
+
+	<!-- prepare aspectj -->
+	<path id="aspectjtools.path">
+		<fileset dir="${lib.dir}" includes="aspectjtools-*.jar" />
+	</path>
+	<taskdef classpathref="aspectjtools.path" resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties" />
+
 	<property name="workspace.dir" value="${start.dir}/.." />
 	<dirname property="project.dir" file="${start.dir}/build.xml"/>
 	<basename property="project.name" file="${start.dir}"/>
 	<ant4eclipse:jdtClassPathLibrary name="org.eclipse.jdt.junit.JUNIT_CONTAINER/4">
 		<fileset dir="${lib.dir}">
 			<include name="junit-4*.jar" />
+		</fileset>
+	</ant4eclipse:jdtClassPathLibrary >
+	<ant4eclipse:jdtClassPathLibrary name="org.eclipse.ajdt.core.ASPECTJRT_CONTAINER">
+		<fileset dir="${lib.dir}">
+			<include name="aspectjrt-*.jar" />
 		</fileset>
 	</ant4eclipse:jdtClassPathLibrary >
 
@@ -78,17 +90,24 @@
 			</and>
 		</restrict>
 		<pathconvert refid="runtimeclasspathref1" property="runtimeclasspath" pathsep=",">
-		   <globmapper from="${lib.dir}/*" to="*" handledirsep="true" />
+			<globmapper from="${lib.dir}/*" to="*" handledirsep="true" />
 		</pathconvert>
 		<fileset id="runtimeclasspathref" dir="${lib.dir}" includes="${runtimeclasspath}" />
 
 		<!-- compile java source files-->
-		<javac destdir="${bin.dir}" classpathref="classpathref" target="1.7" debug="true" includeantruntime="false">
+		<javac destdir="${bin.dir}" classpathref="classpathref" source="1.7" target="1.7" debug="true" includeantruntime="false">
 			<src>
 				<pathelement path="${src.java.dir}" />
 				<pathelement path="${test.java.dir}" />
 			</src>
 		</javac>
+
+		<!-- compile and insert aspects -->
+		<iajc destdir="${bin.dir}" classpathref="classpathref" compliance="1.7" source="1.7" target="1.7" debug="true" verbose="true">
+			<srcdir>
+				<pathelement path="${src.java.dir}" />
+			</srcdir>
+		</iajc>
 
 		<!-- copy resources to ${bin.dir} -->
 		<copy todir="${bin.dir}">
@@ -181,8 +200,10 @@ java -jar $$SCRIPTDIR/sdb.jar $$*
 		<copy todir="${target.dir}">
 			<fileset dir="${bin.dir}">
 				<include name="org/zephyrsoft/**" />
-				<include name="org/jdesktop/swingx/**" /> <!-- icons from SwingX project -->
-				<include name="javax/swing/plaf/**" /> <!-- icons from JDK -->
+				<include name="org/jdesktop/swingx/**" />
+				<!-- icons from SwingX project -->
+				<include name="javax/swing/plaf/**" />
+				<!-- icons from JDK -->
 				<include name="*.properties" />
 				<include name="logback.xml" />
 			</fileset>
