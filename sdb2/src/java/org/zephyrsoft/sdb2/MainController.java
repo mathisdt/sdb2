@@ -134,7 +134,11 @@ public class MainController implements Scroller {
 			}
 		};
 		stopCountDown();
-		countDownFuture = executor.submit(countDownRunnable);
+		if (executor.isShutdown()) {
+			throw new IllegalStateException("background executor is already stopped");
+		} else {
+			countDownFuture = executor.submit(countDownRunnable);
+		}
 	}
 	
 	public void stopCountDown() {
@@ -209,6 +213,7 @@ public class MainController implements Scroller {
 	
 	public void shutdown(int exitCode) {
 		LOG.debug("closing application, exit code " + exitCode);
+		executor.shutdownNow();
 		System.exit(exitCode);
 	}
 	
