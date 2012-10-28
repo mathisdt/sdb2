@@ -19,6 +19,7 @@ package org.zephyrsoft.sdb2.aspects;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zephyrsoft.sdb2.Start;
 
 /**
  * Simple aspect to log method calls.
@@ -66,19 +67,27 @@ public abstract aspect Trace {
 	pointcut myMethod(): myClass() && execution(* *(..));
 
 	before(): myConstructor() {
-		traceEntry("" + thisJoinPointStaticPart.getSignature());
+		if (Start.isTracingEnabled()) {
+			traceEntry("" + thisJoinPointStaticPart.getSignature());
+		}
 	}
 
 	after(): myConstructor() {
-		traceExit("" + thisJoinPointStaticPart.getSignature());
+		if (Start.isTracingEnabled()) {
+			traceExit("" + thisJoinPointStaticPart.getSignature());
+		}
 	}
 
 	before(): myMethod() {
-		traceEntry("" + thisJoinPointStaticPart.getSignature());
+		if (Start.isTracingEnabled()) {
+			traceEntry("" + thisJoinPointStaticPart.getSignature());
+		}
 	}
 
 	after(): myMethod() {
-		traceExit("" + thisJoinPointStaticPart.getSignature());
+		if (Start.isTracingEnabled()) {
+			traceExit("" + thisJoinPointStaticPart.getSignature());
+		}
 	}
 
 }

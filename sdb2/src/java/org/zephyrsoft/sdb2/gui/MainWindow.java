@@ -290,6 +290,44 @@ public class MainWindow extends JFrame {
 		comboPresentationScreen2Contents.setRenderer(new ScreenContentsCellRenderer());
 		comboPresentationScreen1Display.setRenderer(new ScreenDisplayCellRenderer());
 		comboPresentationScreen2Display.setRenderer(new ScreenDisplayCellRenderer());
+		
+		// add keyboard comfort to the filter field
+		textFieldFilter.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_KP_RIGHT) {
+					presentList.requestFocusInWindow();
+				} else if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_KP_UP) {
+					songsList.moveSelectionUp();
+				} else if (e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_KP_DOWN) {
+					songsList.moveSelectionDown();
+				} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					handleSongSelect();
+				}
+			}
+		});
+		
+		// add keyboard comfort to the global songs list
+		songsList.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					handleSongSelect();
+				}
+			}
+		});
+		
+		// add keyboard comfort to the present songs list
+		presentList.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_KP_LEFT) {
+					songsList.requestFocusInWindow();
+				} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					handleSongPresent();
+				}
+			}
+		});
 	}
 	
 	public void setModels(SongsModel songs, SettingsModel settings) {
@@ -587,7 +625,9 @@ public class MainWindow extends JFrame {
 	}
 	
 	private void saveSongWithoutChangingGUI() {
-		saveSongData(songsListSelected);
+		if (songsListSelected != null) {
+			saveSongData(songsListSelected);
+		}
 	}
 	
 	private void loadSong() {
@@ -699,7 +739,6 @@ public class MainWindow extends JFrame {
 		btnRemoveLinkedSong.setEnabled(state);
 		if (state) {
 			editorLyrics.setCaretPosition(0);
-			textFieldFilter.requestFocusInWindow();
 		}
 	}
 	
@@ -731,9 +770,7 @@ public class MainWindow extends JFrame {
 	}
 	
 	protected void handleWindowClosing() {
-		if (songsListSelected != null) {
-			saveSongWithoutChangingGUI();
-		}
+		saveSongWithoutChangingGUI();
 		handleSettingsSaveAndLock();
 		boolean mayClose = controller.prepareClose();
 		if (mayClose) {

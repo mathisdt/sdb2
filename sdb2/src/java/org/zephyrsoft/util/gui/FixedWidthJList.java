@@ -17,6 +17,7 @@
 package org.zephyrsoft.util.gui;
 
 import javax.swing.JList;
+import javax.swing.ListSelectionModel;
 
 /**
  * A {@link JList} without horizontal scrolling. All cell renderers are fixed to the width of the list viewport
@@ -34,4 +35,33 @@ public class FixedWidthJList<T> extends JList<T> {
 		return 0;
 	}
 	
+	public void moveSelectionUp() {
+		if (getSelectionMode() != ListSelectionModel.SINGLE_SELECTION) {
+			throw new IllegalStateException("list does not use single selection");
+		}
+		int selectedIndex = getSelectedIndex();
+		int size = getModel().getSize();
+		if (selectedIndex < 0 && size > 0) {
+			// no selection: select first element
+			setSelectedIndex(0);
+		} else if (selectedIndex > 0) {
+			// selection is not the first element: select the previous element
+			setSelectedIndex(selectedIndex - 1);
+		}
+	}
+	
+	public void moveSelectionDown() {
+		if (getSelectionMode() != ListSelectionModel.SINGLE_SELECTION) {
+			throw new IllegalStateException("list does not use single selection");
+		}
+		int selectedIndex = getSelectedIndex();
+		int size = getModel().getSize();
+		if (selectedIndex < 0 && size > 0) {
+			// no selection: select first element
+			setSelectedIndex(0);
+		} else if (selectedIndex < size - 1) {
+			// selection is not the last element: select the next element
+			setSelectedIndex(selectedIndex + 1);
+		}
+	}
 }
