@@ -24,6 +24,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 if (file_exists('constants.php'))
 {
    include('constants.php');
+   header('Last-Modified: ' . BUILD_TIMESTAMP_READABLE);
 }
 ?>
 <jnlp spec="1.0+"

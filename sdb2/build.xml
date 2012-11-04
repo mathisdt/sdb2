@@ -35,6 +35,9 @@
 	<tstamp>
 		<format property="build.timestamp" pattern="yyyyMMddHHmm" />
 	</tstamp>
+	<tstamp>
+		<format property="build.timestamp.readable" pattern="EEE, dd MMM yyyy HH:mm:ss zzz" />
+	</tstamp>
 
 	<!-- prepare ant4eclipse -->
 	<path id="lib.path">
@@ -147,6 +150,7 @@
 		<!-- create PHP file to preserve build timestamp for Java WebStart -->
 		<echo file="${release.dir}/constants.php">&lt;?php
 define("BUILD_TIMESTAMP", "${build.timestamp}");
+define("BUILD_TIMESTAMP_READABLE", "${build.timestamp.readable}");
 ?&gt;</echo>
 
 		<!-- create scripts for easy startup -->

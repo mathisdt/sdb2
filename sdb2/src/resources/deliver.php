@@ -38,6 +38,7 @@ if ($versionId==BUILD_TIMESTAMP) {
 	if (file_exists($path) && is_readable($path) ) {
 		header('Content-Type: application/java-archive');
 		header('x-java-jnlp-version-id: ' . BUILD_TIMESTAMP);
+		header('Last-Modified: ' . BUILD_TIMESTAMP_READABLE);
 		header("Content-length: ".filesize($path));
 		readfile($path);
 	} else {
