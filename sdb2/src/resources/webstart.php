@@ -40,11 +40,11 @@ if (file_exists('constants.php'))
 			<desktop />
 			<menu />
 		</shortcut>
+		<offline-allowed />
 	</information>
 
 	<application-desc name="Song Database" main-class="org.zephyrsoft.sdb2.Start" />
 
-	<offline-allowed />
 	<update check="background" policy="prompt-update" />
 
 	<security>
