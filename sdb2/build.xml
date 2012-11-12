@@ -23,6 +23,9 @@
 	<property name="package.dir" value="${start.dir}/package" />
 	<property name="keystore.dir" value="${start.dir}/keystore" />
 	<property name="keystore.file" value="${keystore.dir}/keystore" />
+	<!-- provide the possibility to use a fixed keystore so users don't have to approve the signer again with every new build -->
+	<property name="fixed.keystore.dir" value="${user.home}/keystore" />
+	<property name="fixed.keystore.file" value="${fixed.keystore.dir}/keystore" />
 	<tstamp>
 		<format property="build.date" pattern="yyyy-MM-dd" />
 	</tstamp>
@@ -227,24 +230,38 @@ java -jar $$SCRIPTDIR/sdb.jar $$*
 		</jar>
 	</target>
 
-	<target name="signJars">
+	<target name="check-fixed-keystore">
+	    <available property="fixed.keystore.exists" file="${fixed.keystore.file}"/>
+	</target>
+	<target name="use-fixed-keystore" depends="check-fixed-keystore" if="${fixed.keystore.exists}">
+	    <!-- set effective keystore to the fixed keystore -->
+		<property name="effective.keystore.file" value="${fixed.keystore.file}" />
+	</target>
+	<target name="use-own-keystore" depends="check-fixed-keystore" unless="${fixed.keystore.exists}">
+	    <!-- set effective keystore to the local keystore -->
+		<property name="effective.keystore.file" value="${keystore.file}" />
+	</target>
+
+	<target name="signJars" depends="use-fixed-keystore, use-own-keystore">
+		<echo>using keystore: ${effective.keystore.file}</echo>
+
 		<!-- create keystore if necessary -->
 		<antcall target="createKeystore" inheritRefs="true" />
 
 		<!-- sign all JAR files -->
-		<signjar keystore="${keystore.file}" alias="sdb" storepass="sdbsdb">
+		<signjar keystore="${effective.keystore.file}" alias="sdb" storepass="sdbsdb">
 			<fileset dir="${release.dir}" includes="**/*.jar" />
 		</signjar>
 	</target>
 
 	<target name="checkKeystore">
-		<condition property="keystore.exists">
-			<available file="${keystore.file}" />
-		</condition>
+		<available property="keystore.exists" file="${effective.keystore.file}" />
 	</target>
 
 	<target name="createKeystore" depends="checkKeystore" unless="keystore.exists">
-		<echo>creating keystore</echo>
+		<echo>creating keystore: ${keystore.file}</echo>
+		<!-- DON'T use ${effective.keystore.file} here because we ONLY want to create our own keystore if it doesn't exist yet!
+		     At least it won't overwrite the fixed keystore this way... -->
 		<genkey keystore="${keystore.file}" storepass="sdbsdb" alias="sdb" dname="CN=Build Script, OU=Song Database, O=ZephyrSoft, C=DE" validity="20000" />
 	</target>
 
