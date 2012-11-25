@@ -311,8 +311,34 @@ public class MainWindow extends JFrame {
 		songsList.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+				if (e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_KP_RIGHT) {
+					presentList.requestFocusInWindow();
+				} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					handleSongSelect();
+				}
+			}
+			
+			@Override
+			public void keyTyped(KeyEvent e) {
+				char keyChar = e.getKeyChar();
+				
+				if (keyChar != KeyEvent.CHAR_UNDEFINED) {
+					if (Character.isLetterOrDigit(keyChar)
+						|| Character.getType(keyChar) == Character.CONNECTOR_PUNCTUATION
+						|| Character.getType(keyChar) == Character.MATH_SYMBOL
+						|| Character.getType(keyChar) == Character.OTHER_SYMBOL
+						|| Character.getType(keyChar) == Character.DASH_PUNCTUATION
+						|| Character.getType(keyChar) == Character.START_PUNCTUATION
+						|| Character.getType(keyChar) == Character.END_PUNCTUATION
+						|| Character.getType(keyChar) == Character.SPACE_SEPARATOR
+						|| Character.getType(keyChar) == Character.OTHER_PUNCTUATION) {
+						// forward to filter field
+						textFieldFilter.setText(textFieldFilter.getText() + keyChar);
+					} else if (keyChar == (char) 8 && textFieldFilter.getText().length() > 0) {
+						// strip last character from filter field
+						textFieldFilter.setText(textFieldFilter.getText().substring(0,
+							textFieldFilter.getText().length() - 1));
+					}
 				}
 			}
 		});
@@ -325,6 +351,26 @@ public class MainWindow extends JFrame {
 					songsList.requestFocusInWindow();
 				} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					handleSongPresent();
+				}
+			}
+		});
+		
+		// lock setting controls to prevent accidental changes
+		tabbedPane.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				// on every tab switch, lock the settings again
+				handleSettingsSaveAndLock();
+			}
+		});
+		addWindowFocusListener(new WindowAdapter() {
+			@Override
+			public void windowLostFocus(WindowEvent e) {
+				try {
+					// on every window deactivation, lock the settings again
+					handleSettingsSaveAndLock();
+				} catch (Throwable ex) {
+					handleError(ex);
 				}
 			}
 		});
@@ -424,11 +470,11 @@ public class MainWindow extends JFrame {
 	}
 	
 	protected void handleSettingsSaveAndLock() {
-		if (settingsModel != null) {
+		// only if the "unlock" button is disabled (which means that the settings were just edited)
+		if (btnUnlock != null && !btnUnlock.isEnabled() && settingsModel != null) {
 			commitSpinners(spinnerTopMargin, spinnerLeftMargin, spinnerRightMargin, spinnerBottomMargin,
 				spinnerDistanceTitleText, spinnerDistanceTextCopyright, spinnerCountAsDisplayedAfter);
 			// disable controls
-			setSettingsEnabled(false);
 			// copy changed settings to the model
 			settingsModel.put(SettingKey.SHOW_TITLE, checkboxShowTitle.getModel().isSelected());
 			settingsModel.put(SettingKey.TOP_MARGIN, spinnerTopMargin.getValue());
@@ -438,11 +484,13 @@ public class MainWindow extends JFrame {
 			settingsModel.put(SettingKey.DISTANCE_TITLE_TEXT, spinnerDistanceTitleText.getValue());
 			settingsModel.put(SettingKey.DISTANCE_TEXT_COPYRIGHT, spinnerDistanceTextCopyright.getValue());
 			settingsModel.put(SettingKey.SONG_LIST_FILTER, comboSongListFiltering.getSelectedItem());
-			settingsModel.put(SettingKey.SCREEN_1_DISPLAY,
-				ScreenHelper.getScreenId((GraphicsDevice) comboPresentationScreen1Display.getSelectedItem()));
+			String screenOneId =
+				ScreenHelper.getScreenId((GraphicsDevice) comboPresentationScreen1Display.getSelectedItem());
+			settingsModel.put(SettingKey.SCREEN_1_DISPLAY, screenOneId);
 			settingsModel.put(SettingKey.SCREEN_1_CONTENTS, comboPresentationScreen1Contents.getSelectedItem());
-			settingsModel.put(SettingKey.SCREEN_2_DISPLAY,
-				ScreenHelper.getScreenId((GraphicsDevice) comboPresentationScreen2Display.getSelectedItem()));
+			String screenTwoId =
+				ScreenHelper.getScreenId((GraphicsDevice) comboPresentationScreen2Display.getSelectedItem());
+			settingsModel.put(SettingKey.SCREEN_2_DISPLAY, screenTwoId);
 			settingsModel.put(SettingKey.SCREEN_2_CONTENTS, comboPresentationScreen2Contents.getSelectedItem());
 			settingsModel.put(SettingKey.SECONDS_UNTIL_COUNTED, spinnerCountAsDisplayedAfter.getValue());
 			// copying is not necessary for fonts, colors and the logo file name
@@ -451,6 +499,7 @@ public class MainWindow extends JFrame {
 			// apply settings
 			// TODO
 		}
+		setSettingsEnabled(false);
 	}
 	
 	/**
@@ -1033,17 +1082,6 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-		addWindowFocusListener(new WindowAdapter() {
-			@Override
-			public void windowLostFocus(WindowEvent e) {
-				try {
-					// on every window deactivation, lock the settings again
-					handleSettingsSaveAndLock();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
 		setPreferredSize(new Dimension(800, 600));
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		calculateAndSetBounds();
@@ -1207,13 +1245,6 @@ public class MainWindow extends JFrame {
 		panelSongListButtons.add(btnSelectSong, gbc_btnSelectSong);
 		
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		tabbedPane.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				// on every tab switch, lock the settings again
-				handleSettingsSaveAndLock();
-			}
-		});
 		tabbedPane.setBorder(null);
 		splitPane.setRightComponent(tabbedPane);
 		

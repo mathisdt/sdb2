@@ -100,8 +100,9 @@ public class MainController implements Scroller {
 		
 		if (presentationControl.size() == 0) {
 			ErrorDialog
-				.openDialog(null,
-					"You have to specify at least one presentation display.\n\nPlease review your \"Global Settings\" tab!");
+				.openDialog(
+					null,
+					"Could not start presentation!\n\nPlease specify at least one existing presentation display:\nCheck your system configuration\nand/or adjust this program's configuration\n(see tab \"Global Settings\")!");
 			return false;
 		} else {
 			currentlyPresentedSong = presentable.getSong();
