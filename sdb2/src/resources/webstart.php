@@ -45,7 +45,7 @@ if (file_exists('constants.php'))
 
 	<application-desc name="Song Database" main-class="org.zephyrsoft.sdb2.Start" />
 
-	<update check="background" policy="prompt-update" />
+	<update check="background" policy="always" />
 
 	<security>
 		<all-permissions />
