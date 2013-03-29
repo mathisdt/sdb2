@@ -288,7 +288,6 @@ public class MainController implements Scroller {
 			
 			Sheet sheet = workbook.createSheet(month);
 			Row row = null;
-			Cell cell = null;
 			
 			int rownum = 0;
 			
@@ -296,13 +295,13 @@ public class MainController implements Scroller {
 			
 			int cellnum = 0;
 			
-			cell = row.createCell(cellnum++);
-			cell.setCellStyle(textBoldStyle);
-			cell.setCellValue("Presentation Count");
-			
-			cell = row.createCell(cellnum++);
-			cell.setCellStyle(textBoldStyle);
-			cell.setCellValue("Song Title");
+			addTextCell(row, cellnum++, textBoldStyle, "Presentation Count");
+			addTextCell(row, cellnum++, textBoldStyle, "Song Title");
+			addTextCell(row, cellnum++, textBoldStyle, "Composer (Music)");
+			addTextCell(row, cellnum++, textBoldStyle, "Author (Text)");
+			addTextCell(row, cellnum++, textBoldStyle, "Publisher");
+			addTextCell(row, cellnum++, textBoldStyle, "Copyright Notes");
+			addTextCell(row, cellnum++, textBoldStyle, "Song Lyrics");
 			
 			rownum++;
 			
@@ -311,18 +310,21 @@ public class MainController implements Scroller {
 				
 				cellnum = 0;
 				
-				cell = row.createCell(cellnum++);
-				cell.setCellStyle(integerStyle);
-				cell.setCellValue(monthStatsBySong.get(song));
-				
-				cell = row.createCell(cellnum++);
-				cell.setCellStyle(textStyle);
-				cell.setCellValue(song.getTitle());
+				addIntegerCell(row, cellnum++, integerStyle, monthStatsBySong.get(song));
+				addTextCell(row, cellnum++, textStyle, song.getTitle());
+				addTextCell(row, cellnum++, textStyle, song.getComposer());
+				addTextCell(row, cellnum++, textStyle, song.getAuthorText());
+				addTextCell(row, cellnum++, textStyle, song.getPublisher());
+				addTextCell(row, cellnum++, textStyle, song.getAdditionalCopyrightNotes());
+				addTextCell(row, cellnum++, textStyle, song.getLyrics());
 				
 				rownum++;
 			}
 			
-			row = sheet.createRow(rownum);
+			for (int i = 0; i < cellnum; i++) {
+				sheet.autoSizeColumn(i);
+			}
+			sheet.createFreezePane(0, 1);
 		}
 		
 		try (FileOutputStream out = new FileOutputStream(targetExcelFile)) {
@@ -334,6 +336,22 @@ public class MainController implements Scroller {
 				+ "\n\nPlease verify that you have write access and the file is not opened by any other program!");
 			LOG.warn("could not write statistics to file", e);
 		}
+	}
+	
+	private static void addTextCell(Row row, int cellnum, CellStyle style, String text) {
+		Cell cell = addCell(row, cellnum, style);
+		cell.setCellValue(text);
+	}
+	
+	private static void addIntegerCell(Row row, int cellnum, CellStyle style, Integer number) {
+		Cell cell = addCell(row, cellnum, style);
+		cell.setCellValue(number);
+	}
+	
+	private static Cell addCell(Row row, int cellnum, CellStyle style) {
+		Cell cell = row.createCell(cellnum);
+		cell.setCellStyle(style);
+		return cell;
 	}
 	
 	public void loadSettings() {
