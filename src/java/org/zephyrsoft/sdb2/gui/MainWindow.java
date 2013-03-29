@@ -1987,6 +1987,30 @@ public class MainWindow extends JFrame {
 		panelImportExportStatistics.add(btnExportCompletePdfAll, gbc_btnExportCompletePdfAll);
 		
 		btnExportStatisticsAll = new JButton("Export statistics");
+		btnExportStatisticsAll.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// select target
+				JFileChooser chooser = new JFileChooser();
+				chooser.setDialogTitle("choose target file for statistics export");
+				CustomFileFilter filter = new CustomFileFilter("Excel", ".xls");
+				chooser.addChoosableFileFilter(filter);
+				chooser.setFileFilter(filter);
+				chooser.setApproveButtonText("Export");
+				chooser.setSelectedFile(new File("song-statistics.xls"));
+				int result = chooser.showOpenDialog(MainWindow.this);
+				
+				if (result == JFileChooser.APPROVE_OPTION) {
+					File target = chooser.getSelectedFile();
+					// export
+					try {
+						controller.exportStatisticsAll(target);
+					} catch (Throwable ex) {
+						handleError(ex);
+					}
+				}
+			}
+		});
 		GridBagConstraints gbc_btnExportStatisticsAll = new GridBagConstraints();
 		gbc_btnExportStatisticsAll.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnExportStatisticsAll.insets = new Insets(0, 0, 5, 5);

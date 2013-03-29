@@ -16,9 +16,14 @@
  */
 package org.zephyrsoft.sdb2.model.statistics;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import org.apache.commons.lang3.Validate;
@@ -78,6 +83,45 @@ public class StatisticsModel {
 			if (songUuid.equals(stats.getSongUUID())) {
 				ret = stats;
 				break;
+			}
+		}
+		return ret;
+	}
+	
+	private static SimpleDateFormat createYearMonthFormatter() {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
+		return sdf;
+	}
+	
+	public List<String> getUsedMonths() {
+		SortedSet<String> ret = new TreeSet<String>();
+		
+		SimpleDateFormat sdf = createYearMonthFormatter();
+		for (SongStatistics stat : songStatistics) {
+			for (Date date : stat)
+				ret.add(sdf.format(date));
+		}
+		
+		return new ArrayList<String>(ret);
+	}
+	
+	public Map<String, Integer> getStatisticsForMonth(String yearAndMonth) {
+		if (yearAndMonth == null) {
+			return null;
+		}
+		Map<String, Integer> ret = new HashMap<String, Integer>();
+		SimpleDateFormat sdf = createYearMonthFormatter();
+		for (SongStatistics stat : songStatistics) {
+			for (Date date : stat) {
+				if (yearAndMonth.equals(sdf.format(date))) {
+					Integer upToNow = ret.get(stat.getSongUUID());
+					if (upToNow == null) {
+						upToNow = 1;
+					} else {
+						upToNow++;
+					}
+					ret.put(stat.getSongUUID(), upToNow);
+				}
 			}
 		}
 		return ret;

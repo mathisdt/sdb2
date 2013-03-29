@@ -28,7 +28,10 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -36,6 +39,14 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
 import org.apache.commons.lang3.Validate;
+import org.apache.poi.hssf.usermodel.HSSFDataFormat;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.DataFormat;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.gui.MainWindow;
@@ -240,6 +251,88 @@ public class MainController implements Scroller {
 		if (statistics == null) {
 			// there was a problem while reading
 			statistics = new StatisticsModel();
+		}
+	}
+	
+	public void exportStatisticsAll(File targetExcelFile) {
+		// collect basic data
+		Map<String, Song> songsByUUID = new HashMap<String, Song>();
+		for (Song song : songs) {
+			songsByUUID.put(song.getUUID(), song);
+		}
+		List<String> months = statistics.getUsedMonths();
+		
+		// create a new workbook
+		Workbook workbook = new HSSFWorkbook();
+		
+		// define formats
+		CellStyle integerStyle = workbook.createCellStyle();
+		DataFormat df = workbook.createDataFormat();
+		integerStyle.setDataFormat(df.getFormat("0"));
+		CellStyle textStyle = workbook.createCellStyle();
+		textStyle.setDataFormat(HSSFDataFormat.getBuiltinFormat("text"));
+		CellStyle textBoldStyle = workbook.createCellStyle();
+		textBoldStyle.setDataFormat(HSSFDataFormat.getBuiltinFormat("text"));
+		org.apache.poi.ss.usermodel.Font font = workbook.createFont();
+		font.setColor(org.apache.poi.ss.usermodel.Font.COLOR_RED);
+		font.setBoldweight(org.apache.poi.ss.usermodel.Font.BOLDWEIGHT_BOLD);
+		textBoldStyle.setFont(font);
+		
+		for (String month : months) {
+			Map<String, Integer> monthStatsByUUID = statistics.getStatisticsForMonth(month);
+			Map<Song, Integer> monthStatsBySong = new TreeMap<Song, Integer>();
+			for (String uuid : monthStatsByUUID.keySet()) {
+				Song song = songs.getByUUID(uuid);
+				monthStatsBySong.put(song, monthStatsByUUID.get(uuid));
+			}
+			
+			Sheet sheet = workbook.createSheet(month);
+			Row row = null;
+			Cell cell = null;
+			
+			int rownum = 0;
+			
+			row = sheet.createRow(rownum);
+			
+			int cellnum = 0;
+			
+			cell = row.createCell(cellnum++);
+			cell.setCellStyle(textBoldStyle);
+			cell.setCellValue("Presentation Count");
+			
+			cell = row.createCell(cellnum++);
+			cell.setCellStyle(textBoldStyle);
+			cell.setCellValue("Song Title");
+			
+			rownum++;
+			
+			for (Song song : monthStatsBySong.keySet()) {
+				row = sheet.createRow(rownum);
+				
+				cellnum = 0;
+				
+				cell = row.createCell(cellnum++);
+				cell.setCellStyle(integerStyle);
+				cell.setCellValue(monthStatsBySong.get(song));
+				
+				cell = row.createCell(cellnum++);
+				cell.setCellStyle(textStyle);
+				cell.setCellValue(song.getTitle());
+				
+				rownum++;
+			}
+			
+			row = sheet.createRow(rownum);
+		}
+		
+		try (FileOutputStream out = new FileOutputStream(targetExcelFile)) {
+			workbook.write(out);
+			out.close();
+			LOG.info("all statistics exported");
+		} catch (IOException e) {
+			ErrorDialog.openDialog(null, "Could not export the statistics to:\n" + targetExcelFile.getAbsolutePath()
+				+ "\n\nPlease verify that you have write access and the file is not opened by any other program!");
+			LOG.warn("could not write statistics to file", e);
 		}
 	}
 	

@@ -32,7 +32,7 @@ import org.zephyrsoft.sdb2.model.Song;
  * @author Mathis Dirksen-Thedens
  */
 @XStreamAlias("songStatistics")
-public class SongStatistics implements Comparable<SongStatistics> {
+public class SongStatistics implements Comparable<SongStatistics>, Iterable<Date> {
 	
 	private String songUuid;
 	private SortedSet<Date> presentedOn = new TreeSet<>();
@@ -52,7 +52,8 @@ public class SongStatistics implements Comparable<SongStatistics> {
 		return songUuid;
 	}
 	
-	public Iterator<Date> dateIterator() {
+	@Override
+	public Iterator<Date> iterator() {
 		return presentedOn.iterator();
 	}
 	

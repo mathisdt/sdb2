@@ -159,6 +159,15 @@ public class SongsModel implements Iterable<Song>, Serializable {
 		return songs.get(index);
 	}
 	
+	public Song getByUUID(String uuid) {
+		for (Song song : songs) {
+			if (song.getUUID() != null && song.getUUID().equals(uuid)) {
+				return song;
+			}
+		}
+		return null;
+	}
+	
 	@Override
 	public Iterator<Song> iterator() {
 		return songs.iterator();
