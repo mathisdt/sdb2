@@ -283,7 +283,11 @@ public class MainController implements Scroller {
 			Map<Song, Integer> monthStatsBySong = new TreeMap<Song, Integer>();
 			for (String uuid : monthStatsByUUID.keySet()) {
 				Song song = songs.getByUUID(uuid);
-				monthStatsBySong.put(song, monthStatsByUUID.get(uuid));
+				if (song != null) {
+					monthStatsBySong.put(song, monthStatsByUUID.get(uuid));
+				} else {
+					LOG.info("no song found in database for UUID {}", uuid);
+				}
 			}
 			
 			Sheet sheet = workbook.createSheet(month);
