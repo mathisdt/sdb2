@@ -136,8 +136,10 @@
 
 		<!-- build JAR file -->
 		<antcall target="createJar" inheritRefs="true" />
+
 		<!-- sign all JAR files (needed for WebStart) -->
 		<antcall target="signJars" inheritRefs="true" />
+
 		<!-- copy additional resources -->
 		<copy todir="${release.img.dir}">
 			<fileset dir="${src.resources.dir}/org/zephyrsoft/sdb2">
@@ -150,6 +152,7 @@
 				<include name="deliver.php" />
 			</fileset>
 		</copy>
+
 		<!-- create PHP file to preserve build timestamp for Java WebStart -->
 		<echo file="${release.dir}/constants.php">&lt;?php
 define("BUILD_TIMESTAMP", "${build.timestamp}");
