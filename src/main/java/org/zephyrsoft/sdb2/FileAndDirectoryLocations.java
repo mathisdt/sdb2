@@ -58,6 +58,10 @@ public class FileAndDirectoryLocations {
 		return getDir(STATISTICS_SUBDIR_STRING);
 	}
 	
+	/**
+	 * This method is only for telling the user where the log file resides! Configuration of log writing is subject to
+	 * the log framework's config files!
+	 */
 	public static String getLogDir() {
 		return getDir(LOG_SUBDIR_STRING);
 	}

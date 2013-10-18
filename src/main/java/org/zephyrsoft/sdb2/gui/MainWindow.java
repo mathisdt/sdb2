@@ -40,13 +40,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Properties;
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
@@ -227,20 +225,12 @@ public class MainWindow extends JFrame {
 	
 	private void afterConstruction() {
 		// read program version
-		String version = JarTools.getAttributeFromManifest(getClass(), "Song-Database-Version");
-		if (version == null) {
-			// use version without build date and time from properties file
-			InputStream propsStream =
-				ResourceTools.getInputStream(getClass(), "/org/zephyrsoft/sdb2/version.properties");
-			if (propsStream != null) {
-				Properties props = new Properties();
-				try {
-					props.load(propsStream);
-					version = props.getProperty("programVersion");
-				} catch (IOException e) {
-					// swallow exception here and just leave version empty
-				}
-			}
+		String version = JarTools.getAttributeFromManifest(getClass(), "Implementation-Version");
+		String timestamp = JarTools.getAttributeFromManifest(getClass(), "Build-Timestamp");
+		if (version != null && timestamp != null) {
+			version += " (" + timestamp + ")";
+		} else {
+			version = "development snapshot";
 		}
 		lblProgramVersion.setText(version);
 		

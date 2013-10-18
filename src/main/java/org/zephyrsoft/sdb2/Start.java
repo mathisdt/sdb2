@@ -38,10 +38,6 @@ public class Start {
 		usage = "display a short description of the available command line options (this message)")
 	private boolean help = false;
 	
-	@Option(name = "--trace", aliases = {"-trace", "-t"},
-		usage = "show method call tracing for core packages on SYSOUT (tracing will not be logged to file)")
-	private static boolean trace = false;
-	
 	@Argument(metaVar = "<FILE>",
 		usage = "use this file to load from and save to (optional, the default is ~/.songdatabase/songs/songs.xml)")
 	private String songsFile = null;
@@ -67,10 +63,6 @@ public class Start {
 			System.err.println("The available options are:");
 			parser.printUsage(System.err);
 		} else {
-			LOG.debug("tracing core method calls is "
-				+ (trace ? "ENABLED (expect low performance)"
-					: "DISABLED (it may be switched on using the --trace parameter)"));
-			
 			MainController controller = new MainController();
 			controller.setupLookAndFeel();
 			try {
@@ -88,10 +80,6 @@ public class Start {
 				controller.shutdown(-1);
 			}
 		}
-	}
-	
-	public static boolean isTracingEnabled() {
-		return trace;
 	}
 	
 }
