@@ -16,7 +16,6 @@
  */
 package org.zephyrsoft.sdb2;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.zephyrsoft.sdb2.gui.KeyboardShortcutManager;
@@ -30,9 +29,6 @@ import org.zephyrsoft.sdb2.gui.MainWindow;
 @Configuration
 public class SpringConfiguration {
 
-	@Value("#{systemProperties['" + Options.SONGS_FILE + "']}")
-	private String songsFile;
-
 	@Bean
 	public StatisticsController statisticsController() {
 		StatisticsController statisticsController = new StatisticsController();
@@ -45,7 +41,6 @@ public class SpringConfiguration {
 		MainController mainController = new MainController(statisticsController());
 		mainController.setupLookAndFeel();
 		mainController.loadSettings();
-		mainController.loadSongs(songsFile);
 		return mainController;
 	}
 
@@ -56,9 +51,6 @@ public class SpringConfiguration {
 
 	@Bean
 	public MainWindow mainWindow() {
-		MainWindow mainWindow = new MainWindow(mainController(), keyboardShortcutManager());
-		mainWindow.setModels(mainController().getSongs(), mainController().getSettings());
-		mainWindow.setVisible(true);
-		return mainWindow;
+		return new MainWindow(mainController(), keyboardShortcutManager());
 	}
 }

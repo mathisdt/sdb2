@@ -368,6 +368,11 @@ public class MainWindow extends JFrame {
 		});
 	}
 
+	public void startup() {
+		setModels(controller.getSongs(), controller.getSettings());
+		setVisible(true);
+	}
+
 	public void setModels(SongsModel songs, SettingsModel settings) {
 		this.songsModel = songs;
 		this.settingsModel = settings;

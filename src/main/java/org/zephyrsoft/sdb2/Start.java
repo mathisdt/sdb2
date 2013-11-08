@@ -20,7 +20,10 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.zephyrsoft.sdb2.gui.MainWindow;
 
 /**
  * Startup class for SDBv2.
@@ -31,9 +34,19 @@ public class Start {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Start.class);
 
-	private static Options options = new Options();
+	private Options options = new Options();
+
+	@Autowired
+	private MainController mainController;
+
+	@Autowired
+	private MainWindow mainWindow;
 
 	public static void main(String[] args) {
+		new Start(args);
+	}
+
+	private Start(String[] args) {
 		LOG.debug("starting application");
 
 		// parse command line arguments
@@ -51,25 +64,22 @@ public class Start {
 			parser.printUsage(System.err);
 		} else {
 			try {
-				// put command line option into system properties (for Spring)
-				if (options.getSongsFile() != null) {
-					System.setProperty(Options.SONGS_FILE, options.getSongsFile());
-				}
-
 				LOG.info("loading application context");
 				@SuppressWarnings("resource")
 				AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 				context.register(SpringConfiguration.class);
 				context.refresh();
+
+				context.getAutowireCapableBeanFactory().autowireBeanProperties(this,
+					AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, false);
+				mainController.loadSongs(options.getSongsFile());
+
+				mainWindow.startup();
 			} catch (Throwable t) {
 				LOG.error("problem while starting up the application", t);
 				System.exit(-1);
 			}
 		}
-	}
-
-	public static String getSongsFile() {
-		return options.getSongsFile();
 	}
 
 }
