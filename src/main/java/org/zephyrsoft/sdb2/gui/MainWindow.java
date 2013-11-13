@@ -44,7 +44,6 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListSelectionModel;
@@ -109,7 +108,7 @@ import org.zephyrsoft.util.gui.TransparentComboBoxModel;
 import org.zephyrsoft.util.gui.TransparentFilterableListModel;
 import org.zephyrsoft.util.gui.TransparentListModel;
 
-import say.swing.JFontChooser;
+import com.l2fprod.common.swing.JFontChooser;
 
 /**
  * Main window of the application.
@@ -508,16 +507,14 @@ public class MainWindow extends JFrame {
 	 */
 	private boolean selectFont(SettingKey target) {
 		JFontChooser fontChooser = new JFontChooser();
-		// take care of JFontChoosers quirky resource bundle mechanism
-		// TODO add code AND RESOURCE BUNDLES to handle other languages
-		fontChooser.setLocale(Locale.US);
+		fontChooser.setSelectedFont(new Font("Dialog", Font.BOLD | Font.ITALIC, 56));
 		Font font = settingsModel.getFont(target);
 		if (font != null) {
 			fontChooser.setSelectedFont(font);
 		}
-		int result = fontChooser.showDialog(this);
-		if (result == JFontChooser.OK_OPTION) {
-			settingsModel.put(target, fontChooser.getSelectedFont());
+		Font selectedFont = fontChooser.showFontDialog(this, "Choose Font");
+		if (selectedFont != null) {
+			settingsModel.put(target, selectedFont);
 			return true;
 		} else {
 			return false;
