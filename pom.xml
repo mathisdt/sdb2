@@ -189,6 +189,44 @@
 					</execution>
 				</executions>
 			</plugin>
+			
+			<plugin>
+				<groupId>org.bluestemsoftware.open.maven.plugin</groupId>
+				<artifactId>launch4j-plugin</artifactId>
+				<version>1.5.0.0</version>
+				<executions>
+					<execution>
+						<id>l4j-gui</id>
+						<phase>package</phase>
+						<goals>
+							<goal>launch4j</goal>
+						</goals>
+						<configuration>
+							<headerType>gui</headerType>
+							<outfile>target/distribution/bin/${project.artifactId}.exe</outfile>
+							<jar>${project.artifactId}.jar</jar>
+							<dontWrapJar>true</dontWrapJar>
+							<errTitle>SDB2 - Error</errTitle>
+							<icon>src/main/resources/org/zephyrsoft/sdb2/icon.ico</icon>
+							<jre>
+								<minVersion>1.7.0</minVersion>
+							</jre>
+							<versionInfo>
+								<fileVersion>1.0.0.0</fileVersion>
+								<txtFileVersion>${project.version}</txtFileVersion>
+								<fileDescription>Launcher for ${project.artifactId}</fileDescription>
+								<copyright>ZephyrSoft</copyright>
+								<companyName>ZephyrSoft</companyName>
+								<productVersion>0.0.0.0</productVersion>
+								<txtProductVersion>${project.version}</txtProductVersion>
+								<productName>${project.artifactId}</productName>
+								<internalName>${project.artifactId}</internalName>
+								<originalFilename>${project.artifactId}.exe</originalFilename>
+							</versionInfo>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
