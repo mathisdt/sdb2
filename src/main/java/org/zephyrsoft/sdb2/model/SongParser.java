@@ -151,15 +151,15 @@ public class SongParser {
 	 * 
 	 * @return a value between 0.0 and 1.0
 	 */
-	private static double percentOfSpaces(String in) {
+	private static double percentOfSpaces(String toParse) {
 		int spacesCount = 0;
-		for (int i = 0; i < in.length(); i++) {
-			if (in.substring(i, i + 1).equals(" ")) {
+		for (int i = 0; i < toParse.length(); i++) {
+			if (toParse.substring(i, i + 1).equals(" ")) {
 				spacesCount++;
 			}
 		}
-		if (in.length() != 0) {
-			return (double) spacesCount / (double) in.length();
+		if (toParse.length() != 0) {
+			return (double) spacesCount / (double) toParse.length();
 		} else {
 			return 0.0;
 		}

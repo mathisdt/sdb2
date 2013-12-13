@@ -52,7 +52,7 @@ import org.zephyrsoft.util.gui.ErrorDialog;
  */
 public class StatisticsController {
 
-	private static Logger LOG = LoggerFactory.getLogger(StatisticsController.class);
+	private static final Logger LOG = LoggerFactory.getLogger(StatisticsController.class);
 
 	private StatisticsModel statistics = null;
 

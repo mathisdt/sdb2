@@ -53,12 +53,12 @@ public class SongCell extends JPanel {
 		
 		songTitle = new JLabel("<SONG TITLE>");
 		songTitle.setBorder(new EmptyBorder(2, 3, 0, 3));
-		GridBagConstraints gbc_songTitle = new GridBagConstraints();
-		gbc_songTitle.fill = GridBagConstraints.HORIZONTAL;
-		gbc_songTitle.anchor = GridBagConstraints.NORTH;
-		gbc_songTitle.gridx = 0;
-		gbc_songTitle.gridy = 0;
-		add(songTitle, gbc_songTitle);
+		GridBagConstraints gbcSongTitle = new GridBagConstraints();
+		gbcSongTitle.fill = GridBagConstraints.HORIZONTAL;
+		gbcSongTitle.anchor = GridBagConstraints.NORTH;
+		gbcSongTitle.gridx = 0;
+		gbcSongTitle.gridy = 0;
+		add(songTitle, gbcSongTitle);
 		
 		firstLine = new JLabel("<FIRST LINE>");
 		// set a fixed-size border first so WindowBuilder is content
@@ -67,12 +67,12 @@ public class SongCell extends JPanel {
 			firstLine.setBorder(new EmptyBorder(0, leftSpace + 3, 2, 3));
 		}
 		firstLine.setFont(new Font("SansSerif", Font.ITALIC, 10));
-		GridBagConstraints gbc_firstLine = new GridBagConstraints();
-		gbc_firstLine.anchor = GridBagConstraints.NORTH;
-		gbc_firstLine.fill = GridBagConstraints.HORIZONTAL;
-		gbc_firstLine.gridx = 0;
-		gbc_firstLine.gridy = 1;
-		add(firstLine, gbc_firstLine);
+		GridBagConstraints gbcFirstLine = new GridBagConstraints();
+		gbcFirstLine.anchor = GridBagConstraints.NORTH;
+		gbcFirstLine.fill = GridBagConstraints.HORIZONTAL;
+		gbcFirstLine.gridx = 0;
+		gbcFirstLine.gridy = 1;
+		add(firstLine, gbcFirstLine);
 	}
 	
 	public void setSongTitle(String text) {

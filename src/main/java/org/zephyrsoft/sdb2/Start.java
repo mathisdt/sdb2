@@ -21,7 +21,6 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.zephyrsoft.sdb2.gui.MainWindow;
 
@@ -30,16 +29,14 @@ import org.zephyrsoft.sdb2.gui.MainWindow;
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class Start {
+public final class Start {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Start.class);
 
-	private Options options = new Options();
+	private final Options options = new Options();
 
-	@Autowired
 	private MainController mainController;
 
-	@Autowired
 	private MainWindow mainWindow;
 
 	public static void main(String[] args) {
@@ -70,16 +67,25 @@ public class Start {
 				context.register(SpringConfiguration.class);
 				context.refresh();
 
-				context.getAutowireCapableBeanFactory().autowireBeanProperties(this,
-					AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, false);
+				context.getAutowireCapableBeanFactory().autowireBean(this);
 				mainController.loadSongs(options.getSongsFile());
 
 				mainWindow.startup();
-			} catch (Throwable t) {
-				LOG.error("problem while starting up the application", t);
+			} catch (Exception e) {
+				LOG.error("problem while starting up the application", e);
 				System.exit(-1);
 			}
 		}
+	}
+
+	@Autowired
+	public void setMainController(MainController mainController) {
+		this.mainController = mainController;
+	}
+
+	@Autowired
+	public void setMainWindow(MainWindow mainWindow) {
+		this.mainWindow = mainWindow;
 	}
 
 }
