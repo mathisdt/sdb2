@@ -5,17 +5,17 @@
 	<groupId>org.zephyrsoft</groupId>
 	<artifactId>sdb2</artifactId>
 	<version>2.0.0-SNAPSHOT</version>
-	
+
 	<name>Song Database</name>
 	<description>present lyrics on a digital projector (intended for a congregation to sing)</description>
 	<url>http://www.zephyrsoft.org</url>
-	
+
 	<licenses>
-	    <license>
-	        <name>GNU General Public License (GPL), Version 2.0</name>
-	        <url>http://www.gnu.org/licenses/gpl-2.0.html</url>
-	        <distribution>repo</distribution>
-	    </license>
+		<license>
+			<name>GNU General Public License (GPL), Version 2.0</name>
+			<url>http://www.gnu.org/licenses/gpl-2.0.html</url>
+			<distribution>repo</distribution>
+		</license>
 	</licenses>
 
 	<scm>
@@ -31,6 +31,21 @@
 
 		<!-- dependency versions -->
 		<version.slf4j>1.7.5</version.slf4j>
+		<version.log4j>1.2.17</version.log4j>
+		<version.log4j-extras>1.1</version.log4j-extras>
+		<version.args4j>2.0.26</version.args4j>
+		<version.commons-lang3>3.3.1</version.commons-lang3>
+		<version.itext>5.4.4</version.itext>
+		<version.fontchooser>6.9.1</version.fontchooser>
+		<version.poi>3.9</version.poi>
+		<version.swingx>1.6.5-1</version.swingx>
+		<version.timingframework>7.3.1</version.timingframework>
+		<version.xstream>1.4.7</version.xstream>
+		<version.guava>16.0.1</version.guava>
+		<version.spring>4.0.3.RELEASE</version.spring>
+		<version.lucene>4.7.0</version.lucene>
+		<version.junit>4.11</version.junit>
+		<version.mockito>1.9.5</version.mockito>
 	</properties>
 
 	<dependencies>
@@ -38,63 +53,72 @@
 		<dependency>
 			<groupId>args4j</groupId>
 			<artifactId>args4j</artifactId>
-			<version>2.0.25</version>
+			<version>${version.args4j}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.1</version>
+			<version>${version.commons-lang3}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itextpdf</artifactId>
-			<version>5.4.4</version>
+			<version>${version.itext}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itext-xtra</artifactId>
-			<version>5.4.4</version>
+			<version>${version.itext}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.l2fprod.common</groupId>
 			<artifactId>l2fprod-common-fontchooser</artifactId>
-			<version>6.9.1</version>
+			<version>${version.fontchooser}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
-			<version>3.9</version>
+			<version>${version.poi}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.swinglabs.swingx</groupId>
 			<artifactId>swingx-core</artifactId>
-			<version>1.6.5-1</version>
+			<version>${version.swingx}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.java.timingframework</groupId>
 			<artifactId>timingframework-swing</artifactId>
-			<version>7.2.0</version>
+			<version>${version.timingframework}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.thoughtworks.xstream</groupId>
 			<artifactId>xstream</artifactId>
-			<version>1.4.4</version>
+			<version>${version.xstream}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>15.0</version>
+			<version>${version.guava}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<version>3.2.4.RELEASE</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>spring-aop</artifactId>
-					<groupId>org.springframework</groupId>
-				</exclusion>
-			</exclusions>
+			<version>${version.spring}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>${version.lucene}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analyzers-common</artifactId>
+			<version>${version.lucene}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-queryparser</artifactId>
+			<version>${version.lucene}</version>
 		</dependency>
 
 		<!-- logging -->
@@ -111,12 +135,12 @@
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
+			<version>${version.log4j}</version>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>apache-log4j-extras</artifactId>
-			<version>1.1</version>
+			<version>${version.log4j-extras}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -129,13 +153,13 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
+			<version>${version.junit}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-all</artifactId>
-			<version>1.9.5</version>
+			<version>${version.mockito}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -144,13 +168,13 @@
 		<name>ZephyrSoft</name>
 		<url>http://www.zephyrsoft.org</url>
 	</organization>
-	
+
 	<developers>
-	    <developer>
-	        <id>mathis</id>
-	        <name>Mathis Dirksen-Thedens</name>
-	        <email>dev@zephyrsoft.org</email>
-	    </developer>
+		<developer>
+			<id>mathis</id>
+			<name>Mathis Dirksen-Thedens</name>
+			<email>dev@zephyrsoft.org</email>
+		</developer>
 	</developers>
 
 	<repositories>
@@ -210,7 +234,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>org.bluestemsoftware.open.maven.plugin</groupId>
 				<artifactId>launch4j-plugin</artifactId>
@@ -271,18 +295,18 @@
 					</archive>
 				</configuration>
 			</plugin>
-			
+
 			<plugin>
-			    <groupId>org.apache.maven.plugins</groupId>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
 				<version>2.1.2</version>
 				<executions>
-				    <execution>
-				        <id>attach-sources</id>
-				        <goals>
-				            <goal>jar</goal>
-				        </goals>
-				    </execution>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
 				</executions>
 				<configuration>
 					<outputDirectory>${project.build.directory}/distribution/bin</outputDirectory>

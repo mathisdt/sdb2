@@ -14,25 +14,17 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.model;
+package org.zephyrsoft.util;
 
-import org.zephyrsoft.sdb2.service.FieldName;
+import org.zephyrsoft.sdb2.model.SongsModel;
 
 /**
- * Determines on which data the song list filter should operate.
+ * Listens for changes in a {@link SongsModel}.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public enum FilterTypeEnum {
-	ONLY_TITLE(FieldName.TITLE), TITLE_AND_LYRICS(FieldName.TITLE, FieldName.LYRICS), ONLY_LYRICS(FieldName.LYRICS);
+public interface SongsModelListener {
 
-	private FieldName[] fields;
+	void songsModelChanged();
 
-	private FilterTypeEnum(FieldName... fields) {
-		this.fields = fields;
-	}
-
-	public FieldName[] getFields() {
-		return fields;
-	}
 }

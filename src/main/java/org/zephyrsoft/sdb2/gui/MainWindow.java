@@ -42,8 +42,11 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListSelectionModel;
@@ -90,15 +93,18 @@ import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.Song;
-import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
+import org.zephyrsoft.sdb2.service.FieldName;
+import org.zephyrsoft.sdb2.service.IndexType;
+import org.zephyrsoft.sdb2.service.IndexerService;
 import org.zephyrsoft.util.CustomFileFilter;
 import org.zephyrsoft.util.JarTools;
 import org.zephyrsoft.util.ResourceTools;
+import org.zephyrsoft.util.SongsModelListener;
 import org.zephyrsoft.util.StringTools;
 import org.zephyrsoft.util.gui.ErrorDialog;
 import org.zephyrsoft.util.gui.FixedWidthJList;
@@ -151,12 +157,16 @@ public class MainWindow extends JFrame {
 
 	private KeyboardShortcutManager keyboardShortcutManager;
 	private final MainController controller;
+	private IndexerService<Song> indexer;
+
+	private Set<String> filteredSongUuids = new HashSet<>();
 
 	private SettingsModel settingsModel;
 
 	private FixedWidthJList<Song> songsList;
 	private SongsModel songsModel;
 	private TransparentFilterableListModel<Song> songsListModel;
+	private Collection<Song> songsListFiltered;
 	private Song songsListSelected;
 
 	private FixedWidthJList<Song> presentList;
@@ -290,8 +300,10 @@ public class MainWindow extends JFrame {
 					presentList.requestFocusInWindow();
 				} else if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_KP_UP) {
 					songsList.moveSelectionUp();
+					textFieldFilter.requestFocusInWindow();
 				} else if (e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_KP_DOWN) {
 					songsList.moveSelectionDown();
+					textFieldFilter.requestFocusInWindow();
 				} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					handleSongSelect();
 				}
@@ -378,6 +390,15 @@ public class MainWindow extends JFrame {
 		songsListModel = songs.getFilterableListModel();
 		songsList.setModel(songsListModel);
 
+		songsModel.addSongsModelListener(new SongsModelListener() {
+			@Override
+			public void songsModelChanged() {
+				indexAllSongs();
+			}
+		});
+		// start indexing once after initialization
+		indexAllSongs();
+
 		// song list filtering
 		ListFilter<Song> filter = new ListFilter<Song>() {
 			@Override
@@ -387,28 +408,24 @@ public class MainWindow extends JFrame {
 					return true;
 				} else {
 					FilterTypeEnum filterType = (FilterTypeEnum) settingsModel.get(SettingKey.SONG_LIST_FILTER);
-					String toSearch = "";
+					// String toSearch = "";
+					// TODO
 					switch (filterType) {
 						case ONLY_LYRICS:
-							toSearch = object.getLyrics();
-							break;
+							// toSearch = object.getLyrics();
+							return songsListFiltered.contains(object);
 						case ONLY_TITLE:
-							toSearch = object.getTitle();
-							break;
-						case TITLE_AND_FIRST_LYRICS_LINE:
-							toSearch = object.getTitle() + " " + SongParser.getFirstLyricsLine(object);
-							break;
+							// toSearch = object.getTitle();
+							return songsListFiltered.contains(object);
 						case TITLE_AND_LYRICS:
-							toSearch = object.getTitle() + " " + object.getLyrics();
-							break;
+							// toSearch = object.getTitle() + " " + object.getLyrics();
+							return songsListFiltered.contains(object);
 						default:
 							throw new IllegalStateException("unknown song list filter type");
 					}
-					return toSearch == null
-						|| StringTools.toEasilyComparable(toSearch).contains(
-							StringTools.toEasilyComparable(textFieldFilter.getText()));
 				}
 			}
+
 		};
 		songsListModel.setFilter(filter);
 		textFieldFilter.getDocument().addDocumentListener(new DocumentListener() {
@@ -431,8 +448,8 @@ public class MainWindow extends JFrame {
 
 		// prepare for settings
 		controller.detectScreens();
-		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<GraphicsDevice>(controller.getScreens()));
-		comboPresentationScreen2Display.setModel(new TransparentComboBoxModel<GraphicsDevice>(controller.getScreens()));
+		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
+		comboPresentationScreen2Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
 
 		// load values for instantly displayed settings
 		Boolean showTitle = settingsModel.getBoolean(SettingKey.SHOW_TITLE);
@@ -496,6 +513,11 @@ public class MainWindow extends JFrame {
 			// TODO
 		}
 		setSettingsEnabled(false);
+	}
+
+	private void indexAllSongs() {
+		indexer.empty(IndexType.ALL_SONGS);
+		indexer.index(IndexType.ALL_SONGS, songsModel.getSongs());
 	}
 
 	/**
@@ -689,6 +711,8 @@ public class MainWindow extends JFrame {
 
 	private void applyFilter() {
 		saveSong();
+		FieldName[] fieldsToSearch = ((FilterTypeEnum) settingsModel.get(SettingKey.SONG_LIST_FILTER)).getFields();
+		songsListFiltered = indexer.search(IndexType.ALL_SONGS, textFieldFilter.getText(), fieldsToSearch);
 		songsListModel.refilter();
 		songsListSelected = songsList.getSelectedValue();
 		loadSong();
@@ -761,7 +785,7 @@ public class MainWindow extends JFrame {
 		setTextAndRewind(textFieldAdditionalCopyrightNotes, "");
 		setTextAndRewind(textFieldSongNotes, "");
 		setTextAndRewind(editorChordSequence, "");
-		linkedSongsList.setModel(new TransparentListModel<Song>(Collections.<Song> emptyList()));
+		linkedSongsList.setModel(new TransparentListModel<>(Collections.<Song> emptyList()));
 	}
 
 	/**
@@ -806,7 +830,7 @@ public class MainWindow extends JFrame {
 		setTextAndRewind(textFieldAdditionalCopyrightNotes, song.getAdditionalCopyrightNotes());
 		setTextAndRewind(textFieldSongNotes, song.getSongNotes());
 		setTextAndRewind(editorChordSequence, song.getChordSequence());
-		linkedSongsListModel = new TransparentListModel<Song>(song.getLinkedSongs());
+		linkedSongsListModel = new TransparentListModel<>(song.getLinkedSongs());
 		linkedSongsList.setModel(linkedSongsListModel);
 	}
 
@@ -1062,9 +1086,11 @@ public class MainWindow extends JFrame {
 		}
 	}
 
-	public MainWindow(MainController mainController, KeyboardShortcutManager keyboardShortcutManager) {
+	public MainWindow(MainController mainController, KeyboardShortcutManager keyboardShortcutManager,
+		IndexerService<Song> indexer) {
 		controller = mainController;
 		this.keyboardShortcutManager = keyboardShortcutManager;
+		this.indexer = indexer;
 		setIconImages(getIconsFromResources(getClass()));
 		setTitle("Song Database");
 		defineShortcuts();
@@ -1143,7 +1169,7 @@ public class MainWindow extends JFrame {
 		scrollPaneSongList.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		panelSongList.add(scrollPaneSongList, BorderLayout.CENTER);
 
-		songsList = new FixedWidthJList<Song>();
+		songsList = new FixedWidthJList<>();
 		songsList.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -1396,7 +1422,7 @@ public class MainWindow extends JFrame {
 		gbcLblAdditionalCopyrightNotes.gridy = 4;
 		panelEdit.add(lblAdditionalCopyrightNotes, gbcLblAdditionalCopyrightNotes);
 
-		comboBoxLanguage = new JComboBox<LanguageEnum>();
+		comboBoxLanguage = new JComboBox<>();
 		comboBoxLanguage.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
@@ -1586,7 +1612,7 @@ public class MainWindow extends JFrame {
 		gbcScrollPaneLinkedSongsList.gridy = 9;
 		panelEdit.add(scrollPaneLinkedSongsList, gbcScrollPaneLinkedSongsList);
 
-		linkedSongsList = new FixedWidthJList<Song>();
+		linkedSongsList = new FixedWidthJList<>();
 		scrollPaneLinkedSongsList.setViewportView(linkedSongsList);
 
 		JPanel panelLinkedSongs = new JPanel();
@@ -1663,7 +1689,7 @@ public class MainWindow extends JFrame {
 		scrollPanePresentSongList.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		panelPresentLeft.add(scrollPanePresentSongList, BorderLayout.CENTER);
 
-		presentList = new FixedWidthJList<Song>();
+		presentList = new FixedWidthJList<>();
 		presentList.addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
@@ -2407,7 +2433,7 @@ public class MainWindow extends JFrame {
 		gbcLblSongListFiltering.gridy = 16;
 		panel.add(lblSongListFiltering, gbcLblSongListFiltering);
 
-		comboSongListFiltering = new JComboBox<FilterTypeEnum>();
+		comboSongListFiltering = new JComboBox<>();
 		GridBagConstraints gbcComboSongListFiltering = new GridBagConstraints();
 		gbcComboSongListFiltering.insets = new Insets(0, 0, 5, 5);
 		gbcComboSongListFiltering.fill = GridBagConstraints.HORIZONTAL;
@@ -2423,7 +2449,7 @@ public class MainWindow extends JFrame {
 		gbcLblPresentationScreen1Display.gridy = 17;
 		panel.add(lblPresentationScreen1Display, gbcLblPresentationScreen1Display);
 
-		comboPresentationScreen1Display = new JComboBox<GraphicsDevice>();
+		comboPresentationScreen1Display = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen1Display = new GridBagConstraints();
 		gbcComboPresentationScreen1Display.insets = new Insets(0, 0, 5, 5);
 		gbcComboPresentationScreen1Display.fill = GridBagConstraints.HORIZONTAL;
@@ -2439,7 +2465,7 @@ public class MainWindow extends JFrame {
 		gbcLblPresentationScreen1Contents.gridy = 18;
 		panel.add(lblPresentationScreen1Contents, gbcLblPresentationScreen1Contents);
 
-		comboPresentationScreen1Contents = new JComboBox<ScreenContentsEnum>();
+		comboPresentationScreen1Contents = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen1Contents = new GridBagConstraints();
 		gbcComboPresentationScreen1Contents.insets = new Insets(0, 0, 5, 5);
 		gbcComboPresentationScreen1Contents.fill = GridBagConstraints.HORIZONTAL;
@@ -2455,7 +2481,7 @@ public class MainWindow extends JFrame {
 		gbcLblPresentationScreen2Display.gridy = 19;
 		panel.add(lblPresentationScreen2Display, gbcLblPresentationScreen2Display);
 
-		comboPresentationScreen2Display = new JComboBox<GraphicsDevice>();
+		comboPresentationScreen2Display = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen2Display = new GridBagConstraints();
 		gbcComboPresentationScreen2Display.insets = new Insets(0, 0, 5, 5);
 		gbcComboPresentationScreen2Display.fill = GridBagConstraints.HORIZONTAL;
@@ -2471,7 +2497,7 @@ public class MainWindow extends JFrame {
 		gbcLblPresentationScreen2Contents.gridy = 20;
 		panel.add(lblPresentationScreen2Contents, gbcLblPresentationScreen2Contents);
 
-		comboPresentationScreen2Contents = new JComboBox<ScreenContentsEnum>();
+		comboPresentationScreen2Contents = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen2Contents = new GridBagConstraints();
 		gbcComboPresentationScreen2Contents.insets = new Insets(0, 0, 5, 5);
 		gbcComboPresentationScreen2Contents.fill = GridBagConstraints.HORIZONTAL;

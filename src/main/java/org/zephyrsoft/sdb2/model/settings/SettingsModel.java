@@ -1,16 +1,16 @@
 /*
  * This file is part of the Song Database (SDB).
- *
+ * 
  * SDB is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- *
+ * 
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -20,9 +20,11 @@ import java.awt.Color;
 import java.awt.Font;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import org.zephyrsoft.sdb2.model.XMLConverter;
+
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
-import org.zephyrsoft.sdb2.model.XMLConverter;
 
 /**
  * Global settings of the Song Database.
@@ -31,14 +33,14 @@ import org.zephyrsoft.sdb2.model.XMLConverter;
  */
 @XStreamAlias("settings")
 public class SettingsModel {
-	
+
 	@XStreamImplicit(itemFieldName = "setting")
 	private SortedSet<Setting<Object>> store;
-	
+
 	public SettingsModel() {
 		initIfNecessary();
 	}
-	
+
 	public Object get(SettingKey key) {
 		for (Setting<Object> setting : store) {
 			if (setting.getKey() == key) {
@@ -47,7 +49,7 @@ public class SettingsModel {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Is called from the local constructor and from {@link XMLConverter} to ensure a valid inner state after conversion
 	 * from XML and after creation via constructor. This is in this method because XStream might overwrite the value set
@@ -58,7 +60,7 @@ public class SettingsModel {
 			store = new TreeSet<>();
 		}
 	}
-	
+
 	public String getString(SettingKey key) {
 		Object value = get(key);
 		if (key.getType() != String.class) {
@@ -66,7 +68,7 @@ public class SettingsModel {
 		}
 		return (String) value;
 	}
-	
+
 	public Integer getInteger(SettingKey key) {
 		Object value = get(key);
 		if (key.getType() != Integer.class) {
@@ -74,7 +76,7 @@ public class SettingsModel {
 		}
 		return (Integer) value;
 	}
-	
+
 	public Color getColor(SettingKey key) {
 		Object value = get(key);
 		if (key.getType() != Color.class) {
@@ -82,7 +84,7 @@ public class SettingsModel {
 		}
 		return (Color) value;
 	}
-	
+
 	public Font getFont(SettingKey key) {
 		Object value = get(key);
 		if (key.getType() != Font.class) {
@@ -90,7 +92,7 @@ public class SettingsModel {
 		}
 		return (Font) value;
 	}
-	
+
 	public Boolean getBoolean(SettingKey key) {
 		Object value = get(key);
 		if (key.getType() != Boolean.class) {
@@ -98,7 +100,7 @@ public class SettingsModel {
 		}
 		return (Boolean) value;
 	}
-	
+
 	public boolean isSet(SettingKey key) {
 		for (Setting<Object> setting : store) {
 			if (setting.getKey() == key) {
@@ -107,7 +109,7 @@ public class SettingsModel {
 		}
 		return false;
 	}
-	
+
 	public void put(SettingKey key, Object value) {
 		Setting<Object> toSet = null;
 		for (Setting<Object> setting : store) {
@@ -119,8 +121,8 @@ public class SettingsModel {
 		if (toSet != null) {
 			toSet.setValue(value);
 		} else {
-			store.add(new Setting<Object>(key, value));
+			store.add(new Setting<>(key, value));
 		}
 	}
-	
+
 }

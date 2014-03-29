@@ -93,7 +93,7 @@ public class StatisticsController {
 
 	public void exportStatisticsAll(SongsModel songs, File targetExcelFile) {
 		// collect basic data
-		Map<String, Song> songsByUUID = new HashMap<String, Song>();
+		Map<String, Song> songsByUUID = new HashMap<>();
 		for (Song song : songs) {
 			songsByUUID.put(song.getUUID(), song);
 		}
@@ -117,7 +117,7 @@ public class StatisticsController {
 
 		for (String month : months) {
 			Map<String, Integer> monthStatsByUUID = statistics.getStatisticsForMonth(month);
-			Map<Song, Integer> monthStatsBySong = new TreeMap<Song, Integer>();
+			Map<Song, Integer> monthStatsBySong = new TreeMap<>();
 			for (String uuid : monthStatsByUUID.keySet()) {
 				Song song = songs.getByUUID(uuid);
 				if (song != null) {
