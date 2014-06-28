@@ -42,11 +42,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListSelectionModel;
@@ -93,18 +90,15 @@ import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.Song;
+import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
-import org.zephyrsoft.sdb2.service.FieldName;
-import org.zephyrsoft.sdb2.service.IndexType;
-import org.zephyrsoft.sdb2.service.IndexerService;
 import org.zephyrsoft.util.CustomFileFilter;
 import org.zephyrsoft.util.JarTools;
 import org.zephyrsoft.util.ResourceTools;
-import org.zephyrsoft.util.SongsModelListener;
 import org.zephyrsoft.util.StringTools;
 import org.zephyrsoft.util.gui.ErrorDialog;
 import org.zephyrsoft.util.gui.FixedWidthJList;
@@ -122,27 +116,27 @@ import com.l2fprod.common.swing.JFontChooser;
  * @author Mathis Dirksen-Thedens
  */
 public class MainWindow extends JFrame {
-
+	
 	private static final String PROBLEM_WHILE_SAVING = "There was a problem while saving the data.\n\nPlease examine the log file at:\n";
-
+	
 	private static final Presentable BLANK_SCREEN = new Presentable(null, null);
-
+	
 	private static final long serialVersionUID = -6874196690375696416L;
-
+	
 	private static final String NEWLINE = "\n";
 	private static final String STACKTRACE_INDENTATION = "    ";
 	private static final int STACKTRACE_ELEMENT_COUNT = 4;
-
+	
 	private static final int TAB_INDEX_EDIT = 0;
 	private static final int TAB_INDEX_PRESENT = 1;
 	private static final int TAB_INDEX_STATS = 2;
 	private static final int TAB_INDEX_SETTINGS = 3;
-
+	
 	private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
-
+	
 	private JPanel contentPane;
 	private JTabbedPane tabbedPane;
-
+	
 	private JEditorPane editorLyrics;
 	private JTextField textFieldTitle;
 	private JComboBox<LanguageEnum> comboBoxLanguage;
@@ -154,36 +148,32 @@ public class MainWindow extends JFrame {
 	private JTextField textFieldAdditionalCopyrightNotes;
 	private JTextField textFieldSongNotes;
 	private JEditorPane editorChordSequence;
-
+	
 	private KeyboardShortcutManager keyboardShortcutManager;
 	private final MainController controller;
-	private IndexerService<Song> indexer;
-
-	private Set<String> filteredSongUuids = new HashSet<>();
-
+	
 	private SettingsModel settingsModel;
-
+	
 	private FixedWidthJList<Song> songsList;
 	private SongsModel songsModel;
 	private TransparentFilterableListModel<Song> songsListModel;
-	private Collection<Song> songsListFiltered;
 	private Song songsListSelected;
-
+	
 	private FixedWidthJList<Song> presentList;
 	private SongsModel presentModel;
 	private TransparentListModel<Song> presentListModel;
 	private Song presentListSelected;
-
+	
 	private FixedWidthJList<Song> linkedSongsList;
 	private TransparentListModel<Song> linkedSongsListModel;
-
+	
 	private JPanel panelSongList;
 	private JButton btnClearFilter;
 	private JTextField textFieldFilter;
 	private JButton btnNewSong;
 	private JButton btnDeleteSong;
 	private JButton btnSelectSong;
-
+	
 	private JSplitPane splitPanePresent;
 	private boolean splitPanePresentDividerLocationSet = false;
 	private JPanel selectedSongListButtons;
@@ -201,7 +191,7 @@ public class MainWindow extends JFrame {
 	private JButton btnPresentSelectedSong;
 	private JScrollPane scrollPaneSectionButtons;
 	private JButton btnJumpToPresented;
-
+	
 	private JLabel lblStatistics;
 	private JButton btnExportLyricsOnlyPdfSelected;
 	private JButton btnExportCompletePdfSelected;
@@ -211,7 +201,7 @@ public class MainWindow extends JFrame {
 	private JButton btnExportStatisticsAll;
 	private JButton btnImportFromSdb1;
 	private JLabel lblProgramVersion;
-
+	
 	private JButton btnUnlock;
 	private JButton btnSelectTitleFont;
 	private JButton btnSelectLyricsFont;
@@ -233,7 +223,7 @@ public class MainWindow extends JFrame {
 	private JComboBox<GraphicsDevice> comboPresentationScreen2Display;
 	private JComboBox<ScreenContentsEnum> comboPresentationScreen2Contents;
 	private JSpinner spinnerCountAsDisplayedAfter;
-
+	
 	private void afterConstruction() {
 		// read program version
 		String version = JarTools.getAttributeFromManifest(getClass(), "Implementation-Version");
@@ -244,7 +234,7 @@ public class MainWindow extends JFrame {
 			version = "development snapshot";
 		}
 		lblProgramVersion.setText(version);
-
+		
 		// fill in available values for language
 		for (LanguageEnum item : LanguageEnum.values()) {
 			comboBoxLanguage.addItem(item);
@@ -280,7 +270,7 @@ public class MainWindow extends JFrame {
 		presentModel.setAutoSort(false);
 		presentListModel = presentModel.getListModel();
 		presentList.setModel(presentListModel);
-
+		
 		// fill in available values for screen contents
 		for (ScreenContentsEnum item : ScreenContentsEnum.values()) {
 			comboPresentationScreen1Contents.addItem(item);
@@ -291,7 +281,7 @@ public class MainWindow extends JFrame {
 		comboPresentationScreen2Contents.setRenderer(new ScreenContentsCellRenderer());
 		comboPresentationScreen1Display.setRenderer(new ScreenDisplayCellRenderer());
 		comboPresentationScreen2Display.setRenderer(new ScreenDisplayCellRenderer());
-
+		
 		// add keyboard comfort to the filter field
 		textFieldFilter.addKeyListener(new KeyAdapter() {
 			@Override
@@ -309,7 +299,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-
+		
 		// add keyboard comfort to the global songs list
 		songsList.addKeyListener(new KeyAdapter() {
 			@Override
@@ -320,11 +310,11 @@ public class MainWindow extends JFrame {
 					handleSongSelect();
 				}
 			}
-
+			
 			@Override
 			public void keyTyped(KeyEvent e) {
 				char keyChar = e.getKeyChar();
-
+				
 				if (keyChar != KeyEvent.CHAR_UNDEFINED) {
 					if (Character.isLetterOrDigit(keyChar)
 						|| Character.getType(keyChar) == Character.CONNECTOR_PUNCTUATION
@@ -345,7 +335,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-
+		
 		// add keyboard comfort to the present songs list
 		presentList.addKeyListener(new KeyAdapter() {
 			@Override
@@ -357,7 +347,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-
+		
 		// lock setting controls to prevent accidental changes
 		tabbedPane.addChangeListener(new ChangeListener() {
 			@Override
@@ -378,27 +368,18 @@ public class MainWindow extends JFrame {
 			}
 		});
 	}
-
+	
 	public void startup() {
 		setModels(controller.getSongs(), controller.getSettings());
 		setVisible(true);
 	}
-
+	
 	public void setModels(SongsModel songs, SettingsModel settings) {
 		this.songsModel = songs;
 		this.settingsModel = settings;
 		songsListModel = songs.getFilterableListModel();
 		songsList.setModel(songsListModel);
-
-		songsModel.addSongsModelListener(new SongsModelListener() {
-			@Override
-			public void songsModelChanged() {
-				indexAllSongs();
-			}
-		});
-		// start indexing once after initialization
-		indexAllSongs();
-
+		
 		// song list filtering
 		ListFilter<Song> filter = new ListFilter<Song>() {
 			@Override
@@ -408,49 +389,53 @@ public class MainWindow extends JFrame {
 					return true;
 				} else {
 					FilterTypeEnum filterType = (FilterTypeEnum) settingsModel.get(SettingKey.SONG_LIST_FILTER);
-					// String toSearch = "";
-					// TODO
+					String toSearch = "";
 					switch (filterType) {
 						case ONLY_LYRICS:
-							// toSearch = object.getLyrics();
-							return songsListFiltered.contains(object);
+							toSearch = object.getLyrics();
+							break;
 						case ONLY_TITLE:
-							// toSearch = object.getTitle();
-							return songsListFiltered.contains(object);
+							toSearch = object.getTitle();
+							break;
+						case TITLE_AND_FIRST_LYRICS_LINE:
+							toSearch = object.getTitle() + " " + SongParser.getFirstLyricsLine(object);
+							break;
 						case TITLE_AND_LYRICS:
-							// toSearch = object.getTitle() + " " + object.getLyrics();
-							return songsListFiltered.contains(object);
+							toSearch = object.getTitle() + " " + object.getLyrics();
+							break;
 						default:
 							throw new IllegalStateException("unknown song list filter type");
 					}
+					return toSearch == null
+						|| StringTools.toEasilyComparable(toSearch).contains(
+							StringTools.toEasilyComparable(textFieldFilter.getText()));
 				}
 			}
-
 		};
 		songsListModel.setFilter(filter);
 		textFieldFilter.getDocument().addDocumentListener(new DocumentListener() {
-
+			
 			@Override
 			public void changedUpdate(DocumentEvent e) {
 				applyFilter();
 			}
-
+			
 			@Override
 			public void insertUpdate(DocumentEvent e) {
 				applyFilter();
 			}
-
+			
 			@Override
 			public void removeUpdate(DocumentEvent e) {
 				applyFilter();
 			}
 		});
-
+		
 		// prepare for settings
 		controller.detectScreens();
 		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
 		comboPresentationScreen2Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
-
+		
 		// load values for instantly displayed settings
 		Boolean showTitle = settingsModel.getBoolean(SettingKey.SHOW_TITLE);
 		checkboxShowTitle.setSelected(showTitle == null ? false : showTitle.booleanValue());
@@ -469,19 +454,19 @@ public class MainWindow extends JFrame {
 		comboPresentationScreen2Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_CONTENTS));
 		setSpinnerValue(spinnerCountAsDisplayedAfter, settingsModel.getInteger(SettingKey.SECONDS_UNTIL_COUNTED));
 	}
-
+	
 	private static void setSpinnerValue(JSpinner spinner, Object value) {
 		spinner.setValue(value == null ? 0 : value);
 	}
-
+	
 	protected void handleSettingsUnlock() {
 		// reload screens
 		controller.detectScreens();
-
+		
 		// enable controls
 		setSettingsEnabled(true);
 	}
-
+	
 	protected void handleSettingsSaveAndLock() {
 		// only if the "unlock" button is disabled (which means that the settings were just edited)
 		if (btnUnlock != null && !btnUnlock.isEnabled() && settingsModel != null) {
@@ -508,18 +493,13 @@ public class MainWindow extends JFrame {
 			settingsModel.put(SettingKey.SECONDS_UNTIL_COUNTED, spinnerCountAsDisplayedAfter.getValue());
 			// copying is not necessary for fonts, colors and the logo file name
 			// because those settings are only stored directly in the model
-
+			
 			// apply settings
 			// TODO
 		}
 		setSettingsEnabled(false);
 	}
-
-	private void indexAllSongs() {
-		indexer.empty(IndexType.ALL_SONGS);
-		indexer.index(IndexType.ALL_SONGS, songsModel.getSongs());
-	}
-
+	
 	/**
 	 * Let the user select a font and save it into the {@link SettingsModel}.
 	 * 
@@ -542,31 +522,31 @@ public class MainWindow extends JFrame {
 			return false;
 		}
 	}
-
+	
 	protected void handleSelectTitleFont() {
 		selectFont(SettingKey.TITLE_FONT);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
-
+	
 	protected void handleSelectLyricsFont() {
 		selectFont(SettingKey.LYRICS_FONT);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
-
+	
 	protected void handleSelectTranslationFont() {
 		selectFont(SettingKey.TRANSLATION_FONT);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
-
+	
 	protected void handleSelectCopyrightFont() {
 		selectFont(SettingKey.COPYRIGHT_FONT);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
-
+	
 	private boolean selectColor(SettingKey target, Color defaultColor, String title) {
 		Color color = settingsModel.getColor(target);
 		if (color == null) {
@@ -580,19 +560,19 @@ public class MainWindow extends JFrame {
 			return false;
 		}
 	}
-
+	
 	protected void handleSelectTextColor() {
 		selectColor(SettingKey.TEXT_COLOR, Color.WHITE, "Select Text Color");
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
-
+	
 	protected void handleSelectBackgroundColor() {
 		selectColor(SettingKey.BACKGROUND_COLOR, Color.BLACK, "Select Background Color");
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
-
+	
 	protected void handleSelectLogo() {
 		JFileChooser fileChooser = new JFileChooser();
 		String pathname = settingsModel.getString(SettingKey.LOGO_FILE);
@@ -604,13 +584,13 @@ public class MainWindow extends JFrame {
 		}
 		fileChooser.setApproveButtonText("Select");
 		fileChooser.setDialogTitle("Select Logo");
-
+		
 		// set a custom file filter but also keep the "accept all" filter
 		fileChooser.setFileFilter(new CustomFileFilter("Images", ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".gif"));
-
+		
 		// add the preview pane
 		fileChooser.setAccessory(new ImagePreview(fileChooser));
-
+		
 		int returnVal = fileChooser.showDialog(this, null);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			File file = fileChooser.getSelectedFile();
@@ -624,7 +604,7 @@ public class MainWindow extends JFrame {
 		}
 		setSettingsEnabled(true);
 	}
-
+	
 	private static void commitSpinners(JSpinner... spinners) {
 		for (JSpinner spinner : spinners) {
 			try {
@@ -634,7 +614,7 @@ public class MainWindow extends JFrame {
 			}
 		}
 	}
-
+	
 	private void setSettingsEnabled(boolean enabled) {
 		setEnabledIfNotNull(btnSelectTitleFont, enabled);
 		setEnabledIfNotNull(btnSelectLyricsFont, enabled);
@@ -660,13 +640,13 @@ public class MainWindow extends JFrame {
 		// (and the other way around)
 		setEnabledIfNotNull(btnUnlock, !enabled);
 	}
-
+	
 	private static void setEnabledIfNotNull(JComponent component, boolean enabled) {
 		if (component != null) {
 			component.setEnabled(enabled);
 		}
 	}
-
+	
 	protected void handleSongsListSelectionChanged(ListSelectionEvent e) {
 		// only the last event in a row should fire these actions (check valueIsAdjusting)
 		if (!e.getValueIsAdjusting()) {
@@ -675,7 +655,7 @@ public class MainWindow extends JFrame {
 			loadSong();
 		}
 	}
-
+	
 	private void saveSong() {
 		if (songsListSelected != null) {
 			saveSongWithoutChangingGUI();
@@ -689,13 +669,13 @@ public class MainWindow extends JFrame {
 			btnExportStatisticsSelected.setEnabled(false);
 		}
 	}
-
+	
 	private void saveSongWithoutChangingGUI() {
 		if (songsListSelected != null) {
 			saveSongData(songsListSelected);
 		}
 	}
-
+	
 	private void loadSong() {
 		if (songsListSelected != null) {
 			loadSongData(songsListSelected);
@@ -708,16 +688,14 @@ public class MainWindow extends JFrame {
 			btnExportStatisticsSelected.setEnabled(true);
 		}
 	}
-
+	
 	private void applyFilter() {
 		saveSong();
-		FieldName[] fieldsToSearch = ((FilterTypeEnum) settingsModel.get(SettingKey.SONG_LIST_FILTER)).getFields();
-		songsListFiltered = indexer.search(IndexType.ALL_SONGS, textFieldFilter.getText(), fieldsToSearch);
 		songsListModel.refilter();
 		songsListSelected = songsList.getSelectedValue();
 		loadSong();
 	}
-
+	
 	protected void handlePresentListSelectionChanged(ListSelectionEvent e) {
 		// only the last event in a row should fire these actions (check valueIsAdjusting)
 		if (!e.getValueIsAdjusting()) {
@@ -741,11 +719,11 @@ public class MainWindow extends JFrame {
 			}
 		}
 	}
-
+	
 	protected void handleSongDataFocusLost() {
 		saveSongWithoutChangingGUI();
 	}
-
+	
 	/**
 	 * Stores all data contained in the GUI elements.
 	 * 
@@ -769,7 +747,7 @@ public class MainWindow extends JFrame {
 		// now put the songs in the right order again (the title could be edited)
 		songsModel.sortAndUpdateView();
 	}
-
+	
 	/**
 	 * Deletes all values contained in the GUI elements of the song editing tab.
 	 */
@@ -787,7 +765,7 @@ public class MainWindow extends JFrame {
 		setTextAndRewind(editorChordSequence, "");
 		linkedSongsList.setModel(new TransparentListModel<>(Collections.<Song> emptyList()));
 	}
-
+	
 	/**
 	 * Enables or disables all GUI elements of the song editing tab.
 	 */
@@ -810,7 +788,7 @@ public class MainWindow extends JFrame {
 			editorLyrics.setCaretPosition(0);
 		}
 	}
-
+	
 	/**
 	 * Reads song data and puts the values into the GUI elements.
 	 * 
@@ -833,12 +811,12 @@ public class MainWindow extends JFrame {
 		linkedSongsListModel = new TransparentListModel<>(song.getLinkedSongs());
 		linkedSongsList.setModel(linkedSongsListModel);
 	}
-
+	
 	private static void setTextAndRewind(JTextComponent textComponent, String textToSet) {
 		textComponent.setText(textToSet);
 		textComponent.setCaretPosition(0);
 	}
-
+	
 	protected void handleWindowClosing() {
 		saveSongWithoutChangingGUI();
 		handleSettingsSaveAndLock();
@@ -851,14 +829,14 @@ public class MainWindow extends JFrame {
 			ErrorDialog.openDialog(this, PROBLEM_WHILE_SAVING + FileAndDirectoryLocations.getLogDir());
 		}
 	}
-
+	
 	protected void handleSongNew() {
 		Song song = new Song(StringTools.createUUID());
 		songsModel.addSong(song);
 		applyFilter();
 		songsList.setSelectedValue(song, true);
 	}
-
+	
 	protected void handleSongDelete() {
 		if (songsListSelected != null) {
 			Song songToDelete = songsListSelected;
@@ -867,7 +845,7 @@ public class MainWindow extends JFrame {
 			applyFilter();
 		}
 	}
-
+	
 	protected void handleSongSelect() {
 		if (songsListSelected != null) {
 			presentModel.addSong(songsListSelected);
@@ -877,7 +855,7 @@ public class MainWindow extends JFrame {
 			presentList.setSelectedIndex(presentModel.getSize() - 1);
 		}
 	}
-
+	
 	private void setDefaultDividerLocation() {
 		if (!splitPanePresentDividerLocationSet) {
 			int desiredMinimumWidth = panelSongList.getWidth() + selectedSongListButtons.getWidth();
@@ -887,7 +865,7 @@ public class MainWindow extends JFrame {
 			splitPanePresentDividerLocationSet = true;
 		}
 	}
-
+	
 	protected void handleSongUnselect() {
 		if (presentListSelected != null) {
 			// use index because there could be multiple instances of one song in the list
@@ -895,7 +873,7 @@ public class MainWindow extends JFrame {
 			presentList.clearSelection();
 		}
 	}
-
+	
 	protected void handleSongUp() {
 		if (presentListSelected != null) {
 			// use index because there could be multiple instances of one song in the list
@@ -908,7 +886,7 @@ public class MainWindow extends JFrame {
 			presentList.setSelectedIndex(newIndex);
 		}
 	}
-
+	
 	protected void handleSongDown() {
 		if (presentListSelected != null) {
 			// use index because there could be multiple instances of one song in the list
@@ -921,7 +899,7 @@ public class MainWindow extends JFrame {
 			presentList.setSelectedIndex(newIndex);
 		}
 	}
-
+	
 	protected void handleJumpToSelectedSong() {
 		if (presentListSelected != null) {
 			if (!songsListModel.contains(presentListSelected)) {
@@ -930,7 +908,7 @@ public class MainWindow extends JFrame {
 			songsList.setSelectedValue(presentListSelected, true);
 		}
 	}
-
+	
 	protected void handleJumpToPresentedSong() {
 		Song currentlyPresentedSong = controller.getCurrentlyPresentedSong();
 		if (currentlyPresentedSong != null) {
@@ -938,7 +916,7 @@ public class MainWindow extends JFrame {
 			handleJumpToSelectedSong();
 		}
 	}
-
+	
 	protected void handleSongPresent() {
 		boolean success = controller.present(new Presentable(presentListSelected, null));
 		if (success) {
@@ -950,17 +928,17 @@ public class MainWindow extends JFrame {
 				panelSectionButtons.add(buttonGroup, panelSectionButtonsHints);
 				partIndex++;
 			}
-
+			
 			// add empty component to consume any space that is left (so the parts appear at the top of the scrollpane
 			// view)
 			panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
-
+			
 			panelSectionButtons.revalidate();
 			panelSectionButtons.repaint();
 			btnJumpToPresented.setEnabled(true);
 		}
 	}
-
+	
 	protected void handleBlankScreen() {
 		boolean success = controller.present(BLANK_SCREEN);
 		if (success) {
@@ -968,7 +946,7 @@ public class MainWindow extends JFrame {
 			btnJumpToPresented.setEnabled(false);
 		}
 	}
-
+	
 	protected void handleLogoPresent() {
 		boolean success = controller.present(new Presentable(null, loadLogo()));
 		if (success) {
@@ -976,13 +954,13 @@ public class MainWindow extends JFrame {
 			btnJumpToPresented.setEnabled(false);
 		}
 	}
-
+	
 	private void clearSectionButtons() {
 		panelSectionButtons.removeAll();
 		panelSectionButtons.revalidate();
 		panelSectionButtons.repaint();
 	}
-
+	
 	private Image loadLogo() {
 		String logoPath = settingsModel.getString(SettingKey.LOGO_FILE);
 		if (logoPath != null && !logoPath.equals("")) {
@@ -999,14 +977,14 @@ public class MainWindow extends JFrame {
 		}
 		return null;
 	}
-
+	
 	protected void handleImportFromSDBv1() {
 		JFileChooser chooser = new JFileChooser();
 		chooser.setDialogTitle("choose file to import");
 		CustomFileFilter filter = new CustomFileFilter("SDB 1.x database files", ".sdb");
 		chooser.addChoosableFileFilter(filter);
 		int iValue = chooser.showOpenDialog(this);
-
+		
 		if (iValue == JFileChooser.APPROVE_OPTION) {
 			List<Song> imported = null;
 			ImportFromSDBv1 importer = new ImportFromSDBv1();
@@ -1019,11 +997,11 @@ public class MainWindow extends JFrame {
 			}
 		}
 	}
-
+	
 	private final void defineShortcuts() {
 		KeyboardFocusManager focusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		focusManager.addKeyEventDispatcher(keyboardShortcutManager);
-
+		
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_ESCAPE, false, false, false) {
 			@Override
 			public void doAction() {
@@ -1040,7 +1018,7 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
-
+		
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_S, false, false, true) {
 			@Override
 			public void doAction() {
@@ -1054,7 +1032,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 	}
-
+	
 	public void handleError(Throwable ex) {
 		StringBuilder ret = new StringBuilder();
 		ret.append(ex.getMessage());
@@ -1063,11 +1041,11 @@ public class MainWindow extends JFrame {
 		buildStackTraceText(ex, ret);
 		showErrorDialog(ret.toString());
 	}
-
+	
 	public void showErrorDialog(String text) {
 		ErrorDialog.openDialog(this, text);
 	}
-
+	
 	private static void buildStackTraceText(Throwable ex, StringBuilder sb) {
 		sb.append(ex.getClass().getCanonicalName());
 		sb.append(": ");
@@ -1085,16 +1063,14 @@ public class MainWindow extends JFrame {
 			buildStackTraceText(ex.getCause(), sb);
 		}
 	}
-
-	public MainWindow(MainController mainController, KeyboardShortcutManager keyboardShortcutManager,
-		IndexerService<Song> indexer) {
+	
+	public MainWindow(MainController mainController, KeyboardShortcutManager keyboardShortcutManager) {
 		controller = mainController;
 		this.keyboardShortcutManager = keyboardShortcutManager;
-		this.indexer = indexer;
 		setIconImages(getIconsFromResources(getClass()));
 		setTitle("Song Database");
 		defineShortcuts();
-
+		
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -1112,16 +1088,16 @@ public class MainWindow extends JFrame {
 		contentPane.setBorder(null);
 		setContentPane(contentPane);
 		contentPane.setLayout(new BorderLayout(0, 0));
-
+		
 		JSplitPane splitPane = new JSplitPane();
 		splitPane.setBorder(null);
 		contentPane.add(splitPane, BorderLayout.CENTER);
-
+		
 		panelSongList = new JPanel();
 		panelSongList.setBorder(new EmptyBorder(5, 5, 5, 5));
 		splitPane.setLeftComponent(panelSongList);
 		panelSongList.setLayout(new BorderLayout(0, 0));
-
+		
 		JPanel panelFilter = new JPanel();
 		panelFilter.setBorder(null);
 		panelSongList.add(panelFilter, BorderLayout.NORTH);
@@ -1131,7 +1107,7 @@ public class MainWindow extends JFrame {
 		gblPanelFilter.columnWeights = new double[] { 0.0, 1.0, 0.0, Double.MIN_VALUE };
 		gblPanelFilter.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
 		panelFilter.setLayout(gblPanelFilter);
-
+		
 		JLabel lblFilter = new JLabel("Filter:");
 		GridBagConstraints gbcLblFilter = new GridBagConstraints();
 		gbcLblFilter.anchor = GridBagConstraints.WEST;
@@ -1139,7 +1115,7 @@ public class MainWindow extends JFrame {
 		gbcLblFilter.gridx = 0;
 		gbcLblFilter.gridy = 0;
 		panelFilter.add(lblFilter, gbcLblFilter);
-
+		
 		textFieldFilter = new JTextField();
 		GridBagConstraints gbcTextFieldFilter = new GridBagConstraints();
 		gbcTextFieldFilter.fill = GridBagConstraints.HORIZONTAL;
@@ -1148,7 +1124,7 @@ public class MainWindow extends JFrame {
 		gbcTextFieldFilter.gridy = 0;
 		panelFilter.add(textFieldFilter, gbcTextFieldFilter);
 		textFieldFilter.setColumns(10);
-
+		
 		btnClearFilter = new JButton("");
 		btnClearFilter.addActionListener(new ActionListener() {
 			@Override
@@ -1164,11 +1140,11 @@ public class MainWindow extends JFrame {
 		gbcBtnClearFilter.gridx = 2;
 		gbcBtnClearFilter.gridy = 0;
 		panelFilter.add(btnClearFilter, gbcBtnClearFilter);
-
+		
 		JScrollPane scrollPaneSongList = new JScrollPane();
 		scrollPaneSongList.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		panelSongList.add(scrollPaneSongList, BorderLayout.CENTER);
-
+		
 		songsList = new FixedWidthJList<>();
 		songsList.addMouseListener(new MouseAdapter() {
 			@Override
@@ -1185,19 +1161,19 @@ public class MainWindow extends JFrame {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-			.addListSelectionListener(new ListSelectionListener() {
-				@Override
-				public void valueChanged(ListSelectionEvent e) {
-					try {
-						handleSongsListSelectionChanged(e);
-					} catch (Throwable ex) {
-						handleError(ex);
-					}
+		.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				try {
+					handleSongsListSelectionChanged(e);
+				} catch (Throwable ex) {
+					handleError(ex);
 				}
-			});
+			}
+		});
 		scrollPaneSongList.setViewportView(songsList);
 		songsList.setCellRenderer(new SongCellRenderer());
-
+		
 		JPanel panelSongListButtons = new JPanel();
 		panelSongList.add(panelSongListButtons, BorderLayout.SOUTH);
 		GridBagLayout gblPanelSongListButtons = new GridBagLayout();
@@ -1206,7 +1182,7 @@ public class MainWindow extends JFrame {
 		gblPanelSongListButtons.columnWeights = new double[] { 0.0, 0.0, 0.0 };
 		gblPanelSongListButtons.rowWeights = new double[] { 0.0 };
 		panelSongListButtons.setLayout(gblPanelSongListButtons);
-
+		
 		btnNewSong = new JButton("New");
 		btnNewSong.addActionListener(new ActionListener() {
 			@Override
@@ -1226,7 +1202,7 @@ public class MainWindow extends JFrame {
 		gbcBtnNewSong.gridx = 0;
 		gbcBtnNewSong.gridy = 0;
 		panelSongListButtons.add(btnNewSong, gbcBtnNewSong);
-
+		
 		btnDeleteSong = new JButton("Delete");
 		btnDeleteSong.addActionListener(new ActionListener() {
 			@Override
@@ -1246,7 +1222,7 @@ public class MainWindow extends JFrame {
 		gbcBtnDeleteSong.gridx = 1;
 		gbcBtnDeleteSong.gridy = 0;
 		panelSongListButtons.add(btnDeleteSong, gbcBtnDeleteSong);
-
+		
 		btnSelectSong = new JButton("Select");
 		btnSelectSong.addActionListener(new ActionListener() {
 			@Override
@@ -1266,11 +1242,11 @@ public class MainWindow extends JFrame {
 		gbcBtnSelectSong.gridx = 2;
 		gbcBtnSelectSong.gridy = 0;
 		panelSongListButtons.add(btnSelectSong, gbcBtnSelectSong);
-
+		
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.setBorder(null);
 		splitPane.setRightComponent(tabbedPane);
-
+		
 		JPanel panelEdit = new JPanel();
 		panelEdit.setBorder(new EmptyBorder(5, 5, 5, 5));
 		tabbedPane.addTab("Edit Song", null, panelEdit, null);
@@ -1281,7 +1257,7 @@ public class MainWindow extends JFrame {
 		gblPanelEdit.rowWeights = new double[] { 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
 			Double.MIN_VALUE };
 		panelEdit.setLayout(gblPanelEdit);
-
+		
 		JLabel lblLyricsAndChords = new JLabel("Lyrics and Chords");
 		GridBagConstraints gbcLblLyricsAndChords = new GridBagConstraints();
 		gbcLblLyricsAndChords.fill = GridBagConstraints.HORIZONTAL;
@@ -1290,7 +1266,7 @@ public class MainWindow extends JFrame {
 		gbcLblLyricsAndChords.gridx = 0;
 		gbcLblLyricsAndChords.gridy = 0;
 		panelEdit.add(lblLyricsAndChords, gbcLblLyricsAndChords);
-
+		
 		JScrollPane scrollPaneLyrics = new JScrollPane();
 		GridBagConstraints gbcScrollPaneLyrics = new GridBagConstraints();
 		gbcScrollPaneLyrics.weighty = 7.0;
@@ -1300,7 +1276,7 @@ public class MainWindow extends JFrame {
 		gbcScrollPaneLyrics.gridx = 0;
 		gbcScrollPaneLyrics.gridy = 1;
 		panelEdit.add(scrollPaneLyrics, gbcScrollPaneLyrics);
-
+		
 		editorLyrics = new JEditorPane();
 		editorLyrics.addFocusListener(new FocusAdapter() {
 			@Override
@@ -1313,10 +1289,10 @@ public class MainWindow extends JFrame {
 			}
 		});
 		editorLyrics
-			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
+		.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
-
+		
 		JLabel lblTitle = new JLabel("Title");
 		GridBagConstraints gbcLblTitle = new GridBagConstraints();
 		gbcLblTitle.fill = GridBagConstraints.HORIZONTAL;
@@ -1324,7 +1300,7 @@ public class MainWindow extends JFrame {
 		gbcLblTitle.gridx = 0;
 		gbcLblTitle.gridy = 2;
 		panelEdit.add(lblTitle, gbcLblTitle);
-
+		
 		JLabel lblComposer = new JLabel("Composer (Music)");
 		GridBagConstraints gbcLblComposer = new GridBagConstraints();
 		gbcLblComposer.fill = GridBagConstraints.HORIZONTAL;
@@ -1332,7 +1308,7 @@ public class MainWindow extends JFrame {
 		gbcLblComposer.gridx = 1;
 		gbcLblComposer.gridy = 2;
 		panelEdit.add(lblComposer, gbcLblComposer);
-
+		
 		JLabel lblPublisher = new JLabel("Publisher");
 		GridBagConstraints gbcLblPublisher = new GridBagConstraints();
 		gbcLblPublisher.fill = GridBagConstraints.HORIZONTAL;
@@ -1340,7 +1316,7 @@ public class MainWindow extends JFrame {
 		gbcLblPublisher.gridx = 2;
 		gbcLblPublisher.gridy = 2;
 		panelEdit.add(lblPublisher, gbcLblPublisher);
-
+		
 		textFieldTitle = new JTextField();
 		textFieldTitle.addFocusListener(new FocusAdapter() {
 			@Override
@@ -1359,7 +1335,7 @@ public class MainWindow extends JFrame {
 		gbcTextFieldTitle.gridy = 3;
 		panelEdit.add(textFieldTitle, gbcTextFieldTitle);
 		textFieldTitle.setColumns(10);
-
+		
 		textFieldComposer = new JTextField();
 		textFieldComposer.addFocusListener(new FocusAdapter() {
 			@Override
@@ -1378,7 +1354,7 @@ public class MainWindow extends JFrame {
 		gbcTextFieldComposer.gridy = 3;
 		panelEdit.add(textFieldComposer, gbcTextFieldComposer);
 		textFieldComposer.setColumns(10);
-
+		
 		textFieldPublisher = new JTextField();
 		textFieldPublisher.addFocusListener(new FocusAdapter() {
 			@Override
@@ -1397,7 +1373,7 @@ public class MainWindow extends JFrame {
 		gbcTextFieldPublisher.gridy = 3;
 		panelEdit.add(textFieldPublisher, gbcTextFieldPublisher);
 		textFieldPublisher.setColumns(10);
-
+		
 		JLabel lblLanguage = new JLabel("Language");
 		GridBagConstraints gbcLblLanguage = new GridBagConstraints();
 		gbcLblLanguage.fill = GridBagConstraints.HORIZONTAL;
@@ -1405,7 +1381,7 @@ public class MainWindow extends JFrame {
 		gbcLblLanguage.gridx = 0;
 		gbcLblLanguage.gridy = 4;
 		panelEdit.add(lblLanguage, gbcLblLanguage);
-
+		
 		JLabel lblAuthorText = new JLabel("Author (Text)");
 		GridBagConstraints gbcLblAuthorText = new GridBagConstraints();
 		gbcLblAuthorText.fill = GridBagConstraints.HORIZONTAL;
@@ -1413,7 +1389,7 @@ public class MainWindow extends JFrame {
 		gbcLblAuthorText.gridx = 1;
 		gbcLblAuthorText.gridy = 4;
 		panelEdit.add(lblAuthorText, gbcLblAuthorText);
-
+		
 		JLabel lblAdditionalCopyrightNotes = new JLabel("Additional Copyright Notes");
 		GridBagConstraints gbcLblAdditionalCopyrightNotes = new GridBagConstraints();
 		gbcLblAdditionalCopyrightNotes.fill = GridBagConstraints.HORIZONTAL;
@@ -1421,7 +1397,7 @@ public class MainWindow extends JFrame {
 		gbcLblAdditionalCopyrightNotes.gridx = 2;
 		gbcLblAdditionalCopyrightNotes.gridy = 4;
 		panelEdit.add(lblAdditionalCopyrightNotes, gbcLblAdditionalCopyrightNotes);
-
+		
 		comboBoxLanguage = new JComboBox<>();
 		comboBoxLanguage.addFocusListener(new FocusAdapter() {
 			@Override
@@ -1439,7 +1415,7 @@ public class MainWindow extends JFrame {
 		gbcComboBoxLanguage.gridx = 0;
 		gbcComboBoxLanguage.gridy = 5;
 		panelEdit.add(comboBoxLanguage, gbcComboBoxLanguage);
-
+		
 		textFieldAuthorText = new JTextField();
 		textFieldAuthorText.addFocusListener(new FocusAdapter() {
 			@Override
@@ -1458,7 +1434,7 @@ public class MainWindow extends JFrame {
 		gbcTextFieldAuthorText.gridy = 5;
 		panelEdit.add(textFieldAuthorText, gbcTextFieldAuthorText);
 		textFieldAuthorText.setColumns(10);
-
+		
 		textFieldAdditionalCopyrightNotes = new JTextField();
 		textFieldAdditionalCopyrightNotes.addFocusListener(new FocusAdapter() {
 			@Override
@@ -1477,7 +1453,7 @@ public class MainWindow extends JFrame {
 		gbcTextFieldAdditionalCopyrightNotes.gridy = 5;
 		panelEdit.add(textFieldAdditionalCopyrightNotes, gbcTextFieldAdditionalCopyrightNotes);
 		textFieldAdditionalCopyrightNotes.setColumns(10);
-
+		
 		JLabel lblTonality = new JLabel("Tonality");
 		GridBagConstraints gbcLblTonality = new GridBagConstraints();
 		gbcLblTonality.fill = GridBagConstraints.HORIZONTAL;
@@ -1485,7 +1461,7 @@ public class MainWindow extends JFrame {
 		gbcLblTonality.gridx = 0;
 		gbcLblTonality.gridy = 6;
 		panelEdit.add(lblTonality, gbcLblTonality);
-
+		
 		JLabel lblAuthorTranslation = new JLabel("Author (Translation)");
 		GridBagConstraints gbcLblAuthorTranslation = new GridBagConstraints();
 		gbcLblAuthorTranslation.fill = GridBagConstraints.HORIZONTAL;
@@ -1493,7 +1469,7 @@ public class MainWindow extends JFrame {
 		gbcLblAuthorTranslation.gridx = 1;
 		gbcLblAuthorTranslation.gridy = 6;
 		panelEdit.add(lblAuthorTranslation, gbcLblAuthorTranslation);
-
+		
 		JLabel lblSongNotes = new JLabel("Song Notes (not shown in presentation)");
 		GridBagConstraints gbcLblSongNotes = new GridBagConstraints();
 		gbcLblSongNotes.fill = GridBagConstraints.HORIZONTAL;
@@ -1501,7 +1477,7 @@ public class MainWindow extends JFrame {
 		gbcLblSongNotes.gridx = 2;
 		gbcLblSongNotes.gridy = 6;
 		panelEdit.add(lblSongNotes, gbcLblSongNotes);
-
+		
 		textFieldTonality = new JTextField();
 		textFieldTonality.addFocusListener(new FocusAdapter() {
 			@Override
@@ -1520,14 +1496,14 @@ public class MainWindow extends JFrame {
 		gbcTextFieldTonality.gridy = 7;
 		panelEdit.add(textFieldTonality, gbcTextFieldTonality);
 		textFieldTonality.setColumns(10);
-
+		
 		textFieldAuthorTranslation = new JTextField();
 		textFieldAuthorTranslation.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
 				try {
 					handleSongDataFocusLost();
-
+					
 				} catch (Throwable ex) {
 					handleError(ex);
 				}
@@ -1540,7 +1516,7 @@ public class MainWindow extends JFrame {
 		gbcTextFieldAuthorTranslation.gridy = 7;
 		panelEdit.add(textFieldAuthorTranslation, gbcTextFieldAuthorTranslation);
 		textFieldAuthorTranslation.setColumns(10);
-
+		
 		textFieldSongNotes = new JTextField();
 		textFieldSongNotes.addFocusListener(new FocusAdapter() {
 			@Override
@@ -1559,7 +1535,7 @@ public class MainWindow extends JFrame {
 		gbcTextFieldSongNotes.gridy = 7;
 		panelEdit.add(textFieldSongNotes, gbcTextFieldSongNotes);
 		textFieldSongNotes.setColumns(10);
-
+		
 		JLabel lblChordSequence = new JLabel("Chord Sequence");
 		GridBagConstraints gbcLblChordSequence = new GridBagConstraints();
 		gbcLblChordSequence.fill = GridBagConstraints.HORIZONTAL;
@@ -1568,7 +1544,7 @@ public class MainWindow extends JFrame {
 		gbcLblChordSequence.gridx = 0;
 		gbcLblChordSequence.gridy = 8;
 		panelEdit.add(lblChordSequence, gbcLblChordSequence);
-
+		
 		JLabel lblLinkedSongs = new JLabel("Linked Songs");
 		GridBagConstraints gbcLblLinkedSongs = new GridBagConstraints();
 		gbcLblLinkedSongs.fill = GridBagConstraints.HORIZONTAL;
@@ -1576,7 +1552,7 @@ public class MainWindow extends JFrame {
 		gbcLblLinkedSongs.gridx = 2;
 		gbcLblLinkedSongs.gridy = 8;
 		panelEdit.add(lblLinkedSongs, gbcLblLinkedSongs);
-
+		
 		JScrollPane scrollPaneChordSequence = new JScrollPane();
 		GridBagConstraints gbcScrollPaneChordSequence = new GridBagConstraints();
 		gbcScrollPaneChordSequence.gridheight = 2;
@@ -1587,7 +1563,7 @@ public class MainWindow extends JFrame {
 		gbcScrollPaneChordSequence.gridx = 0;
 		gbcScrollPaneChordSequence.gridy = 9;
 		panelEdit.add(scrollPaneChordSequence, gbcScrollPaneChordSequence);
-
+		
 		editorChordSequence = new JEditorPane();
 		editorChordSequence.addFocusListener(new FocusAdapter() {
 			@Override
@@ -1603,7 +1579,7 @@ public class MainWindow extends JFrame {
 			editorChordSequence.getFont().getSize()));
 		scrollPaneChordSequence.setViewportView(editorChordSequence);
 		editorChordSequence.setBackground(Color.WHITE);
-
+		
 		JScrollPane scrollPaneLinkedSongsList = new JScrollPane();
 		GridBagConstraints gbcScrollPaneLinkedSongsList = new GridBagConstraints();
 		gbcScrollPaneLinkedSongsList.insets = new Insets(0, 0, 5, 0);
@@ -1611,10 +1587,10 @@ public class MainWindow extends JFrame {
 		gbcScrollPaneLinkedSongsList.gridx = 2;
 		gbcScrollPaneLinkedSongsList.gridy = 9;
 		panelEdit.add(scrollPaneLinkedSongsList, gbcScrollPaneLinkedSongsList);
-
+		
 		linkedSongsList = new FixedWidthJList<>();
 		scrollPaneLinkedSongsList.setViewportView(linkedSongsList);
-
+		
 		JPanel panelLinkedSongs = new JPanel();
 		GridBagConstraints gbcPanelLinkedSongs = new GridBagConstraints();
 		gbcPanelLinkedSongs.fill = GridBagConstraints.BOTH;
@@ -1627,14 +1603,14 @@ public class MainWindow extends JFrame {
 		gblPanelLinkedSongs.columnWeights = new double[] { 1.0, 1.0 };
 		gblPanelLinkedSongs.rowWeights = new double[] { 0.0 };
 		panelLinkedSongs.setLayout(gblPanelLinkedSongs);
-
+		
 		btnAddLinkedSong = new JButton("Add");
 		btnAddLinkedSong.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
 					// TODO
-
+					
 					// now save the edited song
 					handleSongDataFocusLost();
 				} catch (Throwable ex) {
@@ -1649,14 +1625,14 @@ public class MainWindow extends JFrame {
 		gbcBtnAdd.gridx = 0;
 		gbcBtnAdd.gridy = 0;
 		panelLinkedSongs.add(btnAddLinkedSong, gbcBtnAdd);
-
+		
 		btnRemoveLinkedSong = new JButton("Remove");
 		btnRemoveLinkedSong.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
 					// TODO
-
+					
 					// now save the edited song
 					handleSongDataFocusLost();
 				} catch (Throwable ex) {
@@ -1670,25 +1646,25 @@ public class MainWindow extends JFrame {
 		gbcBtnRemove.gridx = 1;
 		gbcBtnRemove.gridy = 0;
 		panelLinkedSongs.add(btnRemoveLinkedSong, gbcBtnRemove);
-
+		
 		JPanel panelPresent = new JPanel();
 		tabbedPane.addTab("Present Songs", null, panelPresent, null);
 		panelPresent.setLayout(new BorderLayout(0, 0));
-
+		
 		splitPanePresent = new JSplitPane();
 		splitPanePresent.setBorder(null);
 		panelPresent.add(splitPanePresent, BorderLayout.CENTER);
-
+		
 		JPanel panelPresentLeft = new JPanel();
 		panelPresentLeft.setBorder(new EmptyBorder(5, 5, 5, 5));
 		splitPanePresent.setLeftComponent(panelPresentLeft);
 		panelPresentLeft.setLayout(new BorderLayout(0, 0));
 		splitPanePresent.setDividerLocation(-1);
-
+		
 		JScrollPane scrollPanePresentSongList = new JScrollPane();
 		scrollPanePresentSongList.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		panelPresentLeft.add(scrollPanePresentSongList, BorderLayout.CENTER);
-
+		
 		presentList = new FixedWidthJList<>();
 		presentList.addListSelectionListener(new ListSelectionListener() {
 			@Override
@@ -1727,7 +1703,7 @@ public class MainWindow extends JFrame {
 		});
 		presentList.setCellRenderer(new SongCellRenderer());
 		scrollPanePresentSongList.setViewportView(presentList);
-
+		
 		selectedSongListButtons = new JPanel();
 		panelPresentLeft.add(selectedSongListButtons, BorderLayout.EAST);
 		GridBagLayout gblPanelSelectedSongListButtons = new GridBagLayout();
@@ -1736,7 +1712,7 @@ public class MainWindow extends JFrame {
 		gblPanelSelectedSongListButtons.columnWeights = new double[] { 0.0 };
 		gblPanelSelectedSongListButtons.rowWeights = new double[] { 1.0, 0.0, 0.0, 0.0, 1.0 };
 		selectedSongListButtons.setLayout(gblPanelSelectedSongListButtons);
-
+		
 		btnUp = new JButton("");
 		btnUp.addActionListener(new ActionListener() {
 			@Override
@@ -1757,7 +1733,7 @@ public class MainWindow extends JFrame {
 		gbcBtnUp.gridx = 0;
 		gbcBtnUp.gridy = 1;
 		selectedSongListButtons.add(btnUp, gbcBtnUp);
-
+		
 		btnUnselect = new JButton("");
 		btnUnselect.setToolTipText("Unselect");
 		btnUnselect.addActionListener(new ActionListener() {
@@ -1778,7 +1754,7 @@ public class MainWindow extends JFrame {
 		gbcBtnUnselect.gridx = 0;
 		gbcBtnUnselect.gridy = 2;
 		selectedSongListButtons.add(btnUnselect, gbcBtnUnselect);
-
+		
 		btnDown = new JButton("");
 		btnDown.addActionListener(new ActionListener() {
 			@Override
@@ -1798,7 +1774,7 @@ public class MainWindow extends JFrame {
 		gbcBtnDown.gridx = 0;
 		gbcBtnDown.gridy = 3;
 		selectedSongListButtons.add(btnDown, gbcBtnDown);
-
+		
 		btnJumpToSelected = new JButton("Jump to selected song");
 		btnJumpToSelected.addActionListener(new ActionListener() {
 			@Override
@@ -1811,12 +1787,12 @@ public class MainWindow extends JFrame {
 			}
 		});
 		panelPresentLeft.add(btnJumpToSelected, BorderLayout.SOUTH);
-
+		
 		JPanel panelPresentRight = new JPanel();
 		panelPresentRight.setBorder(new EmptyBorder(5, 5, 5, 5));
 		splitPanePresent.setRightComponent(panelPresentRight);
 		panelPresentRight.setLayout(new BorderLayout(0, 0));
-
+		
 		JPanel panelPresentationButtons = new JPanel();
 		panelPresentRight.add(panelPresentationButtons, BorderLayout.CENTER);
 		GridBagLayout gblPanelPresentationButtons = new GridBagLayout();
@@ -1825,7 +1801,7 @@ public class MainWindow extends JFrame {
 		gblPanelPresentationButtons.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
 		gblPanelPresentationButtons.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE };
 		panelPresentationButtons.setLayout(gblPanelPresentationButtons);
-
+		
 		btnShowLogo = new JButton("Show logo");
 		btnShowLogo.addActionListener(new ActionListener() {
 			@Override
@@ -1843,7 +1819,7 @@ public class MainWindow extends JFrame {
 		gbcBtnShowLogo.gridx = 0;
 		gbcBtnShowLogo.gridy = 0;
 		panelPresentationButtons.add(btnShowLogo, gbcBtnShowLogo);
-
+		
 		btnShowBlankScreen = new JButton("Blank screen");
 		btnShowBlankScreen.addActionListener(new ActionListener() {
 			@Override
@@ -1861,7 +1837,7 @@ public class MainWindow extends JFrame {
 		gbcBtnShowBlankScreen.gridx = 0;
 		gbcBtnShowBlankScreen.gridy = 1;
 		panelPresentationButtons.add(btnShowBlankScreen, gbcBtnShowBlankScreen);
-
+		
 		btnPresentSelectedSong = new JButton("Present selected song");
 		btnPresentSelectedSong.addActionListener(new ActionListener() {
 			@Override
@@ -1879,7 +1855,7 @@ public class MainWindow extends JFrame {
 		gbcBtnPresentSelectedSong.gridx = 0;
 		gbcBtnPresentSelectedSong.gridy = 2;
 		panelPresentationButtons.add(btnPresentSelectedSong, gbcBtnPresentSelectedSong);
-
+		
 		JLabel lblSections = new JLabel("Sections:");
 		GridBagConstraints gbcLblSections = new GridBagConstraints();
 		gbcLblSections.fill = GridBagConstraints.HORIZONTAL;
@@ -1887,14 +1863,14 @@ public class MainWindow extends JFrame {
 		gbcLblSections.gridx = 0;
 		gbcLblSections.gridy = 3;
 		panelPresentationButtons.add(lblSections, gbcLblSections);
-
+		
 		scrollPaneSectionButtons = new JScrollPane();
 		GridBagConstraints gbcScrollPaneSectionButtons = new GridBagConstraints();
 		gbcScrollPaneSectionButtons.fill = GridBagConstraints.BOTH;
 		gbcScrollPaneSectionButtons.gridx = 0;
 		gbcScrollPaneSectionButtons.gridy = 4;
 		panelPresentationButtons.add(scrollPaneSectionButtons, gbcScrollPaneSectionButtons);
-
+		
 		panelSectionButtons = new JPanel();
 		scrollPaneSectionButtons.setViewportView(panelSectionButtons);
 		scrollPaneSectionButtons.getVerticalScrollBar().setUnitIncrement(30);
@@ -1911,7 +1887,7 @@ public class MainWindow extends JFrame {
 		panelSectionButtonsLastRowHints.weighty = 1.0;
 		panelSectionButtonsLastRowHints.fill = GridBagConstraints.BOTH;
 		panelSectionButtons.setLayout(new GridBagLayout());
-
+		
 		btnJumpToPresented = new JButton("Jump to presented song");
 		btnJumpToPresented.addActionListener(new ActionListener() {
 			@Override
@@ -1924,7 +1900,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		panelPresentRight.add(btnJumpToPresented, BorderLayout.SOUTH);
-
+		
 		JPanel panelImportExportStatistics = new JPanel();
 		panelImportExportStatistics.setBorder(new EmptyBorder(5, 5, 5, 5));
 		tabbedPane.addTab("Import / Export / Statistics", null, panelImportExportStatistics, null);
@@ -1935,7 +1911,7 @@ public class MainWindow extends JFrame {
 		gblPanelImportExportStatistics.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 			0.0, 0.0, Double.MIN_VALUE };
 		panelImportExportStatistics.setLayout(gblPanelImportExportStatistics);
-
+		
 		JLabel lblSelectedSong2 = new JLabel("Selected Song");
 		GridBagConstraints gbcLblSelectedSong2 = new GridBagConstraints();
 		gbcLblSelectedSong2.fill = GridBagConstraints.HORIZONTAL;
@@ -1945,7 +1921,7 @@ public class MainWindow extends JFrame {
 		gbcLblSelectedSong2.gridx = 0;
 		gbcLblSelectedSong2.gridy = 0;
 		panelImportExportStatistics.add(lblSelectedSong2, gbcLblSelectedSong2);
-
+		
 		btnExportLyricsOnlyPdfSelected = new JButton("Export lyrics-only PDF");
 		GridBagConstraints gbcBtnExportLyricsOnlyPdfSelected = new GridBagConstraints();
 		gbcBtnExportLyricsOnlyPdfSelected.anchor = GridBagConstraints.NORTH;
@@ -1954,7 +1930,7 @@ public class MainWindow extends JFrame {
 		gbcBtnExportLyricsOnlyPdfSelected.gridx = 0;
 		gbcBtnExportLyricsOnlyPdfSelected.gridy = 1;
 		panelImportExportStatistics.add(btnExportLyricsOnlyPdfSelected, gbcBtnExportLyricsOnlyPdfSelected);
-
+		
 		lblStatistics = new JLabel("<STATISTICS>");
 		GridBagConstraints gbcLblStatistics = new GridBagConstraints();
 		gbcLblStatistics.anchor = GridBagConstraints.NORTH;
@@ -1964,7 +1940,7 @@ public class MainWindow extends JFrame {
 		gbcLblStatistics.gridx = 2;
 		gbcLblStatistics.gridy = 1;
 		panelImportExportStatistics.add(lblStatistics, gbcLblStatistics);
-
+		
 		btnExportCompletePdfSelected = new JButton("Export complete PDF");
 		GridBagConstraints gbcBtnExportCompletePdfSelected = new GridBagConstraints();
 		gbcBtnExportCompletePdfSelected.anchor = GridBagConstraints.NORTH;
@@ -1973,7 +1949,7 @@ public class MainWindow extends JFrame {
 		gbcBtnExportCompletePdfSelected.gridx = 0;
 		gbcBtnExportCompletePdfSelected.gridy = 2;
 		panelImportExportStatistics.add(btnExportCompletePdfSelected, gbcBtnExportCompletePdfSelected);
-
+		
 		btnExportStatisticsSelected = new JButton("Export statistics");
 		GridBagConstraints gbcBtnExportStatisticsSelected = new GridBagConstraints();
 		gbcBtnExportStatisticsSelected.anchor = GridBagConstraints.NORTH;
@@ -1982,7 +1958,7 @@ public class MainWindow extends JFrame {
 		gbcBtnExportStatisticsSelected.gridx = 0;
 		gbcBtnExportStatisticsSelected.gridy = 3;
 		panelImportExportStatistics.add(btnExportStatisticsSelected, gbcBtnExportStatisticsSelected);
-
+		
 		JLabel lblAllSongs2 = new JLabel("All Songs");
 		GridBagConstraints gbcLblAllSongs2 = new GridBagConstraints();
 		gbcLblAllSongs2.fill = GridBagConstraints.HORIZONTAL;
@@ -1992,7 +1968,7 @@ public class MainWindow extends JFrame {
 		gbcLblAllSongs2.gridx = 0;
 		gbcLblAllSongs2.gridy = 4;
 		panelImportExportStatistics.add(lblAllSongs2, gbcLblAllSongs2);
-
+		
 		btnExportLyricsOnlyPdfAll = new JButton("Export lyrics-only PDF");
 		GridBagConstraints gbcBtnExportLyricsOnlyPdfAll = new GridBagConstraints();
 		gbcBtnExportLyricsOnlyPdfAll.fill = GridBagConstraints.HORIZONTAL;
@@ -2000,7 +1976,7 @@ public class MainWindow extends JFrame {
 		gbcBtnExportLyricsOnlyPdfAll.gridx = 0;
 		gbcBtnExportLyricsOnlyPdfAll.gridy = 5;
 		panelImportExportStatistics.add(btnExportLyricsOnlyPdfAll, gbcBtnExportLyricsOnlyPdfAll);
-
+		
 		btnExportCompletePdfAll = new JButton("Export complete PDF");
 		GridBagConstraints gbcBtnExportCompletePdfAll = new GridBagConstraints();
 		gbcBtnExportCompletePdfAll.fill = GridBagConstraints.HORIZONTAL;
@@ -2008,7 +1984,7 @@ public class MainWindow extends JFrame {
 		gbcBtnExportCompletePdfAll.gridx = 0;
 		gbcBtnExportCompletePdfAll.gridy = 6;
 		panelImportExportStatistics.add(btnExportCompletePdfAll, gbcBtnExportCompletePdfAll);
-
+		
 		btnExportStatisticsAll = new JButton("Export statistics");
 		btnExportStatisticsAll.addActionListener(new ActionListener() {
 			@Override
@@ -2022,7 +1998,7 @@ public class MainWindow extends JFrame {
 				chooser.setApproveButtonText("Export");
 				chooser.setSelectedFile(new File("song-statistics.xls"));
 				int result = chooser.showOpenDialog(MainWindow.this);
-
+				
 				if (result == JFileChooser.APPROVE_OPTION) {
 					File target = chooser.getSelectedFile();
 					// export
@@ -2040,7 +2016,7 @@ public class MainWindow extends JFrame {
 		gbcBtnExportStatisticsAll.gridx = 0;
 		gbcBtnExportStatisticsAll.gridy = 7;
 		panelImportExportStatistics.add(btnExportStatisticsAll, gbcBtnExportStatisticsAll);
-
+		
 		JLabel lblImportingSongs = new JLabel("Importing Songs");
 		GridBagConstraints gbcLblImportingSongs = new GridBagConstraints();
 		gbcLblImportingSongs.gridwidth = 3;
@@ -2050,7 +2026,7 @@ public class MainWindow extends JFrame {
 		gbcLblImportingSongs.gridx = 0;
 		gbcLblImportingSongs.gridy = 8;
 		panelImportExportStatistics.add(lblImportingSongs, gbcLblImportingSongs);
-
+		
 		btnImportFromSdb1 = new JButton("Import from SDB 1.x");
 		btnImportFromSdb1.addActionListener(new ActionListener() {
 			@Override
@@ -2068,7 +2044,7 @@ public class MainWindow extends JFrame {
 		gbcBtnImportFromSdb1.gridx = 0;
 		gbcBtnImportFromSdb1.gridy = 9;
 		panelImportExportStatistics.add(btnImportFromSdb1, gbcBtnImportFromSdb1);
-
+		
 		JLabel lblProgramVersionTitle = new JLabel("Program Version");
 		lblProgramVersionTitle.setFont(new Font("DejaVu Sans", Font.ITALIC, 12));
 		GridBagConstraints gbcLblProgramVersionTitle = new GridBagConstraints();
@@ -2079,7 +2055,7 @@ public class MainWindow extends JFrame {
 		gbcLblProgramVersionTitle.gridx = 0;
 		gbcLblProgramVersionTitle.gridy = 10;
 		panelImportExportStatistics.add(lblProgramVersionTitle, gbcLblProgramVersionTitle);
-
+		
 		lblProgramVersion = new JLabel("<PROGRAM VERSION>");
 		lblProgramVersion.setBorder(new EmptyBorder(0, 0, 0, 0));
 		lblProgramVersion.setFont(new Font("DejaVu Sans", Font.ITALIC, 12));
@@ -2090,16 +2066,16 @@ public class MainWindow extends JFrame {
 		gbcLblProgramVersion.gridx = 0;
 		gbcLblProgramVersion.gridy = 11;
 		panelImportExportStatistics.add(lblProgramVersion, gbcLblProgramVersion);
-
+		
 		JPanel panelSettings = new JPanel();
 		panelSettings.setBorder(null);
 		tabbedPane.addTab("Global Settings", null, panelSettings, null);
 		panelSettings.setLayout(new BorderLayout(0, 0));
-
+		
 		JScrollPane scrollPaneSettings = new JScrollPane();
 		scrollPaneSettings.setBorder(null);
 		panelSettings.add(scrollPaneSettings);
-
+		
 		JPanel panel = new JPanel();
 		panel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		scrollPaneSettings.setViewportBorder(null);
@@ -2111,7 +2087,7 @@ public class MainWindow extends JFrame {
 		gblPanel.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 			0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
 		panel.setLayout(gblPanel);
-
+		
 		btnUnlock = new JButton("Unlock");
 		btnUnlock.addActionListener(new ActionListener() {
 			@Override
@@ -2130,7 +2106,7 @@ public class MainWindow extends JFrame {
 		gbcBtnUnlock.gridx = 1;
 		gbcBtnUnlock.gridy = 1;
 		panel.add(btnUnlock, gbcBtnUnlock);
-
+		
 		JLabel lblTitleFont = new JLabel("Title font");
 		GridBagConstraints gbcLblTitleFont = new GridBagConstraints();
 		gbcLblTitleFont.anchor = GridBagConstraints.EAST;
@@ -2138,7 +2114,7 @@ public class MainWindow extends JFrame {
 		gbcLblTitleFont.gridx = 1;
 		gbcLblTitleFont.gridy = 2;
 		panel.add(lblTitleFont, gbcLblTitleFont);
-
+		
 		btnSelectTitleFont = new JButton("Select...");
 		btnSelectTitleFont.addActionListener(new ActionListener() {
 			@Override
@@ -2156,7 +2132,7 @@ public class MainWindow extends JFrame {
 		gbcBtnSelectTitleFont.gridx = 3;
 		gbcBtnSelectTitleFont.gridy = 2;
 		panel.add(btnSelectTitleFont, gbcBtnSelectTitleFont);
-
+		
 		JLabel lblLyricsFont = new JLabel("Lyrics font");
 		GridBagConstraints gbcLblLyricsFont = new GridBagConstraints();
 		gbcLblLyricsFont.anchor = GridBagConstraints.EAST;
@@ -2164,7 +2140,7 @@ public class MainWindow extends JFrame {
 		gbcLblLyricsFont.gridx = 1;
 		gbcLblLyricsFont.gridy = 3;
 		panel.add(lblLyricsFont, gbcLblLyricsFont);
-
+		
 		btnSelectLyricsFont = new JButton("Select...");
 		btnSelectLyricsFont.addActionListener(new ActionListener() {
 			@Override
@@ -2182,7 +2158,7 @@ public class MainWindow extends JFrame {
 		gbcBtnSelectLyricsFont.gridx = 3;
 		gbcBtnSelectLyricsFont.gridy = 3;
 		panel.add(btnSelectLyricsFont, gbcBtnSelectLyricsFont);
-
+		
 		JLabel lblTranslationFont = new JLabel("Translation font");
 		GridBagConstraints gbcLblTranslationFont = new GridBagConstraints();
 		gbcLblTranslationFont.anchor = GridBagConstraints.EAST;
@@ -2190,7 +2166,7 @@ public class MainWindow extends JFrame {
 		gbcLblTranslationFont.gridx = 1;
 		gbcLblTranslationFont.gridy = 4;
 		panel.add(lblTranslationFont, gbcLblTranslationFont);
-
+		
 		btnSelectTranslationFont = new JButton("Select...");
 		btnSelectTranslationFont.addActionListener(new ActionListener() {
 			@Override
@@ -2208,7 +2184,7 @@ public class MainWindow extends JFrame {
 		gbcBtnSelectTranslationFont.gridx = 3;
 		gbcBtnSelectTranslationFont.gridy = 4;
 		panel.add(btnSelectTranslationFont, gbcBtnSelectTranslationFont);
-
+		
 		JLabel lblCopyrightFont = new JLabel("Copyright font");
 		GridBagConstraints gbcLblCopyrightFont = new GridBagConstraints();
 		gbcLblCopyrightFont.anchor = GridBagConstraints.EAST;
@@ -2216,7 +2192,7 @@ public class MainWindow extends JFrame {
 		gbcLblCopyrightFont.gridx = 1;
 		gbcLblCopyrightFont.gridy = 5;
 		panel.add(lblCopyrightFont, gbcLblCopyrightFont);
-
+		
 		btnSelectCopyrightFont = new JButton("Select...");
 		btnSelectCopyrightFont.addActionListener(new ActionListener() {
 			@Override
@@ -2234,7 +2210,7 @@ public class MainWindow extends JFrame {
 		gbcBtnSelectCopyrightFont.gridx = 3;
 		gbcBtnSelectCopyrightFont.gridy = 5;
 		panel.add(btnSelectCopyrightFont, gbcBtnSelectCopyrightFont);
-
+		
 		JLabel lblTextColor = new JLabel("Text color");
 		GridBagConstraints gbcLblTextColor = new GridBagConstraints();
 		gbcLblTextColor.anchor = GridBagConstraints.EAST;
@@ -2242,7 +2218,7 @@ public class MainWindow extends JFrame {
 		gbcLblTextColor.gridx = 1;
 		gbcLblTextColor.gridy = 6;
 		panel.add(lblTextColor, gbcLblTextColor);
-
+		
 		btnSelectTextColor = new JButton("Select...");
 		btnSelectTextColor.addActionListener(new ActionListener() {
 			@Override
@@ -2260,7 +2236,7 @@ public class MainWindow extends JFrame {
 		gbcBtnSelectTextColor.gridx = 3;
 		gbcBtnSelectTextColor.gridy = 6;
 		panel.add(btnSelectTextColor, gbcBtnSelectTextColor);
-
+		
 		JLabel lblBackgroundColor = new JLabel("Background color");
 		GridBagConstraints gbcLblBackgroundColor = new GridBagConstraints();
 		gbcLblBackgroundColor.anchor = GridBagConstraints.EAST;
@@ -2268,7 +2244,7 @@ public class MainWindow extends JFrame {
 		gbcLblBackgroundColor.gridx = 1;
 		gbcLblBackgroundColor.gridy = 7;
 		panel.add(lblBackgroundColor, gbcLblBackgroundColor);
-
+		
 		btnSelectBackgroundColor = new JButton("Select...");
 		btnSelectBackgroundColor.addActionListener(new ActionListener() {
 			@Override
@@ -2286,7 +2262,7 @@ public class MainWindow extends JFrame {
 		gbcBtnSelectBackgroundColor.gridx = 3;
 		gbcBtnSelectBackgroundColor.gridy = 7;
 		panel.add(btnSelectBackgroundColor, gbcBtnSelectBackgroundColor);
-
+		
 		JLabel lblLogo = new JLabel("Logo");
 		GridBagConstraints gbcLblLogo = new GridBagConstraints();
 		gbcLblLogo.anchor = GridBagConstraints.EAST;
@@ -2294,7 +2270,7 @@ public class MainWindow extends JFrame {
 		gbcLblLogo.gridx = 1;
 		gbcLblLogo.gridy = 8;
 		panel.add(lblLogo, gbcLblLogo);
-
+		
 		btnSelectLogo = new JButton("Select...");
 		btnSelectLogo.addActionListener(new ActionListener() {
 			@Override
@@ -2312,7 +2288,7 @@ public class MainWindow extends JFrame {
 		gbcBtnSelectLogo.gridx = 3;
 		gbcBtnSelectLogo.gridy = 8;
 		panel.add(btnSelectLogo, gbcBtnSelectLogo);
-
+		
 		JLabel lblTopMargin = new JLabel("Top margin");
 		GridBagConstraints gbcLblTopMargin = new GridBagConstraints();
 		gbcLblTopMargin.anchor = GridBagConstraints.EAST;
@@ -2320,7 +2296,7 @@ public class MainWindow extends JFrame {
 		gbcLblTopMargin.gridx = 1;
 		gbcLblTopMargin.gridy = 9;
 		panel.add(lblTopMargin, gbcLblTopMargin);
-
+		
 		spinnerTopMargin = new JSpinner();
 		GridBagConstraints gbcSpinnerTopMargin = new GridBagConstraints();
 		gbcSpinnerTopMargin.fill = GridBagConstraints.HORIZONTAL;
@@ -2328,7 +2304,7 @@ public class MainWindow extends JFrame {
 		gbcSpinnerTopMargin.gridx = 3;
 		gbcSpinnerTopMargin.gridy = 9;
 		panel.add(spinnerTopMargin, gbcSpinnerTopMargin);
-
+		
 		JLabel lblLeftMargin = new JLabel("Left margin");
 		GridBagConstraints gbcLblLeftMargin = new GridBagConstraints();
 		gbcLblLeftMargin.anchor = GridBagConstraints.EAST;
@@ -2336,7 +2312,7 @@ public class MainWindow extends JFrame {
 		gbcLblLeftMargin.gridx = 1;
 		gbcLblLeftMargin.gridy = 10;
 		panel.add(lblLeftMargin, gbcLblLeftMargin);
-
+		
 		spinnerLeftMargin = new JSpinner();
 		GridBagConstraints gbcSpinnerLeftMargin = new GridBagConstraints();
 		gbcSpinnerLeftMargin.fill = GridBagConstraints.HORIZONTAL;
@@ -2344,7 +2320,7 @@ public class MainWindow extends JFrame {
 		gbcSpinnerLeftMargin.gridx = 3;
 		gbcSpinnerLeftMargin.gridy = 10;
 		panel.add(spinnerLeftMargin, gbcSpinnerLeftMargin);
-
+		
 		JLabel lblRightMargin = new JLabel("Right margin");
 		GridBagConstraints gbcLblRightMargin = new GridBagConstraints();
 		gbcLblRightMargin.anchor = GridBagConstraints.EAST;
@@ -2352,7 +2328,7 @@ public class MainWindow extends JFrame {
 		gbcLblRightMargin.gridx = 1;
 		gbcLblRightMargin.gridy = 11;
 		panel.add(lblRightMargin, gbcLblRightMargin);
-
+		
 		spinnerRightMargin = new JSpinner();
 		GridBagConstraints gbcSpinnerRightMargin = new GridBagConstraints();
 		gbcSpinnerRightMargin.fill = GridBagConstraints.HORIZONTAL;
@@ -2360,7 +2336,7 @@ public class MainWindow extends JFrame {
 		gbcSpinnerRightMargin.gridx = 3;
 		gbcSpinnerRightMargin.gridy = 11;
 		panel.add(spinnerRightMargin, gbcSpinnerRightMargin);
-
+		
 		JLabel lblBottomMargin = new JLabel("Bottom margin");
 		GridBagConstraints gbcLblBottomMargin = new GridBagConstraints();
 		gbcLblBottomMargin.anchor = GridBagConstraints.EAST;
@@ -2368,7 +2344,7 @@ public class MainWindow extends JFrame {
 		gbcLblBottomMargin.gridx = 1;
 		gbcLblBottomMargin.gridy = 12;
 		panel.add(lblBottomMargin, gbcLblBottomMargin);
-
+		
 		spinnerBottomMargin = new JSpinner();
 		GridBagConstraints gbcSpinnerBottomMargin = new GridBagConstraints();
 		gbcSpinnerBottomMargin.fill = GridBagConstraints.HORIZONTAL;
@@ -2376,7 +2352,7 @@ public class MainWindow extends JFrame {
 		gbcSpinnerBottomMargin.gridx = 3;
 		gbcSpinnerBottomMargin.gridy = 12;
 		panel.add(spinnerBottomMargin, gbcSpinnerBottomMargin);
-
+		
 		JLabel lblShowTitle = new JLabel("Show title in presentation");
 		lblShowTitle.setHorizontalAlignment(SwingConstants.TRAILING);
 		GridBagConstraints gbcLblShowTitle = new GridBagConstraints();
@@ -2385,14 +2361,14 @@ public class MainWindow extends JFrame {
 		gbcLblShowTitle.gridx = 1;
 		gbcLblShowTitle.gridy = 13;
 		panel.add(lblShowTitle, gbcLblShowTitle);
-
+		
 		checkboxShowTitle = new JCheckBox("");
 		GridBagConstraints gbcCheckboxShowTitle = new GridBagConstraints();
 		gbcCheckboxShowTitle.insets = new Insets(0, 0, 5, 5);
 		gbcCheckboxShowTitle.gridx = 3;
 		gbcCheckboxShowTitle.gridy = 13;
 		panel.add(checkboxShowTitle, gbcCheckboxShowTitle);
-
+		
 		JLabel lblDistanceBetweenTitle = new JLabel("Distance between title and text");
 		GridBagConstraints gbcLblDistanceBetweenTitle = new GridBagConstraints();
 		gbcLblDistanceBetweenTitle.anchor = GridBagConstraints.EAST;
@@ -2400,7 +2376,7 @@ public class MainWindow extends JFrame {
 		gbcLblDistanceBetweenTitle.gridx = 1;
 		gbcLblDistanceBetweenTitle.gridy = 14;
 		panel.add(lblDistanceBetweenTitle, gbcLblDistanceBetweenTitle);
-
+		
 		spinnerDistanceTitleText = new JSpinner();
 		GridBagConstraints gbcSpinnerDistanceTitleText = new GridBagConstraints();
 		gbcSpinnerDistanceTitleText.fill = GridBagConstraints.HORIZONTAL;
@@ -2408,7 +2384,7 @@ public class MainWindow extends JFrame {
 		gbcSpinnerDistanceTitleText.gridx = 3;
 		gbcSpinnerDistanceTitleText.gridy = 14;
 		panel.add(spinnerDistanceTitleText, gbcSpinnerDistanceTitleText);
-
+		
 		JLabel lblDistanceBetweenText = new JLabel("Distance between text and copyright");
 		GridBagConstraints gbcLblDistanceBetweenText = new GridBagConstraints();
 		gbcLblDistanceBetweenText.anchor = GridBagConstraints.EAST;
@@ -2416,7 +2392,7 @@ public class MainWindow extends JFrame {
 		gbcLblDistanceBetweenText.gridx = 1;
 		gbcLblDistanceBetweenText.gridy = 15;
 		panel.add(lblDistanceBetweenText, gbcLblDistanceBetweenText);
-
+		
 		spinnerDistanceTextCopyright = new JSpinner();
 		GridBagConstraints gbcSpinnerDistanceTextCopyright = new GridBagConstraints();
 		gbcSpinnerDistanceTextCopyright.insets = new Insets(0, 0, 5, 5);
@@ -2424,7 +2400,7 @@ public class MainWindow extends JFrame {
 		gbcSpinnerDistanceTextCopyright.gridx = 3;
 		gbcSpinnerDistanceTextCopyright.gridy = 15;
 		panel.add(spinnerDistanceTextCopyright, gbcSpinnerDistanceTextCopyright);
-
+		
 		JLabel lblSongListFiltering = new JLabel("Song list filter");
 		GridBagConstraints gbcLblSongListFiltering = new GridBagConstraints();
 		gbcLblSongListFiltering.anchor = GridBagConstraints.EAST;
@@ -2432,7 +2408,7 @@ public class MainWindow extends JFrame {
 		gbcLblSongListFiltering.gridx = 1;
 		gbcLblSongListFiltering.gridy = 16;
 		panel.add(lblSongListFiltering, gbcLblSongListFiltering);
-
+		
 		comboSongListFiltering = new JComboBox<>();
 		GridBagConstraints gbcComboSongListFiltering = new GridBagConstraints();
 		gbcComboSongListFiltering.insets = new Insets(0, 0, 5, 5);
@@ -2440,7 +2416,7 @@ public class MainWindow extends JFrame {
 		gbcComboSongListFiltering.gridx = 3;
 		gbcComboSongListFiltering.gridy = 16;
 		panel.add(comboSongListFiltering, gbcComboSongListFiltering);
-
+		
 		JLabel lblPresentationScreen1Display = new JLabel("Presentation screen 1 display");
 		GridBagConstraints gbcLblPresentationScreen1Display = new GridBagConstraints();
 		gbcLblPresentationScreen1Display.anchor = GridBagConstraints.EAST;
@@ -2448,7 +2424,7 @@ public class MainWindow extends JFrame {
 		gbcLblPresentationScreen1Display.gridx = 1;
 		gbcLblPresentationScreen1Display.gridy = 17;
 		panel.add(lblPresentationScreen1Display, gbcLblPresentationScreen1Display);
-
+		
 		comboPresentationScreen1Display = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen1Display = new GridBagConstraints();
 		gbcComboPresentationScreen1Display.insets = new Insets(0, 0, 5, 5);
@@ -2456,7 +2432,7 @@ public class MainWindow extends JFrame {
 		gbcComboPresentationScreen1Display.gridx = 3;
 		gbcComboPresentationScreen1Display.gridy = 17;
 		panel.add(comboPresentationScreen1Display, gbcComboPresentationScreen1Display);
-
+		
 		JLabel lblPresentationScreen1Contents = new JLabel("Presentation screen 1 contents");
 		GridBagConstraints gbcLblPresentationScreen1Contents = new GridBagConstraints();
 		gbcLblPresentationScreen1Contents.anchor = GridBagConstraints.EAST;
@@ -2464,7 +2440,7 @@ public class MainWindow extends JFrame {
 		gbcLblPresentationScreen1Contents.gridx = 1;
 		gbcLblPresentationScreen1Contents.gridy = 18;
 		panel.add(lblPresentationScreen1Contents, gbcLblPresentationScreen1Contents);
-
+		
 		comboPresentationScreen1Contents = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen1Contents = new GridBagConstraints();
 		gbcComboPresentationScreen1Contents.insets = new Insets(0, 0, 5, 5);
@@ -2472,7 +2448,7 @@ public class MainWindow extends JFrame {
 		gbcComboPresentationScreen1Contents.gridx = 3;
 		gbcComboPresentationScreen1Contents.gridy = 18;
 		panel.add(comboPresentationScreen1Contents, gbcComboPresentationScreen1Contents);
-
+		
 		JLabel lblPresentationScreen2Display = new JLabel("Presentation screen 2 display");
 		GridBagConstraints gbcLblPresentationScreen2Display = new GridBagConstraints();
 		gbcLblPresentationScreen2Display.anchor = GridBagConstraints.EAST;
@@ -2480,7 +2456,7 @@ public class MainWindow extends JFrame {
 		gbcLblPresentationScreen2Display.gridx = 1;
 		gbcLblPresentationScreen2Display.gridy = 19;
 		panel.add(lblPresentationScreen2Display, gbcLblPresentationScreen2Display);
-
+		
 		comboPresentationScreen2Display = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen2Display = new GridBagConstraints();
 		gbcComboPresentationScreen2Display.insets = new Insets(0, 0, 5, 5);
@@ -2488,7 +2464,7 @@ public class MainWindow extends JFrame {
 		gbcComboPresentationScreen2Display.gridx = 3;
 		gbcComboPresentationScreen2Display.gridy = 19;
 		panel.add(comboPresentationScreen2Display, gbcComboPresentationScreen2Display);
-
+		
 		JLabel lblPresentationScreen2Contents = new JLabel("Presentation screen 2 contents");
 		GridBagConstraints gbcLblPresentationScreen2Contents = new GridBagConstraints();
 		gbcLblPresentationScreen2Contents.anchor = GridBagConstraints.EAST;
@@ -2496,7 +2472,7 @@ public class MainWindow extends JFrame {
 		gbcLblPresentationScreen2Contents.gridx = 1;
 		gbcLblPresentationScreen2Contents.gridy = 20;
 		panel.add(lblPresentationScreen2Contents, gbcLblPresentationScreen2Contents);
-
+		
 		comboPresentationScreen2Contents = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen2Contents = new GridBagConstraints();
 		gbcComboPresentationScreen2Contents.insets = new Insets(0, 0, 5, 5);
@@ -2504,7 +2480,7 @@ public class MainWindow extends JFrame {
 		gbcComboPresentationScreen2Contents.gridx = 3;
 		gbcComboPresentationScreen2Contents.gridy = 20;
 		panel.add(comboPresentationScreen2Contents, gbcComboPresentationScreen2Contents);
-
+		
 		JLabel lblSecondsToCount = new JLabel("Seconds to count a song as displayed after");
 		GridBagConstraints gbcLblSecondsToCount = new GridBagConstraints();
 		gbcLblSecondsToCount.anchor = GridBagConstraints.EAST;
@@ -2512,7 +2488,7 @@ public class MainWindow extends JFrame {
 		gbcLblSecondsToCount.gridx = 1;
 		gbcLblSecondsToCount.gridy = 21;
 		panel.add(lblSecondsToCount, gbcLblSecondsToCount);
-
+		
 		spinnerCountAsDisplayedAfter = new JSpinner();
 		GridBagConstraints gbcSpinnerCountAsDisplayedAfter = new GridBagConstraints();
 		gbcSpinnerCountAsDisplayedAfter.insets = new Insets(0, 0, 5, 5);
@@ -2520,18 +2496,18 @@ public class MainWindow extends JFrame {
 		gbcSpinnerCountAsDisplayedAfter.gridx = 3;
 		gbcSpinnerCountAsDisplayedAfter.gridy = 21;
 		panel.add(spinnerCountAsDisplayedAfter, gbcSpinnerCountAsDisplayedAfter);
-
+		
 		afterConstruction();
 	}
-
+	
 	public static List<Image> getIconsFromResources(Class<?> classToUse) {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-16.png"));
+					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+						"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
-
+	
 	private void calculateAndSetBounds() {
 		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		Rectangle maximumWindowBounds = env.getMaximumWindowBounds();
@@ -2543,67 +2519,67 @@ public class MainWindow extends JFrame {
 			setBounds(50, 50, 965, 659);
 		}
 	}
-
+	
 	public JTextField getTextFieldTitle() {
 		return textFieldTitle;
 	}
-
+	
 	public JComboBox<LanguageEnum> getComboBoxLanguage() {
 		return comboBoxLanguage;
 	}
-
+	
 	public JTextField getTextFieldTonality() {
 		return textFieldTonality;
 	}
-
+	
 	public JEditorPane getEditorLyrics() {
 		return editorLyrics;
 	}
-
+	
 	public JTextField getTextFieldComposer() {
 		return textFieldComposer;
 	}
-
+	
 	public JTextField getTextFieldAuthorText() {
 		return textFieldAuthorText;
 	}
-
+	
 	public JTextField getTextFieldAuthorTranslation() {
 		return textFieldAuthorTranslation;
 	}
-
+	
 	public JTextField getTextFieldPublisher() {
 		return textFieldPublisher;
 	}
-
+	
 	public JTextField getTextFieldAdditionalCopyrightNotes() {
 		return textFieldAdditionalCopyrightNotes;
 	}
-
+	
 	public JTextField getTextFieldSongNotes() {
 		return textFieldSongNotes;
 	}
-
+	
 	public JEditorPane getEditorChordSequence() {
 		return editorChordSequence;
 	}
-
+	
 	public JList<?> getSongList() {
 		return songsList;
 	}
-
+	
 	public JTextField getTextFieldFilter() {
 		return textFieldFilter;
 	}
-
+	
 	public JList<?> getPresentSongList() {
 		return presentList;
 	}
-
+	
 	public JPanel getPanelSectionButtons() {
 		return panelSectionButtons;
 	}
-
+	
 	public JLabel getLblStatistics() {
 		return lblStatistics;
 	}

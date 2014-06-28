@@ -32,9 +32,9 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
  */
 @XStreamAlias("song")
 public class Song implements Serializable, Comparable<Song> {
-
+	
 	private static final long serialVersionUID = -7133402923581521674L;
-
+	
 	private String title;
 	private String composer;
 	private String authorText;
@@ -48,7 +48,7 @@ public class Song implements Serializable, Comparable<Song> {
 	private List<Song> linkedSongs = new ArrayList<>();
 	private String chordSequence;
 	private String lyrics;
-
+	
 	/**
 	 * Create a song instance. By making this the only constructor, everyone (who doesn't use reflection) has to provide
 	 * a UUID.
@@ -60,155 +60,155 @@ public class Song implements Serializable, Comparable<Song> {
 	public Song(String uuid) {
 		this.uuid = uuid;
 	}
-
+	
 	public String getTitle() {
 		return title;
 	}
-
+	
 	public String getComposer() {
 		return composer;
 	}
-
+	
 	public String getAuthorText() {
 		return authorText;
 	}
-
+	
 	public String getAuthorTranslation() {
 		return authorTranslation;
 	}
-
+	
 	public String getPublisher() {
 		return publisher;
 	}
-
+	
 	public String getAdditionalCopyrightNotes() {
 		return additionalCopyrightNotes;
 	}
-
+	
 	public LanguageEnum getLanguage() {
 		return language;
 	}
-
+	
 	public String getSongNotes() {
 		return songNotes;
 	}
-
+	
 	public String getLyrics() {
 		return lyrics;
 	}
-
+	
 	public String getTonality() {
 		return tonality;
 	}
-
+	
 	public String getChordSequence() {
 		return chordSequence;
 	}
-
+	
 	public void setTitle(String title) {
 		this.title = title;
 	}
-
+	
 	public void setComposer(String composer) {
 		this.composer = composer;
 	}
-
+	
 	public void setAuthorText(String authorText) {
 		this.authorText = authorText;
 	}
-
+	
 	public void setAuthorTranslation(String authorTranslation) {
 		this.authorTranslation = authorTranslation;
 	}
-
+	
 	public void setPublisher(String publisher) {
 		this.publisher = publisher;
 	}
-
+	
 	public void setAdditionalCopyrightNotes(String additionalCopyrightNotes) {
 		this.additionalCopyrightNotes = additionalCopyrightNotes;
 	}
-
+	
 	public void setLanguage(LanguageEnum language) {
 		this.language = language;
 	}
-
+	
 	public void setSongNotes(String songNotes) {
 		this.songNotes = songNotes;
 	}
-
+	
 	public void setLyrics(String lyrics) {
 		this.lyrics = lyrics;
 	}
-
+	
 	public void setTonality(String tonality) {
 		this.tonality = tonality;
 	}
-
+	
 	public void setChordSequence(String chordSequence) {
 		this.chordSequence = chordSequence;
 	}
-
+	
 	public Iterator<Song> linkedSongsIterator() {
 		return linkedSongs.iterator();
 	}
-
+	
 	public boolean addLinkedSong(Song e) {
 		return linkedSongs.add(e);
 	}
-
+	
 	public boolean removeLinkedSong(Song o) {
 		return linkedSongs.remove(o);
 	}
-
+	
 	public int linkedSongsSize() {
 		return linkedSongs.size();
 	}
-
+	
 	public Song getLinkedSong(int index) {
 		return linkedSongs.get(index);
 	}
-
+	
 	public List<Song> getLinkedSongs() {
 		return linkedSongs;
 	}
-
+	
 	public void setLinkedSongs(List<Song> linkedSongs) {
 		this.linkedSongs.clear();
 		if (linkedSongs != null) {
 			this.linkedSongs.addAll(linkedSongs);
 		}
 	}
-
+	
 	public String getUUID() {
 		return uuid;
 	}
-
+	
 	@Override
 	public int compareTo(Song o) {
 		int ret = 0;
-
+		
 		ret = StringTools.compareLocaleBasedWithNullFirst(getTitle(), o.getTitle());
 		if (ret != 0) {
 			return ret;
 		}
-
+		
 		ret = StringTools.compareLocaleBasedWithNullFirst(getLyrics(), o.getLyrics());
 		if (ret != 0) {
 			return ret;
 		}
-
+		
 		ret = StringTools.compareLocaleBasedWithNullFirst(getChordSequence(), o.getChordSequence());
 		if (ret != 0) {
 			return ret;
 		}
-
+		
 		return ret;
 	}
-
+	
 	@Override
 	public String toString() {
 		return "SONG[" + title + "|" + uuid + "]";
 	}
-
+	
 }

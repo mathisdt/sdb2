@@ -11,13 +11,13 @@
 
 	<fileSets>
 		<fileSet>
-            <directory>${project.build.directory}/distribution</directory>
-            <outputDirectory></outputDirectory>
-            <includes>
-                <include>**/*.sh</include>
-            </includes>
-            <fileMode>0755</fileMode>
-        </fileSet>
+			<directory>${project.build.directory}/distribution</directory>
+			<outputDirectory></outputDirectory>
+			<includes>
+				<include>**/*.sh</include>
+			</includes>
+			<fileMode>0755</fileMode>
+		</fileSet>
 		<fileSet>
 			<directory>${project.build.directory}/distribution</directory>
 			<outputDirectory></outputDirectory>

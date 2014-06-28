@@ -5,17 +5,17 @@
 	<groupId>org.zephyrsoft</groupId>
 	<artifactId>sdb2</artifactId>
 	<version>2.0.0-SNAPSHOT</version>
-
+	
 	<name>Song Database</name>
 	<description>present lyrics on a digital projector (intended for a congregation to sing)</description>
 	<url>http://www.zephyrsoft.org</url>
-
+	
 	<licenses>
-		<license>
-			<name>GNU General Public License (GPL), Version 2.0</name>
-			<url>http://www.gnu.org/licenses/gpl-2.0.html</url>
-			<distribution>repo</distribution>
-		</license>
+	    <license>
+	        <name>GNU General Public License (GPL), Version 2.0</name>
+	        <url>http://www.gnu.org/licenses/gpl-2.0.html</url>
+	        <distribution>repo</distribution>
+	    </license>
 	</licenses>
 
 	<scm>
@@ -34,16 +34,15 @@
 		<version.log4j>1.2.17</version.log4j>
 		<version.log4j-extras>1.1</version.log4j-extras>
 		<version.args4j>2.0.26</version.args4j>
-		<version.commons-lang3>3.3.1</version.commons-lang3>
+		<version.commons-lang3>3.3.2</version.commons-lang3>
 		<version.itext>5.4.4</version.itext>
 		<version.fontchooser>6.9.1</version.fontchooser>
 		<version.poi>3.9</version.poi>
 		<version.swingx>1.6.5-1</version.swingx>
 		<version.timingframework>7.3.1</version.timingframework>
 		<version.xstream>1.4.7</version.xstream>
-		<version.guava>16.0.1</version.guava>
-		<version.spring>4.0.3.RELEASE</version.spring>
-		<version.lucene>4.7.0</version.lucene>
+		<version.guava>17.0</version.guava>
+		<version.spring>4.0.5.RELEASE</version.spring>
 		<version.junit>4.11</version.junit>
 		<version.mockito>1.9.5</version.mockito>
 	</properties>
@@ -105,21 +104,6 @@
 			<artifactId>spring-context</artifactId>
 			<version>${version.spring}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-core</artifactId>
-			<version>${version.lucene}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-analyzers-common</artifactId>
-			<version>${version.lucene}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-queryparser</artifactId>
-			<version>${version.lucene}</version>
-		</dependency>
 
 		<!-- logging -->
 		<dependency>
@@ -168,13 +152,13 @@
 		<name>ZephyrSoft</name>
 		<url>http://www.zephyrsoft.org</url>
 	</organization>
-
+	
 	<developers>
-		<developer>
-			<id>mathis</id>
-			<name>Mathis Dirksen-Thedens</name>
-			<email>dev@zephyrsoft.org</email>
-		</developer>
+	    <developer>
+	        <id>mathis</id>
+	        <name>Mathis Dirksen-Thedens</name>
+	        <email>dev@zephyrsoft.org</email>
+	    </developer>
 	</developers>
 
 	<repositories>
@@ -234,7 +218,7 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			
 			<plugin>
 				<groupId>org.bluestemsoftware.open.maven.plugin</groupId>
 				<artifactId>launch4j-plugin</artifactId>
@@ -295,18 +279,18 @@
 					</archive>
 				</configuration>
 			</plugin>
-
+			
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
+			    <groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
 				<version>2.1.2</version>
 				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
+				    <execution>
+				        <id>attach-sources</id>
+				        <goals>
+				            <goal>jar</goal>
+				        </goals>
+				    </execution>
 				</executions>
 				<configuration>
 					<outputDirectory>${project.build.directory}/distribution/bin</outputDirectory>
