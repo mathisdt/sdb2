@@ -18,7 +18,9 @@ package org.zephyrsoft.sdb2.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -135,6 +137,7 @@ public class MainWindow extends JFrame {
 	
 	private JPanel contentPane;
 	private JTabbedPane tabbedPane;
+	private JPanel buttonPanel;
 	
 	private JEditorPane editorLyrics;
 	private JTextField textFieldTitle;
@@ -217,6 +220,8 @@ public class MainWindow extends JFrame {
 	private JComboBox<GraphicsDevice> comboPresentationScreen2Display;
 	private JComboBox<ScreenContentsEnum> comboPresentationScreen2Contents;
 	private JSpinner spinnerCountAsDisplayedAfter;
+	
+	private JButton saveButton;
 	
 	private void afterConstruction() {
 		// read program version
@@ -815,6 +820,12 @@ public class MainWindow extends JFrame {
 		} else {
 			ErrorDialog.openDialog(this, PROBLEM_WHILE_SAVING + FileAndDirectoryLocations.getLogDir());
 		}
+	}
+	
+	protected void handleSave() {
+		saveSongWithoutChangingGUI();
+		handleSettingsSaveAndLock();
+		controller.saveAll();
 	}
 	
 	protected void handleSongNew() {
@@ -2408,6 +2419,30 @@ public class MainWindow extends JFrame {
 		gbcSpinnerCountAsDisplayedAfter.gridx = 3;
 		gbcSpinnerCountAsDisplayedAfter.gridy = 21;
 		panel.add(spinnerCountAsDisplayedAfter, gbcSpinnerCountAsDisplayedAfter);
+		
+		Container glassPane = (Container) getGlassPane();
+		glassPane.setVisible(true);
+		glassPane.setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.weightx = 1.0;
+		gbc.weighty = 1.0;
+		gbc.fill = GridBagConstraints.NONE;
+		gbc.insets = new Insets(0, 0, 0, 0);
+		gbc.anchor = GridBagConstraints.NORTHEAST;
+		buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+		buttonPanel.setOpaque(false);
+		saveButton = new JButton("Save");
+		saveButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				handleSave();
+				// TODO display "saved" somewhere?
+				// TODO set UI focus to where it was before?
+			}
+		});
+		saveButton.setFont(new Font(null, Font.PLAIN, 10));
+		buttonPanel.add(saveButton);
+		glassPane.add(buttonPanel, gbc);
 		
 		afterConstruction();
 	}
