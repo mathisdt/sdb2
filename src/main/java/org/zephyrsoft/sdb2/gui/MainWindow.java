@@ -371,6 +371,7 @@ public class MainWindow extends JFrame {
 	public void startup() {
 		setModels(controller.getSongs(), controller.getSettings());
 		setVisible(true);
+		textFieldFilter.requestFocusInWindow();
 	}
 	
 	public void setModels(SongsModel songs, SettingsModel settings) {
