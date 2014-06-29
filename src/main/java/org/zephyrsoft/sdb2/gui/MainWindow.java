@@ -42,7 +42,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -164,9 +163,6 @@ public class MainWindow extends JFrame {
 	private TransparentListModel<Song> presentListModel;
 	private Song presentListSelected;
 	
-	private FixedWidthJList<Song> linkedSongsList;
-	private TransparentListModel<Song> linkedSongsListModel;
-	
 	private JPanel panelSongList;
 	private JButton btnClearFilter;
 	private JTextField textFieldFilter;
@@ -183,8 +179,6 @@ public class MainWindow extends JFrame {
 	private JPanel panelSectionButtons;
 	private GridBagConstraints panelSectionButtonsHints;
 	private GridBagConstraints panelSectionButtonsLastRowHints;
-	private JButton btnAddLinkedSong;
-	private JButton btnRemoveLinkedSong;
 	private JButton btnJumpToSelected;
 	private JButton btnShowLogo;
 	private JButton btnShowBlankScreen;
@@ -743,7 +737,6 @@ public class MainWindow extends JFrame {
 		song.setAdditionalCopyrightNotes(textFieldAdditionalCopyrightNotes.getText());
 		song.setSongNotes(textFieldSongNotes.getText());
 		song.setChordSequence(editorChordSequence.getText());
-		song.setLinkedSongs(linkedSongsListModel.getAllElements());
 		// now put the songs in the right order again (the title could be edited)
 		songsModel.sortAndUpdateView();
 	}
@@ -763,7 +756,6 @@ public class MainWindow extends JFrame {
 		setTextAndRewind(textFieldAdditionalCopyrightNotes, "");
 		setTextAndRewind(textFieldSongNotes, "");
 		setTextAndRewind(editorChordSequence, "");
-		linkedSongsList.setModel(new TransparentListModel<>(Collections.<Song> emptyList()));
 	}
 	
 	/**
@@ -781,9 +773,6 @@ public class MainWindow extends JFrame {
 		textFieldAdditionalCopyrightNotes.setEnabled(state);
 		textFieldSongNotes.setEnabled(state);
 		editorChordSequence.setEnabled(state);
-		linkedSongsList.setEnabled(state);
-		btnAddLinkedSong.setEnabled(state);
-		btnRemoveLinkedSong.setEnabled(state);
 		if (state) {
 			editorLyrics.setCaretPosition(0);
 		}
@@ -808,8 +797,6 @@ public class MainWindow extends JFrame {
 		setTextAndRewind(textFieldAdditionalCopyrightNotes, song.getAdditionalCopyrightNotes());
 		setTextAndRewind(textFieldSongNotes, song.getSongNotes());
 		setTextAndRewind(editorChordSequence, song.getChordSequence());
-		linkedSongsListModel = new TransparentListModel<>(song.getLinkedSongs());
-		linkedSongsList.setModel(linkedSongsListModel);
 	}
 	
 	private static void setTextAndRewind(JTextComponent textComponent, String textToSet) {
@@ -1539,26 +1526,18 @@ public class MainWindow extends JFrame {
 		JLabel lblChordSequence = new JLabel("Chord Sequence");
 		GridBagConstraints gbcLblChordSequence = new GridBagConstraints();
 		gbcLblChordSequence.fill = GridBagConstraints.HORIZONTAL;
-		gbcLblChordSequence.gridwidth = 2;
+		gbcLblChordSequence.gridwidth = 3;
 		gbcLblChordSequence.insets = new Insets(0, 0, 5, 5);
 		gbcLblChordSequence.gridx = 0;
 		gbcLblChordSequence.gridy = 8;
 		panelEdit.add(lblChordSequence, gbcLblChordSequence);
-		
-		JLabel lblLinkedSongs = new JLabel("Linked Songs");
-		GridBagConstraints gbcLblLinkedSongs = new GridBagConstraints();
-		gbcLblLinkedSongs.fill = GridBagConstraints.HORIZONTAL;
-		gbcLblLinkedSongs.insets = new Insets(0, 0, 5, 0);
-		gbcLblLinkedSongs.gridx = 2;
-		gbcLblLinkedSongs.gridy = 8;
-		panelEdit.add(lblLinkedSongs, gbcLblLinkedSongs);
 		
 		JScrollPane scrollPaneChordSequence = new JScrollPane();
 		GridBagConstraints gbcScrollPaneChordSequence = new GridBagConstraints();
 		gbcScrollPaneChordSequence.gridheight = 2;
 		gbcScrollPaneChordSequence.weighty = 1.0;
 		gbcScrollPaneChordSequence.fill = GridBagConstraints.BOTH;
-		gbcScrollPaneChordSequence.gridwidth = 2;
+		gbcScrollPaneChordSequence.gridwidth = 3;
 		gbcScrollPaneChordSequence.insets = new Insets(0, 0, 0, 5);
 		gbcScrollPaneChordSequence.gridx = 0;
 		gbcScrollPaneChordSequence.gridy = 9;
@@ -1579,73 +1558,6 @@ public class MainWindow extends JFrame {
 			editorChordSequence.getFont().getSize()));
 		scrollPaneChordSequence.setViewportView(editorChordSequence);
 		editorChordSequence.setBackground(Color.WHITE);
-		
-		JScrollPane scrollPaneLinkedSongsList = new JScrollPane();
-		GridBagConstraints gbcScrollPaneLinkedSongsList = new GridBagConstraints();
-		gbcScrollPaneLinkedSongsList.insets = new Insets(0, 0, 5, 0);
-		gbcScrollPaneLinkedSongsList.fill = GridBagConstraints.BOTH;
-		gbcScrollPaneLinkedSongsList.gridx = 2;
-		gbcScrollPaneLinkedSongsList.gridy = 9;
-		panelEdit.add(scrollPaneLinkedSongsList, gbcScrollPaneLinkedSongsList);
-		
-		linkedSongsList = new FixedWidthJList<>();
-		scrollPaneLinkedSongsList.setViewportView(linkedSongsList);
-		
-		JPanel panelLinkedSongs = new JPanel();
-		GridBagConstraints gbcPanelLinkedSongs = new GridBagConstraints();
-		gbcPanelLinkedSongs.fill = GridBagConstraints.BOTH;
-		gbcPanelLinkedSongs.gridx = 2;
-		gbcPanelLinkedSongs.gridy = 10;
-		panelEdit.add(panelLinkedSongs, gbcPanelLinkedSongs);
-		GridBagLayout gblPanelLinkedSongs = new GridBagLayout();
-		gblPanelLinkedSongs.columnWidths = new int[] { 0, 0 };
-		gblPanelLinkedSongs.rowHeights = new int[] { 26 };
-		gblPanelLinkedSongs.columnWeights = new double[] { 1.0, 1.0 };
-		gblPanelLinkedSongs.rowWeights = new double[] { 0.0 };
-		panelLinkedSongs.setLayout(gblPanelLinkedSongs);
-		
-		btnAddLinkedSong = new JButton("Add");
-		btnAddLinkedSong.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					// TODO
-					
-					// now save the edited song
-					handleSongDataFocusLost();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
-		btnAddLinkedSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/newHighlighter.gif"));
-		GridBagConstraints gbcBtnAdd = new GridBagConstraints();
-		gbcBtnAdd.fill = GridBagConstraints.BOTH;
-		gbcBtnAdd.insets = new Insets(0, 0, 0, 5);
-		gbcBtnAdd.gridx = 0;
-		gbcBtnAdd.gridy = 0;
-		panelLinkedSongs.add(btnAddLinkedSong, gbcBtnAdd);
-		
-		btnRemoveLinkedSong = new JButton("Remove");
-		btnRemoveLinkedSong.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					// TODO
-					
-					// now save the edited song
-					handleSongDataFocusLost();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
-		btnRemoveLinkedSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/deleteHighlighter.gif"));
-		GridBagConstraints gbcBtnRemove = new GridBagConstraints();
-		gbcBtnRemove.fill = GridBagConstraints.BOTH;
-		gbcBtnRemove.gridx = 1;
-		gbcBtnRemove.gridy = 0;
-		panelLinkedSongs.add(btnRemoveLinkedSong, gbcBtnRemove);
 		
 		JPanel panelPresent = new JPanel();
 		tabbedPane.addTab("Present Songs", null, panelPresent, null);

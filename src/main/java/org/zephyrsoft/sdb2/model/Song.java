@@ -17,9 +17,6 @@
 package org.zephyrsoft.sdb2.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import org.zephyrsoft.util.StringTools;
 
@@ -45,7 +42,6 @@ public class Song implements Serializable, Comparable<Song> {
 	private String songNotes;
 	private String tonality;
 	private String uuid;
-	private List<Song> linkedSongs = new ArrayList<>();
 	private String chordSequence;
 	private String lyrics;
 	
@@ -147,37 +143,6 @@ public class Song implements Serializable, Comparable<Song> {
 	
 	public void setChordSequence(String chordSequence) {
 		this.chordSequence = chordSequence;
-	}
-	
-	public Iterator<Song> linkedSongsIterator() {
-		return linkedSongs.iterator();
-	}
-	
-	public boolean addLinkedSong(Song e) {
-		return linkedSongs.add(e);
-	}
-	
-	public boolean removeLinkedSong(Song o) {
-		return linkedSongs.remove(o);
-	}
-	
-	public int linkedSongsSize() {
-		return linkedSongs.size();
-	}
-	
-	public Song getLinkedSong(int index) {
-		return linkedSongs.get(index);
-	}
-	
-	public List<Song> getLinkedSongs() {
-		return linkedSongs;
-	}
-	
-	public void setLinkedSongs(List<Song> linkedSongs) {
-		this.linkedSongs.clear();
-		if (linkedSongs != null) {
-			this.linkedSongs.addAll(linkedSongs);
-		}
 	}
 	
 	public String getUUID() {
