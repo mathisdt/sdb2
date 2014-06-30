@@ -1,16 +1,16 @@
 /*
  * This file is part of the Song Database (SDB).
- *
+ * 
  * SDB is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- *
+ * 
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -29,6 +29,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
@@ -40,12 +41,11 @@ import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
+
 import org.apache.commons.lang3.Validate;
 import org.jdesktop.core.animation.timing.Animator;
 import org.jdesktop.core.animation.timing.PropertySetter;
-import org.jdesktop.core.animation.timing.TimingSource;
 import org.jdesktop.core.animation.timing.interpolators.AccelerationInterpolator;
-import org.jdesktop.swing.animation.timing.sources.SwingTimerTimingSource;
 import org.zephyrsoft.sdb2.model.AddressableLine;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.Song;
@@ -131,8 +131,6 @@ public class SongView extends JPanel implements Scroller {
 		
 		render();
 		
-		initAnimationTimer();
-		
 		// workaround for Nimbus L&F:
 		text.setOpaque(false);
 		text.setBackground(new Color(0, 0, 0, 0));
@@ -149,14 +147,14 @@ public class SongView extends JPanel implements Scroller {
 		Area areaUpper = new Area(new Rectangle2D.Double(0, 0, getWidth(), topBorderHeight));
 		g2d.setPaint(new GradientPaint(0, 0, new Color(backgroundColor.getRed(), backgroundColor.getGreen(),
 			backgroundColor.getBlue(), 255), 0, topBorderHeight, new Color(backgroundColor.getRed(), backgroundColor
-			.getGreen(), backgroundColor.getBlue(), 0), false));
+				.getGreen(), backgroundColor.getBlue(), 0), false));
 		g2d.fill(areaUpper);
 		
 		// gradient lower border as overlay
 		Area areaLower = new Area(new Rectangle2D.Double(0, getHeight() - bottomBorderHeight, getWidth(), getHeight()));
 		g2d.setPaint(new GradientPaint(0, getHeight() - bottomBorderHeight, new Color(backgroundColor.getRed(),
 			backgroundColor.getGreen(), backgroundColor.getBlue(), 0), 0, getHeight(), new Color(backgroundColor
-			.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue(), 255), false));
+				.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue(), 255), false));
 		g2d.fill(areaLower);
 	}
 	
@@ -203,7 +201,7 @@ public class SongView extends JPanel implements Scroller {
 					&& prevElement.getType() == SongElementEnum.LYRICS
 					&& !StringTools.isBlank(prevElement.getElement())
 					&& ((prevPrevElement != null && (prevPrevElement.getType() == SongElementEnum.NEW_LINE || prevPrevElement
-						.getType() == SongElementEnum.TITLE)) || prevPrevElement == null)) {
+					.getType() == SongElementEnum.TITLE)) || prevPrevElement == null)) {
 					// two newlines OR a title element and a newline, separated by a non-blank lyrics line =>
 					// save current line and begin a new one
 					currentLineText = prevElement.getElement();
@@ -228,8 +226,8 @@ public class SongView extends JPanel implements Scroller {
 			String type = element.getType().name();
 			if ((element.getType() == SongElementEnum.NEW_LINE && prevElement != null && prevElement.getType() == SongElementEnum.NEW_LINE)
 				|| (element.getType() == SongElementEnum.NEW_LINE && prevElement != null
-					&& StringTools.isBlank(prevElement.getElement()) && ((prevPrevElement != null && prevPrevElement
-					.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null))) {
+				&& StringTools.isBlank(prevElement.getElement()) && ((prevPrevElement != null && prevPrevElement
+				.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null))) {
 				type = SongElementEnum.LYRICS.name();
 			}
 			appendText(element.getElement(), type);
@@ -244,12 +242,6 @@ public class SongView extends JPanel implements Scroller {
 			parts.add(currentPart);
 		}
 		
-	}
-	
-	private void initAnimationTimer() {
-		final TimingSource animationTimer = new SwingTimerTimingSource(5, TimeUnit.MILLISECONDS);
-		Animator.setDefaultTimingSource(animationTimer);
-		animationTimer.init();
 	}
 	
 	private void handleTitlePosition(SongElement element) {

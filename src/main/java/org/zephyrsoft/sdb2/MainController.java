@@ -31,12 +31,16 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import org.apache.commons.lang3.Validate;
+import org.jdesktop.core.animation.timing.Animator;
+import org.jdesktop.core.animation.timing.TimingSource;
+import org.jdesktop.swing.animation.timing.sources.SwingTimerTimingSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.gui.MainWindow;
@@ -63,70 +67,70 @@ import org.zephyrsoft.util.gui.ErrorDialog;
  * @author Mathis Dirksen-Thedens
  */
 public class MainController implements Scroller {
-
+	
 	private static Logger LOG = LoggerFactory.getLogger(MainController.class);
-
+	
 	private StatisticsController statisticsController;
-
+	
 	private String songsFileName = null;
 	private SongsModel songs = null;
 	private SettingsModel settings = null;
-
+	
 	private List<GraphicsDevice> screens;
 	private PresenterBundle presentationControl;
 	private Song currentlyPresentedSong = null;
-
+	
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
 	private Future<?> countDownFuture;
-
+	
 	public MainController(StatisticsController statisticsController) {
 		this.statisticsController = statisticsController;
 	}
-
+	
 	public boolean present(Presentable presentable) {
 		// end old presentation (if any)
 		if (presentationControl != null) {
 			presentationControl.hidePresenter();
 		}
-
+		
 		presentationControl = new PresenterBundle();
-
+		
 		Presenter presenter1 = createPresenter(ScreenHelper.getScreen(screens, settings
 			.getString(SettingKey.SCREEN_1_DISPLAY)), presentable, (ScreenContentsEnum) settings
 			.get(SettingKey.SCREEN_1_CONTENTS));
 		if (presenter1 != null) {
 			presentationControl.addPresenter(presenter1);
 		}
-
+		
 		Presenter presenter2 = createPresenter(ScreenHelper.getScreen(screens, settings
 			.getString(SettingKey.SCREEN_2_DISPLAY)), presentable, (ScreenContentsEnum) settings
 			.get(SettingKey.SCREEN_2_CONTENTS));
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
 		}
-
+		
 		if (presentationControl.size() == 0) {
 			ErrorDialog
-				.openDialog(
-					null,
-					"Could not start presentation!\n\nPlease specify at least one existing presentation display:\nCheck your system configuration\nand/or adjust this program's configuration\n(see tab \"Global Settings\")!");
+			.openDialog(
+				null,
+				"Could not start presentation!\n\nPlease specify at least one existing presentation display:\nCheck your system configuration\nand/or adjust this program's configuration\n(see tab \"Global Settings\")!");
 			return false;
 		} else {
 			currentlyPresentedSong = presentable.getSong();
-
+			
 			if (currentlyPresentedSong != null) {
 				startCountDown(settings.getInteger(SettingKey.SECONDS_UNTIL_COUNTED), currentlyPresentedSong);
 			} else {
 				stopCountDown();
 			}
-
+			
 			// start presentation
 			presentationControl.showPresenter();
-
+			
 			return true;
 		}
 	}
-
+	
 	public void startCountDown(final int seconds, final Song song) {
 		Runnable countDownRunnable = new Runnable() {
 			@Override
@@ -148,7 +152,7 @@ public class MainController implements Scroller {
 			countDownFuture = executor.submit(countDownRunnable);
 		}
 	}
-
+	
 	public void stopCountDown() {
 		if (countDownFuture != null) {
 			LOG.debug("stopping countdown");
@@ -158,23 +162,23 @@ public class MainController implements Scroller {
 			LOG.debug("wanted to stop countdown, but nothing to do");
 		}
 	}
-
+	
 	@Override
 	public List<AddressablePart> getParts() {
 		Validate.notNull(presentationControl, "there is no active presentation");
 		return presentationControl.getParts();
 	}
-
+	
 	@Override
 	public void moveToPart(Integer part) {
 		presentationControl.moveToPart(part);
 	}
-
+	
 	@Override
 	public void moveToLine(Integer part, Integer line) {
 		presentationControl.moveToLine(part, line);
 	}
-
+	
 	private PresenterWindow createPresenter(GraphicsDevice screen, Presentable presentable, ScreenContentsEnum contents) {
 		if (screen == null) {
 			// nothing to be done
@@ -182,49 +186,49 @@ public class MainController implements Scroller {
 		}
 		return new PresenterWindow(screen, presentable, contents, settings);
 	}
-
+	
 	public List<GraphicsDevice> getScreens() {
 		return Collections.unmodifiableList(screens);
 	}
-
+	
 	public void detectScreens() {
 		if (screens == null) {
 			screens = new ArrayList<>();
 		} else {
 			screens.clear();
 		}
-
+		
 		// for the setting "don't show at all"
 		screens.add(null);
-
+		
 		List<GraphicsDevice> screensInternal = ScreenHelper.getScreens();
 		for (GraphicsDevice screen : screensInternal) {
 			screens.add(screen);
 		}
 	}
-
+	
 	public boolean prepareClose() {
 		LOG.debug("preparing to close application");
 		return saveAll();
 	}
-
+	
 	public boolean saveAll() {
 		boolean successfullySavedSongs = saveSongs();
 		boolean successfullySavedSettings = saveSettings();
 		boolean successfullySavedStatistics = statisticsController.saveStatistics();
 		return successfullySavedSongs && successfullySavedSettings && successfullySavedStatistics;
 	}
-
+	
 	public void shutdown() {
 		shutdown(0);
 	}
-
+	
 	public void shutdown(int exitCode) {
 		LOG.debug("closing application, exit code " + exitCode);
 		executor.shutdownNow();
 		System.exit(exitCode);
 	}
-
+	
 	public void loadSongs(String fileName) {
 		if (!StringTools.isBlank(fileName)) {
 			songsFileName = fileName;
@@ -235,11 +239,11 @@ public class MainController implements Scroller {
 			songs = new SongsModel();
 		}
 	}
-
+	
 	public void exportStatisticsAll(File targetExcelFile) {
 		statisticsController.exportStatisticsAll(songs, targetExcelFile);
 	}
-
+	
 	public void loadSettings() {
 		LOG.debug("loading settings from file");
 		File file = new File(FileAndDirectoryLocations.getSettingsFileName());
@@ -256,24 +260,24 @@ public class MainController implements Scroller {
 		}
 		loadDefaultSettingsForUnsetSettings();
 	}
-
+	
 	private void loadDefaultSettingsForUnsetSettings() {
 		putDefaultIfKeyIsUnset(SettingKey.BACKGROUND_COLOR, Color.BLACK);
 		putDefaultIfKeyIsUnset(SettingKey.TEXT_COLOR, Color.WHITE);
-
+		
 		putDefaultIfKeyIsUnset(SettingKey.TOP_MARGIN, Integer.valueOf(10));
 		putDefaultIfKeyIsUnset(SettingKey.LEFT_MARGIN, Integer.valueOf(0));
 		putDefaultIfKeyIsUnset(SettingKey.RIGHT_MARGIN, Integer.valueOf(0));
 		putDefaultIfKeyIsUnset(SettingKey.BOTTOM_MARGIN, Integer.valueOf(20));
 		putDefaultIfKeyIsUnset(SettingKey.DISTANCE_TITLE_TEXT, Integer.valueOf(20));
 		putDefaultIfKeyIsUnset(SettingKey.DISTANCE_TEXT_COPYRIGHT, Integer.valueOf(20));
-
+		
 		putDefaultIfKeyIsUnset(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.TITLE_AND_LYRICS);
 		putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.ONLY_LYRICS);
 		putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_DISPLAY, "");
 		putDefaultIfKeyIsUnset(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.LYRICS_AND_CHORDS);
 		putDefaultIfKeyIsUnset(SettingKey.SCREEN_2_DISPLAY, "");
-
+		
 		putDefaultIfKeyIsUnset(SettingKey.SHOW_TITLE, Boolean.TRUE);
 		putDefaultIfKeyIsUnset(SettingKey.TITLE_FONT, new Font(Font.SERIF, Font.BOLD, 10));
 		putDefaultIfKeyIsUnset(SettingKey.LYRICS_FONT, new Font(Font.SERIF, Font.PLAIN, 10));
@@ -281,7 +285,7 @@ public class MainController implements Scroller {
 		putDefaultIfKeyIsUnset(SettingKey.COPYRIGHT_FONT, new Font(Font.SERIF, Font.ITALIC, 10));
 		putDefaultIfKeyIsUnset(SettingKey.LOGO_FILE, "");
 		putDefaultIfKeyIsUnset(SettingKey.SECONDS_UNTIL_COUNTED, Integer.valueOf(60));
-
+		
 		// check that really all settings are set
 		for (SettingKey key : SettingKey.values()) {
 			if (!settings.isSet(key)) {
@@ -289,13 +293,13 @@ public class MainController implements Scroller {
 			}
 		}
 	}
-
+	
 	private void putDefaultIfKeyIsUnset(SettingKey key, Object defaultValue) {
 		if (!settings.isSet(key)) {
 			settings.put(key, defaultValue);
 		}
 	}
-
+	
 	public synchronized boolean saveSettings() {
 		File file = new File(FileAndDirectoryLocations.getSettingsFileName());
 		try {
@@ -308,11 +312,11 @@ public class MainController implements Scroller {
 			return false;
 		}
 	}
-
+	
 	private SongsModel populateSongsModel() {
 		File file = new File(getSongsFileName());
 		LOG.debug("loading songs from file {}", file.getAbsolutePath());
-
+		
 		try {
 			InputStream xmlInputStream = new FileInputStream(file);
 			SongsModel modelToReturn = XMLConverter.fromXMLToSongsModel(xmlInputStream);
@@ -323,7 +327,7 @@ public class MainController implements Scroller {
 			return null;
 		}
 	}
-
+	
 	public synchronized boolean saveSongs() {
 		File file = new File(getSongsFileName());
 		try {
@@ -336,15 +340,15 @@ public class MainController implements Scroller {
 			return false;
 		}
 	}
-
+	
 	public SongsModel getSongs() {
 		return songs;
 	}
-
+	
 	public SettingsModel getSettings() {
 		return settings;
 	}
-
+	
 	private String getSongsFileName() {
 		if (songsFileName == null) {
 			return FileAndDirectoryLocations.getDefaultSongsFileName();
@@ -352,7 +356,7 @@ public class MainController implements Scroller {
 			return songsFileName;
 		}
 	}
-
+	
 	/**
 	 * Use a nice LaF.
 	 * 
@@ -373,9 +377,15 @@ public class MainController implements Scroller {
 			return false;
 		}
 	}
-
+	
 	public Song getCurrentlyPresentedSong() {
 		return currentlyPresentedSong;
 	}
-
+	
+	public static void initAnimationTimer() {
+		final TimingSource animationTimer = new SwingTimerTimingSource(5, TimeUnit.MILLISECONDS);
+		Animator.setDefaultTimingSource(animationTimer);
+		animationTimer.init();
+	}
+	
 }

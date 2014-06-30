@@ -135,6 +135,7 @@ public class MainWindow extends JFrame {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
 	
+	private Container glassPane;
 	private JPanel contentPane;
 	private JTabbedPane tabbedPane;
 	private JPanel buttonPanel;
@@ -224,6 +225,8 @@ public class MainWindow extends JFrame {
 	private JButton saveButton;
 	
 	private void afterConstruction() {
+		MainController.initAnimationTimer();
+		
 		// read program version
 		String version = JarTools.getAttributeFromManifest(getClass(), "Implementation-Version");
 		String timestamp = JarTools.getAttributeFromManifest(getClass(), "Build-Timestamp");
@@ -1160,16 +1163,16 @@ public class MainWindow extends JFrame {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-		.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				try {
-					handleSongsListSelectionChanged(e);
-				} catch (Throwable ex) {
-					handleError(ex);
+			.addListSelectionListener(new ListSelectionListener() {
+				@Override
+				public void valueChanged(ListSelectionEvent e) {
+					try {
+						handleSongsListSelectionChanged(e);
+					} catch (Throwable ex) {
+						handleError(ex);
+					}
 				}
-			}
-		});
+			});
 		scrollPaneSongList.setViewportView(songsList);
 		songsList.setCellRenderer(new SongCellRenderer());
 		
@@ -1288,7 +1291,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		editorLyrics
-		.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
+			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
 		
@@ -2421,12 +2424,12 @@ public class MainWindow extends JFrame {
 		gbcSpinnerCountAsDisplayedAfter.gridy = 21;
 		panel.add(spinnerCountAsDisplayedAfter, gbcSpinnerCountAsDisplayedAfter);
 		
-		Container glassPane = (Container) getGlassPane();
+		glassPane = (Container) getGlassPane();
 		glassPane.setVisible(true);
 		glassPane.setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.weightx = 1.0;
-		gbc.weighty = 1.0;
+		gbc.weightx = 0.00001;
+		gbc.weighty = 0.00001;
 		gbc.fill = GridBagConstraints.NONE;
 		gbc.insets = new Insets(0, 0, 0, 0);
 		gbc.anchor = GridBagConstraints.NORTHEAST;
@@ -2437,7 +2440,9 @@ public class MainWindow extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				handleSave();
-				// TODO display "saved" somewhere?
+				
+				displayNotification("SAVED", 4000);
+				
 				// TODO set UI focus to where it was before?
 			}
 		});
@@ -2448,12 +2453,33 @@ public class MainWindow extends JFrame {
 		afterConstruction();
 	}
 	
+	private void displayNotification(String textToDisplay, long millis) {
+		JLabel notificationLabel = new NotificationLabel(textToDisplay, millis, glassPane);
+		
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.weightx = 1.0;
+		gbc.weighty = 1.0;
+		gbc.fill = GridBagConstraints.NONE;
+		gbc.insets = new Insets(20, 20, 20, 20);
+		gbc.anchor = GridBagConstraints.NORTHEAST;
+		glassPane.add(notificationLabel, gbc, 0);
+		notificationLabel.setVisible(true);
+		glassPane.revalidate();
+		
+		// Animator animator = new Animator.Builder().setDuration(millis, TimeUnit.MILLISECONDS).build();
+		// animator.addTarget(PropertySetter.getTargetTo(notificationLabel, "location", new
+		// AccelerationInterpolator(0.5,
+		// 0.5),
+		// targetLocation));
+		// animator.start();
+	}
+	
 	public static List<Image> getIconsFromResources(Class<?> classToUse) {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-						"/org/zephyrsoft/sdb2/icon-16.png"));
+				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+				"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {
