@@ -31,6 +31,8 @@ import javax.swing.JLabel;
 import org.jdesktop.core.animation.timing.Animator;
 import org.jdesktop.core.animation.timing.TimingTarget;
 import org.jdesktop.core.animation.timing.interpolators.AccelerationInterpolator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Notification with fading effect.
@@ -41,6 +43,7 @@ import org.jdesktop.core.animation.timing.interpolators.AccelerationInterpolator
 public class NotificationLabel extends JLabel implements TimingTarget {
 	
 	private static final long serialVersionUID = 7755120521341005608L;
+	private static final Logger LOG = LoggerFactory.getLogger(NotificationLabel.class);
 	
 	float f_alpha = 0.0f; // current opacity
 	Animator f_animator;
@@ -78,8 +81,12 @@ public class NotificationLabel extends JLabel implements TimingTarget {
 		
 		// Make the graphics object sent to this paint() method translucent
 		Graphics2D g2d = (Graphics2D) g;
-		AlphaComposite newComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, f_alpha);
-		g2d.setComposite(newComposite);
+		try {
+			AlphaComposite newComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, f_alpha);
+			g2d.setComposite(newComposite);
+		} catch (IllegalArgumentException iae) {
+			LOG.debug("illegal alpha value {}", f_alpha);
+		}
 		
 		// Copy the button's image to the destination graphics, translucently
 		g2d.drawImage(f_image, 0, 0, null);
@@ -111,14 +118,18 @@ public class NotificationLabel extends JLabel implements TimingTarget {
 	 */
 	@Override
 	public void timingEvent(Animator source, double fraction) {
-		if (fraction <= 0.3) {
-			f_alpha = (float) fraction * 5;
+		double fadeIn = 0.2;
+		double fadeOut = 0.3;
+		
+		if (fraction <= fadeIn) {
+			f_alpha = (float) (fraction / fadeIn);
 			repaint();
-		} else if (fraction >= 0.7) {
-			f_alpha = (float) (1 - fraction) * 5;
+			container.repaint();
+		} else if (fraction >= (1 - fadeOut)) {
+			f_alpha = (float) ((1 - fraction) / fadeOut);
 			repaint();
+			container.repaint();
 		}
-		container.repaint();
 	}
 	
 	@Override

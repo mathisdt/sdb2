@@ -2436,14 +2436,12 @@ public class MainWindow extends JFrame {
 		buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
 		buttonPanel.setOpaque(false);
 		saveButton = new JButton("Save");
+		saveButton.setFocusable(false);
 		saveButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				handleSave();
-				
-				displayNotification("SAVED", 4000);
-				
-				// TODO set UI focus to where it was before?
+				displayNotification("SAVED", 3500);
 			}
 		});
 		saveButton.setFont(new Font(null, Font.PLAIN, 10));
@@ -2454,7 +2452,7 @@ public class MainWindow extends JFrame {
 	}
 	
 	private void displayNotification(String textToDisplay, long millis) {
-		JLabel notificationLabel = new NotificationLabel(textToDisplay, millis, glassPane);
+		NotificationLabel notificationLabel = new NotificationLabel(textToDisplay, millis, glassPane);
 		
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.weightx = 1.0;
