@@ -377,40 +377,54 @@ public class MainWindow extends JFrame {
 	}
 	
 	private void checkForUpdateAsync() {
-		final VersionUpdate updateAvailable = VersionTools.getLatest();
-		if (updateAvailable != null) {
-			final JLabel updateLabel = new JLabel("new version " + updateAvailable.getVersionNumber() + " available");
-			updateLabel.setForeground(Color.BLUE);
-			updateLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-			updateLabel.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseClicked(MouseEvent event) {
-					if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-						try {
-							LOG.info("starting browse action for {}", updateAvailable.getUpdateUrl());
-							Desktop.getDesktop().browse(new URI(updateAvailable.getUpdateUrl()));
-						} catch (Exception e) {
-							LOG.warn("could not start browsing", e);
+		Runnable task = new Runnable() {
+			@Override
+			public void run() {
+				try {
+					Thread.sleep(3000);
+				} catch (InterruptedException e1) {
+					// do nothing
+				}
+				
+				final VersionUpdate updateAvailable = VersionTools.getLatest();
+				if (updateAvailable != null) {
+					final JLabel updateLabel = new JLabel("version " + updateAvailable.getVersionNumber()
+						+ " available");
+					updateLabel.setForeground(Color.BLUE);
+					updateLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+					updateLabel.addMouseListener(new MouseAdapter() {
+						@Override
+						public void mouseClicked(MouseEvent event) {
+							if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+								try {
+									LOG.info("starting browse action for {}", updateAvailable.getUpdateUrl());
+									Desktop.getDesktop().browse(new URI(updateAvailable.getUpdateUrl()));
+								} catch (Exception e) {
+									LOG.warn("could not start browsing", e);
+								}
+							} else {
+								LOG.warn("browsing not supported on this platform");
+							}
 						}
-					} else {
-						LOG.warn("browsing not supported on this platform");
-					}
+					});
+					SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+							GridBagConstraints gbc = new GridBagConstraints();
+							gbc.weightx = 1.0;
+							gbc.weighty = 1.0;
+							gbc.fill = GridBagConstraints.NONE;
+							gbc.insets = new Insets(5, 20, 5, 20);
+							gbc.anchor = GridBagConstraints.NORTHEAST;
+							glassPane.add(updateLabel, gbc, 0);
+							glassPane.revalidate();
+						}
+					});
 				}
-			});
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					GridBagConstraints gbc = new GridBagConstraints();
-					gbc.weightx = 1.0;
-					gbc.weighty = 1.0;
-					gbc.fill = GridBagConstraints.NONE;
-					gbc.insets = new Insets(5, 20, 5, 20);
-					gbc.anchor = GridBagConstraints.NORTHEAST;
-					glassPane.add(updateLabel, gbc, 0);
-					glassPane.revalidate();
-				}
-			});
-		}
+			}
+		};
+		Thread thread = new Thread(task);
+		thread.start();
 	}
 	
 	public void setModels(SongsModel songs, SettingsModel settings) {
@@ -1199,16 +1213,16 @@ public class MainWindow extends JFrame {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-			.addListSelectionListener(new ListSelectionListener() {
-				@Override
-				public void valueChanged(ListSelectionEvent e) {
-					try {
-						handleSongsListSelectionChanged(e);
-					} catch (Throwable ex) {
-						handleError(ex);
-					}
+		.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				try {
+					handleSongsListSelectionChanged(e);
+				} catch (Throwable ex) {
+					handleError(ex);
 				}
-			});
+			}
+		});
 		scrollPaneSongList.setViewportView(songsList);
 		songsList.setCellRenderer(new SongCellRenderer());
 		
@@ -1327,7 +1341,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		editorLyrics
-			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
+		.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
 		
@@ -2505,8 +2519,8 @@ public class MainWindow extends JFrame {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-16.png"));
+					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+						"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {
