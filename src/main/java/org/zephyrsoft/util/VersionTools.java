@@ -63,7 +63,7 @@ public class VersionTools {
 			&& jenkinsInfo.getArtifacts().get(0) != null) {
 			versionFromJenkins = extractVersionFromArtifactFilename(jenkinsInfo.getArtifacts().get(0).getFileName());
 		}
-		if (versionFromJenkins == null || !versionFromJenkins.equals(getCurrent())) {
+		if (versionFromJenkins == null || versionFromJenkins.equals(getImplementationVersion())) {
 			return null;
 		} else {
 			return new VersionUpdate(versionFromJenkins, JENKINS_DOWNLOAD_URL);
