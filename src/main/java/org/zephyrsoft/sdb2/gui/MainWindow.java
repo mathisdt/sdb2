@@ -19,6 +19,8 @@ package org.zephyrsoft.sdb2.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.Cursor;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -42,6 +44,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
@@ -67,6 +70,7 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -98,9 +102,10 @@ import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.util.CustomFileFilter;
-import org.zephyrsoft.util.JarTools;
 import org.zephyrsoft.util.ResourceTools;
 import org.zephyrsoft.util.StringTools;
+import org.zephyrsoft.util.VersionTools;
+import org.zephyrsoft.util.VersionTools.VersionUpdate;
 import org.zephyrsoft.util.gui.ErrorDialog;
 import org.zephyrsoft.util.gui.FixedWidthJList;
 import org.zephyrsoft.util.gui.ImagePreview;
@@ -228,14 +233,7 @@ public class MainWindow extends JFrame {
 		MainController.initAnimationTimer();
 		
 		// read program version
-		String version = JarTools.getAttributeFromManifest(getClass(), "Implementation-Version");
-		String timestamp = JarTools.getAttributeFromManifest(getClass(), "Build-Timestamp");
-		if (version != null && timestamp != null) {
-			version += " (" + timestamp + ")";
-		} else {
-			version = "development snapshot";
-		}
-		lblProgramVersion.setText(version);
+		lblProgramVersion.setText(VersionTools.getCurrent());
 		
 		// fill in available values for language
 		for (LanguageEnum item : LanguageEnum.values()) {
@@ -375,6 +373,44 @@ public class MainWindow extends JFrame {
 		setModels(controller.getSongs(), controller.getSettings());
 		setVisible(true);
 		textFieldFilter.requestFocusInWindow();
+		checkForUpdateAsync();
+	}
+	
+	private void checkForUpdateAsync() {
+		final VersionUpdate updateAvailable = VersionTools.getLatest();
+		if (updateAvailable != null) {
+			final JLabel updateLabel = new JLabel("new version " + updateAvailable.getVersionNumber() + " available");
+			updateLabel.setForeground(Color.BLUE);
+			updateLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+			updateLabel.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent event) {
+					if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+						try {
+							LOG.info("starting browse action for {}", updateAvailable.getUpdateUrl());
+							Desktop.getDesktop().browse(new URI(updateAvailable.getUpdateUrl()));
+						} catch (Exception e) {
+							LOG.warn("could not start browsing", e);
+						}
+					} else {
+						LOG.warn("browsing not supported on this platform");
+					}
+				}
+			});
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					GridBagConstraints gbc = new GridBagConstraints();
+					gbc.weightx = 1.0;
+					gbc.weighty = 1.0;
+					gbc.fill = GridBagConstraints.NONE;
+					gbc.insets = new Insets(5, 20, 5, 20);
+					gbc.anchor = GridBagConstraints.NORTHEAST;
+					glassPane.add(updateLabel, gbc, 0);
+					glassPane.revalidate();
+				}
+			});
+		}
 	}
 	
 	public void setModels(SongsModel songs, SettingsModel settings) {
@@ -2463,13 +2499,6 @@ public class MainWindow extends JFrame {
 		glassPane.add(notificationLabel, gbc, 0);
 		notificationLabel.setVisible(true);
 		glassPane.revalidate();
-		
-		// Animator animator = new Animator.Builder().setDuration(millis, TimeUnit.MILLISECONDS).build();
-		// animator.addTarget(PropertySetter.getTargetTo(notificationLabel, "location", new
-		// AccelerationInterpolator(0.5,
-		// 0.5),
-		// targetLocation));
-		// animator.start();
 	}
 	
 	public static List<Image> getIconsFromResources(Class<?> classToUse) {
