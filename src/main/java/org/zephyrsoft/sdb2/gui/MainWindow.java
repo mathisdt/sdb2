@@ -61,6 +61,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -1900,6 +1901,13 @@ public class MainWindow extends JFrame {
 		panelImportExportStatistics.add(lblSelectedSong2, gbcLblSelectedSong2);
 		
 		btnExportLyricsOnlyPdfSelected = new JButton("Export lyrics-only PDF");
+		btnExportLyricsOnlyPdfSelected.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(MainWindow.this, "This function is not implemented yet!", "Information",
+					JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
 		GridBagConstraints gbcBtnExportLyricsOnlyPdfSelected = new GridBagConstraints();
 		gbcBtnExportLyricsOnlyPdfSelected.anchor = GridBagConstraints.NORTH;
 		gbcBtnExportLyricsOnlyPdfSelected.insets = new Insets(0, 0, 5, 5);
@@ -1919,6 +1927,13 @@ public class MainWindow extends JFrame {
 		panelImportExportStatistics.add(lblStatistics, gbcLblStatistics);
 		
 		btnExportCompletePdfSelected = new JButton("Export complete PDF");
+		btnExportCompletePdfSelected.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(MainWindow.this, "This function is not implemented yet!", "Information",
+					JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
 		GridBagConstraints gbcBtnExportCompletePdfSelected = new GridBagConstraints();
 		gbcBtnExportCompletePdfSelected.anchor = GridBagConstraints.NORTH;
 		gbcBtnExportCompletePdfSelected.fill = GridBagConstraints.HORIZONTAL;
@@ -1928,6 +1943,13 @@ public class MainWindow extends JFrame {
 		panelImportExportStatistics.add(btnExportCompletePdfSelected, gbcBtnExportCompletePdfSelected);
 		
 		btnExportStatisticsSelected = new JButton("Export statistics");
+		btnExportStatisticsSelected.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(MainWindow.this, "This function is not implemented yet!", "Information",
+					JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
 		GridBagConstraints gbcBtnExportStatisticsSelected = new GridBagConstraints();
 		gbcBtnExportStatisticsSelected.anchor = GridBagConstraints.NORTH;
 		gbcBtnExportStatisticsSelected.fill = GridBagConstraints.HORIZONTAL;
@@ -1947,6 +1969,13 @@ public class MainWindow extends JFrame {
 		panelImportExportStatistics.add(lblAllSongs2, gbcLblAllSongs2);
 		
 		btnExportLyricsOnlyPdfAll = new JButton("Export lyrics-only PDF");
+		btnExportLyricsOnlyPdfAll.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(MainWindow.this, "This function is not implemented yet!", "Information",
+					JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
 		GridBagConstraints gbcBtnExportLyricsOnlyPdfAll = new GridBagConstraints();
 		gbcBtnExportLyricsOnlyPdfAll.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnExportLyricsOnlyPdfAll.insets = new Insets(0, 0, 5, 5);
@@ -1955,6 +1984,13 @@ public class MainWindow extends JFrame {
 		panelImportExportStatistics.add(btnExportLyricsOnlyPdfAll, gbcBtnExportLyricsOnlyPdfAll);
 		
 		btnExportCompletePdfAll = new JButton("Export complete PDF");
+		btnExportCompletePdfAll.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(MainWindow.this, "This function is not implemented yet!", "Information",
+					JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
 		GridBagConstraints gbcBtnExportCompletePdfAll = new GridBagConstraints();
 		gbcBtnExportCompletePdfAll.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnExportCompletePdfAll.insets = new Insets(0, 0, 5, 5);
