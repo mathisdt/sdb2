@@ -90,6 +90,7 @@ import org.zephyrsoft.sdb2.gui.renderer.LanguageCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenDisplayCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
+import org.zephyrsoft.sdb2.importer.ImportFromEasiSlides;
 import org.zephyrsoft.sdb2.importer.ImportFromSDBv1;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
@@ -204,6 +205,7 @@ public class MainWindow extends JFrame {
 	private JButton btnExportCompletePdfAll;
 	private JButton btnExportStatisticsAll;
 	private JButton btnImportFromSdb1;
+	private JButton btnImportFromEasiSlides;
 	private JLabel lblProgramVersion;
 	
 	private JButton btnUnlock;
@@ -1051,6 +1053,26 @@ public class MainWindow extends JFrame {
 		}
 	}
 	
+	protected void handleImportFromEasiSlides() {
+		JFileChooser chooser = new JFileChooser();
+		chooser.setDialogTitle("choose file to import");
+		CustomFileFilter filter = new CustomFileFilter("EasiSlides 4.0 export files", ".xml");
+		chooser.addChoosableFileFilter(filter);
+		int iValue = chooser.showOpenDialog(this);
+		
+		if (iValue == JFileChooser.APPROVE_OPTION) {
+			List<Song> imported = null;
+			ImportFromEasiSlides importer = new ImportFromEasiSlides();
+			imported = importer.loadFromFile(chooser.getSelectedFile());
+			if (imported != null) {
+				for (Song song : imported) {
+					songsModel.addSong(song);
+				}
+				applyFilter();
+			}
+		}
+	}
+	
 	private final void defineShortcuts() {
 		KeyboardFocusManager focusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		focusManager.addKeyEventDispatcher(keyboardShortcutManager);
@@ -1214,16 +1236,16 @@ public class MainWindow extends JFrame {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-		.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				try {
-					handleSongsListSelectionChanged(e);
-				} catch (Throwable ex) {
-					handleError(ex);
+			.addListSelectionListener(new ListSelectionListener() {
+				@Override
+				public void valueChanged(ListSelectionEvent e) {
+					try {
+						handleSongsListSelectionChanged(e);
+					} catch (Throwable ex) {
+						handleError(ex);
+					}
 				}
-			}
-		});
+			});
 		scrollPaneSongList.setViewportView(songsList);
 		songsList.setCellRenderer(new SongCellRenderer());
 		
@@ -1342,7 +1364,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		editorLyrics
-		.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
+			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
 		
@@ -2040,6 +2062,7 @@ public class MainWindow extends JFrame {
 		gbcLblImportingSongs.gridy = 8;
 		panelImportExportStatistics.add(lblImportingSongs, gbcLblImportingSongs);
 		
+		// TODO handle importers dynamically, load every implementation of "Importer" as button
 		btnImportFromSdb1 = new JButton("Import from SDB 1.x");
 		btnImportFromSdb1.addActionListener(new ActionListener() {
 			@Override
@@ -2058,6 +2081,24 @@ public class MainWindow extends JFrame {
 		gbcBtnImportFromSdb1.gridy = 9;
 		panelImportExportStatistics.add(btnImportFromSdb1, gbcBtnImportFromSdb1);
 		
+		btnImportFromEasiSlides = new JButton("Import from EasiSlides 4.0");
+		btnImportFromEasiSlides.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleImportFromEasiSlides();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
+		GridBagConstraints gbcBtnImportFromEasiSlides = new GridBagConstraints();
+		gbcBtnImportFromEasiSlides.fill = GridBagConstraints.HORIZONTAL;
+		gbcBtnImportFromEasiSlides.insets = new Insets(0, 0, 5, 5);
+		gbcBtnImportFromEasiSlides.gridx = 0;
+		gbcBtnImportFromEasiSlides.gridy = 10;
+		panelImportExportStatistics.add(btnImportFromEasiSlides, gbcBtnImportFromEasiSlides);
+		
 		JLabel lblProgramVersionTitle = new JLabel("Program Version");
 		lblProgramVersionTitle.setFont(new Font("DejaVu Sans", Font.ITALIC, 12));
 		GridBagConstraints gbcLblProgramVersionTitle = new GridBagConstraints();
@@ -2066,7 +2107,7 @@ public class MainWindow extends JFrame {
 		gbcLblProgramVersionTitle.anchor = GridBagConstraints.SOUTH;
 		gbcLblProgramVersionTitle.insets = new Insets(0, 0, 5, 5);
 		gbcLblProgramVersionTitle.gridx = 0;
-		gbcLblProgramVersionTitle.gridy = 10;
+		gbcLblProgramVersionTitle.gridy = 11;
 		panelImportExportStatistics.add(lblProgramVersionTitle, gbcLblProgramVersionTitle);
 		
 		lblProgramVersion = new JLabel("<PROGRAM VERSION>");
@@ -2077,7 +2118,7 @@ public class MainWindow extends JFrame {
 		gbcLblProgramVersion.anchor = GridBagConstraints.NORTH;
 		gbcLblProgramVersion.gridwidth = 3;
 		gbcLblProgramVersion.gridx = 0;
-		gbcLblProgramVersion.gridy = 11;
+		gbcLblProgramVersion.gridy = 12;
 		panelImportExportStatistics.add(lblProgramVersion, gbcLblProgramVersion);
 		
 		JPanel panelSettings = new JPanel();
@@ -2555,8 +2596,8 @@ public class MainWindow extends JFrame {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-						"/org/zephyrsoft/sdb2/icon-16.png"));
+				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+				"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {

@@ -16,6 +16,9 @@
  */
 package org.zephyrsoft.sdb2;
 
+import java.lang.reflect.Field;
+import java.nio.charset.Charset;
+
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
@@ -30,22 +33,22 @@ import org.zephyrsoft.sdb2.gui.MainWindow;
  * @author Mathis Dirksen-Thedens
  */
 public final class Start {
-
+	
 	private static final Logger LOG = LoggerFactory.getLogger(Start.class);
-
+	
 	private final Options options = new Options();
-
+	
 	private MainController mainController;
-
+	
 	private MainWindow mainWindow;
-
+	
 	public static void main(String[] args) {
 		new Start(args);
 	}
-
+	
 	private Start(String[] args) {
 		LOG.debug("starting application");
-
+		
 		// parse command line arguments
 		CmdLineParser parser = new CmdLineParser(options);
 		parser.setUsageWidth(80);
@@ -55,21 +58,27 @@ public final class Start {
 			System.err.println(e.getMessage());
 			options.setHelp(true);
 		}
-
+		
 		if (options.isHelp()) {
 			System.err.println("The available options are:");
 			parser.printUsage(System.err);
 		} else {
 			try {
+				// set encoding to UTF-8 (the cache has to be reset to make the new definition effective)
+				System.setProperty("file.encoding", "UTF-8");
+				Field charset = Charset.class.getDeclaredField("defaultCharset");
+				charset.setAccessible(true);
+				charset.set(null, null);
+				
 				LOG.info("loading application context");
 				@SuppressWarnings("resource")
 				AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 				context.register(SpringConfiguration.class);
 				context.refresh();
-
+				
 				context.getAutowireCapableBeanFactory().autowireBean(this);
 				mainController.loadSongs(options.getSongsFile());
-
+				
 				mainWindow.startup();
 			} catch (Exception e) {
 				LOG.error("problem while starting up the application", e);
@@ -77,15 +86,15 @@ public final class Start {
 			}
 		}
 	}
-
+	
 	@Autowired
 	public void setMainController(MainController mainController) {
 		this.mainController = mainController;
 	}
-
+	
 	@Autowired
 	public void setMainWindow(MainWindow mainWindow) {
 		this.mainWindow = mainWindow;
 	}
-
+	
 }
