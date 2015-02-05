@@ -45,6 +45,7 @@ import javax.swing.text.StyledDocument;
 import org.apache.commons.lang3.Validate;
 import org.jdesktop.core.animation.timing.Animator;
 import org.jdesktop.core.animation.timing.PropertySetter;
+import org.jdesktop.core.animation.timing.TimingTargetAdapter;
 import org.jdesktop.core.animation.timing.interpolators.AccelerationInterpolator;
 import org.zephyrsoft.sdb2.model.AddressableLine;
 import org.zephyrsoft.sdb2.model.AddressablePart;
@@ -93,6 +94,7 @@ public class SongView extends JPanel implements Scroller {
 	private StyledDocument document;
 	
 	protected Animator animator;
+	protected Point animatorTarget;
 	
 	/**
 	 * Private constructor: only the builder may call it.
@@ -147,14 +149,14 @@ public class SongView extends JPanel implements Scroller {
 		Area areaUpper = new Area(new Rectangle2D.Double(0, 0, getWidth(), topBorderHeight));
 		g2d.setPaint(new GradientPaint(0, 0, new Color(backgroundColor.getRed(), backgroundColor.getGreen(),
 			backgroundColor.getBlue(), 255), 0, topBorderHeight, new Color(backgroundColor.getRed(), backgroundColor
-				.getGreen(), backgroundColor.getBlue(), 0), false));
+			.getGreen(), backgroundColor.getBlue(), 0), false));
 		g2d.fill(areaUpper);
 		
 		// gradient lower border as overlay
 		Area areaLower = new Area(new Rectangle2D.Double(0, getHeight() - bottomBorderHeight, getWidth(), getHeight()));
 		g2d.setPaint(new GradientPaint(0, getHeight() - bottomBorderHeight, new Color(backgroundColor.getRed(),
 			backgroundColor.getGreen(), backgroundColor.getBlue(), 0), 0, getHeight(), new Color(backgroundColor
-				.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue(), 255), false));
+			.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue(), 255), false));
 		g2d.fill(areaLower);
 	}
 	
@@ -201,7 +203,7 @@ public class SongView extends JPanel implements Scroller {
 					&& prevElement.getType() == SongElementEnum.LYRICS
 					&& !StringTools.isBlank(prevElement.getElement())
 					&& ((prevPrevElement != null && (prevPrevElement.getType() == SongElementEnum.NEW_LINE || prevPrevElement
-					.getType() == SongElementEnum.TITLE)) || prevPrevElement == null)) {
+						.getType() == SongElementEnum.TITLE)) || prevPrevElement == null)) {
 					// two newlines OR a title element and a newline, separated by a non-blank lyrics line =>
 					// save current line and begin a new one
 					currentLineText = prevElement.getElement();
@@ -226,8 +228,8 @@ public class SongView extends JPanel implements Scroller {
 			String type = element.getType().name();
 			if ((element.getType() == SongElementEnum.NEW_LINE && prevElement != null && prevElement.getType() == SongElementEnum.NEW_LINE)
 				|| (element.getType() == SongElementEnum.NEW_LINE && prevElement != null
-				&& StringTools.isBlank(prevElement.getElement()) && ((prevPrevElement != null && prevPrevElement
-				.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null))) {
+					&& StringTools.isBlank(prevElement.getElement()) && ((prevPrevElement != null && prevPrevElement
+					.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null))) {
 				type = SongElementEnum.LYRICS.name();
 			}
 			appendText(element.getElement(), type);
@@ -372,14 +374,21 @@ public class SongView extends JPanel implements Scroller {
 	}
 	
 	private void animatedMoveTo(Point targetLocation) {
+		if (animator != null && animator.isRunning() && animatorTarget != null && animatorTarget.equals(targetLocation)) {
+			// animator is already moving the song text to the requested location
+			return;
+		} else {
+			animatorTarget = targetLocation;
+		}
 		if (animator != null && animator.isRunning()) {
 			animator.stop();
 			// discard old animator because it takes too long to let it stop completely
 			animator = null;
 		}
 		animator = createAnimator();
-		animator.addTarget(PropertySetter.getTargetTo(text, "location", new AccelerationInterpolator(0.5, 0.5),
-			targetLocation));
+		TimingTargetAdapter target = PropertySetter.getTargetTo(text, "location",
+			new AccelerationInterpolator(0.5, 0.5), targetLocation);
+		animator.addTarget(target);
 		animator.start();
 	}
 	
