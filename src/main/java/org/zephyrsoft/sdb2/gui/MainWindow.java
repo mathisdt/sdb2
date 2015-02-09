@@ -391,8 +391,8 @@ public class MainWindow extends JFrame {
 				
 				final VersionUpdate updateAvailable = VersionTools.getLatest();
 				if (updateAvailable != null) {
-					final JLabel updateLabel = new JLabel("version " + updateAvailable.getVersionNumber()
-						+ " available");
+					final JLabel updateLabel = new JLabel("new version available: "
+						+ updateAvailable.getVersionNumber());
 					updateLabel.setForeground(Color.BLUE);
 					updateLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 					updateLabel.addMouseListener(new MouseAdapter() {

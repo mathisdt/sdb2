@@ -70,6 +70,9 @@ public final class Start {
 				charset.setAccessible(true);
 				charset.set(null, null);
 				
+				// add missing SSL certificates if any
+				CertificateManager.loadDefaultCerts();
+				
 				LOG.info("loading application context");
 				@SuppressWarnings("resource")
 				AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
