@@ -1106,6 +1106,26 @@ public class MainWindow extends JFrame {
 				}
 			}
 		});
+		
+		// TODO use single Shortcut (without ctrl), put an option in the global settings tab
+		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_P, false, false, true) {
+			@Override
+			public void doAction() {
+				LOG.debug("ctrl-p action");
+				if (presentListSelected != null) {
+					handleSongPresent();
+				}
+			}
+		});
+		
+		// TODO use single Shortcut (without ctrl), put an option in the global settings tab
+		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_B, false, false, true) {
+			@Override
+			public void doAction() {
+				LOG.debug("ctrl-b action");
+				handleBlankScreen();
+			}
+		});
 	}
 	
 	public void handleError(Throwable ex) {
@@ -1237,16 +1257,16 @@ public class MainWindow extends JFrame {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-			.addListSelectionListener(new ListSelectionListener() {
-				@Override
-				public void valueChanged(ListSelectionEvent e) {
-					try {
-						handleSongsListSelectionChanged(e);
-					} catch (Throwable ex) {
-						handleError(ex);
-					}
+		.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				try {
+					handleSongsListSelectionChanged(e);
+				} catch (Throwable ex) {
+					handleError(ex);
 				}
-			});
+			}
+		});
 		scrollPaneSongList.setViewportView(songsList);
 		songsList.setCellRenderer(new SongCellRenderer());
 		
@@ -1365,7 +1385,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		editorLyrics
-			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
+		.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
 		
@@ -2625,8 +2645,8 @@ public class MainWindow extends JFrame {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-16.png"));
+					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+						"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {
