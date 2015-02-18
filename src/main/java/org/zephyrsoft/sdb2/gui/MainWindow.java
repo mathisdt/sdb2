@@ -1168,6 +1168,7 @@ public class MainWindow extends JFrame {
 		splitPane.setBorder(null);
 		contentPane.add(splitPane, BorderLayout.CENTER);
 		
+		// MARK Edit Panel
 		panelSongList = new JPanel();
 		panelSongList.setBorder(new EmptyBorder(5, 5, 5, 5));
 		splitPane.setLeftComponent(panelSongList);
@@ -1236,16 +1237,16 @@ public class MainWindow extends JFrame {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-			.addListSelectionListener(new ListSelectionListener() {
-				@Override
-				public void valueChanged(ListSelectionEvent e) {
-					try {
-						handleSongsListSelectionChanged(e);
-					} catch (Throwable ex) {
-						handleError(ex);
-					}
+		.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				try {
+					handleSongsListSelectionChanged(e);
+				} catch (Throwable ex) {
+					handleError(ex);
 				}
-			});
+			}
+		});
 		scrollPaneSongList.setViewportView(songsList);
 		songsList.setCellRenderer(new SongCellRenderer());
 		
@@ -1364,7 +1365,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		editorLyrics
-			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
+		.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
 		
@@ -1647,6 +1648,7 @@ public class MainWindow extends JFrame {
 		scrollPaneChordSequence.setViewportView(editorChordSequence);
 		editorChordSequence.setBackground(Color.WHITE);
 		
+		// MARK Present Panel
 		JPanel panelPresent = new JPanel();
 		tabbedPane.addTab("Present Songs", null, panelPresent, null);
 		panelPresent.setLayout(new BorderLayout(0, 0));
@@ -1655,6 +1657,7 @@ public class MainWindow extends JFrame {
 		splitPanePresent.setBorder(null);
 		panelPresent.add(splitPanePresent, BorderLayout.CENTER);
 		
+		// left part, filterable list of all songs
 		JPanel panelPresentLeft = new JPanel();
 		panelPresentLeft.setBorder(new EmptyBorder(5, 5, 5, 5));
 		splitPanePresent.setLeftComponent(panelPresentLeft);
@@ -1788,6 +1791,7 @@ public class MainWindow extends JFrame {
 		});
 		panelPresentLeft.add(btnJumpToSelected, BorderLayout.SOUTH);
 		
+		// right part, controls and active song
 		JPanel panelPresentRight = new JPanel();
 		panelPresentRight.setBorder(new EmptyBorder(5, 5, 5, 5));
 		splitPanePresent.setRightComponent(panelPresentRight);
@@ -1795,11 +1799,12 @@ public class MainWindow extends JFrame {
 		
 		JPanel panelPresentationButtons = new JPanel();
 		panelPresentRight.add(panelPresentationButtons, BorderLayout.CENTER);
+		
 		GridBagLayout gblPanelPresentationButtons = new GridBagLayout();
-		gblPanelPresentationButtons.columnWidths = new int[] { 0, 0 };
-		gblPanelPresentationButtons.rowHeights = new int[] { 0, 0, 0, 0, 0, 0 };
-		gblPanelPresentationButtons.columnWeights = new double[] { 1.0, Double.MIN_VALUE };
-		gblPanelPresentationButtons.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE };
+		gblPanelPresentationButtons.columnWidths = new int[] { 0, 0, 0 };
+		// gblPanelPresentationButtons.rowHeights = new int[] { 1, 1, 1, 0, 0, 0 };
+		gblPanelPresentationButtons.columnWeights = new double[] { 0.5d, 0.5d, 0.5d };
+		gblPanelPresentationButtons.rowWeights = new double[] { 0d, 0d, 0d, 0d, 1d, Double.MIN_VALUE };
 		panelPresentationButtons.setLayout(gblPanelPresentationButtons);
 		
 		btnShowLogo = new JButton("Show logo");
@@ -1815,7 +1820,10 @@ public class MainWindow extends JFrame {
 		});
 		GridBagConstraints gbcBtnShowLogo = new GridBagConstraints();
 		gbcBtnShowLogo.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnShowLogo.insets = new Insets(0, 0, 5, 0);
+		gbcBtnShowLogo.insets = new Insets(10, 0, 15, 0);
+		gbcBtnShowLogo.gridheight = 3;
+		// gbcBtnShowLogo.ipadx = 40;
+		gbcBtnShowLogo.ipady = 80;
 		gbcBtnShowLogo.gridx = 0;
 		gbcBtnShowLogo.gridy = 0;
 		panelPresentationButtons.add(btnShowLogo, gbcBtnShowLogo);
@@ -1833,9 +1841,12 @@ public class MainWindow extends JFrame {
 		});
 		GridBagConstraints gbcBtnShowBlankScreen = new GridBagConstraints();
 		gbcBtnShowBlankScreen.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnShowBlankScreen.insets = new Insets(0, 0, 5, 0);
-		gbcBtnShowBlankScreen.gridx = 0;
-		gbcBtnShowBlankScreen.gridy = 1;
+		gbcBtnShowBlankScreen.insets = new Insets(10, 0, 15, 0);
+		gbcBtnShowBlankScreen.gridheight = 3;
+		// gbcBtnShowBlankScreen.ipadx = 30;
+		gbcBtnShowBlankScreen.ipady = 80;
+		gbcBtnShowBlankScreen.gridx = 1;
+		gbcBtnShowBlankScreen.gridy = 0;
 		panelPresentationButtons.add(btnShowBlankScreen, gbcBtnShowBlankScreen);
 		
 		btnPresentSelectedSong = new JButton("Present selected song");
@@ -1851,9 +1862,12 @@ public class MainWindow extends JFrame {
 		});
 		GridBagConstraints gbcBtnPresentSelectedSong = new GridBagConstraints();
 		gbcBtnPresentSelectedSong.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnPresentSelectedSong.insets = new Insets(0, 0, 5, 0);
-		gbcBtnPresentSelectedSong.gridx = 0;
-		gbcBtnPresentSelectedSong.gridy = 2;
+		gbcBtnPresentSelectedSong.insets = new Insets(10, 0, 15, 0);
+		gbcBtnPresentSelectedSong.gridheight = 3;
+		// gbcBtnPresentSelectedSong.ipadx = 20;
+		gbcBtnPresentSelectedSong.ipady = 80;
+		gbcBtnPresentSelectedSong.gridx = 2;
+		gbcBtnPresentSelectedSong.gridy = 0;
 		panelPresentationButtons.add(btnPresentSelectedSong, gbcBtnPresentSelectedSong);
 		
 		JLabel lblSections = new JLabel("Sections:");
@@ -1867,6 +1881,7 @@ public class MainWindow extends JFrame {
 		scrollPaneSectionButtons = new JScrollPane();
 		GridBagConstraints gbcScrollPaneSectionButtons = new GridBagConstraints();
 		gbcScrollPaneSectionButtons.fill = GridBagConstraints.BOTH;
+		gbcScrollPaneSectionButtons.gridwidth = 3;
 		gbcScrollPaneSectionButtons.gridx = 0;
 		gbcScrollPaneSectionButtons.gridy = 4;
 		panelPresentationButtons.add(scrollPaneSectionButtons, gbcScrollPaneSectionButtons);
@@ -1901,6 +1916,7 @@ public class MainWindow extends JFrame {
 		});
 		panelPresentRight.add(btnJumpToPresented, BorderLayout.SOUTH);
 		
+		// MARK Export/Import Panel
 		JPanel panelImportExportStatistics = new JPanel();
 		panelImportExportStatistics.setBorder(new EmptyBorder(5, 5, 5, 5));
 		tabbedPane.addTab("Import / Export / Statistics", null, panelImportExportStatistics, null);
@@ -2121,6 +2137,7 @@ public class MainWindow extends JFrame {
 		gbcLblProgramVersion.gridy = 12;
 		panelImportExportStatistics.add(lblProgramVersion, gbcLblProgramVersion);
 		
+		// MARK Settings Panel
 		JPanel panelSettings = new JPanel();
 		panelSettings.setBorder(null);
 		tabbedPane.addTab("Global Settings", null, panelSettings, null);
@@ -2596,8 +2613,8 @@ public class MainWindow extends JFrame {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-16.png"));
+					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+						"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {
