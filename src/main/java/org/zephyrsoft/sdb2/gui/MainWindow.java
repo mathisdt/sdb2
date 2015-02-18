@@ -1237,16 +1237,16 @@ public class MainWindow extends JFrame {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-		.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				try {
-					handleSongsListSelectionChanged(e);
-				} catch (Throwable ex) {
-					handleError(ex);
+			.addListSelectionListener(new ListSelectionListener() {
+				@Override
+				public void valueChanged(ListSelectionEvent e) {
+					try {
+						handleSongsListSelectionChanged(e);
+					} catch (Throwable ex) {
+						handleError(ex);
+					}
 				}
-			}
-		});
+			});
 		scrollPaneSongList.setViewportView(songsList);
 		songsList.setCellRenderer(new SongCellRenderer());
 		
@@ -1365,7 +1365,7 @@ public class MainWindow extends JFrame {
 			}
 		});
 		editorLyrics
-		.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
+			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
 		
@@ -1807,28 +1807,35 @@ public class MainWindow extends JFrame {
 		gblPanelPresentationButtons.rowWeights = new double[] { 0d, 0d, 0d, 0d, 1d, Double.MIN_VALUE };
 		panelPresentationButtons.setLayout(gblPanelPresentationButtons);
 		
-		btnShowLogo = new JButton("Show logo");
-		btnShowLogo.addActionListener(new ActionListener() {
+		btnPresentSelectedSong = new JButton("Present selected song");
+		btnPresentSelectedSong.setIcon(ResourceTools.getIcon(getClass(), "/milky/play.png"));
+		btnPresentSelectedSong.setVerticalTextPosition(SwingConstants.BOTTOM);
+		btnPresentSelectedSong.setHorizontalTextPosition(SwingConstants.CENTER);
+		btnPresentSelectedSong.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					handleLogoPresent();
+					handleSongPresent();
 				} catch (Throwable ex) {
 					handleError(ex);
 				}
 			}
 		});
-		GridBagConstraints gbcBtnShowLogo = new GridBagConstraints();
-		gbcBtnShowLogo.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnShowLogo.insets = new Insets(10, 0, 15, 0);
-		gbcBtnShowLogo.gridheight = 3;
-		// gbcBtnShowLogo.ipadx = 40;
-		gbcBtnShowLogo.ipady = 80;
-		gbcBtnShowLogo.gridx = 0;
-		gbcBtnShowLogo.gridy = 0;
-		panelPresentationButtons.add(btnShowLogo, gbcBtnShowLogo);
+		GridBagConstraints gbcBtnPresentSelectedSong = new GridBagConstraints();
+		gbcBtnPresentSelectedSong.fill = GridBagConstraints.HORIZONTAL;
+		gbcBtnPresentSelectedSong.insets = new Insets(10, 0, 15, 0);
+		gbcBtnPresentSelectedSong.gridheight = 3;
+		// gbcBtnPresentSelectedSong.ipadx = 20;
+		gbcBtnPresentSelectedSong.ipady = 80;
+		gbcBtnPresentSelectedSong.gridx = 0;
+		gbcBtnPresentSelectedSong.gridy = 0;
+		btnPresentSelectedSong.setPreferredSize(new Dimension(64, 64));
+		panelPresentationButtons.add(btnPresentSelectedSong, gbcBtnPresentSelectedSong);
 		
 		btnShowBlankScreen = new JButton("Blank screen");
+		btnShowBlankScreen.setIcon(ResourceTools.getIcon(getClass(), "/milky/stop.png"));
+		btnShowBlankScreen.setVerticalTextPosition(SwingConstants.BOTTOM);
+		btnShowBlankScreen.setHorizontalTextPosition(SwingConstants.CENTER);
 		btnShowBlankScreen.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -1847,28 +1854,33 @@ public class MainWindow extends JFrame {
 		gbcBtnShowBlankScreen.ipady = 80;
 		gbcBtnShowBlankScreen.gridx = 1;
 		gbcBtnShowBlankScreen.gridy = 0;
+		btnShowBlankScreen.setPreferredSize(new Dimension(64, 64));
 		panelPresentationButtons.add(btnShowBlankScreen, gbcBtnShowBlankScreen);
 		
-		btnPresentSelectedSong = new JButton("Present selected song");
-		btnPresentSelectedSong.addActionListener(new ActionListener() {
+		btnShowLogo = new JButton("Show logo");
+		btnShowLogo.setIcon(ResourceTools.getIcon(getClass(), "/milky/picture.png"));
+		btnShowLogo.setVerticalTextPosition(SwingConstants.BOTTOM);
+		btnShowLogo.setHorizontalTextPosition(SwingConstants.CENTER);
+		btnShowLogo.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					handleSongPresent();
+					handleLogoPresent();
 				} catch (Throwable ex) {
 					handleError(ex);
 				}
 			}
 		});
-		GridBagConstraints gbcBtnPresentSelectedSong = new GridBagConstraints();
-		gbcBtnPresentSelectedSong.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnPresentSelectedSong.insets = new Insets(10, 0, 15, 0);
-		gbcBtnPresentSelectedSong.gridheight = 3;
-		// gbcBtnPresentSelectedSong.ipadx = 20;
-		gbcBtnPresentSelectedSong.ipady = 80;
-		gbcBtnPresentSelectedSong.gridx = 2;
-		gbcBtnPresentSelectedSong.gridy = 0;
-		panelPresentationButtons.add(btnPresentSelectedSong, gbcBtnPresentSelectedSong);
+		GridBagConstraints gbcBtnShowLogo = new GridBagConstraints();
+		gbcBtnShowLogo.fill = GridBagConstraints.HORIZONTAL;
+		gbcBtnShowLogo.insets = new Insets(10, 0, 15, 0);
+		gbcBtnShowLogo.gridheight = 3;
+		// gbcBtnShowLogo.ipadx = 40;
+		gbcBtnShowLogo.ipady = 80;
+		gbcBtnShowLogo.gridx = 2;
+		gbcBtnShowLogo.gridy = 0;
+		btnShowLogo.setPreferredSize(new Dimension(64, 64));
+		panelPresentationButtons.add(btnShowLogo, gbcBtnShowLogo);
 		
 		JLabel lblSections = new JLabel("Sections:");
 		GridBagConstraints gbcLblSections = new GridBagConstraints();
@@ -2613,8 +2625,8 @@ public class MainWindow extends JFrame {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-						"/org/zephyrsoft/sdb2/icon-16.png"));
+				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+				"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {
