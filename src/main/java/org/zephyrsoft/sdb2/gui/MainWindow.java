@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -103,6 +104,7 @@ import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
+import org.zephyrsoft.sdb2.presenter.UIScroller;
 import org.zephyrsoft.util.CustomFileFilter;
 import org.zephyrsoft.util.ResourceTools;
 import org.zephyrsoft.util.StringTools;
@@ -123,7 +125,7 @@ import com.l2fprod.common.swing.JFontChooser;
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class MainWindow extends JFrame {
+public class MainWindow extends JFrame implements UIScroller {
 	
 	private static final String PROBLEM_WHILE_SAVING = "There was a problem while saving the data.\n\nPlease examine the log file at:\n";
 	
@@ -188,6 +190,7 @@ public class MainWindow extends JFrame {
 	private JButton btnUnselect;
 	private JButton btnDown;
 	private JPanel panelSectionButtons;
+	private List<PartButtonGroup> listSectionButtons = new LinkedList<>();
 	private GridBagConstraints panelSectionButtonsHints;
 	private GridBagConstraints panelSectionButtonsLastRowHints;
 	private JButton btnJumpToSelected;
@@ -231,6 +234,11 @@ public class MainWindow extends JFrame {
 	private JSpinner spinnerCountAsDisplayedAfter;
 	
 	private JButton saveButton;
+	
+	@Override
+	public List<PartButtonGroup> getUIParts() {
+		return listSectionButtons;
+	}
 	
 	private void afterConstruction() {
 		MainController.initAnimationTimer();
@@ -979,9 +987,15 @@ public class MainWindow extends JFrame {
 			List<AddressablePart> parts = controller.getParts();
 			int partIndex = 0;
 			for (AddressablePart part : parts) {
-				PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller);
+				PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller, this);
 				panelSectionButtons.add(buttonGroup, panelSectionButtonsHints);
+				listSectionButtons.add(buttonGroup);
 				partIndex++;
+			}
+			
+			// mark first line as active
+			if (!listSectionButtons.isEmpty()) {
+				listSectionButtons.get(0).setActiveLine(0);
 			}
 			
 			// add empty component to consume any space that is left (so the parts appear at the top of the scrollpane
@@ -1011,6 +1025,7 @@ public class MainWindow extends JFrame {
 	}
 	
 	private void clearSectionButtons() {
+		listSectionButtons.clear();
 		panelSectionButtons.removeAll();
 		panelSectionButtons.revalidate();
 		panelSectionButtons.repaint();

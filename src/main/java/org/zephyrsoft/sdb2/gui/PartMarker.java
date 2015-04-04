@@ -1,16 +1,16 @@
 /*
  * This file is part of the Song Database (SDB).
- *
+ * 
  * SDB is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- *
+ * 
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -18,6 +18,7 @@ package org.zephyrsoft.sdb2.gui;
 
 import java.awt.Color;
 import java.awt.Graphics;
+
 import javax.swing.JComponent;
 
 /**
@@ -32,13 +33,16 @@ public class PartMarker extends JComponent {
 	
 	private final Color color;
 	private final int margin;
+	private PartButtonGroup partButtonGroup;
 	private boolean drawArrow = false;
 	
-	public PartMarker(Color color, int margin) {
+	public PartMarker(Color color, int margin, PartButtonGroup partButtonGroup) {
 		this.color = color;
 		this.margin = margin;
+		this.partButtonGroup = partButtonGroup;
 	}
 	
+	/** for mouse-over effect */
 	public void setActive(boolean active) {
 		drawArrow = active;
 		repaint();
@@ -53,13 +57,15 @@ public class PartMarker extends JComponent {
 		int markerHeight = getHeight() - (2 * margin);
 		g.fillRect(markerStartX, margin, MARKER_WIDTH, markerHeight);
 		
+		// TODO paint marker if partButtonGroup.isActive() at line partButtonGroup.getActiveLine()
+		
 		if (drawArrow) {
 			// calculate position and size: use one third of the available space
 			int arrowStartX = markerStartX / 3;
 			int arrowWidthAndHeight = Math.min(getHeight(), arrowStartX);
 			int arrowStartY = margin + ((markerHeight - arrowWidthAndHeight) / 2);
-			g.fillPolygon(new int[] {arrowStartX, arrowStartX, arrowStartX + arrowWidthAndHeight}, new int[] {
-				arrowStartY, arrowStartY + arrowWidthAndHeight, (int) (arrowStartY + arrowWidthAndHeight * 0.5)}, 3);
+			g.fillPolygon(new int[] { arrowStartX, arrowStartX, arrowStartX + arrowWidthAndHeight }, new int[] {
+				arrowStartY, arrowStartY + arrowWidthAndHeight, (int) (arrowStartY + arrowWidthAndHeight * 0.5) }, 3);
 		}
 	}
 }

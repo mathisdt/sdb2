@@ -1,16 +1,16 @@
 /*
  * This file is part of the Song Database (SDB).
- *
+ * 
  * SDB is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- *
+ * 
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,15 +21,18 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
+
 import org.zephyrsoft.sdb2.model.AddressableLine;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.presenter.Scroller;
+import org.zephyrsoft.sdb2.presenter.UIScroller;
 
 /**
  * Button group for an {@link AddressablePart}.
@@ -43,16 +46,21 @@ public class PartButtonGroup extends JPanel {
 	private static final int MARGIN = 10;
 	
 	private Scroller scroller;
+	private UIScroller uiScroller;
 	private Integer partIndex;
 	private AddressablePart part;
 	private Color defaultForeground;
 	private PartMarker partMarker;
 	private JPanel lineButtons;
 	
-	public PartButtonGroup(AddressablePart part, Integer partIndex, Scroller scroller) {
+	private boolean active = false;
+	private int activeLine = 0;
+	
+	public PartButtonGroup(AddressablePart part, Integer partIndex, Scroller scroller, UIScroller uiScroller) {
 		this.part = part;
 		this.partIndex = partIndex;
 		this.scroller = scroller;
+		this.uiScroller = uiScroller;
 		
 		setLayout(new BorderLayout());
 		
@@ -60,7 +68,7 @@ public class PartButtonGroup extends JPanel {
 		add(lineButtons, BorderLayout.CENTER);
 		lineButtons.setLayout(new BoxLayout(lineButtons, BoxLayout.Y_AXIS));
 		
-		partMarker = new PartMarker(Color.WHITE, MARGIN);
+		partMarker = new PartMarker(Color.WHITE, MARGIN, this);
 		defaultForeground = partMarker.getForeground();
 		Dimension preferredSize = new Dimension(180, 10);
 		partMarker.setPreferredSize(preferredSize);
@@ -79,6 +87,7 @@ public class PartButtonGroup extends JPanel {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				PartButtonGroup.this.scroller.moveToPart(PartButtonGroup.this.partIndex);
+				setActiveLine(0);
 			}
 		};
 		MouseAdapter mouseOverListener = new MouseAdapter() {
@@ -105,6 +114,7 @@ public class PartButtonGroup extends JPanel {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				PartButtonGroup.this.scroller.moveToLine(PartButtonGroup.this.partIndex, lineIndex);
+				setActiveLine(lineIndex);
 			}
 			
 			@Override
@@ -137,5 +147,29 @@ public class PartButtonGroup extends JPanel {
 		return BorderFactory.createCompoundBorder(
 			BorderFactory.createMatteBorder(MARGIN / 2, MARGIN / 2, MARGIN / 2, MARGIN / 2, Color.WHITE),
 			BorderFactory.createEmptyBorder(MARGIN / 2, MARGIN / 2, MARGIN / 2, MARGIN / 2));
+	}
+	
+	protected void setActiveLine(int lineIndex) {
+		for (PartButtonGroup group : uiScroller.getUIParts()) {
+			group.setInactive();
+		}
+		active = true;
+		this.activeLine = lineIndex;
+		repaint();
+	}
+	
+	public void setInactive() {
+		if (active) {
+			active = false;
+			repaint();
+		}
+	}
+	
+	protected int getActiveLine() {
+		return activeLine;
+	}
+	
+	protected boolean isActive() {
+		return active;
 	}
 }
