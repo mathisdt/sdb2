@@ -41,6 +41,7 @@
 		<version.swingx>1.6.5-1</version.swingx>
 		<version.timingframework>7.3.1</version.timingframework>
 		<version.xstream>1.4.7</version.xstream>
+		<version.lucene>5.1.0</version.lucene>
 		<version.guava>17.0</version.guava>
 		<version.spring>4.0.5.RELEASE</version.spring>
 		<version.junit>4.11</version.junit>
@@ -93,6 +94,21 @@
 			<groupId>com.thoughtworks.xstream</groupId>
 			<artifactId>xstream</artifactId>
 			<version>${version.xstream}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>${version.lucene}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analyzers-common</artifactId>
+			<version>${version.lucene}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-queryparser</artifactId>
+			<version>${version.lucene}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>

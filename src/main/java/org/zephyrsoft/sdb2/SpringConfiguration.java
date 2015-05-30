@@ -20,6 +20,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.zephyrsoft.sdb2.gui.KeyboardShortcutManager;
 import org.zephyrsoft.sdb2.gui.MainWindow;
+import org.zephyrsoft.sdb2.model.Song;
+import org.zephyrsoft.sdb2.service.IndexerService;
+import org.zephyrsoft.sdb2.service.IndexerServiceImpl;
 
 /**
  * Configures the DI context.
@@ -28,14 +31,14 @@ import org.zephyrsoft.sdb2.gui.MainWindow;
  */
 @Configuration
 public class SpringConfiguration {
-
+	
 	@Bean
 	public StatisticsController statisticsController() {
 		StatisticsController statisticsController = new StatisticsController();
 		statisticsController.loadStatistics();
 		return statisticsController;
 	}
-
+	
 	@Bean
 	public MainController mainController() {
 		MainController mainController = new MainController(statisticsController());
@@ -43,14 +46,19 @@ public class SpringConfiguration {
 		mainController.loadSettings();
 		return mainController;
 	}
-
+	
 	@Bean
 	public KeyboardShortcutManager keyboardShortcutManager() {
 		return new KeyboardShortcutManager();
 	}
-
+	
+	@Bean
+	public IndexerService<Song> indexerService() {
+		return new IndexerServiceImpl();
+	}
+	
 	@Bean
 	public MainWindow mainWindow() {
-		return new MainWindow(mainController(), keyboardShortcutManager());
+		return new MainWindow(mainController(), keyboardShortcutManager(), indexerService());
 	}
 }

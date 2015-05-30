@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -98,15 +99,18 @@ import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.Song;
-import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.UIScroller;
+import org.zephyrsoft.sdb2.service.FieldName;
+import org.zephyrsoft.sdb2.service.IndexType;
+import org.zephyrsoft.sdb2.service.IndexerService;
 import org.zephyrsoft.util.CustomFileFilter;
 import org.zephyrsoft.util.ResourceTools;
+import org.zephyrsoft.util.SongsModelListener;
 import org.zephyrsoft.util.StringTools;
 import org.zephyrsoft.util.VersionTools;
 import org.zephyrsoft.util.VersionTools.VersionUpdate;
@@ -163,12 +167,14 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	private KeyboardShortcutManager keyboardShortcutManager;
 	private final MainController controller;
+	private IndexerService<Song> indexer;
 	
 	private SettingsModel settingsModel;
 	
 	private FixedWidthJList<Song> songsList;
 	private SongsModel songsModel;
 	private TransparentFilterableListModel<Song> songsListModel;
+	private Collection<Song> songsListFiltered;
 	private Song songsListSelected;
 	
 	private FixedWidthJList<Song> presentList;
@@ -444,6 +450,15 @@ public class MainWindow extends JFrame implements UIScroller {
 		songsListModel = songs.getFilterableListModel();
 		songsList.setModel(songsListModel);
 		
+		songsModel.addSongsModelListener(new SongsModelListener() {
+			@Override
+			public void songsModelChanged() {
+				indexAllSongs();
+			}
+		});
+		// start indexing once after initialization
+		indexAllSongs();
+		
 		// song list filtering
 		ListFilter<Song> filter = new ListFilter<Song>() {
 			@Override
@@ -452,27 +467,7 @@ public class MainWindow extends JFrame implements UIScroller {
 				if (StringTools.isBlank(filterText)) {
 					return true;
 				} else {
-					FilterTypeEnum filterType = (FilterTypeEnum) settingsModel.get(SettingKey.SONG_LIST_FILTER);
-					String toSearch = "";
-					switch (filterType) {
-						case ONLY_LYRICS:
-							toSearch = object.getLyrics();
-							break;
-						case ONLY_TITLE:
-							toSearch = object.getTitle();
-							break;
-						case TITLE_AND_FIRST_LYRICS_LINE:
-							toSearch = object.getTitle() + " " + SongParser.getFirstLyricsLine(object);
-							break;
-						case TITLE_AND_LYRICS:
-							toSearch = object.getTitle() + " " + object.getLyrics();
-							break;
-						default:
-							throw new IllegalStateException("unknown song list filter type");
-					}
-					return toSearch == null
-						|| StringTools.toEasilyComparable(toSearch).contains(
-							StringTools.toEasilyComparable(textFieldFilter.getText()));
+					return songsListFiltered.contains(object);
 				}
 			}
 		};
@@ -562,6 +557,11 @@ public class MainWindow extends JFrame implements UIScroller {
 			// TODO
 		}
 		setSettingsEnabled(false);
+	}
+	
+	private void indexAllSongs() {
+		indexer.empty(IndexType.ALL_SONGS);
+		indexer.index(IndexType.ALL_SONGS, songsModel.getSongs());
 	}
 	
 	/**
@@ -755,6 +755,8 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	private void applyFilter() {
 		saveSong();
+		FieldName[] fieldsToSearch = ((FilterTypeEnum) settingsModel.get(SettingKey.SONG_LIST_FILTER)).getFields();
+		songsListFiltered = indexer.search(IndexType.ALL_SONGS, textFieldFilter.getText(), fieldsToSearch);
 		songsListModel.refilter();
 		songsListSelected = songsList.getSelectedValue();
 		loadSong();
@@ -1174,9 +1176,11 @@ public class MainWindow extends JFrame implements UIScroller {
 		}
 	}
 	
-	public MainWindow(MainController mainController, KeyboardShortcutManager keyboardShortcutManager) {
+	public MainWindow(MainController mainController, KeyboardShortcutManager keyboardShortcutManager,
+		IndexerService<Song> indexer) {
 		controller = mainController;
 		this.keyboardShortcutManager = keyboardShortcutManager;
+		this.indexer = indexer;
 		setIconImages(getIconsFromResources(getClass()));
 		setTitle("Song Database");
 		defineShortcuts();
@@ -1272,16 +1276,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-		.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				try {
-					handleSongsListSelectionChanged(e);
-				} catch (Throwable ex) {
-					handleError(ex);
+			.addListSelectionListener(new ListSelectionListener() {
+				@Override
+				public void valueChanged(ListSelectionEvent e) {
+					try {
+						handleSongsListSelectionChanged(e);
+					} catch (Throwable ex) {
+						handleError(ex);
+					}
 				}
-			}
-		});
+			});
 		scrollPaneSongList.setViewportView(songsList);
 		songsList.setCellRenderer(new SongCellRenderer());
 		
@@ -1400,7 +1404,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			}
 		});
 		editorLyrics
-		.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
+			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
 		
@@ -2660,8 +2664,8 @@ public class MainWindow extends JFrame implements UIScroller {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-						"/org/zephyrsoft/sdb2/icon-16.png"));
+				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+				"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {

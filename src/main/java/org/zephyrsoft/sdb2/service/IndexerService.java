@@ -14,25 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.model;
+package org.zephyrsoft.sdb2.service;
 
-import org.zephyrsoft.sdb2.service.FieldName;
+import java.util.Collection;
+import java.util.List;
 
 /**
- * Determines on which data the song list filter should operate.
+ * Indexing allows faster access when searching.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public enum FilterTypeEnum {
-	ONLY_TITLE(FieldName.TITLE), TITLE_AND_LYRICS(FieldName.TITLE, FieldName.LYRICS), ONLY_LYRICS(FieldName.LYRICS);
+public interface IndexerService<T> {
 	
-	private FieldName[] fields;
+	void index(IndexType indexType, Collection<T> toIndex);
 	
-	private FilterTypeEnum(FieldName... fields) {
-		this.fields = fields;
-	}
+	void empty(IndexType indexType);
 	
-	public FieldName[] getFields() {
-		return fields;
-	}
+	List<T> search(IndexType indexType, String searchString, FieldName... fieldsToSearchIn);
+	
 }
