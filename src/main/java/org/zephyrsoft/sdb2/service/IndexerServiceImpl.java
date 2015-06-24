@@ -87,11 +87,13 @@ public class IndexerServiceImpl implements IndexerService<Song> {
 	private Document createDocument(Song song) {
 		Document document = new Document();
 		document.add(new StringField(FieldName.UUID.name(), song.getUUID(), Store.YES));
-		document.add(new TextField(FieldName.TITLE.name(), song.getTitle().replaceAll(SIMPLIFY_INDEXING_REGEX, " "),
-			Store.NO));
-		document.add(new TextField(FieldName.LYRICS.name(), song.getLyrics().replaceAll(SIMPLIFY_INDEXING_REGEX, " "),
-			Store.NO));
+		document.add(new TextField(FieldName.TITLE.name(), simplify(song.getTitle()), Store.NO));
+		document.add(new TextField(FieldName.LYRICS.name(), simplify(song.getLyrics()), Store.NO));
 		return document;
+	}
+	
+	private String simplify(String content) {
+		return content == null ? "" : content.replaceAll(SIMPLIFY_INDEXING_REGEX, " ");
 	}
 	
 	@Override
@@ -105,17 +107,19 @@ public class IndexerServiceImpl implements IndexerService<Song> {
 				new StandardAnalyzer(new CharArraySet(0, true)));
 			queryParser.setAllowLeadingWildcard(true);
 			BooleanQuery outerBooleanQuery = new BooleanQuery();
+			// TODO input "aaa bbb" should return "aaa,<TAB><NEWLINE>bbb" - but not "bbb aaa" or "aaa ccc bbb"
 			for (FieldName field : fieldsToSearchIn) {
-				BooleanQuery innerBooleanQuery = new BooleanQuery();
+				StringBuilder queryTerm = new StringBuilder();
+				queryTerm.append(field.name()).append(":*");
 				for (String searchTerm : searchString.split(TERM_SPLIT_REGEX)) {
-					Query query = queryParser.parse(field.name() + ":*" + searchTerm + "*");
-					innerBooleanQuery.add(query, Occur.MUST);
+					queryTerm.append(searchTerm).append("*");
 				}
-				outerBooleanQuery.add(innerBooleanQuery, Occur.SHOULD);
+				Query query = queryParser.parse(queryTerm.toString());
+				outerBooleanQuery.add(query, Occur.SHOULD);
 			}
 			TopDocs hits = indexSearcher.search(outerBooleanQuery, Integer.MAX_VALUE);
 			
-			LOG.debug("{} hits for filter {}", hits.totalHits, searchString);
+			LOG.debug("{} hits for filter \"{}\"", hits.totalHits, searchString);
 			
 			List<Song> ret = new LinkedList<>();
 			for (ScoreDoc scoreDocument : hits.scoreDocs) {
