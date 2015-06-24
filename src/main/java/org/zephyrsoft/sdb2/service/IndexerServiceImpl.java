@@ -26,8 +26,6 @@ import java.util.Map;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.SimpleAnalyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.analysis.util.CharArraySet;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
@@ -36,11 +34,11 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
@@ -103,23 +101,18 @@ public class IndexerServiceImpl implements IndexerService<Song> {
 			IndexReader indexReader = DirectoryReader.open(directory);
 			IndexSearcher indexSearcher = new IndexSearcher(indexReader);
 			
-			QueryParser queryParser = new QueryParser(FieldName.LYRICS.name(),
-				new StandardAnalyzer(new CharArraySet(0, true)));
-			queryParser.setAllowLeadingWildcard(true);
 			BooleanQuery outerBooleanQuery = new BooleanQuery();
-			// TODO input "aaa bbb" should return "aaa,<TAB><NEWLINE>bbb" - but not "bbb aaa" or "aaa ccc bbb"
 			for (FieldName field : fieldsToSearchIn) {
-				StringBuilder queryTerm = new StringBuilder();
-				queryTerm.append(field.name()).append(":*");
-				for (String searchTerm : searchString.split(TERM_SPLIT_REGEX)) {
-					queryTerm.append(searchTerm).append("*");
+				// TODO match also parts of terms, at least at the end of the phrase!
+				PhraseQuery query = new PhraseQuery();
+				for (String searchTerm : searchString.toLowerCase().split(TERM_SPLIT_REGEX)) {
+					query.add(new Term(field.name(), searchTerm));
 				}
-				Query query = queryParser.parse(queryTerm.toString());
 				outerBooleanQuery.add(query, Occur.SHOULD);
 			}
 			TopDocs hits = indexSearcher.search(outerBooleanQuery, Integer.MAX_VALUE);
 			
-			LOG.debug("{} hits for filter \"{}\"", hits.totalHits, searchString);
+			LOG.debug("{} hits for filter \"{}\"", hits.totalHits, outerBooleanQuery);
 			
 			List<Song> ret = new LinkedList<>();
 			for (ScoreDoc scoreDocument : hits.scoreDocs) {
