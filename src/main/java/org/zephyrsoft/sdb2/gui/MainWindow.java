@@ -798,19 +798,58 @@ public class MainWindow extends JFrame implements UIScroller {
 	 */
 	private synchronized void saveSongData(Song song) {
 		LOG.debug("saveSongData");
-		song.setLyrics(editorLyrics.getText());
-		song.setTitle(textFieldTitle.getText());
-		song.setLanguage((LanguageEnum) comboBoxLanguage.getSelectedItem());
-		song.setTonality(textFieldTonality.getText());
-		song.setComposer(textFieldComposer.getText());
-		song.setAuthorText(textFieldAuthorText.getText());
-		song.setAuthorTranslation(textFieldAuthorTranslation.getText());
-		song.setPublisher(textFieldPublisher.getText());
-		song.setAdditionalCopyrightNotes(textFieldAdditionalCopyrightNotes.getText());
-		song.setSongNotes(textFieldSongNotes.getText());
-		song.setChordSequence(editorChordSequence.getText());
-		// now put the songs in the right order again (the title could be edited)
-		songsModel.sortAndUpdateView();
+		
+		boolean dataChanged = false;
+		
+		if (!StringTools.equals(song.getLyrics(), editorLyrics.getText())) {
+			song.setLyrics(editorLyrics.getText());
+			dataChanged = true;
+		}
+		if (!StringTools.equals(song.getTitle(), textFieldTitle.getText())) {
+			song.setTitle(textFieldTitle.getText());
+			dataChanged = true;
+		}
+		if (song.getLanguage() != (LanguageEnum) comboBoxLanguage.getSelectedItem()) {
+			song.setLanguage((LanguageEnum) comboBoxLanguage.getSelectedItem());
+			dataChanged = true;
+		}
+		if (!StringTools.equals(song.getTonality(), textFieldTonality.getText())) {
+			song.setTonality(textFieldTonality.getText());
+			dataChanged = true;
+		}
+		if (!StringTools.equals(song.getComposer(), textFieldComposer.getText())) {
+			song.setComposer(textFieldComposer.getText());
+			dataChanged = true;
+		}
+		if (!StringTools.equals(song.getAuthorText(), textFieldAuthorText.getText())) {
+			song.setAuthorText(textFieldAuthorText.getText());
+			dataChanged = true;
+		}
+		if (!StringTools.equals(song.getAuthorTranslation(), textFieldAuthorTranslation.getText())) {
+			song.setAuthorTranslation(textFieldAuthorTranslation.getText());
+			dataChanged = true;
+		}
+		if (!StringTools.equals(song.getPublisher(), textFieldPublisher.getText())) {
+			song.setPublisher(textFieldPublisher.getText());
+			dataChanged = true;
+		}
+		if (!StringTools.equals(song.getAdditionalCopyrightNotes(), textFieldAdditionalCopyrightNotes.getText())) {
+			song.setAdditionalCopyrightNotes(textFieldAdditionalCopyrightNotes.getText());
+			dataChanged = true;
+		}
+		if (!StringTools.equals(song.getSongNotes(), textFieldSongNotes.getText())) {
+			song.setSongNotes(textFieldSongNotes.getText());
+			dataChanged = true;
+		}
+		if (!StringTools.equals(song.getChordSequence(), editorChordSequence.getText())) {
+			song.setChordSequence(editorChordSequence.getText());
+			dataChanged = true;
+		}
+		
+		if (dataChanged) {
+			// put the songs in the right order again
+			songsModel.sortAndUpdateView();
+		}
 	}
 	
 	/**
@@ -1276,16 +1315,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-			.addListSelectionListener(new ListSelectionListener() {
-				@Override
-				public void valueChanged(ListSelectionEvent e) {
-					try {
-						handleSongsListSelectionChanged(e);
-					} catch (Throwable ex) {
-						handleError(ex);
-					}
+		.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				try {
+					handleSongsListSelectionChanged(e);
+				} catch (Throwable ex) {
+					handleError(ex);
 				}
-			});
+			}
+		});
 		scrollPaneSongList.setViewportView(songsList);
 		songsList.setCellRenderer(new SongCellRenderer());
 		
@@ -1404,7 +1443,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			}
 		});
 		editorLyrics
-			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
+		.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
 		
@@ -2664,8 +2703,8 @@ public class MainWindow extends JFrame implements UIScroller {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-16.png"));
+					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+						"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {

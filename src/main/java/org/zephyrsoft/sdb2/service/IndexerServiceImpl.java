@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.core.SimpleAnalyzer;
+import org.apache.lucene.analysis.custom.CustomAnalyzer;
+import org.apache.lucene.analysis.util.TokenFilterFactory;
+import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
@@ -47,6 +49,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.Song;
 
+import com.google.common.base.Stopwatch;
+
 /**
  * An in-memory index based on Lucene.
  * 
@@ -64,21 +68,36 @@ public class IndexerServiceImpl implements IndexerService<Song> {
 	
 	@Override
 	public void index(IndexType indexType, Collection<Song> songs) {
+		Stopwatch stopwatch = Stopwatch.createStarted();
+		
 		Directory directory = indexes.get(indexType);
 		if (directory == null) {
 			directory = new RAMDirectory();
 			indexes.put(indexType, directory);
 		}
-		Analyzer analyzer = new SimpleAnalyzer();
-		IndexWriterConfig config = new IndexWriterConfig(analyzer);
-		try (IndexWriter writer = new IndexWriter(directory, config)) {
-			for (Song song : songs) {
-				Document document = createDocument(song);
-				writer.addDocument(document);
-				songByUuid.put(song.getUUID(), song);
+		try {
+			LOG.debug("available tokenizers: {}", TokenizerFactory.availableTokenizers());
+			LOG.debug("available token filters: {}", TokenFilterFactory.availableTokenFilters());
+			Analyzer analyzer = CustomAnalyzer.builder()
+				.withTokenizer("standard")
+				.addTokenFilter("lowercase")
+				.addTokenFilter("ngram", "minGramSize", "1", "maxGramSize", "25")
+				.build();
+			IndexWriterConfig config = new IndexWriterConfig(analyzer);
+			try (IndexWriter writer = new IndexWriter(directory, config)) {
+				for (Song song : songs) {
+					Document document = createDocument(song);
+					writer.addDocument(document);
+					songByUuid.put(song.getUUID(), song);
+				}
+			} catch (IOException e) {
+				LOG.warn("couldn't index songs", e);
 			}
-		} catch (IOException e) {
-			LOG.warn("couldn't index songs", e);
+		} catch (IOException e1) {
+			LOG.warn("couldn't create analyzer", e1);
+		} finally {
+			stopwatch.stop();
+			LOG.info("indexing songs took {}", stopwatch.toString());
 		}
 	}
 	
