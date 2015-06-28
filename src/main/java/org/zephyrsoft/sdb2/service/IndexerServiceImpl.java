@@ -85,13 +85,6 @@ public class IndexerServiceImpl implements IndexerService<Song> {
 	}
 	
 	@Override
-	public void empty(IndexType indexType) {
-		synchronized (INDEXES_LOCK) {
-			indexes.remove(indexType);
-		}
-	}
-	
-	@Override
 	public void index(final IndexType indexType, final Collection<Song> songs) {
 		executor.execute(new Runnable() {
 			@Override

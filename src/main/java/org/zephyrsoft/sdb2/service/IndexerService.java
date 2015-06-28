@@ -28,8 +28,6 @@ public interface IndexerService<T> {
 	
 	void index(IndexType indexType, Collection<T> toIndex);
 	
-	void empty(IndexType indexType);
-	
 	List<T> search(IndexType indexType, String searchString, FieldName... fieldsToSearchIn);
 	
 }

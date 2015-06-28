@@ -560,7 +560,6 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	private void indexAllSongs() {
-		indexer.empty(IndexType.ALL_SONGS);
 		indexer.index(IndexType.ALL_SONGS, songsModel.getSongs());
 	}
 	
@@ -841,7 +840,8 @@ public class MainWindow extends JFrame implements UIScroller {
 			LOG.debug("changed song attribute: Publisher");
 			dataChanged = true;
 		}
-		if (!StringTools.equalsWithNullAsEmpty(song.getAdditionalCopyrightNotes(), textFieldAdditionalCopyrightNotes.getText())) {
+		if (!StringTools.equalsWithNullAsEmpty(song.getAdditionalCopyrightNotes(), textFieldAdditionalCopyrightNotes
+			.getText())) {
 			song.setAdditionalCopyrightNotes(textFieldAdditionalCopyrightNotes.getText());
 			LOG.debug("changed song attribute: AdditionalCopyrightNotes");
 			dataChanged = true;
@@ -1326,16 +1326,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-			.addListSelectionListener(new ListSelectionListener() {
-				@Override
-				public void valueChanged(ListSelectionEvent e) {
-					try {
-						handleSongsListSelectionChanged(e);
-					} catch (Throwable ex) {
-						handleError(ex);
-					}
+		.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				try {
+					handleSongsListSelectionChanged(e);
+				} catch (Throwable ex) {
+					handleError(ex);
 				}
-			});
+			}
+		});
 		scrollPaneSongList.setViewportView(songsList);
 		songsList.setCellRenderer(new SongCellRenderer());
 		
@@ -1454,7 +1454,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			}
 		});
 		editorLyrics
-			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
+		.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
 		
@@ -2714,8 +2714,8 @@ public class MainWindow extends JFrame implements UIScroller {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-16.png"));
+					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+						"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {
