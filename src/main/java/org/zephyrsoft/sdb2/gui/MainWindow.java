@@ -797,52 +797,63 @@ public class MainWindow extends JFrame implements UIScroller {
 	 *            the songsModel object to which the data should be written
 	 */
 	private synchronized void saveSongData(Song song) {
-		LOG.debug("saveSongData");
+		LOG.debug("saveSongData: {}", song.getTitle());
 		
 		boolean dataChanged = false;
 		
-		if (!StringTools.equals(song.getLyrics(), editorLyrics.getText())) {
+		if (!StringTools.equalsWithNullAsEmpty(song.getLyrics(), editorLyrics.getText())) {
 			song.setLyrics(editorLyrics.getText());
+			LOG.debug("changed song attribute: Lyrics");
 			dataChanged = true;
 		}
-		if (!StringTools.equals(song.getTitle(), textFieldTitle.getText())) {
+		if (!StringTools.equalsWithNullAsEmpty(song.getTitle(), textFieldTitle.getText())) {
 			song.setTitle(textFieldTitle.getText());
+			LOG.debug("changed song attribute: Title");
 			dataChanged = true;
 		}
 		if (song.getLanguage() != (LanguageEnum) comboBoxLanguage.getSelectedItem()) {
 			song.setLanguage((LanguageEnum) comboBoxLanguage.getSelectedItem());
+			LOG.debug("changed song attribute: Language");
 			dataChanged = true;
 		}
-		if (!StringTools.equals(song.getTonality(), textFieldTonality.getText())) {
+		if (!StringTools.equalsWithNullAsEmpty(song.getTonality(), textFieldTonality.getText())) {
 			song.setTonality(textFieldTonality.getText());
+			LOG.debug("changed song attribute: Tonality");
 			dataChanged = true;
 		}
-		if (!StringTools.equals(song.getComposer(), textFieldComposer.getText())) {
+		if (!StringTools.equalsWithNullAsEmpty(song.getComposer(), textFieldComposer.getText())) {
 			song.setComposer(textFieldComposer.getText());
+			LOG.debug("changed song attribute: Composer");
 			dataChanged = true;
 		}
-		if (!StringTools.equals(song.getAuthorText(), textFieldAuthorText.getText())) {
+		if (!StringTools.equalsWithNullAsEmpty(song.getAuthorText(), textFieldAuthorText.getText())) {
 			song.setAuthorText(textFieldAuthorText.getText());
+			LOG.debug("changed song attribute: AuthorText");
 			dataChanged = true;
 		}
-		if (!StringTools.equals(song.getAuthorTranslation(), textFieldAuthorTranslation.getText())) {
+		if (!StringTools.equalsWithNullAsEmpty(song.getAuthorTranslation(), textFieldAuthorTranslation.getText())) {
 			song.setAuthorTranslation(textFieldAuthorTranslation.getText());
+			LOG.debug("changed song attribute: AuthorTranslation");
 			dataChanged = true;
 		}
-		if (!StringTools.equals(song.getPublisher(), textFieldPublisher.getText())) {
+		if (!StringTools.equalsWithNullAsEmpty(song.getPublisher(), textFieldPublisher.getText())) {
 			song.setPublisher(textFieldPublisher.getText());
+			LOG.debug("changed song attribute: Publisher");
 			dataChanged = true;
 		}
-		if (!StringTools.equals(song.getAdditionalCopyrightNotes(), textFieldAdditionalCopyrightNotes.getText())) {
+		if (!StringTools.equalsWithNullAsEmpty(song.getAdditionalCopyrightNotes(), textFieldAdditionalCopyrightNotes.getText())) {
 			song.setAdditionalCopyrightNotes(textFieldAdditionalCopyrightNotes.getText());
+			LOG.debug("changed song attribute: AdditionalCopyrightNotes");
 			dataChanged = true;
 		}
-		if (!StringTools.equals(song.getSongNotes(), textFieldSongNotes.getText())) {
+		if (!StringTools.equalsWithNullAsEmpty(song.getSongNotes(), textFieldSongNotes.getText())) {
 			song.setSongNotes(textFieldSongNotes.getText());
+			LOG.debug("changed song attribute: SongNotes");
 			dataChanged = true;
 		}
-		if (!StringTools.equals(song.getChordSequence(), editorChordSequence.getText())) {
+		if (!StringTools.equalsWithNullAsEmpty(song.getChordSequence(), editorChordSequence.getText())) {
 			song.setChordSequence(editorChordSequence.getText());
+			LOG.debug("changed song attribute: ChordSequence");
 			dataChanged = true;
 		}
 		
@@ -896,7 +907,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	 *            the songsModel object which should be read
 	 */
 	private synchronized void loadSongData(final Song song) {
-		LOG.debug("loadSongData");
+		LOG.debug("loadSongData: {}", song.getTitle());
 		setTextAndRewind(editorLyrics, song.getLyrics());
 		setTextAndRewind(textFieldTitle, song.getTitle());
 		comboBoxLanguage.setSelectedItem(song.getLanguage());
@@ -1315,16 +1326,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-		.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				try {
-					handleSongsListSelectionChanged(e);
-				} catch (Throwable ex) {
-					handleError(ex);
+			.addListSelectionListener(new ListSelectionListener() {
+				@Override
+				public void valueChanged(ListSelectionEvent e) {
+					try {
+						handleSongsListSelectionChanged(e);
+					} catch (Throwable ex) {
+						handleError(ex);
+					}
 				}
-			}
-		});
+			});
 		scrollPaneSongList.setViewportView(songsList);
 		songsList.setCellRenderer(new SongCellRenderer());
 		
@@ -1443,7 +1454,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			}
 		});
 		editorLyrics
-		.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
+			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
 		
@@ -2703,8 +2714,8 @@ public class MainWindow extends JFrame implements UIScroller {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-						"/org/zephyrsoft/sdb2/icon-16.png"));
+				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+				"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {

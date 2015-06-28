@@ -22,5 +22,17 @@ package org.zephyrsoft.sdb2.service;
  * @author Mathis Dirksen-Thedens
  */
 public enum FieldName {
-	UUID, TITLE, LYRICS;
+	
+	UUID(1), TITLE(2), LYRICS(1);
+	
+	private float boost;
+	
+	public float getBoost() {
+		return boost;
+	}
+	
+	private FieldName(float boost) {
+		this.boost = boost;
+	}
+	
 }

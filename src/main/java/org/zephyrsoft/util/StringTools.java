@@ -20,6 +20,7 @@ import java.text.Collator;
 import java.util.Locale;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
 
 /**
@@ -30,18 +31,18 @@ import org.apache.commons.lang3.text.WordUtils;
  * @author Mathis Dirksen-Thedens
  */
 public final class StringTools {
-
+	
 	private StringTools() {
 		// this class is not intended for instantiation
 	}
-
+	
 	/**
 	 * Create a random UUID value.
 	 */
 	public static String createUUID() {
 		return UUID.randomUUID().toString();
 	}
-
+	
 	/**
 	 * Convert a string to an easily comparable form, especially remove all punctuation and newline characters.
 	 * 
@@ -56,7 +57,7 @@ public final class StringTools {
 			return in.replaceAll("[^\\wäöüÄÖÜß]", " ").replaceAll("  ", " ").toLowerCase();
 		}
 	}
-
+	
 	/**
 	 * Convert a string which is in camel case to all caps, separated with underscores. Example:
 	 * "camelCaseStringExample" => "CAMEL_CASE_STRING_EXAMPLE"
@@ -73,7 +74,7 @@ public final class StringTools {
 				.replaceAll("([a-z\\d])([A-Z])", "$1_$2").toUpperCase(Locale.ENGLISH);
 		}
 	}
-
+	
 	/**
 	 * Convert a string which is separated with underscores to camel case. Example: "UNDERSCORED_STRING_EXAMPLE" =>
 	 * "underscoredStringExample"
@@ -91,7 +92,7 @@ public final class StringTools {
 			return ret;
 		}
 	}
-
+	
 	/**
 	 * Compare two Strings with special care. If one of the Strings is {@code null}, it is assumed "smaller" than the
 	 * non-null String.
@@ -117,7 +118,7 @@ public final class StringTools {
 			throw new IllegalStateException();
 		}
 	}
-
+	
 	/**
 	 * Compare two Strings with regards to the current default locale. If one of the Strings is {@code null}, it is
 	 * assumed "smaller" than the non-null String.
@@ -144,7 +145,7 @@ public final class StringTools {
 			throw new IllegalStateException();
 		}
 	}
-
+	
 	/**
 	 * A sibling of {@link String#replaceAll(String, String)} but without regex interpretation.
 	 * 
@@ -164,7 +165,7 @@ public final class StringTools {
 		}
 		return ret;
 	}
-
+	
 	/**
 	 * Makes sure that a {@link String} does have a specific number of characters at maximum.
 	 * 
@@ -181,7 +182,7 @@ public final class StringTools {
 			return in.substring(0, maxlength - 3) + "...";
 		}
 	}
-
+	
 	/**
 	 * Repeat a {@link String}.
 	 * 
@@ -198,7 +199,7 @@ public final class StringTools {
 		}
 		return ret.toString();
 	}
-
+	
 	/**
 	 * Trim only the right side of a {@link String}.
 	 * 
@@ -209,7 +210,7 @@ public final class StringTools {
 	public static String rightTrim(String in) {
 		return "X".concat(in).trim().substring(1);
 	}
-
+	
 	/**
 	 * A sibling of the {@link String#contains(CharSequence)} method, but ignorant of casing.
 	 * 
@@ -222,7 +223,7 @@ public final class StringTools {
 	public static boolean containsIgnoreCase(String haystack, String needle) {
 		return haystack.toLowerCase().contains(needle.toLowerCase());
 	}
-
+	
 	/**
 	 * Equals method capable of handling null values.
 	 * 
@@ -236,7 +237,21 @@ public final class StringTools {
 	public static boolean equals(String one, String two) {
 		return (one == null && two == null) || (one != null && one.equals(two));
 	}
-
+	
+	/**
+	 * Equals method capable of handling null values. {@code null} values are treated as equal to empty strings.
+	 * 
+	 * @param one
+	 *            first string
+	 * @param two
+	 *            second string
+	 * @return {@code true} if both strings are ({@code null} or an empty string) or if they are equal via
+	 *         {@link String#equals(Object)} method, {@code false} else
+	 */
+	public static boolean equalsWithNullAsEmpty(String one, String two) {
+		return (StringUtils.isEmpty(one) && StringUtils.isEmpty(two)) || (one != null && one.equals(two));
+	}
+	
 	/**
 	 * Tests is a string is null or empty.
 	 * 
@@ -247,7 +262,7 @@ public final class StringTools {
 	public static boolean isEmpty(String toTest) {
 		return toTest == null || toTest.isEmpty();
 	}
-
+	
 	/**
 	 * Returns exactly the argument, unless the argument is {@code null}. In this case, this method returns the empty
 	 * string.
@@ -263,7 +278,7 @@ public final class StringTools {
 			return in;
 		}
 	}
-
+	
 	/**
 	 * Tests is a string is null, empty or only contains whitespace.
 	 * 

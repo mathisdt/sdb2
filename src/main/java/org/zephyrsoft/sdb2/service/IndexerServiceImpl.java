@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
@@ -64,41 +66,66 @@ public class IndexerServiceImpl implements IndexerService<Song> {
 	private static final String TERM_SPLIT_REGEX = "[- .,;:_/+'\"!?()\\[\\]]++";
 	
 	private Map<String, Song> songByUuid = new HashMap<>();
-	private Map<IndexType, Directory> indexes = new HashMap<>();
 	
-	@Override
-	public void index(IndexType indexType, Collection<Song> songs) {
-		Stopwatch stopwatch = Stopwatch.createStarted();
-		
-		Directory directory = indexes.get(indexType);
-		if (directory == null) {
-			directory = new RAMDirectory();
+	private Map<IndexType, Directory> indexes = new HashMap<>();
+	private static final Object INDEXES_LOCK = new Object();
+	
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
+	
+	private Directory getIndex(IndexType indexType) {
+		synchronized (INDEXES_LOCK) {
+			return indexes.get(indexType);
+		}
+	}
+	
+	private void putIndex(IndexType indexType, Directory directory) {
+		synchronized (INDEXES_LOCK) {
 			indexes.put(indexType, directory);
 		}
-		try {
-			LOG.debug("available tokenizers: {}", TokenizerFactory.availableTokenizers());
-			LOG.debug("available token filters: {}", TokenFilterFactory.availableTokenFilters());
-			Analyzer analyzer = CustomAnalyzer.builder()
-				.withTokenizer("standard")
-				.addTokenFilter("lowercase")
-				.addTokenFilter("ngram", "minGramSize", "1", "maxGramSize", "25")
-				.build();
-			IndexWriterConfig config = new IndexWriterConfig(analyzer);
-			try (IndexWriter writer = new IndexWriter(directory, config)) {
-				for (Song song : songs) {
-					Document document = createDocument(song);
-					writer.addDocument(document);
-					songByUuid.put(song.getUUID(), song);
-				}
-			} catch (IOException e) {
-				LOG.warn("couldn't index songs", e);
-			}
-		} catch (IOException e1) {
-			LOG.warn("couldn't create analyzer", e1);
-		} finally {
-			stopwatch.stop();
-			LOG.info("indexing songs took {}", stopwatch.toString());
+	}
+	
+	@Override
+	public void empty(IndexType indexType) {
+		synchronized (INDEXES_LOCK) {
+			indexes.remove(indexType);
 		}
+	}
+	
+	@Override
+	public void index(final IndexType indexType, final Collection<Song> songs) {
+		executor.execute(new Runnable() {
+			@Override
+			public void run() {
+				Stopwatch stopwatch = Stopwatch.createStarted();
+				
+				Directory directory = new RAMDirectory();
+				try {
+					LOG.debug("available tokenizers: {}", TokenizerFactory.availableTokenizers());
+					LOG.debug("available token filters: {}", TokenFilterFactory.availableTokenFilters());
+					Analyzer analyzer = CustomAnalyzer.builder()
+						.withTokenizer("standard")
+						.addTokenFilter("lowercase")
+						.addTokenFilter("ngram", "minGramSize", "1", "maxGramSize", "25")
+						.build();
+					IndexWriterConfig config = new IndexWriterConfig(analyzer);
+					try (IndexWriter writer = new IndexWriter(directory, config)) {
+						for (Song song : songs) {
+							Document document = createDocument(song);
+							writer.addDocument(document);
+							songByUuid.put(song.getUUID(), song);
+						}
+					} catch (IOException e) {
+						LOG.warn("couldn't index songs", e);
+					}
+				} catch (IOException e1) {
+					LOG.warn("couldn't create analyzer", e1);
+				} finally {
+					putIndex(indexType, directory);
+					stopwatch.stop();
+					LOG.info("indexing songs in background thread took {}", stopwatch.toString());
+				}
+			}
+		});
 	}
 	
 	private Document createDocument(Song song) {
@@ -116,17 +143,17 @@ public class IndexerServiceImpl implements IndexerService<Song> {
 	@Override
 	public List<Song> search(IndexType indexType, String searchString, FieldName... fieldsToSearchIn) {
 		try {
-			Directory directory = indexes.get(indexType);
+			Directory directory = getIndex(indexType);
 			IndexReader indexReader = DirectoryReader.open(directory);
 			IndexSearcher indexSearcher = new IndexSearcher(indexReader);
 			
 			BooleanQuery outerBooleanQuery = new BooleanQuery();
 			for (FieldName field : fieldsToSearchIn) {
-				// TODO match also parts of terms, at least at the end of the phrase!
 				PhraseQuery query = new PhraseQuery();
 				for (String searchTerm : searchString.toLowerCase().split(TERM_SPLIT_REGEX)) {
 					query.add(new Term(field.name(), searchTerm));
 				}
+				query.setBoost(field.getBoost());
 				outerBooleanQuery.add(query, Occur.SHOULD);
 			}
 			TopDocs hits = indexSearcher.search(outerBooleanQuery, Integer.MAX_VALUE);
@@ -145,11 +172,6 @@ public class IndexerServiceImpl implements IndexerService<Song> {
 			LOG.warn("problem while searching", e);
 			return new ArrayList<>(0);
 		}
-	}
-	
-	@Override
-	public void empty(IndexType indexType) {
-		indexes.remove(indexType);
 	}
 	
 }
