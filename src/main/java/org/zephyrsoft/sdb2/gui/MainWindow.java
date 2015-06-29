@@ -241,6 +241,8 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	private JButton saveButton;
 	
+	private SongCellRenderer songCellRenderer;
+	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
 		return listSectionButtons;
@@ -1326,18 +1328,19 @@ public class MainWindow extends JFrame implements UIScroller {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-		.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				try {
-					handleSongsListSelectionChanged(e);
-				} catch (Throwable ex) {
-					handleError(ex);
+			.addListSelectionListener(new ListSelectionListener() {
+				@Override
+				public void valueChanged(ListSelectionEvent e) {
+					try {
+						handleSongsListSelectionChanged(e);
+					} catch (Throwable ex) {
+						handleError(ex);
+					}
 				}
-			}
-		});
+			});
 		scrollPaneSongList.setViewportView(songsList);
-		songsList.setCellRenderer(new SongCellRenderer());
+		songCellRenderer = new SongCellRenderer(textFieldFilter);
+		songsList.setCellRenderer(songCellRenderer);
 		
 		JPanel panelSongListButtons = new JPanel();
 		panelSongList.add(panelSongListButtons, BorderLayout.SOUTH);
@@ -1454,7 +1457,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			}
 		});
 		editorLyrics
-		.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
+			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
 		
@@ -1793,7 +1796,7 @@ public class MainWindow extends JFrame implements UIScroller {
 				}
 			}
 		});
-		presentList.setCellRenderer(new SongCellRenderer());
+		presentList.setCellRenderer(songCellRenderer);
 		scrollPanePresentSongList.setViewportView(presentList);
 		
 		selectedSongListButtons = new JPanel();
@@ -2714,8 +2717,8 @@ public class MainWindow extends JFrame implements UIScroller {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-						"/org/zephyrsoft/sdb2/icon-16.png"));
+				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+				"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {

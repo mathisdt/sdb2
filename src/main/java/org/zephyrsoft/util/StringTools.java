@@ -253,7 +253,7 @@ public final class StringTools {
 	}
 	
 	/**
-	 * Tests is a string is null or empty.
+	 * Tests if a string is null or empty.
 	 * 
 	 * @param toTest
 	 *            the string to test

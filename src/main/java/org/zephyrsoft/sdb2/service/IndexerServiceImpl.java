@@ -63,7 +63,7 @@ public class IndexerServiceImpl implements IndexerService<Song> {
 	private static final Logger LOG = LoggerFactory.getLogger(IndexerServiceImpl.class);
 	
 	private static final String SIMPLIFY_INDEXING_REGEX = "[-\r\n\t.,;:_/+'\"!?()\\[\\]]++";
-	private static final String TERM_SPLIT_REGEX = "[- .,;:_/+'\"!?()\\[\\]]++";
+	public static final String TERM_SPLIT_REGEX = "[- .,;:_/+'\"!?()\\[\\]]++";
 	
 	private Map<String, Song> songByUuid = new HashMap<>();
 	
