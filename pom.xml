@@ -44,7 +44,7 @@
 		<version.lucene>5.2.0</version.lucene>
 		<version.guava>17.0</version.guava>
 		<version.spring>4.2.2.RELEASE</version.spring>
-		<version.junit>4.11</version.junit>
+		<version.junit>4.12</version.junit>
 		<version.mockito>1.9.5</version.mockito>
 	</properties>
 
@@ -206,6 +206,38 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<version>1.8</version>
+				<configuration>
+					<useMissingFile>true</useMissingFile>
+					<useRepositoryMissingFiles>false</useRepositoryMissingFiles>
+					<deployMissingFile>false</deployMissingFile>
+					<licenseMerges>
+						<licenseMerge>
+							Apache 2.0|The Apache Software License, Version 2.0|Apache License Version 2.0|Apache License, Version 2.0|Apache 2
+						</licenseMerge>
+						<licenseMerge>
+							LGPL|Lesser General Public License (LGPL)
+						</licenseMerge>
+						<licenseMerge>
+							MIT License|The MIT License
+						</licenseMerge>
+						<licenseMerge>
+							AGPL 3|GNU Affero General Public License v3
+						</licenseMerge>
+					</licenseMerges>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>add-third-party</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -412,6 +444,25 @@
 									</pluginExecutionFilter>
 									<action>
 										<ignore />
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.codehaus.mojo
+										</groupId>
+										<artifactId>
+											license-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.8,)
+										</versionRange>
+										<goals>
+											<goal>add-third-party</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
 									</action>
 								</pluginExecution>
 							</pluginExecutions>
