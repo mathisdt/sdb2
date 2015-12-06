@@ -28,6 +28,7 @@ import javax.swing.text.JTextComponent;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zephyrsoft.sdb2.Feature;
 import org.zephyrsoft.sdb2.gui.SongCell;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongParser;
@@ -50,34 +51,39 @@ public class SongCellRenderer implements ListCellRenderer<Song> {
 	
 	public SongCellRenderer(JTextComponent filterInputField) {
 		this.filterInputField = filterInputField;
-		highlighter = new SongCellHighlighter();
-		updateHighlighter();
 		
-		this.filterInputField.getDocument().addDocumentListener(new DocumentListener() {
-			@Override
-			public void removeUpdate(DocumentEvent e) {
-				updateHighlighter();
-			}
+		if (Feature.HIGHLIGHT_FILTER_MATCHES.isActive()) {
+			highlighter = new SongCellHighlighter();
+			updateHighlighter();
 			
-			@Override
-			public void insertUpdate(DocumentEvent e) {
-				updateHighlighter();
-			}
-			
-			@Override
-			public void changedUpdate(DocumentEvent e) {
-				updateHighlighter();
-			}
-		});
+			this.filterInputField.getDocument().addDocumentListener(new DocumentListener() {
+				@Override
+				public void removeUpdate(DocumentEvent e) {
+					updateHighlighter();
+				}
+				
+				@Override
+				public void insertUpdate(DocumentEvent e) {
+					updateHighlighter();
+				}
+				
+				@Override
+				public void changedUpdate(DocumentEvent e) {
+					updateHighlighter();
+				}
+			});
+		}
 	}
 	
 	private void updateHighlighter() {
-		String findRegex = constructFindRegex(filterInputField.getText());
-		String replaceRegex = constructReplaceRegex(filterInputField.getText());
-		LOG.debug("new find regex: {}", findRegex);
-		LOG.debug("new replace regex: {}", replaceRegex);
-		highlighter.setFindRegex(findRegex);
-		highlighter.setReplaceRegex(replaceRegex);
+		if (Feature.HIGHLIGHT_FILTER_MATCHES.isActive()) {
+			String findRegex = constructFindRegex(filterInputField.getText());
+			String replaceRegex = constructReplaceRegex(filterInputField.getText());
+			LOG.debug("new find regex: {}", findRegex);
+			LOG.debug("new replace regex: {}", replaceRegex);
+			highlighter.setFindRegex(findRegex);
+			highlighter.setReplaceRegex(replaceRegex);
+		}
 	}
 	
 	private String constructFindRegex(String filter) {
@@ -139,7 +145,9 @@ public class SongCellRenderer implements ListCellRenderer<Song> {
 			}
 		}
 		
-		highlighter.highlight(ret);
+		if (Feature.HIGHLIGHT_FILTER_MATCHES.isActive()) {
+			highlighter.highlight(ret);
+		}
 		
 		return ret;
 	}
