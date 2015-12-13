@@ -133,11 +133,10 @@ public class SongCellRenderer implements ListCellRenderer<Song> {
 		ret.setSongTitle(value.getTitle());
 		ret.setFirstLine(SongParser.getFirstLyricsLine(value));
 		
+		ret.setForeground(Color.BLACK);
 		if (isSelected) {
-			ret.setForeground(list.getSelectionForeground());
-			ret.setBackground(list.getSelectionBackground());
+			ret.setBackground(new Color(183, 200, 213));
 		} else {
-			ret.setForeground(list.getForeground());
 			if (index % 2 == 0) {
 				ret.setBackground(Color.WHITE);
 			} else {
