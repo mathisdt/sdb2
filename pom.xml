@@ -30,9 +30,8 @@
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
 		<!-- dependency versions -->
-		<version.slf4j>1.7.5</version.slf4j>
-		<version.log4j>1.2.17</version.log4j>
-		<version.log4j-extras>1.1</version.log4j-extras>
+		<version.slf4j>1.7.13</version.slf4j>
+		<version.log4j>2.5</version.log4j>
 		<version.args4j>2.0.26</version.args4j>
 		<version.commons-lang3>3.3.2</version.commons-lang3>
 		<version.togglz>2.2.0.Final</version.togglz>
@@ -135,24 +134,19 @@
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>${version.slf4j}</version>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>${version.log4j}</version>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>apache-log4j-extras</artifactId>
-			<version>${version.log4j-extras}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
 			<artifactId>jcl-over-slf4j</artifactId>
 			<version>${version.slf4j}</version>
 			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j-impl</artifactId>
+			<version>${version.log4j}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>${version.log4j}</version>
 		</dependency>
 
 		<!-- test -->
