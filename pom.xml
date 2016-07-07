@@ -30,6 +30,7 @@
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
 		<!-- dependency versions -->
+		<version.spring>4.3.1.RELEASE</version.spring>
 		<version.slf4j>1.7.13</version.slf4j>
 		<version.log4j>2.5</version.log4j>
 		<version.args4j>2.0.26</version.args4j>
@@ -43,7 +44,6 @@
 		<version.xstream>1.4.7</version.xstream>
 		<version.lucene>5.2.0</version.lucene>
 		<version.guava>19.0</version.guava>
-		<version.spring>4.3.0.RELEASE</version.spring>
 		<version.junit>4.12</version.junit>
 		<version.mockito>1.9.5</version.mockito>
 	</properties>
