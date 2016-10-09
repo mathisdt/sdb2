@@ -11,7 +11,7 @@ branches:
   - master
   - "/^v[0-9].*/"
 
-before_script:
+before_install:
   - sudo dpkg --add-architecture i386
   - sudo apt-get update
   - sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 libc6:i386 libstdc++6:i386
