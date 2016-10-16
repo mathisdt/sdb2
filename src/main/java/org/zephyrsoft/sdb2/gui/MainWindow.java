@@ -407,8 +407,8 @@ public class MainWindow extends JFrame implements UIScroller {
 				
 				final VersionUpdate updateAvailable = VersionTools.getLatest();
 				if (updateAvailable != null) {
-					final JLabel updateLabel = new JLabel("new version available: "
-						+ updateAvailable.getVersionNumber());
+					final JLabel updateLabel = new JLabel("new version available since "
+						+ updateAvailable.getVersionTimestamp());
 					updateLabel.setForeground(Color.BLUE);
 					updateLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 					updateLabel.addMouseListener(new MouseAdapter() {
@@ -2717,8 +2717,8 @@ public class MainWindow extends JFrame implements UIScroller {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
 				classToUse, "/org/zephyrsoft/sdb2/icon-64.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
-				"/org/zephyrsoft/sdb2/icon-16.png"));
+					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
+						"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
 	
 	private void calculateAndSetBounds() {

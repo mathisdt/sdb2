@@ -17,16 +17,13 @@
 package org.zephyrsoft.util;
 
 import java.io.IOException;
-import java.net.URL;
+import java.time.LocalDateTime;
+import java.util.List;
 
+import org.kohsuke.github.GHRelease;
+import org.kohsuke.github.GitHub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zephyrsoft.util.jenkins.Artifact;
-import org.zephyrsoft.util.jenkins.FreeStyleBuild;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-import com.thoughtworks.xstream.XStream;
 
 /**
  * Extracts the current version from the manifest and checks for updates.
@@ -37,88 +34,75 @@ public class VersionTools {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(VersionTools.class);
 	
-	private static final String JENKINS_INFO_URL = "https://dev.zephyrsoft.org/jenkins/job/SDB2/lastSuccessfulBuild/api/xml";
-	private static final String JENKINS_DOWNLOAD_URL = "https://dev.zephyrsoft.org/jenkins/job/SDB2/lastSuccessfulBuild/artifact/target/";
-	
 	public static String getCurrent() {
 		String version = getImplementationVersion();
-		String timestamp = JarTools.getAttributeFromManifest(VersionTools.class, "Build-Timestamp");
+		LocalDateTime timestamp = getTimestampAsLocalDateTime();
 		if (version != null && timestamp != null) {
-			version += " (" + timestamp + ")";
+			version += " (" + DateTools.format(timestamp) + ")";
 		} else {
 			version = "development snapshot";
 		}
 		return version;
 	}
 	
-	/**
-	 * @return the latest version update or {@code null} if the running version is the latest one
-	 */
-	public static VersionUpdate getLatest() {
-		FreeStyleBuild jenkinsInfo = getJenkinsInfo();
-		String versionFromJenkins = null;
-		if (jenkinsInfo != null
-			&& jenkinsInfo.getArtifacts() != null
-			&& !jenkinsInfo.getArtifacts().isEmpty()
-			&& jenkinsInfo.getArtifacts().get(0) != null) {
-			versionFromJenkins = extractVersionFromArtifactFilename(jenkinsInfo.getArtifacts().get(0).getFileName());
-		}
-		if (versionFromJenkins == null || versionFromJenkins.equals(getImplementationVersion())) {
-			return null;
-		} else {
-			return new VersionUpdate(versionFromJenkins, JENKINS_DOWNLOAD_URL);
-		}
-	}
-	
-	private static String extractVersionFromArtifactFilename(String filename) {
-		if (filename != null) {
-			return filename.replaceAll("^sdb2-", "").replaceAll("\\.zip$", "");
-		} else {
-			return null;
-		}
-	}
-	
-	private static FreeStyleBuild getJenkinsInfo() {
-		try {
-			URL url = new URL(JENKINS_INFO_URL);
-			String rawData = Resources.toString(url, Charsets.UTF_8);
-			XStream xstream = initXStream();
-			FreeStyleBuild jenkinsInfo = (FreeStyleBuild) xstream.fromXML(rawData);
-			return jenkinsInfo;
-		} catch (IOException e) {
-			LOG.warn("could not get update information from {}", JENKINS_INFO_URL, e);
-			return null;
-		}
-	}
-	
-	private static XStream initXStream() {
-		XStream xstream = new XStream();
-		
-		// aliases and omitted fields of model classes are defined via annotations
-		xstream.processAnnotations(FreeStyleBuild.class);
-		xstream.processAnnotations(Artifact.class);
-		
-		// unknown XML elements can be ignored
-		xstream.ignoreUnknownElements();
-		
-		return xstream;
-	}
-	
 	private static String getImplementationVersion() {
 		return JarTools.getAttributeFromManifest(VersionTools.class, "Implementation-Version");
 	}
 	
+	private static String getTimestamp() {
+		return JarTools.getAttributeFromManifest(VersionTools.class, "Build-Timestamp");
+	}
+	
+	private static LocalDateTime getTimestampAsLocalDateTime() {
+		String timestamp = getTimestamp();
+		return DateTools.parseDateTime(timestamp);
+	}
+	
+	/**
+	 * @return the latest version update or {@code null} if the running version is the latest one
+	 */
+	public static VersionUpdate getLatest() {
+		try {
+			GitHub gitHub = GitHub.connectAnonymously();
+			List<GHRelease> releases = gitHub.getUser("mathisdt").getRepository("sdb2").listReleases().asList();
+			GHRelease latestRelease = releases == null || releases.isEmpty()
+				? null
+				: releases.get(releases.size() - 1);
+			if (latestRelease == null) {
+				return null;
+			}
+			LocalDateTime latestReleaseTimestamp = DateTools.toLocalDateTime(latestRelease.getPublished_at());
+			LocalDateTime ownTimestamp = getTimestampAsLocalDateTime();
+			
+			if (DateTools.isMax15MinutesLater(ownTimestamp, latestReleaseTimestamp)) {
+				// is already latest release
+				return null;
+			} else {
+				if (latestRelease.getAssets() == null || latestRelease.getAssets().isEmpty()) {
+					LOG.error("release {} does not have any assets", latestRelease.getName());
+					return null;
+				} else {
+					return new VersionUpdate(DateTools.format(latestReleaseTimestamp),
+						latestRelease.getAssets().get(0).getBrowserDownloadUrl());
+				}
+			}
+		} catch (IOException ioe) {
+			LOG.error("error communicating with GitHub", ioe);
+			return null;
+		}
+	}
+	
 	public static class VersionUpdate {
-		private String versionNumber;
+		private String versionTimestamp;
 		private String updateUrl;
 		
-		public VersionUpdate(String versionNumber, String updateUrl) {
-			this.versionNumber = versionNumber;
+		public VersionUpdate(String versionTimestamp, String updateUrl) {
+			this.versionTimestamp = versionTimestamp;
 			this.updateUrl = updateUrl;
 		}
 		
-		public String getVersionNumber() {
-			return versionNumber;
+		public String getVersionTimestamp() {
+			return versionTimestamp;
 		}
 		
 		public String getUpdateUrl() {

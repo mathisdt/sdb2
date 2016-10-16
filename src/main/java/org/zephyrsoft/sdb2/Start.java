@@ -18,6 +18,7 @@ package org.zephyrsoft.sdb2;
 
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
+import java.time.ZoneId;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -69,6 +70,8 @@ public final class Start {
 				Field charset = Charset.class.getDeclaredField("defaultCharset");
 				charset.setAccessible(true);
 				charset.set(null, null);
+				
+				LOG.info("default time zone is {}", ZoneId.systemDefault().getId());
 				
 				LOG.info("loading application context");
 				@SuppressWarnings("resource")
