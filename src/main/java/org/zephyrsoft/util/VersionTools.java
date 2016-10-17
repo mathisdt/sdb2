@@ -67,15 +67,17 @@ public class VersionTools {
 			List<GHRelease> releases = gitHub.getUser("mathisdt").getRepository("sdb2").listReleases().asList();
 			GHRelease latestRelease = releases == null || releases.isEmpty()
 				? null
-				: releases.get(releases.size() - 1);
+				: releases.get(0);
 			if (latestRelease == null) {
 				return null;
 			}
 			LocalDateTime latestReleaseTimestamp = DateTools.toLocalDateTime(latestRelease.getPublished_at());
 			LocalDateTime ownTimestamp = getTimestampAsLocalDateTime();
 			
-			if (DateTools.isMax15MinutesLater(ownTimestamp, latestReleaseTimestamp)) {
-				// is already latest release
+			LOG.info("own timestamp: {} / latest release timestamp: {}", ownTimestamp, latestReleaseTimestamp);
+			if (ownTimestamp == null || latestReleaseTimestamp == null
+				|| DateTools.isMax15MinutesLater(latestReleaseTimestamp, ownTimestamp)) {
+				// is already latest release or we cannot tell
 				return null;
 			} else {
 				if (latestRelease.getAssets() == null || latestRelease.getAssets().isEmpty()) {
@@ -83,6 +85,7 @@ public class VersionTools {
 					return null;
 				} else {
 					return new VersionUpdate(DateTools.format(latestReleaseTimestamp),
+						latestRelease.getHtmlUrl().toString(),
 						latestRelease.getAssets().get(0).getBrowserDownloadUrl());
 				}
 			}
@@ -93,16 +96,22 @@ public class VersionTools {
 	}
 	
 	public static class VersionUpdate {
-		private String versionTimestamp;
-		private String updateUrl;
+		private final String versionTimestamp;
+		private final String webUrl;
+		private final String updateUrl;
 		
-		public VersionUpdate(String versionTimestamp, String updateUrl) {
+		public VersionUpdate(String versionTimestamp, String webUrl, String updateUrl) {
 			this.versionTimestamp = versionTimestamp;
+			this.webUrl = webUrl;
 			this.updateUrl = updateUrl;
 		}
 		
 		public String getVersionTimestamp() {
 			return versionTimestamp;
+		}
+		
+		public String getWebUrl() {
+			return webUrl;
 		}
 		
 		public String getUpdateUrl() {

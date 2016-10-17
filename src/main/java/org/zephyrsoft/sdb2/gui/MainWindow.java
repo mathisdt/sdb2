@@ -416,8 +416,8 @@ public class MainWindow extends JFrame implements UIScroller {
 						public void mouseClicked(MouseEvent event) {
 							if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 								try {
-									LOG.info("starting browse action for {}", updateAvailable.getUpdateUrl());
-									Desktop.getDesktop().browse(new URI(updateAvailable.getUpdateUrl()));
+									LOG.info("starting browse action for {}", updateAvailable.getWebUrl());
+									Desktop.getDesktop().browse(new URI(updateAvailable.getWebUrl()));
 								} catch (Exception e) {
 									LOG.warn("could not start browsing", e);
 								}
