@@ -21,6 +21,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Helps with handling dates.
@@ -40,7 +41,9 @@ public class DateTools {
 	
 	public static LocalDateTime toLocalDateTime(Date date) {
 		if (date != null) {
-			return ZonedDateTime.from(date.toInstant()).withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+			return date.toInstant().atZone(TimeZone.getTimeZone("GMT").toZoneId())
+				.withZoneSameInstant(ZoneId.systemDefault())
+				.toLocalDateTime();
 		} else {
 			return null;
 		}
