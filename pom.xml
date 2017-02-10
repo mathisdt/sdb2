@@ -44,7 +44,7 @@
 		<version.xstream>1.4.7</version.xstream>
 		<version.github-api>1.77</version.github-api>
 		<version.lucene>5.2.0</version.lucene>
-		<version.guava>19.0</version.guava>
+		<version.guava>21.0</version.guava>
 		<version.junit>4.12</version.junit>
 		<version.mockito>1.9.5</version.mockito>
 	</properties>
