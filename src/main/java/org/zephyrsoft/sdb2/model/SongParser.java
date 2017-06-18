@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.commons.lang3.Validate;
 import org.zephyrsoft.util.StringTools;
 
@@ -36,6 +37,7 @@ public class SongParser {
 	protected static final String LABEL_PUBLISHER = "Publisher: ";
 	
 	private static final Pattern TRANSLATION_PATTERN = Pattern.compile("^(.*)\\[(.*)\\](.*)$");
+	private static final String NEWLINE_REGEX = "\r?+\n";
 	
 	private SongParser() {
 		// this class should only be used statically
@@ -45,9 +47,12 @@ public class SongParser {
 	 * Breaks down a {@link Song} into its elements. See {@link SongElementEnum} for more information about the line
 	 * break policy used in the returned list!
 	 * 
-	 * @param song the song to parse
-	 * @param includeTitle should the title be included?
-	 * @param includeChords should all the chord lines be included?
+	 * @param song
+	 *            the song to parse
+	 * @param includeTitle
+	 *            should the title be included?
+	 * @param includeChords
+	 *            should all the chord lines be included?
 	 * @return a list containing the elements, marked up using {@link SongElementEnum}s
 	 */
 	public static List<SongElement> parse(Song song, boolean includeTitle, boolean includeChords) {
@@ -63,7 +68,7 @@ public class SongParser {
 		// lyrics
 		if (song.getLyrics() != null) {
 			boolean isFirst = true;
-			for (String line : song.getLyrics().split("\n")) {
+			for (String line : song.getLyrics().split(NEWLINE_REGEX)) {
 				Matcher translationMatcher = TRANSLATION_PATTERN.matcher(line);
 				if (translationMatcher.matches()) {
 					isFirst = addNewlineIfNotFirstLine(ret, isFirst);
@@ -129,7 +134,7 @@ public class SongParser {
 		Validate.notNull(song, "song may not be null");
 		
 		if (song.getLyrics() != null) {
-			for (String line : song.getLyrics().split("\n")) {
+			for (String line : song.getLyrics().split(NEWLINE_REGEX)) {
 				Matcher translationMatcher = TRANSLATION_PATTERN.matcher(line);
 				if (!translationMatcher.matches() && !isChordsLine(line)) {
 					return line;
