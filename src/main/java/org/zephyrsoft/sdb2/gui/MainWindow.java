@@ -205,8 +205,6 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JButton btnPresentSelectedSong;
 	private JScrollPane scrollPaneSectionButtons;
 	private JButton btnJumpToPresented;
-	
-	private JLabel lblStatistics;
 	private JButton btnExportLyricsOnlyPdfSelected;
 	private JButton btnExportCompletePdfSelected;
 	private JButton btnExportStatisticsSelected;
@@ -238,14 +236,14 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JComboBox<SelectableScreen> comboPresentationScreen2Display;
 	private JComboBox<ScreenContentsEnum> comboPresentationScreen2Contents;
 	private JSpinner spinnerCountAsDisplayedAfter;
+	private JButton btnSlideShowDirectory;
+	private JSpinner spinnerSlideShowSeconds;
 	
 	private JButton saveButton;
 	
 	private SongCellRenderer songCellRenderer;
 	private JLabel lblSlideShowDirectory;
 	private JLabel lblSlideShowSeconds;
-	private JSpinner spinnerSlideShowSeconds;
-	private JButton btnSlideShowDirectory;
 	private JButton btnSlideshow;
 	
 	@Override
@@ -521,6 +519,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			settingsModel.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)));
 		comboPresentationScreen2Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class));
 		setSpinnerValue(spinnerCountAsDisplayedAfter, settingsModel.get(SettingKey.SECONDS_UNTIL_COUNTED, Integer.class));
+		setSpinnerValue(spinnerSlideShowSeconds, settingsModel.get(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, Integer.class));
 	}
 	
 	private static void setSpinnerValue(JSpinner spinner, Object value) {
@@ -539,7 +538,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		// only if the "unlock" button is disabled (which means that the settings were just edited)
 		if (btnUnlock != null && !btnUnlock.isEnabled() && settingsModel != null) {
 			commitSpinners(spinnerTopMargin, spinnerLeftMargin, spinnerRightMargin, spinnerBottomMargin,
-				spinnerDistanceTitleText, spinnerDistanceTextCopyright, spinnerCountAsDisplayedAfter);
+				spinnerDistanceTitleText, spinnerDistanceTextCopyright, spinnerCountAsDisplayedAfter, spinnerSlideShowSeconds);
 			// disable controls
 			// copy changed settings to the model
 			settingsModel.put(SettingKey.SHOW_TITLE, checkboxShowTitle.getModel().isSelected());
@@ -561,7 +560,8 @@ public class MainWindow extends JFrame implements UIScroller {
 			settingsModel.put(SettingKey.SCREEN_2_DISPLAY, screenTwoIndex);
 			settingsModel.put(SettingKey.SCREEN_2_CONTENTS, comboPresentationScreen2Contents.getSelectedItem());
 			settingsModel.put(SettingKey.SECONDS_UNTIL_COUNTED, spinnerCountAsDisplayedAfter.getValue());
-			// copying is not necessary for fonts, colors and the logo file name
+			settingsModel.put(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, spinnerSlideShowSeconds.getValue());
+			// copying is not necessary for fonts, colors, the logo file and the slide show directory
 			// because those settings are only stored directly in the model
 			
 			// apply settings
@@ -679,6 +679,37 @@ public class MainWindow extends JFrame implements UIScroller {
 		setSettingsEnabled(true);
 	}
 	
+	protected void handleSelectSlideShowDirectory() {
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		String pathname = settingsModel.get(SettingKey.SLIDE_SHOW_DIRECTORY, String.class);
+		if (pathname != null) {
+			File currentValue = new File(pathname);
+			if (currentValue.isDirectory() && currentValue.canRead()) {
+				fileChooser.setSelectedFile(currentValue);
+			}
+		}
+		fileChooser.setApproveButtonText("Select");
+		fileChooser.setDialogTitle("Select Slide Show Directory");
+		
+		// set a custom file filter and don't keep the "accept all" filter
+		fileChooser.setFileFilter(new CustomFileFilter("Directories"));
+		fileChooser.setAcceptAllFileFilterUsed(false);
+		
+		int returnVal = fileChooser.showDialog(this, null);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			File file = fileChooser.getSelectedFile();
+			if (file.isDirectory() && file.canRead()) {
+				settingsModel.put(SettingKey.SLIDE_SHOW_DIRECTORY, file.getAbsolutePath());
+				// TODO perhaps apply the new settings?
+			} else {
+				// error: can't access dir
+				showErrorDialog("Couldn't access the directory:\n" + file.getAbsolutePath());
+			}
+		}
+		setSettingsEnabled(true);
+	}
+	
 	private static void commitSpinners(JSpinner... spinners) {
 		for (JSpinner spinner : spinners) {
 			try {
@@ -710,6 +741,8 @@ public class MainWindow extends JFrame implements UIScroller {
 		setEnabledIfNotNull(comboPresentationScreen2Display, enabled);
 		setEnabledIfNotNull(comboPresentationScreen2Contents, enabled);
 		setEnabledIfNotNull(spinnerCountAsDisplayedAfter, enabled);
+		setEnabledIfNotNull(btnSlideShowDirectory, enabled);
+		setEnabledIfNotNull(spinnerSlideShowSeconds, enabled);
 		// disable the "unlock" button when enabling the other controls
 		// (and the other way around)
 		setEnabledIfNotNull(btnUnlock, !enabled);
@@ -2101,16 +2134,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcBtnExportLyricsOnlyPdfSelected.gridy = 1;
 		panelImportExportStatistics.add(btnExportLyricsOnlyPdfSelected, gbcBtnExportLyricsOnlyPdfSelected);
 		
-		lblStatistics = new JLabel("<STATISTICS>");
-		GridBagConstraints gbcLblStatistics = new GridBagConstraints();
-		gbcLblStatistics.anchor = GridBagConstraints.NORTH;
-		gbcLblStatistics.gridheight = 3;
-		gbcLblStatistics.insets = new Insets(0, 0, 5, 0);
-		gbcLblStatistics.fill = GridBagConstraints.HORIZONTAL;
-		gbcLblStatistics.gridx = 2;
-		gbcLblStatistics.gridy = 1;
-		panelImportExportStatistics.add(lblStatistics, gbcLblStatistics);
-		
 		btnExportCompletePdfSelected = new JButton("Export complete PDF");
 		btnExportCompletePdfSelected.addActionListener(new ActionListener() {
 			@Override
@@ -2300,10 +2323,10 @@ public class MainWindow extends JFrame implements UIScroller {
 		scrollPaneSettings.setViewportView(panel);
 		GridBagLayout gblPanel = new GridBagLayout();
 		gblPanel.columnWidths = new int[] { 0, 0, 0, 0, 0 };
-		gblPanel.rowHeights = new int[] { 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 0 };
+		gblPanel.rowHeights = new int[] { 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 0 };
 		gblPanel.columnWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0 };
 		gblPanel.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-			0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+			0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, Double.MIN_VALUE };
 		panel.setLayout(gblPanel);
 		
 		btnUnlock = new JButton("Unlock");
@@ -2724,6 +2747,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		panel.add(lblSlideShowDirectory, gbc_lblSlideShowDirectory);
 		
 		btnSlideShowDirectory = new JButton("Select...");
+		btnSlideShowDirectory.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					handleSelectSlideShowDirectory();
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
 		GridBagConstraints gbc_btnSlideShowDirectory = new GridBagConstraints();
 		gbc_btnSlideShowDirectory.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnSlideShowDirectory.insets = new Insets(0, 0, 5, 5);
@@ -2866,9 +2899,5 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	public JPanel getPanelSectionButtons() {
 		return panelSectionButtons;
-	}
-	
-	public JLabel getLblStatistics() {
-		return lblStatistics;
 	}
 }
