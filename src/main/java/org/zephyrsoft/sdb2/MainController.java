@@ -407,4 +407,9 @@ public class MainController implements Scroller {
 		animationTimer.init();
 	}
 	
+	public boolean presentSlideShow() {
+		// TODO
+		return true;
+	}
+	
 }

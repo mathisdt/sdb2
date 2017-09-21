@@ -1087,6 +1087,14 @@ public class MainWindow extends JFrame implements UIScroller {
 		}
 	}
 	
+	protected void handleSlideShowPresent() {
+		boolean success = controller.presentSlideShow();
+		if (success) {
+			clearSectionButtons();
+			btnJumpToPresented.setEnabled(false);
+		}
+	}
+	
 	private void clearSectionButtons() {
 		listSectionButtons.clear();
 		panelSectionButtons.removeAll();
@@ -1992,7 +2000,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					// TODO
+					handleSlideShowPresent();
 				} catch (Throwable ex) {
 					handleError(ex);
 				}
