@@ -278,9 +278,11 @@ public class MainController implements Scroller {
 		
 		putDefaultIfKeyIsUnset(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.TITLE_AND_LYRICS);
 		putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.ONLY_LYRICS);
-		putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_DISPLAY, "");
 		putDefaultIfKeyIsUnset(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.LYRICS_AND_CHORDS);
-		putDefaultIfKeyIsUnset(SettingKey.SCREEN_2_DISPLAY, "");
+		List<SelectableScreen> availableScreens = ScreenHelper.getScreens();
+		if (availableScreens.size() > 1) {
+			putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_DISPLAY, Integer.valueOf(availableScreens.get(1).getIndex()));
+		}
 		
 		putDefaultIfKeyIsUnset(SettingKey.SHOW_TITLE, Boolean.TRUE);
 		putDefaultIfKeyIsUnset(SettingKey.TITLE_FONT, new Font(Font.SERIF, Font.BOLD, 10));

@@ -32,6 +32,7 @@ import com.thoughtworks.xstream.annotations.XStreamImplicit;
 @XStreamAlias("settings")
 public class SettingsModel {
 	
+	// TODO possible optimization: use a map to make read and write access faster (no for loop needed)
 	@XStreamImplicit(itemFieldName = "setting")
 	private SortedSet<Setting<Object>> store;
 	
