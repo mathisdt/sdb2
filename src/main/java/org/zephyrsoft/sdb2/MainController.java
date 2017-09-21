@@ -302,6 +302,9 @@ public class MainController implements Scroller {
 		putDefaultIfKeyIsUnset(SettingKey.LOGO_FILE, "");
 		putDefaultIfKeyIsUnset(SettingKey.SECONDS_UNTIL_COUNTED, Integer.valueOf(60));
 		
+		putDefaultIfKeyIsUnset(SettingKey.SLIDE_SHOW_DIRECTORY, null);
+		putDefaultIfKeyIsUnset(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, Integer.valueOf(20));
+		
 		// check that really all settings are set
 		for (SettingKey key : SettingKey.values()) {
 			if (!settings.isSet(key)) {

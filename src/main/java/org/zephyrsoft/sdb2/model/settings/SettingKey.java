@@ -18,6 +18,7 @@ package org.zephyrsoft.sdb2.model.settings;
 
 import java.awt.Color;
 import java.awt.Font;
+
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 
@@ -66,7 +67,11 @@ public enum SettingKey {
 	/** content of second configured presentation screen */
 	SCREEN_2_CONTENTS(ScreenContentsEnum.class),
 	/** how long the song has to be shown until it counts as presented (for statistics) */
-	SECONDS_UNTIL_COUNTED(Integer.class);
+	SECONDS_UNTIL_COUNTED(Integer.class),
+	/** directory to use for slide show */
+	SLIDE_SHOW_DIRECTORY(String.class),
+	/** how long each picture should be displayed in slide show */
+	SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE(Integer.class);
 	
 	private Class<?> type;
 	

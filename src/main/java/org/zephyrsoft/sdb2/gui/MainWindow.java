@@ -242,6 +242,11 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JButton saveButton;
 	
 	private SongCellRenderer songCellRenderer;
+	private JLabel lblSlideShowDirectory;
+	private JLabel lblSlideShowSeconds;
+	private JSpinner spinnerSlideShowSeconds;
+	private JButton btnSlideShowDirectory;
+	private JButton btnSlideshow;
 	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
@@ -1898,10 +1903,10 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelPresentRight.add(panelPresentationButtons, BorderLayout.CENTER);
 		
 		GridBagLayout gblPanelPresentationButtons = new GridBagLayout();
-		gblPanelPresentationButtons.columnWidths = new int[] { 0, 0, 0 };
+		gblPanelPresentationButtons.columnWidths = new int[] { 0, 0, 0, 0 };
 		// gblPanelPresentationButtons.rowHeights = new int[] { 1, 1, 1, 0, 0, 0 };
-		gblPanelPresentationButtons.columnWeights = new double[] { 0.5d, 0.5d, 0.5d };
-		gblPanelPresentationButtons.rowWeights = new double[] { 0d, 0d, 0d, 0d, 1d, Double.MIN_VALUE };
+		gblPanelPresentationButtons.columnWeights = new double[] { 0.5d, 0.5d, 0.5d, 0.5d };
+		gblPanelPresentationButtons.rowWeights = new double[] { 0d, 0d, 0d, 0d, 1d };
 		panelPresentationButtons.setLayout(gblPanelPresentationButtons);
 		
 		btnPresentSelectedSong = new JButton("Present selected song");
@@ -1919,8 +1924,8 @@ public class MainWindow extends JFrame implements UIScroller {
 			}
 		});
 		GridBagConstraints gbcBtnPresentSelectedSong = new GridBagConstraints();
-		gbcBtnPresentSelectedSong.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnPresentSelectedSong.insets = new Insets(10, 0, 15, 0);
+		gbcBtnPresentSelectedSong.fill = GridBagConstraints.BOTH;
+		gbcBtnPresentSelectedSong.insets = new Insets(10, 0, 15, 5);
 		gbcBtnPresentSelectedSong.gridheight = 3;
 		// gbcBtnPresentSelectedSong.ipadx = 20;
 		gbcBtnPresentSelectedSong.ipady = 80;
@@ -1944,8 +1949,8 @@ public class MainWindow extends JFrame implements UIScroller {
 			}
 		});
 		GridBagConstraints gbcBtnShowBlankScreen = new GridBagConstraints();
-		gbcBtnShowBlankScreen.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnShowBlankScreen.insets = new Insets(10, 0, 15, 0);
+		gbcBtnShowBlankScreen.fill = GridBagConstraints.BOTH;
+		gbcBtnShowBlankScreen.insets = new Insets(10, 0, 15, 5);
 		gbcBtnShowBlankScreen.gridheight = 3;
 		// gbcBtnShowBlankScreen.ipadx = 30;
 		gbcBtnShowBlankScreen.ipady = 80;
@@ -1969,8 +1974,8 @@ public class MainWindow extends JFrame implements UIScroller {
 			}
 		});
 		GridBagConstraints gbcBtnShowLogo = new GridBagConstraints();
-		gbcBtnShowLogo.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnShowLogo.insets = new Insets(10, 0, 15, 0);
+		gbcBtnShowLogo.fill = GridBagConstraints.BOTH;
+		gbcBtnShowLogo.insets = new Insets(10, 0, 15, 5);
 		gbcBtnShowLogo.gridheight = 3;
 		// gbcBtnShowLogo.ipadx = 40;
 		gbcBtnShowLogo.ipady = 80;
@@ -1979,18 +1984,43 @@ public class MainWindow extends JFrame implements UIScroller {
 		btnShowLogo.setPreferredSize(new Dimension(64, 64));
 		panelPresentationButtons.add(btnShowLogo, gbcBtnShowLogo);
 		
+		btnSlideshow = new JButton("Slide Show");
+		btnSlideshow.setIcon(ResourceTools.getIcon(getClass(), "/milky/movie.png"));
+		btnSlideshow.setVerticalTextPosition(SwingConstants.BOTTOM);
+		btnSlideshow.setHorizontalTextPosition(SwingConstants.CENTER);
+		btnSlideshow.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				try {
+					// TODO
+				} catch (Throwable ex) {
+					handleError(ex);
+				}
+			}
+		});
+		GridBagConstraints gbcBtnSlideshow = new GridBagConstraints();
+		gbcBtnSlideshow.fill = GridBagConstraints.BOTH;
+		gbcBtnSlideshow.gridheight = 3;
+		gbcBtnSlideshow.insets = new Insets(10, 0, 15, 5);
+		gbcBtnSlideshow.ipady = 80;
+		gbcBtnSlideshow.gridx = 3;
+		gbcBtnSlideshow.gridy = 0;
+		btnSlideshow.setPreferredSize(new Dimension(64, 64));
+		panelPresentationButtons.add(btnSlideshow, gbcBtnSlideshow);
+		
 		JLabel lblSections = new JLabel("Sections:");
 		GridBagConstraints gbcLblSections = new GridBagConstraints();
 		gbcLblSections.fill = GridBagConstraints.HORIZONTAL;
-		gbcLblSections.insets = new Insets(0, 0, 5, 0);
+		gbcLblSections.insets = new Insets(0, 0, 5, 5);
 		gbcLblSections.gridx = 0;
 		gbcLblSections.gridy = 3;
 		panelPresentationButtons.add(lblSections, gbcLblSections);
 		
 		scrollPaneSectionButtons = new JScrollPane();
 		GridBagConstraints gbcScrollPaneSectionButtons = new GridBagConstraints();
+		gbcScrollPaneSectionButtons.insets = new Insets(0, 0, 0, 5);
 		gbcScrollPaneSectionButtons.fill = GridBagConstraints.BOTH;
-		gbcScrollPaneSectionButtons.gridwidth = 3;
+		gbcScrollPaneSectionButtons.gridwidth = 4;
 		gbcScrollPaneSectionButtons.gridx = 0;
 		gbcScrollPaneSectionButtons.gridy = 4;
 		panelPresentationButtons.add(scrollPaneSectionButtons, gbcScrollPaneSectionButtons);
@@ -2262,7 +2292,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		scrollPaneSettings.setViewportView(panel);
 		GridBagLayout gblPanel = new GridBagLayout();
 		gblPanel.columnWidths = new int[] { 0, 0, 0, 0, 0 };
-		gblPanel.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		gblPanel.rowHeights = new int[] { 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 0 };
 		gblPanel.columnWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0 };
 		gblPanel.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 			0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
@@ -2676,6 +2706,38 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcSpinnerCountAsDisplayedAfter.gridx = 3;
 		gbcSpinnerCountAsDisplayedAfter.gridy = 21;
 		panel.add(spinnerCountAsDisplayedAfter, gbcSpinnerCountAsDisplayedAfter);
+		
+		lblSlideShowDirectory = new JLabel("Directory for slide show");
+		GridBagConstraints gbc_lblSlideShowDirectory = new GridBagConstraints();
+		gbc_lblSlideShowDirectory.anchor = GridBagConstraints.EAST;
+		gbc_lblSlideShowDirectory.insets = new Insets(0, 0, 5, 5);
+		gbc_lblSlideShowDirectory.gridx = 1;
+		gbc_lblSlideShowDirectory.gridy = 22;
+		panel.add(lblSlideShowDirectory, gbc_lblSlideShowDirectory);
+		
+		btnSlideShowDirectory = new JButton("Select...");
+		GridBagConstraints gbc_btnSlideShowDirectory = new GridBagConstraints();
+		gbc_btnSlideShowDirectory.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSlideShowDirectory.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSlideShowDirectory.gridx = 3;
+		gbc_btnSlideShowDirectory.gridy = 22;
+		panel.add(btnSlideShowDirectory, gbc_btnSlideShowDirectory);
+		
+		lblSlideShowSeconds = new JLabel("Seconds between slide show changes");
+		GridBagConstraints gbc_lblSlideShowSeconds = new GridBagConstraints();
+		gbc_lblSlideShowSeconds.anchor = GridBagConstraints.EAST;
+		gbc_lblSlideShowSeconds.insets = new Insets(0, 0, 5, 5);
+		gbc_lblSlideShowSeconds.gridx = 1;
+		gbc_lblSlideShowSeconds.gridy = 23;
+		panel.add(lblSlideShowSeconds, gbc_lblSlideShowSeconds);
+		
+		spinnerSlideShowSeconds = new JSpinner();
+		GridBagConstraints gbc_spinnerSlideShowSeconds = new GridBagConstraints();
+		gbc_spinnerSlideShowSeconds.fill = GridBagConstraints.HORIZONTAL;
+		gbc_spinnerSlideShowSeconds.insets = new Insets(0, 0, 5, 5);
+		gbc_spinnerSlideShowSeconds.gridx = 3;
+		gbc_spinnerSlideShowSeconds.gridy = 23;
+		panel.add(spinnerSlideShowSeconds, gbc_spinnerSlideShowSeconds);
 		
 		glassPane = (Container) getGlassPane();
 		glassPane.setVisible(true);
