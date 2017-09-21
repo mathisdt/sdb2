@@ -88,22 +88,23 @@ public class MainController implements Scroller {
 	}
 	
 	public boolean present(Presentable presentable) {
-		// end old presentation (if any)
+		// make it possible to end the old presentation (if any)
+		PresenterBundle oldPresentationControl = null;
 		if (presentationControl != null) {
-			presentationControl.hidePresenter();
+			oldPresentationControl = presentationControl;
 		}
 		
 		presentationControl = new PresenterBundle();
 		
-		Presenter presenter1 = createPresenter(ScreenHelper.getScreen(screens,
-			settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class)), presentable,
+		Presenter presenter1 = createPresenter(
+			ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class)), presentable,
 			settings.get(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.class));
 		if (presenter1 != null) {
 			presentationControl.addPresenter(presenter1);
 		}
 		
-		Presenter presenter2 = createPresenter(ScreenHelper.getScreen(screens,
-			settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)), presentable,
+		Presenter presenter2 = createPresenter(
+			ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)), presentable,
 			settings.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class));
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
@@ -126,6 +127,11 @@ public class MainController implements Scroller {
 			
 			// start presentation
 			presentationControl.showPresenter();
+			
+			// now stop old presentation (if any)
+			if (oldPresentationControl != null) {
+				oldPresentationControl.hidePresenter();
+			}
 			
 			return true;
 		}
@@ -202,10 +208,7 @@ public class MainController implements Scroller {
 		// for the setting "don't show at all"
 		screens.add(null);
 		
-		List<SelectableScreen> screensInternal = ScreenHelper.getScreens();
-		for (SelectableScreen screen : screensInternal) {
-			screens.add(screen);
-		}
+		screens.addAll(ScreenHelper.getScreens());
 	}
 	
 	public boolean prepareClose() {

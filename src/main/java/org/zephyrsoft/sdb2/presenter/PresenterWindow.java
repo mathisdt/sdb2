@@ -19,9 +19,11 @@ package org.zephyrsoft.sdb2.presenter;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.image.MemoryImageSource;
 import java.util.List;
@@ -31,6 +33,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableScreen;
@@ -44,13 +48,15 @@ import org.zephyrsoft.util.gui.ImagePanel;
  * @author Mathis Dirksen-Thedens
  */
 public class PresenterWindow extends JFrame implements Presenter {
-	
 	private static final long serialVersionUID = -2390663756699128439L;
+	
+	private static final Logger LOG = LoggerFactory.getLogger(PresenterWindow.class);
 	
 	private JPanel contentPane;
 	private SongView songView;
 	
 	private final SettingsModel settings;
+	private final SelectableScreen screen;
 	private final ScreenContentsEnum contents;
 	private final Presentable presentable;
 	
@@ -61,6 +67,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 	public PresenterWindow(SelectableScreen screen, Presentable presentable, ScreenContentsEnum contents,
 		SettingsModel settings) {
 		super(ScreenHelper.getConfiguration(screen));
+		this.screen = screen;
 		
 		this.presentable = presentable;
 		this.contents = contents;
@@ -132,15 +139,35 @@ public class PresenterWindow extends JFrame implements Presenter {
 	private static Cursor getTransparentCursor() {
 		int[] pixels = new int[16 * 16];
 		Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
-		Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0),
-			"invisiblecursor");
+		Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisiblecursor");
 		return transparentCursor;
 	}
 	
 	@Override
 	public void showPresenter() {
+		// ensure that the window is on the configured screen
+		Rectangle targetCoordinates = ScreenHelper.getConfiguration(screen).getBounds();
+		Point currentLocation = getLocation();
+		Dimension currentSize = getSize();
+		LOG.debug("presenter window for {} is at {}/{} with size {}x{}", screen.getDescription(),
+			currentLocation.getX(), currentLocation.getY(), currentSize.getWidth(), currentSize.getHeight());
+		
+		if (!sameInt(targetCoordinates.getX(), currentLocation.getX())
+			|| !sameInt(targetCoordinates.getY(), currentLocation.getY())
+			|| !sameInt(targetCoordinates.getWidth(), currentSize.getWidth())
+			|| !sameInt(targetCoordinates.getHeight(), currentSize.getHeight())) {
+			setLocation((int) targetCoordinates.getX(), (int) targetCoordinates.getY());
+			setSize((int) targetCoordinates.getWidth(), (int) targetCoordinates.getHeight());
+			LOG.debug("presenter window for {} is now moved to {}/{} with size {}x{}", screen.getDescription(),
+				targetCoordinates.getX(), targetCoordinates.getY(), targetCoordinates.getWidth(), targetCoordinates.getHeight());
+		}
+		
 		// TODO fade in
 		setVisible(true);
+	}
+	
+	private boolean sameInt(double one, double two) {
+		return (int) one == (int) two;
 	}
 	
 	@Override
