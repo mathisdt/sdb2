@@ -21,6 +21,7 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,6 +35,9 @@ import org.zephyrsoft.util.StringTools;
 
 import com.google.common.base.Joiner;
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.security.NoTypePermission;
+import com.thoughtworks.xstream.security.NullPermission;
+import com.thoughtworks.xstream.security.PrimitiveTypePermission;
 
 /**
  * Importer from EasiSlides 4.0
@@ -72,6 +76,14 @@ public class ImportFromEasiSlides implements Importer {
 		
 		try {
 			XStream xstream = new XStream();
+			// clear out existing permissions and set own ones
+			xstream.addPermission(NoTypePermission.NONE);
+			// allow some classes
+			xstream.addPermission(NullPermission.NULL);
+			xstream.addPermission(PrimitiveTypePermission.PRIMITIVES);
+			xstream.allowTypeHierarchy(Collection.class);
+			xstream.allowTypesByWildcard(new String[] { "java.lang.**", "java.util.**", "java.awt.**",
+				"org.zephyrsoft.sdb2.**" });
 			// aliases and omitted fields of model classes are defined via annotations
 			xstream.processAnnotations(EasiSlides.class);
 			xstream.processAnnotations(EasiSlidesSong.class);

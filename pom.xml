@@ -30,23 +30,23 @@
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
 		<!-- dependency versions -->
-		<version.spring>4.3.10.RELEASE</version.spring>
-		<version.slf4j>1.7.22</version.slf4j>
-		<version.log4j>2.8</version.log4j>
-		<version.args4j>2.0.26</version.args4j>
-		<version.commons-lang3>3.3.2</version.commons-lang3>
-		<version.togglz>2.2.0.Final</version.togglz>
-		<version.itext>5.4.4</version.itext>
+		<version.spring>4.3.11.RELEASE</version.spring>
+		<version.slf4j>1.7.25</version.slf4j>
+		<version.log4j>2.9.0</version.log4j>
+		<version.args4j>2.33</version.args4j>
+		<version.commons-lang3>3.6</version.commons-lang3>
+		<version.togglz>2.4.1.Final</version.togglz>
+		<version.itext>5.5.12</version.itext>
 		<version.fontchooser>6.9.1</version.fontchooser>
-		<version.poi>3.9</version.poi>
+		<version.poi>3.17</version.poi>
 		<version.swingx>1.6.5-1</version.swingx>
 		<version.timingframework>7.3.1</version.timingframework>
-		<version.xstream>1.4.7</version.xstream>
-		<version.github-api>1.77</version.github-api>
-		<version.lucene>5.2.0</version.lucene>
-		<version.guava>21.0</version.guava>
+		<version.xstream>1.4.10</version.xstream>
+		<version.github-api>1.89</version.github-api>
+		<version.lucene>7.0.0</version.lucene>
+		<version.guava>23.0</version.guava>
 		<version.junit>4.12</version.junit>
-		<version.mockito>1.9.5</version.mockito>
+		<version.mockito>2.10.0</version.mockito>
 	</properties>
 
 	<dependencies>
@@ -132,6 +132,11 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<dependency>
+			<groupId>org.kohsuke</groupId>
+			<artifactId>github-api</artifactId>
+			<version>${version.github-api}</version>
+		</dependency>
 
 		<!-- logging -->
 		<dependency>
@@ -155,11 +160,6 @@
 			<artifactId>log4j-core</artifactId>
 			<version>${version.log4j}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.kohsuke</groupId>
-			<artifactId>github-api</artifactId>
-			<version>${version.github-api}</version>
-		</dependency>
 
 		<!-- test -->
 		<dependency>
@@ -170,7 +170,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
-			<artifactId>mockito-all</artifactId>
+			<artifactId>mockito-core</artifactId>
 			<version>${version.mockito}</version>
 			<scope>test</scope>
 		</dependency>

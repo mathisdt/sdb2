@@ -18,12 +18,16 @@ package org.zephyrsoft.sdb2.model;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.model.statistics.SongStatistics;
 import org.zephyrsoft.sdb2.model.statistics.StatisticsModel;
 
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.security.NoTypePermission;
+import com.thoughtworks.xstream.security.NullPermission;
+import com.thoughtworks.xstream.security.PrimitiveTypePermission;
 
 /**
  * Converts models to and from XML.
@@ -70,6 +74,14 @@ public class XMLConverter {
 	
 	private static XStream initXStream() {
 		XStream xstream = new XStream();
+		// clear out existing permissions and set own ones
+		xstream.addPermission(NoTypePermission.NONE);
+		// allow some classes
+		xstream.addPermission(NullPermission.NULL);
+		xstream.addPermission(PrimitiveTypePermission.PRIMITIVES);
+		xstream.allowTypeHierarchy(Collection.class);
+		xstream.allowTypesByWildcard(new String[] { "java.lang.**", "java.util.**", "java.awt.**",
+			"org.zephyrsoft.sdb2.**" });
 		
 		// aliases and omitted fields of model classes are defined via annotations
 		xstream.processAnnotations(SongsModel.class);

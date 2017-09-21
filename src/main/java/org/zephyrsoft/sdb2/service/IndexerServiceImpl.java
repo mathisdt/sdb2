@@ -140,18 +140,19 @@ public class IndexerServiceImpl implements IndexerService<Song> {
 			IndexReader indexReader = DirectoryReader.open(directory);
 			IndexSearcher indexSearcher = new IndexSearcher(indexReader);
 			
-			BooleanQuery outerBooleanQuery = new BooleanQuery();
+			BooleanQuery.Builder outerBooleanQueryBuilder = new BooleanQuery.Builder();
 			for (FieldName field : fieldsToSearchIn) {
-				PhraseQuery query = new PhraseQuery();
+				PhraseQuery.Builder phraseQueryBuilder = new PhraseQuery.Builder();
 				for (String searchTerm : searchString.toLowerCase().split(TERM_SPLIT_REGEX)) {
-					query.add(new Term(field.name(), searchTerm));
+					phraseQueryBuilder.add(new Term(field.name(), searchTerm));
 				}
-				query.setBoost(field.getBoost());
-				outerBooleanQuery.add(query, Occur.SHOULD);
+				PhraseQuery phraseQuery = phraseQueryBuilder.build();
+				outerBooleanQueryBuilder.add(phraseQuery, Occur.SHOULD);
 			}
+			BooleanQuery outerBooleanQuery = outerBooleanQueryBuilder.build();
 			TopDocs hits = indexSearcher.search(outerBooleanQuery, Integer.MAX_VALUE);
 			
-			LOG.debug("{} hits for filter \"{}\"", hits.totalHits, outerBooleanQuery);
+			LOG.debug("{} hits for filter \"{}\"", hits.totalHits, outerBooleanQueryBuilder);
 			
 			List<Song> ret = new LinkedList<>();
 			for (ScoreDoc scoreDocument : hits.scoreDocs) {

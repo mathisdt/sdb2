@@ -51,11 +51,11 @@ import org.zephyrsoft.util.gui.ErrorDialog;
  * @author Mathis Dirksen-Thedens
  */
 public class StatisticsController {
-
+	
 	private static final Logger LOG = LoggerFactory.getLogger(StatisticsController.class);
-
+	
 	private StatisticsModel statistics = null;
-
+	
 	public void loadStatistics() {
 		LOG.debug("loading statistics from file");
 		File file = new File(FileAndDirectoryLocations.getStatisticsFileName());
@@ -71,13 +71,13 @@ public class StatisticsController {
 			statistics = new StatisticsModel();
 		}
 	}
-
+	
 	public void countSongAsPresentedToday(Song song) {
 		Validate.notNull(song, "counted song must be different from null");
 		LOG.info("counting song \"{}\" as presented today", song.getTitle());
 		statistics.addStatisticsEntry(song, new Date());
 	}
-
+	
 	public synchronized boolean saveStatistics() {
 		File file = new File(FileAndDirectoryLocations.getStatisticsFileName());
 		try {
@@ -90,7 +90,7 @@ public class StatisticsController {
 			return false;
 		}
 	}
-
+	
 	public void exportStatisticsAll(SongsModel songs, File targetExcelFile) {
 		// collect basic data
 		Map<String, Song> songsByUUID = new HashMap<>();
@@ -98,10 +98,10 @@ public class StatisticsController {
 			songsByUUID.put(song.getUUID(), song);
 		}
 		List<String> months = statistics.getUsedMonths();
-
+		
 		// create a new workbook
 		Workbook workbook = new HSSFWorkbook();
-
+		
 		// define formats
 		CellStyle integerStyle = workbook.createCellStyle();
 		DataFormat df = workbook.createDataFormat();
@@ -112,9 +112,9 @@ public class StatisticsController {
 		textBoldStyle.setDataFormat(HSSFDataFormat.getBuiltinFormat("text"));
 		org.apache.poi.ss.usermodel.Font font = workbook.createFont();
 		font.setColor(org.apache.poi.ss.usermodel.Font.COLOR_RED);
-		font.setBoldweight(org.apache.poi.ss.usermodel.Font.BOLDWEIGHT_BOLD);
+		font.setBold(true);
 		textBoldStyle.setFont(font);
-
+		
 		for (String month : months) {
 			Map<String, Integer> monthStatsByUUID = statistics.getStatisticsForMonth(month);
 			Map<Song, Integer> monthStatsBySong = new TreeMap<>();
@@ -126,16 +126,16 @@ public class StatisticsController {
 					LOG.info("no song found in database for UUID {}", uuid);
 				}
 			}
-
+			
 			Sheet sheet = workbook.createSheet(month);
 			Row row = null;
-
+			
 			int rownum = 0;
-
+			
 			row = sheet.createRow(rownum);
-
+			
 			int cellnum = 0;
-
+			
 			addTextCell(row, cellnum++, textBoldStyle, "Presentation Count");
 			addTextCell(row, cellnum++, textBoldStyle, "Song Title");
 			addTextCell(row, cellnum++, textBoldStyle, "Composer (Music)");
@@ -143,14 +143,14 @@ public class StatisticsController {
 			addTextCell(row, cellnum++, textBoldStyle, "Publisher");
 			addTextCell(row, cellnum++, textBoldStyle, "Copyright Notes");
 			addTextCell(row, cellnum++, textBoldStyle, "Song Lyrics");
-
+			
 			rownum++;
-
+			
 			for (Song song : monthStatsBySong.keySet()) {
 				row = sheet.createRow(rownum);
-
+				
 				cellnum = 0;
-
+				
 				addIntegerCell(row, cellnum++, integerStyle, monthStatsBySong.get(song));
 				addTextCell(row, cellnum++, textStyle, song.getTitle());
 				addTextCell(row, cellnum++, textStyle, song.getComposer());
@@ -158,16 +158,16 @@ public class StatisticsController {
 				addTextCell(row, cellnum++, textStyle, song.getPublisher());
 				addTextCell(row, cellnum++, textStyle, song.getAdditionalCopyrightNotes());
 				addTextCell(row, cellnum++, textStyle, song.getLyrics());
-
+				
 				rownum++;
 			}
-
+			
 			for (int i = 0; i < cellnum; i++) {
 				sheet.autoSizeColumn(i);
 			}
 			sheet.createFreezePane(0, 1);
 		}
-
+		
 		try (FileOutputStream out = new FileOutputStream(targetExcelFile)) {
 			workbook.write(out);
 			out.close();
@@ -177,18 +177,23 @@ public class StatisticsController {
 				+ "\n\nPlease verify that you have write access and the file is not opened by any other program!");
 			LOG.warn("could not write statistics to file", e);
 		}
+		try (FileOutputStream out = new FileOutputStream(targetExcelFile)) {
+			workbook.close();
+		} catch (IOException e) {
+			// do nothing
+		}
 	}
-
+	
 	private static void addTextCell(Row row, int cellnum, CellStyle style, String text) {
 		Cell cell = addCell(row, cellnum, style);
 		cell.setCellValue(text);
 	}
-
+	
 	private static void addIntegerCell(Row row, int cellnum, CellStyle style, Integer number) {
 		Cell cell = addCell(row, cellnum, style);
 		cell.setCellValue(number);
 	}
-
+	
 	private static Cell addCell(Row row, int cellnum, CellStyle style) {
 		Cell cell = row.createCell(cellnum);
 		cell.setCellStyle(style);
