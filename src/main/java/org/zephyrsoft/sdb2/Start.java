@@ -52,7 +52,6 @@ public final class Start {
 		
 		// parse command line arguments
 		CmdLineParser parser = new CmdLineParser(options);
-		parser.setUsageWidth(80);
 		try {
 			parser.parseArgument(args);
 		} catch (CmdLineException e) {

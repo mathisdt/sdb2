@@ -21,7 +21,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 
 /**
  * Methods which are missing in the {@link String} class.<br/>
