@@ -24,7 +24,6 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -98,6 +97,7 @@ import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
+import org.zephyrsoft.sdb2.model.SelectableScreen;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
@@ -233,9 +233,9 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JSpinner spinnerDistanceTitleText;
 	private JSpinner spinnerDistanceTextCopyright;
 	private JComboBox<FilterTypeEnum> comboSongListFiltering;
-	private JComboBox<GraphicsDevice> comboPresentationScreen1Display;
+	private JComboBox<SelectableScreen> comboPresentationScreen1Display;
 	private JComboBox<ScreenContentsEnum> comboPresentationScreen1Contents;
-	private JComboBox<GraphicsDevice> comboPresentationScreen2Display;
+	private JComboBox<SelectableScreen> comboPresentationScreen2Display;
 	private JComboBox<ScreenContentsEnum> comboPresentationScreen2Contents;
 	private JSpinner spinnerCountAsDisplayedAfter;
 	
@@ -414,7 +414,8 @@ public class MainWindow extends JFrame implements UIScroller {
 					updateLabel.addMouseListener(new MouseAdapter() {
 						@Override
 						public void mouseClicked(MouseEvent event) {
-							if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+							if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(
+								Desktop.Action.BROWSE)) {
 								try {
 									LOG.info("starting browse action for {}", updateAvailable.getWebUrl());
 									Desktop.getDesktop().browse(new URI(updateAvailable.getWebUrl()));
@@ -498,22 +499,23 @@ public class MainWindow extends JFrame implements UIScroller {
 		comboPresentationScreen2Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
 		
 		// load values for instantly displayed settings
-		Boolean showTitle = settingsModel.getBoolean(SettingKey.SHOW_TITLE);
+		Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
 		checkboxShowTitle.setSelected(showTitle == null ? false : showTitle.booleanValue());
-		setSpinnerValue(spinnerTopMargin, settingsModel.getInteger(SettingKey.TOP_MARGIN));
-		setSpinnerValue(spinnerLeftMargin, settingsModel.getInteger(SettingKey.LEFT_MARGIN));
-		setSpinnerValue(spinnerRightMargin, settingsModel.getInteger(SettingKey.RIGHT_MARGIN));
-		setSpinnerValue(spinnerBottomMargin, settingsModel.getInteger(SettingKey.BOTTOM_MARGIN));
-		setSpinnerValue(spinnerDistanceTitleText, settingsModel.getInteger(SettingKey.DISTANCE_TITLE_TEXT));
-		setSpinnerValue(spinnerDistanceTextCopyright, settingsModel.getInteger(SettingKey.DISTANCE_TEXT_COPYRIGHT));
-		comboSongListFiltering.setSelectedItem(settingsModel.get(SettingKey.SONG_LIST_FILTER));
+		setSpinnerValue(spinnerTopMargin, settingsModel.get(SettingKey.TOP_MARGIN, Integer.class));
+		setSpinnerValue(spinnerLeftMargin, settingsModel.get(SettingKey.LEFT_MARGIN, Integer.class));
+		setSpinnerValue(spinnerRightMargin, settingsModel.get(SettingKey.RIGHT_MARGIN, Integer.class));
+		setSpinnerValue(spinnerBottomMargin, settingsModel.get(SettingKey.BOTTOM_MARGIN, Integer.class));
+		setSpinnerValue(spinnerDistanceTitleText, settingsModel.get(SettingKey.DISTANCE_TITLE_TEXT, Integer.class));
+		setSpinnerValue(spinnerDistanceTextCopyright, settingsModel.get(SettingKey.DISTANCE_TEXT_COPYRIGHT,
+			Integer.class));
+		comboSongListFiltering.setSelectedItem(settingsModel.get(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.class));
 		comboPresentationScreen1Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
-			(String) settingsModel.get(SettingKey.SCREEN_1_DISPLAY)));
-		comboPresentationScreen1Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_1_CONTENTS));
+			settingsModel.get(SettingKey.SCREEN_1_DISPLAY, Integer.class)));
+		comboPresentationScreen1Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.class));
 		comboPresentationScreen2Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
-			(String) settingsModel.get(SettingKey.SCREEN_2_DISPLAY)));
-		comboPresentationScreen2Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_CONTENTS));
-		setSpinnerValue(spinnerCountAsDisplayedAfter, settingsModel.getInteger(SettingKey.SECONDS_UNTIL_COUNTED));
+			settingsModel.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)));
+		comboPresentationScreen2Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class));
+		setSpinnerValue(spinnerCountAsDisplayedAfter, settingsModel.get(SettingKey.SECONDS_UNTIL_COUNTED, Integer.class));
 	}
 	
 	private static void setSpinnerValue(JSpinner spinner, Object value) {
@@ -543,13 +545,15 @@ public class MainWindow extends JFrame implements UIScroller {
 			settingsModel.put(SettingKey.DISTANCE_TITLE_TEXT, spinnerDistanceTitleText.getValue());
 			settingsModel.put(SettingKey.DISTANCE_TEXT_COPYRIGHT, spinnerDistanceTextCopyright.getValue());
 			settingsModel.put(SettingKey.SONG_LIST_FILTER, comboSongListFiltering.getSelectedItem());
-			String screenOneId = ScreenHelper.getScreenId((GraphicsDevice) comboPresentationScreen1Display
-				.getSelectedItem());
-			settingsModel.put(SettingKey.SCREEN_1_DISPLAY, screenOneId);
+			Integer screenOneIndex = comboPresentationScreen1Display.getSelectedItem() == null
+				? null
+				: ((SelectableScreen) comboPresentationScreen1Display.getSelectedItem()).getIndex();
+			settingsModel.put(SettingKey.SCREEN_1_DISPLAY, screenOneIndex);
 			settingsModel.put(SettingKey.SCREEN_1_CONTENTS, comboPresentationScreen1Contents.getSelectedItem());
-			String screenTwoId = ScreenHelper.getScreenId((GraphicsDevice) comboPresentationScreen2Display
-				.getSelectedItem());
-			settingsModel.put(SettingKey.SCREEN_2_DISPLAY, screenTwoId);
+			Integer screenTwoIndex = comboPresentationScreen2Display.getSelectedItem() == null
+				? null
+				: ((SelectableScreen) comboPresentationScreen2Display.getSelectedItem()).getIndex();
+			settingsModel.put(SettingKey.SCREEN_2_DISPLAY, screenTwoIndex);
 			settingsModel.put(SettingKey.SCREEN_2_CONTENTS, comboPresentationScreen2Contents.getSelectedItem());
 			settingsModel.put(SettingKey.SECONDS_UNTIL_COUNTED, spinnerCountAsDisplayedAfter.getValue());
 			// copying is not necessary for fonts, colors and the logo file name
@@ -575,7 +579,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	private boolean selectFont(SettingKey target) {
 		JFontChooser fontChooser = new JFontChooser();
 		fontChooser.setSelectedFont(new Font("Dialog", Font.BOLD | Font.ITALIC, 56));
-		Font font = settingsModel.getFont(target);
+		Font font = settingsModel.get(target, Font.class);
 		if (font != null) {
 			fontChooser.setSelectedFont(font);
 		}
@@ -613,7 +617,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	private boolean selectColor(SettingKey target, Color defaultColor, String title) {
-		Color color = settingsModel.getColor(target);
+		Color color = settingsModel.get(target, Color.class);
 		if (color == null) {
 			color = defaultColor;
 		}
@@ -640,7 +644,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	protected void handleSelectLogo() {
 		JFileChooser fileChooser = new JFileChooser();
-		String pathname = settingsModel.getString(SettingKey.LOGO_FILE);
+		String pathname = settingsModel.get(SettingKey.LOGO_FILE, String.class);
 		if (pathname != null) {
 			File currentFile = new File(pathname);
 			if (currentFile.isFile() && currentFile.canRead()) {
@@ -756,7 +760,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	private void applyFilter() {
 		saveSong();
-		FieldName[] fieldsToSearch = ((FilterTypeEnum) settingsModel.get(SettingKey.SONG_LIST_FILTER)).getFields();
+		FieldName[] fieldsToSearch = settingsModel.get(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.class).getFields();
 		songsListFiltered = indexer.search(IndexType.ALL_SONGS, textFieldFilter.getText(), fieldsToSearch);
 		songsListModel.refilter();
 		songsListSelected = songsList.getSelectedValue();
@@ -1086,7 +1090,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	private Image loadLogo() {
-		String logoPath = settingsModel.getString(SettingKey.LOGO_FILE);
+		String logoPath = settingsModel.get(SettingKey.LOGO_FILE, String.class);
 		if (logoPath != null && !logoPath.equals("")) {
 			File logoFile = new File(logoPath);
 			if (logoFile.isFile() && logoFile.canRead()) {

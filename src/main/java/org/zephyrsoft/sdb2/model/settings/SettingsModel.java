@@ -16,13 +16,13 @@
  */
 package org.zephyrsoft.sdb2.model.settings;
 
-import java.awt.Color;
-import java.awt.Font;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import org.zephyrsoft.sdb2.model.XMLConverter;
+
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
-import org.zephyrsoft.sdb2.model.XMLConverter;
 
 /**
  * Global settings of the Song Database.
@@ -39,7 +39,21 @@ public class SettingsModel {
 		initIfNecessary();
 	}
 	
-	public Object get(SettingKey key) {
+	@SuppressWarnings("unchecked")
+	public <T> T get(SettingKey key, Class<T> clazz) {
+		for (Setting<Object> setting : store) {
+			if (setting.getKey() == key) {
+				if (setting.getValue() != null && !clazz.isAssignableFrom(setting.getValue().getClass())) {
+					throw new ClassCastException("wrong setting type - wanted " + clazz.getName() + " but found "
+						+ setting.getValue().getClass().getName());
+				}
+				return (T) setting.getValue();
+			}
+		}
+		return null;
+	}
+	
+	private Object get(SettingKey key) {
 		for (Setting<Object> setting : store) {
 			if (setting.getKey() == key) {
 				return setting.getValue();
@@ -57,46 +71,19 @@ public class SettingsModel {
 		if (store == null) {
 			store = new TreeSet<>();
 		}
+		doMigrationIfNecessary();
 	}
 	
-	public String getString(SettingKey key) {
-		Object value = get(key);
-		if (key.getType() != String.class) {
-			throw new ClassCastException("wrong setting type");
-		}
-		return (String) value;
+	private void doMigrationIfNecessary() {
+		clearIfString(SettingKey.SCREEN_1_DISPLAY);
+		clearIfString(SettingKey.SCREEN_2_DISPLAY);
 	}
 	
-	public Integer getInteger(SettingKey key) {
-		Object value = get(key);
-		if (key.getType() != Integer.class) {
-			throw new ClassCastException("wrong setting type");
+	private void clearIfString(SettingKey key) {
+		if (get(key) instanceof String) {
+			// it should be an Integer
+			put(key, null);
 		}
-		return (Integer) value;
-	}
-	
-	public Color getColor(SettingKey key) {
-		Object value = get(key);
-		if (key.getType() != Color.class) {
-			throw new ClassCastException("wrong setting type");
-		}
-		return (Color) value;
-	}
-	
-	public Font getFont(SettingKey key) {
-		Object value = get(key);
-		if (key.getType() != Font.class) {
-			throw new ClassCastException("wrong setting type");
-		}
-		return (Font) value;
-	}
-	
-	public Boolean getBoolean(SettingKey key) {
-		Object value = get(key);
-		if (key.getType() != Boolean.class) {
-			throw new ClassCastException("wrong setting type");
-		}
-		return (Boolean) value;
 	}
 	
 	public boolean isSet(SettingKey key) {

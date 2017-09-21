@@ -18,7 +18,6 @@ package org.zephyrsoft.sdb2;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.GraphicsDevice;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -47,6 +46,7 @@ import org.zephyrsoft.sdb2.gui.MainWindow;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
+import org.zephyrsoft.sdb2.model.SelectableScreen;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.XMLConverter;
@@ -76,7 +76,7 @@ public class MainController implements Scroller {
 	private SongsModel songs = null;
 	private SettingsModel settings = null;
 	
-	private List<GraphicsDevice> screens;
+	private List<SelectableScreen> screens;
 	private PresenterBundle presentationControl;
 	private Song currentlyPresentedSong = null;
 	
@@ -95,16 +95,16 @@ public class MainController implements Scroller {
 		
 		presentationControl = new PresenterBundle();
 		
-		Presenter presenter1 = createPresenter(ScreenHelper.getScreen(screens, settings
-			.getString(SettingKey.SCREEN_1_DISPLAY)), presentable, (ScreenContentsEnum) settings
-			.get(SettingKey.SCREEN_1_CONTENTS));
+		Presenter presenter1 = createPresenter(ScreenHelper.getScreen(screens,
+			settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class)), presentable,
+			settings.get(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.class));
 		if (presenter1 != null) {
 			presentationControl.addPresenter(presenter1);
 		}
 		
-		Presenter presenter2 = createPresenter(ScreenHelper.getScreen(screens, settings
-			.getString(SettingKey.SCREEN_2_DISPLAY)), presentable, (ScreenContentsEnum) settings
-			.get(SettingKey.SCREEN_2_CONTENTS));
+		Presenter presenter2 = createPresenter(ScreenHelper.getScreen(screens,
+			settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)), presentable,
+			settings.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class));
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
 		}
@@ -119,7 +119,7 @@ public class MainController implements Scroller {
 			currentlyPresentedSong = presentable.getSong();
 			
 			if (currentlyPresentedSong != null) {
-				startCountDown(settings.getInteger(SettingKey.SECONDS_UNTIL_COUNTED), currentlyPresentedSong);
+				startCountDown(settings.get(SettingKey.SECONDS_UNTIL_COUNTED, Integer.class), currentlyPresentedSong);
 			} else {
 				stopCountDown();
 			}
@@ -179,7 +179,8 @@ public class MainController implements Scroller {
 		presentationControl.moveToLine(part, line);
 	}
 	
-	private PresenterWindow createPresenter(GraphicsDevice screen, Presentable presentable, ScreenContentsEnum contents) {
+	private PresenterWindow createPresenter(SelectableScreen screen, Presentable presentable,
+		ScreenContentsEnum contents) {
 		if (screen == null) {
 			// nothing to be done
 			return null;
@@ -187,7 +188,7 @@ public class MainController implements Scroller {
 		return new PresenterWindow(screen, presentable, contents, settings);
 	}
 	
-	public List<GraphicsDevice> getScreens() {
+	public List<SelectableScreen> getScreens() {
 		return Collections.unmodifiableList(screens);
 	}
 	
@@ -201,8 +202,8 @@ public class MainController implements Scroller {
 		// for the setting "don't show at all"
 		screens.add(null);
 		
-		List<GraphicsDevice> screensInternal = ScreenHelper.getScreens();
-		for (GraphicsDevice screen : screensInternal) {
+		List<SelectableScreen> screensInternal = ScreenHelper.getScreens();
+		for (SelectableScreen screen : screensInternal) {
 			screens.add(screen);
 		}
 	}

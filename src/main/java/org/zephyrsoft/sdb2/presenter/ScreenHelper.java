@@ -16,13 +16,15 @@
  */
 package org.zephyrsoft.sdb2.presenter;
 
+import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
-import org.zephyrsoft.util.StringTools;
+import org.zephyrsoft.sdb2.model.SelectableScreen;
 
 /**
  * Helper class for dealing with multiple screens.
@@ -30,45 +32,62 @@ import org.zephyrsoft.util.StringTools;
  * @author Mathis Dirksen-Thedens
  */
 public final class ScreenHelper {
-
+	
 	private ScreenHelper() {
 		// this class should not be instantiated
 	}
-
+	
 	/**
 	 * Get the comprehensive list of all screens attached to the system.
 	 */
-	public static List<GraphicsDevice> getScreens() {
+	public static List<SelectableScreen> getScreens() {
+		List<SelectableScreen> result = new LinkedList<>();
+		for (int i = 0; i < getGraphicsDevices().size(); i++) {
+			result.add(new SelectableScreen(i));
+		}
+		return result;
+	}
+	
+	private static List<GraphicsDevice> getGraphicsDevices() {
 		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		return Collections.unmodifiableList(Arrays.asList(env.getScreenDevices()));
 	}
-
+	
 	/**
-	 * Get a screen from the given list that has the specified ID.
+	 * Get a screen from the given list that has the specified index.
 	 * 
-	 * @param devices
+	 * @param screens
 	 *            list of possible screens
-	 * @param screenId
-	 *            the ID to find
+	 * @param screenIndex
+	 *            the index of the screen to find
 	 */
-	public static GraphicsDevice getScreen(List<GraphicsDevice> devices, String screenId) {
-		for (GraphicsDevice device : devices) {
-			if (StringTools.equals(getScreenId(device), screenId)) {
-				return device;
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Get the ID of a screen.
-	 */
-	public static String getScreenId(GraphicsDevice screen) {
-		if (screen == null) {
+	public static SelectableScreen getScreen(List<SelectableScreen> screens, Integer screenIndex) {
+		if (screenIndex == null) {
 			return null;
-		} else {
-			return screen.getIDstring();
 		}
+		return getScreen(screens, screenIndex.intValue());
 	}
-
+	
+	/**
+	 * Get a screen from the given list that has the specified index.
+	 * 
+	 * @param screens
+	 *            list of possible screens
+	 * @param screenIndex
+	 *            the index of the screen to find
+	 */
+	public static SelectableScreen getScreen(List<SelectableScreen> screens, int screenIndex) {
+		return screens.stream()
+			.filter(scr -> scr != null && scr.getIndex() == screenIndex)
+			.findFirst()
+			.orElse(null);
+	}
+	
+	public static GraphicsConfiguration getConfiguration(SelectableScreen screen) {
+		List<GraphicsDevice> graphicsDevices = getGraphicsDevices();
+		return screen.getIndex() >= graphicsDevices.size()
+			? null
+			: graphicsDevices.get(screen.getIndex()).getDefaultConfiguration();
+	}
+	
 }

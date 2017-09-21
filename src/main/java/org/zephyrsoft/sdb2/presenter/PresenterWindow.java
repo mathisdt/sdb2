@@ -20,18 +20,20 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
-import java.awt.GraphicsDevice;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.image.MemoryImageSource;
 import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
+
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
+import org.zephyrsoft.sdb2.model.SelectableScreen;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.util.gui.ImagePanel;
@@ -56,9 +58,10 @@ public class PresenterWindow extends JFrame implements Presenter {
 	
 	private Color backgroundColor;
 	
-	public PresenterWindow(GraphicsDevice screen, Presentable presentable, ScreenContentsEnum contents,
+	public PresenterWindow(SelectableScreen screen, Presentable presentable, ScreenContentsEnum contents,
 		SettingsModel settings) {
-		super(screen.getDefaultConfiguration());
+		super(ScreenHelper.getConfiguration(screen));
+		
 		this.presentable = presentable;
 		this.contents = contents;
 		this.settings = settings;
@@ -67,7 +70,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		contentPane = new JPanel();
 		contentPane.setLayout(new BorderLayout(0, 0));
-		backgroundColor = settings.getColor(SettingKey.BACKGROUND_COLOR);
+		backgroundColor = settings.get(SettingKey.BACKGROUND_COLOR, Color.class);
 		setBackground(backgroundColor);
 		contentPane.setBackground(backgroundColor);
 		setContentPane(contentPane);
@@ -81,37 +84,36 @@ public class PresenterWindow extends JFrame implements Presenter {
 		setUndecorated(true);
 		getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 		// maximize window on indicated screen
-		setBounds(screen.getDefaultConfiguration().getBounds());
+		setBounds(ScreenHelper.getConfiguration(screen).getBounds());
 		
 		prepareContent();
 	}
 	
 	private void prepareContent() {
-		int topMargin = settings.getInteger(SettingKey.TOP_MARGIN);
-		int leftMargin = settings.getInteger(SettingKey.LEFT_MARGIN);
-		int rightMargin = settings.getInteger(SettingKey.RIGHT_MARGIN);
-		int bottomMargin = settings.getInteger(SettingKey.BOTTOM_MARGIN);
+		int topMargin = settings.get(SettingKey.TOP_MARGIN, Integer.class);
+		int leftMargin = settings.get(SettingKey.LEFT_MARGIN, Integer.class);
+		int rightMargin = settings.get(SettingKey.RIGHT_MARGIN, Integer.class);
+		int bottomMargin = settings.get(SettingKey.BOTTOM_MARGIN, Integer.class);
 		
 		if (presentable.getSong() != null) {
 			// determine WHAT to present and HOW to present it
-			boolean showTitle = settings.getBoolean(SettingKey.SHOW_TITLE).booleanValue();
+			boolean showTitle = settings.get(SettingKey.SHOW_TITLE, Boolean.class).booleanValue();
 			boolean showChords = (contents == ScreenContentsEnum.LYRICS_AND_CHORDS);
-			Font titleFont = settings.getFont(SettingKey.TITLE_FONT);
-			Font lyricsFont = settings.getFont(SettingKey.LYRICS_FONT);
-			Font translationFont = settings.getFont(SettingKey.TRANSLATION_FONT);
-			Font copyrightFont = settings.getFont(SettingKey.COPYRIGHT_FONT);
-			int titleLyricsDistance = settings.getInteger(SettingKey.DISTANCE_TITLE_TEXT);
-			int lyricsCopyrightDistance = settings.getInteger(SettingKey.DISTANCE_TEXT_COPYRIGHT);
-			Color foregroundColor = settings.getColor(SettingKey.TEXT_COLOR);
+			Font titleFont = settings.get(SettingKey.TITLE_FONT, Font.class);
+			Font lyricsFont = settings.get(SettingKey.LYRICS_FONT, Font.class);
+			Font translationFont = settings.get(SettingKey.TRANSLATION_FONT, Font.class);
+			Font copyrightFont = settings.get(SettingKey.COPYRIGHT_FONT, Font.class);
+			int titleLyricsDistance = settings.get(SettingKey.DISTANCE_TITLE_TEXT, Integer.class);
+			int lyricsCopyrightDistance = settings.get(SettingKey.DISTANCE_TEXT_COPYRIGHT, Integer.class);
+			Color foregroundColor = settings.get(SettingKey.TEXT_COLOR, Color.class);
 			
 			// create a SongView to render the song
-			songView =
-				new SongView.Builder(presentable.getSong()).showTitle(showTitle).showChords(showChords)
-					.titleFont(titleFont).lyricsFont(lyricsFont).translationFont(translationFont)
-					.copyrightFont(copyrightFont).topMargin(topMargin).leftMargin(leftMargin).rightMargin(rightMargin)
-					.bottomMargin(bottomMargin).titleLyricsDistance(titleLyricsDistance)
-					.lyricsCopyrightDistance(lyricsCopyrightDistance).foregroundColor(foregroundColor)
-					.backgroundColor(backgroundColor).build();
+			songView = new SongView.Builder(presentable.getSong()).showTitle(showTitle).showChords(showChords)
+				.titleFont(titleFont).lyricsFont(lyricsFont).translationFont(translationFont)
+				.copyrightFont(copyrightFont).topMargin(topMargin).leftMargin(leftMargin).rightMargin(rightMargin)
+				.bottomMargin(bottomMargin).titleLyricsDistance(titleLyricsDistance)
+				.lyricsCopyrightDistance(lyricsCopyrightDistance).foregroundColor(foregroundColor)
+				.backgroundColor(backgroundColor).build();
 			songView.setOpaque(true);
 			contentPane.add(songView, BorderLayout.CENTER);
 		} else if (presentable.getImage() != null) {
@@ -130,8 +132,8 @@ public class PresenterWindow extends JFrame implements Presenter {
 	private static Cursor getTransparentCursor() {
 		int[] pixels = new int[16 * 16];
 		Image image = Toolkit.getDefaultToolkit().createImage(new MemoryImageSource(16, 16, pixels, 0, 16));
-		Cursor transparentCursor =
-			Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0), "invisiblecursor");
+		Cursor transparentCursor = Toolkit.getDefaultToolkit().createCustomCursor(image, new Point(0, 0),
+			"invisiblecursor");
 		return transparentCursor;
 	}
 	
