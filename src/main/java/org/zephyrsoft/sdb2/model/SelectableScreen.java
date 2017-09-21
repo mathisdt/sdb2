@@ -26,18 +26,34 @@ import com.google.common.base.Preconditions;
 public class SelectableScreen {
 	
 	private final int index;
+	private final boolean available;
 	
 	/**
 	 * @param index
 	 *            0-based (screen 0 is the main display)
 	 */
 	public SelectableScreen(int index) {
+		this(index, true);
+	}
+	
+	/**
+	 * @param index
+	 *            0-based (screen 0 is the main display)
+	 * @param available
+	 *            is this screen available at present?
+	 */
+	public SelectableScreen(int index, boolean available) {
 		Preconditions.checkArgument(index >= 0);
 		this.index = index;
+		this.available = available;
 	}
 	
 	public int getIndex() {
 		return index;
+	}
+	
+	public boolean isAvailable() {
+		return available;
 	}
 	
 	/**
@@ -45,12 +61,34 @@ public class SelectableScreen {
 	 *         {@link #index}, so the screen with index 1 will have a description like "screen 2"!
 	 */
 	public String getDescription() {
-		return "Screen " + (index + 1) + (index == 0 ? " (main screen)" : "");
+		return "Screen " + (index + 1) + (index == 0 ? " (main screen)" : "") + (available ? "" : " - currently unavailable");
 	}
 	
 	@Override
 	public String toString() {
 		return getDescription();
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + index;
+		return result;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SelectableScreen other = (SelectableScreen) obj;
+		if (index != other.index)
+			return false;
+		return true;
 	}
 	
 }

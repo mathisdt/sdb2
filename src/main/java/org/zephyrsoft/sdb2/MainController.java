@@ -187,7 +187,7 @@ public class MainController implements Scroller {
 	
 	private PresenterWindow createPresenter(SelectableScreen screen, Presentable presentable,
 		ScreenContentsEnum contents) {
-		if (screen == null) {
+		if (screen == null || !screen.isAvailable()) {
 			// nothing to be done
 			return null;
 		}
@@ -208,7 +208,17 @@ public class MainController implements Scroller {
 		// for the setting "don't show at all"
 		screens.add(null);
 		
-		screens.addAll(ScreenHelper.getScreens());
+		List<SelectableScreen> availableScreens = ScreenHelper.getScreens();
+		screens.addAll(availableScreens);
+		
+		// if applicable: add currently unavailable screens if they are mentioned in settings
+		Integer screen1Index = settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class);
+		Integer screen2Index = settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class);
+		int maxScreenIndex = Math.max(screen1Index == null ? 0 : screen1Index, screen2Index == null ? 0 : screen2Index);
+		for (int i = availableScreens.size(); i <= maxScreenIndex; i++) {
+			LOG.debug("adding screen with index {} as unavailable", i);
+			screens.add(new SelectableScreen(i, false));
+		}
 	}
 	
 	public boolean prepareClose() {

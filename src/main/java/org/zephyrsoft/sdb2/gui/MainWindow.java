@@ -1202,6 +1202,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	public void handleError(Throwable ex) {
+		LOG.error("handled exception", ex);
 		StringBuilder ret = new StringBuilder();
 		ret.append(ex.getMessage());
 		ret.append(NEWLINE);
@@ -2186,7 +2187,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblImportingSongs.gridy = 8;
 		panelImportExportStatistics.add(lblImportingSongs, gbcLblImportingSongs);
 		
-		// TODO handle importers dynamically, load every implementation of "Importer" as button
+		// TODO handle importers dynamically, load every implementation of "Importer" as button (=> ServiceLoader?)
 		btnImportFromSdb1 = new JButton("Import from SDB 1.x");
 		btnImportFromSdb1.addActionListener(new ActionListener() {
 			@Override
