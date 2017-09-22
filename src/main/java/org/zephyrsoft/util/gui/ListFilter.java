@@ -21,14 +21,16 @@ package org.zephyrsoft.util.gui;
  * 
  * @author Mathis Dirksen-Thedens
  */
-public abstract class ListFilter<T> {
+@FunctionalInterface
+public interface ListFilter<T> {
 	
 	/**
 	 * Check an object to see if it should be in the filtered list.
 	 * 
-	 * @param object the object to check
+	 * @param object
+	 *            the object to check
 	 * @return {@code true} if the object should be in the filtered list; {@code false} otherwise
 	 */
-	public abstract boolean isAccepted(T object);
+	boolean isAccepted(T object);
 	
 }

@@ -466,15 +466,12 @@ public class MainWindow extends JFrame implements UIScroller {
 		indexAllSongs();
 		
 		// song list filtering
-		ListFilter<Song> filter = new ListFilter<Song>() {
-			@Override
-			public boolean isAccepted(Song object) {
-				String filterText = textFieldFilter.getText();
-				if (StringTools.isBlank(filterText)) {
-					return true;
-				} else {
-					return songsListFiltered.contains(object);
-				}
+		ListFilter<Song> filter = song -> {
+			String filterText = textFieldFilter.getText();
+			if (StringTools.isBlank(filterText)) {
+				return true;
+			} else {
+				return songsListFiltered.contains(song);
 			}
 		};
 		songsListModel.setFilter(filter);

@@ -149,14 +149,14 @@ public class SongView extends JPanel implements Scroller {
 		Area areaUpper = new Area(new Rectangle2D.Double(0, 0, getWidth(), topBorderHeight));
 		g2d.setPaint(new GradientPaint(0, 0, new Color(backgroundColor.getRed(), backgroundColor.getGreen(),
 			backgroundColor.getBlue(), 255), 0, topBorderHeight, new Color(backgroundColor.getRed(), backgroundColor
-			.getGreen(), backgroundColor.getBlue(), 0), false));
+				.getGreen(), backgroundColor.getBlue(), 0), false));
 		g2d.fill(areaUpper);
 		
 		// gradient lower border as overlay
 		Area areaLower = new Area(new Rectangle2D.Double(0, getHeight() - bottomBorderHeight, getWidth(), getHeight()));
 		g2d.setPaint(new GradientPaint(0, getHeight() - bottomBorderHeight, new Color(backgroundColor.getRed(),
 			backgroundColor.getGreen(), backgroundColor.getBlue(), 0), 0, getHeight(), new Color(backgroundColor
-			.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue(), 255), false));
+				.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue(), 255), false));
 		g2d.fill(areaLower);
 	}
 	
@@ -188,11 +188,11 @@ public class SongView extends JPanel implements Scroller {
 			
 			handleTitlePosition(element);
 			if (isBodyElement(element)) {
-				if (((element.getType() == SongElementEnum.NEW_LINE && prevElement != null && prevElement.getType() == SongElementEnum.NEW_LINE) || (element
-					.getType() == SongElementEnum.NEW_LINE
-					&& prevElement != null
-					&& StringTools.isBlank(prevElement.getElement()) && ((prevPrevElement != null && prevPrevElement
-					.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null)))
+				if (((element.getType() == SongElementEnum.NEW_LINE && prevElement != null && prevElement.getType() == SongElementEnum.NEW_LINE)
+					|| (element.getType() == SongElementEnum.NEW_LINE
+						&& prevElement != null
+						&& StringTools.isBlank(prevElement.getElement()) && ((prevPrevElement != null && prevPrevElement
+							.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null)))
 					&& currentPart.size() > 0) {
 					// [ two consecutive newlines OR two newlines, only separated by a blank line ] AND current part is
 					// populated with at least one line => save current part and begin a new one
@@ -207,8 +207,7 @@ public class SongView extends JPanel implements Scroller {
 					// two newlines OR a title element and a newline, separated by a non-blank lyrics line =>
 					// save current line and begin a new one
 					currentLineText = prevElement.getElement();
-					AddressableLine currentLine =
-						new AddressableLine(currentLineText, createPosition(element, prevElement));
+					AddressableLine currentLine = new AddressableLine(currentLineText, createPosition(element, prevElement));
 					currentPart.add(currentLine);
 				}
 			} else if (element.getType() == SongElementEnum.COPYRIGHT
@@ -219,9 +218,8 @@ public class SongView extends JPanel implements Scroller {
 				// a newline and a copyright element, separated by a non-blank lyrics line =>
 				// save current line and begin a new one
 				currentLineText = prevElement.getElement();
-				AddressableLine currentLine =
-					new AddressableLine(currentLineText, createPosition(prevElement)
-						- LYRICS_COPYRIGHT_DISTANCE_TEXT.length() - LYRICS_FINAL_NEWLINE.length());
+				AddressableLine currentLine = new AddressableLine(currentLineText, createPosition(prevElement)
+					- LYRICS_COPYRIGHT_DISTANCE_TEXT.length() - LYRICS_FINAL_NEWLINE.length());
 				currentPart.add(currentLine);
 			}
 			
@@ -229,7 +227,7 @@ public class SongView extends JPanel implements Scroller {
 			if ((element.getType() == SongElementEnum.NEW_LINE && prevElement != null && prevElement.getType() == SongElementEnum.NEW_LINE)
 				|| (element.getType() == SongElementEnum.NEW_LINE && prevElement != null
 					&& StringTools.isBlank(prevElement.getElement()) && ((prevPrevElement != null && prevPrevElement
-					.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null))) {
+						.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null))) {
 				type = SongElementEnum.LYRICS.name();
 			}
 			appendText(element.getElement(), type);

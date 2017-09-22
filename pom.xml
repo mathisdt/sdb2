@@ -19,9 +19,9 @@
 	</licenses>
 
 	<scm>
-		<url>https://dev.zephyrsoft.org/svn/sdb2/trunk/</url>
-		<connection>scm:svn:https://dev.zephyrsoft.org/svn/sdb2/trunk/</connection>
-		<developerConnection>scm:svn:https://dev.zephyrsoft.org/svn/sdb2/trunk/</developerConnection>
+		<url>scm:git:ssh:git@github.com:mathisdt/sdb2.git</url>
+		<connection>scm:git:ssh:git@github.com:mathisdt/sdb2.git</connection>
+		<developerConnection>scm:git:ssh:git@github.com:mathisdt/sdb2.git</developerConnection>
 	</scm>
 
 	<properties>
@@ -195,39 +195,12 @@
 	    </developer>
 	</developers>
 
-	<repositories>
-		<repository>
-			<id>all</id>
-			<url>${repository_url}</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
-	<distributionManagement>
-		<repository>
-			<id>releases</id>
-			<name>Internal Release Repository</name>
-			<url>${repository_release_url}</url>
-		</repository>
-
-		<snapshotRepository>
-			<id>snapshots</id>
-			<name>Internal snapshot Repository</name>
-			<url>${repository_snapshot_url}</url>
-		</snapshotRepository>
-	</distributionManagement>
-
 	<build>
 		<plugins>
 			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>1.4.1</version>
+                <version>3.0.0-M1</version>
                 <executions>
                     <execution>
                         <id>enforce-banned-dependencies</id>
@@ -257,7 +230,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>license-maven-plugin</artifactId>
-				<version>1.8</version>
+				<version>1.14</version>
 				<configuration>
 					<useMissingFile>true</useMissingFile>
 					<useRepositoryMissingFiles>false</useRepositoryMissingFiles>
@@ -289,7 +262,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
+				<version>3.7.0</version>
 				<inherited>true</inherited>
 				<configuration>
 					<source>${version.java}</source>
@@ -299,7 +272,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
-				<version>2.8</version>
+				<version>3.0.2</version>
 				<executions>
 					<execution>
 						<id>copy-dependencies</id>
@@ -318,7 +291,7 @@
 			<plugin>
 				<groupId>com.akathist.maven.plugins.launch4j</groupId>
 				<artifactId>launch4j-maven-plugin</artifactId>
-				<version>1.7.12</version>
+				<version>1.7.21</version>
 				<executions>
 					<execution>
 						<id>l4j-gui</id>
@@ -334,7 +307,7 @@
 							<errTitle>SDB2 - Error</errTitle>
 							<icon>src/main/resources/org/zephyrsoft/sdb2/icon.ico</icon>
 							<jre>
-								<minVersion>1.7.0</minVersion>
+								<minVersion>1.8.0</minVersion>
 							</jre>
 							<versionInfo>
 								<fileVersion>1.0.0.0</fileVersion>
@@ -356,7 +329,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.4</version>
+				<version>3.0.2</version>
 				<configuration>
 					<outputDirectory>${project.build.directory}/distribution/bin</outputDirectory>
 					<finalName>${project.artifactId}</finalName>
@@ -379,7 +352,7 @@
 			<plugin>
 			    <groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>2.1.2</version>
+				<version>3.0.1</version>
 				<executions>
 				    <execution>
 				        <id>attach-sources</id>
@@ -396,7 +369,7 @@
 
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.7</version>
+				<version>1.8</version>
 				<executions>
 					<execution>
 						<phase>prepare-package</phase>
@@ -418,13 +391,13 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.4</version>
+				<version>3.1.0</version>
 				<executions>
 					<execution>
 						<id>zip</id>
 						<phase>package</phase>
 						<goals>
-							<goal>assembly</goal>
+							<goal>single</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -441,7 +414,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>1.8</version>
+				<version>3.0.0</version>
 				<executions>
 					<execution>
 						<id>attach-distribution</id>
