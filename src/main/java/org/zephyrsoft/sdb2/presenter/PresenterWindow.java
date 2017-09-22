@@ -67,6 +67,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 	public PresenterWindow(SelectableScreen screen, Presentable presentable, ScreenContentsEnum contents,
 		SettingsModel settings) {
 		super(ScreenHelper.getConfiguration(screen));
+		setAutoRequestFocus(false);
 		this.screen = screen;
 		
 		this.presentable = presentable;

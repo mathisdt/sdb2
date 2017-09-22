@@ -17,6 +17,8 @@
 package org.zephyrsoft.sdb2.presenter;
 
 import java.awt.Image;
+
+import org.togglz.core.util.Preconditions;
 import org.zephyrsoft.sdb2.model.Song;
 
 /**
@@ -30,11 +32,7 @@ public class Presentable {
 	final Image image;
 	
 	public Presentable(Song song, Image image) {
-		// check arguments
-		if (song != null && image != null) {
-			throw new IllegalArgumentException(
-				"you cant't display a song and a logo image simultaneously, it's either or!");
-		}
+		Preconditions.checkArgument(song == null || image == null, "you cant't display a song and a logo image simultaneously, it's either or!");
 		
 		this.song = song;
 		this.image = image;

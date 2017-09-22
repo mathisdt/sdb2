@@ -124,7 +124,7 @@ public class MainController implements Scroller {
 			presentationControl.addPresenter(presenter2);
 		}
 		
-		if (presentationControl.size() == 0) {
+		if (presentationControl.isEmpty()) {
 			ErrorDialog
 				.openDialog(
 					null,

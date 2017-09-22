@@ -19,6 +19,7 @@ package org.zephyrsoft.sdb2.presenter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.zephyrsoft.sdb2.model.AddressablePart;
 
 /**
@@ -78,7 +79,7 @@ public class PresenterBundle implements Presenter {
 		}
 	}
 	
-	public int size() {
-		return presenters.size();
+	public boolean isEmpty() {
+		return presenters.isEmpty();
 	}
 }
