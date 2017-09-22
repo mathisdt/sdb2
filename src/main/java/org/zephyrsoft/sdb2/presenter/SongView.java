@@ -42,7 +42,6 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
-import org.apache.commons.lang3.Validate;
 import org.jdesktop.core.animation.timing.Animator;
 import org.jdesktop.core.animation.timing.PropertySetter;
 import org.jdesktop.core.animation.timing.TimingTargetAdapter;
@@ -54,6 +53,8 @@ import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
 import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.util.StringTools;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Renders the contents of a {@link Song} in order to display it on a screen. Scrolling is handled internally - no
@@ -337,17 +338,17 @@ public class SongView extends JPanel implements Scroller {
 	
 	@Override
 	public List<AddressablePart> getParts() {
-		Validate.notNull(parts, "the song parts are not initialized");
+		Preconditions.checkArgument(parts != null, "the song parts are not initialized");
 		return parts;
 	}
 	
 	@Override
 	public void moveToPart(Integer part) {
-		Validate.notNull(parts, "the song parts are not initialized");
+		Preconditions.checkArgument(parts != null, "the song parts are not initialized");
 		adjustHeightIfNecessary();
 		try {
 			AddressablePart addressablePart = parts.get(part);
-			Validate.notNull(addressablePart, "part index does not correspond to a part of the song");
+			Preconditions.checkArgument(addressablePart != null, "part index does not correspond to a part of the song");
 			Rectangle target = text.modelToView(addressablePart.getPosition());
 			animatedMoveTo(new Point(text.getLocation().x, topMargin - target.y));
 		} catch (BadLocationException e) {
@@ -357,13 +358,13 @@ public class SongView extends JPanel implements Scroller {
 	
 	@Override
 	public void moveToLine(Integer part, Integer line) {
-		Validate.notNull(parts, "the song parts are not initialized");
+		Preconditions.checkArgument(parts != null, "the song parts are not initialized");
 		adjustHeightIfNecessary();
 		try {
 			AddressablePart addressablePart = parts.get(part);
-			Validate.notNull(addressablePart, "part index does not correspond to a part of the song");
+			Preconditions.checkArgument(addressablePart != null, "part index does not correspond to a part of the song");
 			AddressableLine addressableLine = addressablePart.get(line);
-			Validate.notNull(addressableLine, "line index does not correspond to a line of the addressed part");
+			Preconditions.checkArgument(addressableLine != null, "line index does not correspond to a line of the addressed part");
 			Rectangle target = text.modelToView(addressableLine.getPosition());
 			animatedMoveTo(new Point(text.getLocation().x, topMargin - target.y));
 		} catch (BadLocationException e) {

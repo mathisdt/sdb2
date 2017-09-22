@@ -21,8 +21,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.Validate;
 import org.zephyrsoft.util.StringTools;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Parses a {@link Song} and thus prepares it for being shown in the editor or as presentation.
@@ -56,7 +57,7 @@ public class SongParser {
 	 * @return a list containing the elements, marked up using {@link SongElementEnum}s
 	 */
 	public static List<SongElement> parse(Song song, boolean includeTitle, boolean includeChords) {
-		Validate.notNull(song, "song may not be null");
+		Preconditions.checkArgument(song != null, "song may not be null");
 		
 		List<SongElement> ret = new ArrayList<>();
 		
@@ -131,7 +132,7 @@ public class SongParser {
 	 * Extract the first lyrics-only line from a song.
 	 */
 	public static String getFirstLyricsLine(Song song) {
-		Validate.notNull(song, "song may not be null");
+		Preconditions.checkArgument(song != null, "song may not be null");
 		
 		if (song.getLyrics() != null) {
 			for (String line : song.getLyrics().split(NEWLINE_REGEX)) {

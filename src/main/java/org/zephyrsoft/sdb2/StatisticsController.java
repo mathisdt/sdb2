@@ -22,13 +22,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.lang3.Validate;
 import org.apache.poi.hssf.usermodel.HSSFDataFormat;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -43,7 +41,10 @@ import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.XMLConverter;
 import org.zephyrsoft.sdb2.model.statistics.StatisticsModel;
+import org.zephyrsoft.util.DateTools;
 import org.zephyrsoft.util.gui.ErrorDialog;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Manages the song statistics.
@@ -73,9 +74,9 @@ public class StatisticsController {
 	}
 	
 	public void countSongAsPresentedToday(Song song) {
-		Validate.notNull(song, "counted song must be different from null");
+		Preconditions.checkArgument(song != null, "counted song must be different from null");
 		LOG.info("counting song \"{}\" as presented today", song.getTitle());
-		statistics.addStatisticsEntry(song, LocalDate.now());
+		statistics.addStatisticsEntry(song, DateTools.now());
 	}
 	
 	public synchronized boolean saveStatistics() {
@@ -177,7 +178,7 @@ public class StatisticsController {
 				+ "\n\nPlease verify that you have write access and the file is not opened by any other program!");
 			LOG.warn("could not write statistics to file", e);
 		}
-		try (FileOutputStream out = new FileOutputStream(targetExcelFile)) {
+		try {
 			workbook.close();
 		} catch (IOException e) {
 			// do nothing

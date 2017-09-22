@@ -45,7 +45,6 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import org.apache.commons.lang3.Validate;
 import org.jdesktop.core.animation.timing.Animator;
 import org.jdesktop.core.animation.timing.TimingSource;
 import org.jdesktop.swing.animation.timing.sources.SwingTimerTimingSource;
@@ -70,6 +69,7 @@ import org.zephyrsoft.sdb2.presenter.Scroller;
 import org.zephyrsoft.util.StringTools;
 import org.zephyrsoft.util.gui.ErrorDialog;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 
 /**
@@ -182,7 +182,7 @@ public class MainController implements Scroller {
 	
 	@Override
 	public List<AddressablePart> getParts() {
-		Validate.notNull(presentationControl, "there is no active presentation");
+		Preconditions.checkArgument(presentationControl != null, "there is no active presentation");
 		return presentationControl.getParts();
 	}
 	

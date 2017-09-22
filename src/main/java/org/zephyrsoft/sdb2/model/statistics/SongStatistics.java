@@ -16,14 +16,16 @@
  */
 package org.zephyrsoft.sdb2.model.statistics;
 
-import java.time.LocalDate;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.commons.lang3.Validate;
 import org.zephyrsoft.sdb2.model.Song;
 
+import com.google.common.base.Preconditions;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 /**
@@ -32,10 +34,10 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
  * @author Mathis Dirksen-Thedens
  */
 @XStreamAlias("songStatistics")
-public class SongStatistics implements Comparable<SongStatistics>, Iterable<LocalDate> {
+public class SongStatistics implements Comparable<SongStatistics>, Iterable<Date> {
 	
 	private String songUuid;
-	private SortedSet<LocalDate> presentedOn = new TreeSet<>();
+	private SortedSet<Date> presentedOn = new TreeSet<>();
 	
 	/**
 	 * Create a statistics element for a single {@link Song}. By only having a constructor with the UUID as argument,
@@ -45,7 +47,7 @@ public class SongStatistics implements Comparable<SongStatistics>, Iterable<Loca
 	 *            the UUID which belongs to the song that these statistics are kept for
 	 */
 	SongStatistics(String songUuid) {
-		Validate.notNull(songUuid, "the UUID must be different from null");
+		Preconditions.checkArgument(songUuid != null, "the UUID must be different from null");
 		this.songUuid = songUuid;
 	}
 	
@@ -54,7 +56,7 @@ public class SongStatistics implements Comparable<SongStatistics>, Iterable<Loca
 	}
 	
 	@Override
-	public Iterator<LocalDate> iterator() {
+	public Iterator<Date> iterator() {
 		return presentedOn.iterator();
 	}
 	
@@ -62,13 +64,23 @@ public class SongStatistics implements Comparable<SongStatistics>, Iterable<Loca
 		return presentedOn.size();
 	}
 	
-	public boolean dateAdd(LocalDate date) {
-		return presentedOn.add(date);
+	public boolean dateAdd(Date date) {
+		return presentedOn.add(wipeTime(date));
+	}
+	
+	private Date wipeTime(Date date) {
+		GregorianCalendar cal = new GregorianCalendar();
+		cal.setTime(date);
+		cal.set(Calendar.HOUR, 0);
+		cal.set(Calendar.MINUTE, 0);
+		cal.set(Calendar.SECOND, 0);
+		cal.set(Calendar.MILLISECOND, 0);
+		return cal.getTime();
 	}
 	
 	@Override
 	public int compareTo(SongStatistics o) {
-		Validate.notNull(o, "cannot compare a SongStatistics object with null");
+		Preconditions.checkArgument(o != null, "cannot compare a SongStatistics object with null");
 		return songUuid.compareTo(o.getSongUUID());
 	}
 	

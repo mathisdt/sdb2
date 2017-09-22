@@ -19,9 +19,11 @@ package org.zephyrsoft.util.gui;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
+
 import javax.swing.JPanel;
 import javax.swing.border.Border;
-import org.apache.commons.lang3.Validate;
+
+import com.google.common.base.Preconditions;
 
 /**
  * Display an image at the right scale to make it fit exactly into the container.
@@ -70,7 +72,7 @@ public class ImagePanel extends JPanel {
 	}
 	
 	private void calculateScaledImage() {
-		Validate.notNull(image, "original image may not be null");
+		Preconditions.checkArgument(image != null, "original image may not be null");
 		
 		// use floats so division below won't round
 		float imageWidth = image.getWidth(null);
@@ -109,9 +111,8 @@ public class ImagePanel extends JPanel {
 				imageHeight = -1;
 			}
 			
-			scaledImage =
-				image.getScaledInstance(Float.valueOf(imageWidth).intValue(), Float.valueOf(imageHeight).intValue(),
-					Image.SCALE_DEFAULT);
+			scaledImage = image.getScaledInstance(Float.valueOf(imageWidth).intValue(), Float.valueOf(imageHeight).intValue(),
+				Image.SCALE_DEFAULT);
 			
 		} else {
 			scaledImage = image;

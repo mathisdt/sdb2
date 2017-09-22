@@ -16,6 +16,8 @@
  */
 package org.zephyrsoft.util;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -29,6 +31,7 @@ import java.util.TimeZone;
 public class DateTools {
 	
 	private static final String DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm";
+	private static final String YEAR_MONTH_PATTERN = "yyyy-MM";
 	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_PATTERN);
 	
 	public static LocalDateTime parseDateTime(String toParse) {
@@ -58,5 +61,17 @@ public class DateTools {
 	
 	public static String format(LocalDateTime latestReleaseTimestamp) {
 		return latestReleaseTimestamp.format(DATE_TIME_FORMATTER);
+	}
+	
+	public static Date fromLocalDate(LocalDate localDate) {
+		return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	}
+	
+	public static String formatYearMonth(Date date) {
+		return new SimpleDateFormat(YEAR_MONTH_PATTERN).format(date);
+	}
+	
+	public static Date now() {
+		return new Date();
 	}
 }
