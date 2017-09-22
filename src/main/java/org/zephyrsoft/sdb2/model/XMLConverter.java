@@ -95,7 +95,7 @@ public class XMLConverter {
 		xstream.registerConverter(new GenericEnumConverter<>(LanguageEnum.class));
 		xstream.registerConverter(new GenericEnumConverter<>(ScreenContentsEnum.class));
 		xstream.registerConverter(new FontConverter());
-		xstream.registerConverter(new LocalDateConverter());
+		xstream.registerConverter(new DateWithoutTimeConverter());
 		
 		// unknown XML elements can be ignored (e.g. <linkedSongs> which was removed)
 		xstream.ignoreUnknownElements();

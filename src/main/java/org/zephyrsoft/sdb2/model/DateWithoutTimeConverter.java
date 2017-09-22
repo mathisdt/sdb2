@@ -16,7 +16,9 @@
  */
 package org.zephyrsoft.sdb2.model;
 
-import java.time.LocalDate;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
@@ -25,48 +27,48 @@ import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
 /**
- * A custom XStream converter for {@link LocalDate} objects.
+ * A XStream converter for {@link Date} objects which does only use the date and discards any time information.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class LocalDateConverter implements Converter {
+public class DateWithoutTimeConverter implements Converter {
 	
 	@Override
 	public boolean canConvert(Class clazz) {
-		return clazz.equals(LocalDate.class);
+		return clazz.equals(Date.class);
 	}
 	
 	@Override
 	public void marshal(Object value, HierarchicalStreamWriter writer, MarshallingContext context) {
-		LocalDate date = (LocalDate) value;
+		Date date = (Date) value;
+		Calendar cal = new GregorianCalendar();
+		cal.setTime(date);
 		writer.startNode("year");
-		writer.setValue(String.valueOf(date.getYear()));
+		writer.setValue(String.valueOf(cal.get(Calendar.YEAR)));
 		writer.endNode();
 		writer.startNode("month");
-		writer.setValue(String.valueOf(date.getMonthValue()));
+		writer.setValue(String.valueOf(cal.get(Calendar.MONTH)));
 		writer.endNode();
 		writer.startNode("day");
-		writer.setValue(String.valueOf(date.getDayOfMonth()));
+		writer.setValue(String.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
 		writer.endNode();
 	}
 	
 	@Override
 	public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
-		int year = 0;
-		int month = 0;
-		int dayOfMonth = 0;
+		Calendar cal = new GregorianCalendar();
 		while (reader.hasMoreChildren()) {
 			reader.moveDown();
 			if ("year".equals(reader.getNodeName())) {
-				year = Integer.parseInt(reader.getValue());
+				cal.set(Calendar.YEAR, Integer.parseInt(reader.getValue()));
 			} else if ("month".equals(reader.getNodeName())) {
-				month = Integer.parseInt(reader.getValue());
+				cal.set(Calendar.MONTH, Integer.parseInt(reader.getValue()));
 			} else if ("day".equals(reader.getNodeName())) {
-				dayOfMonth = Integer.parseInt(reader.getValue());
+				cal.set(Calendar.DAY_OF_MONTH, Integer.parseInt(reader.getValue()));
 			}
 			reader.moveUp();
 		}
-		return LocalDate.of(year, month, dayOfMonth);
+		return cal.getTime();
 	}
 	
 }
