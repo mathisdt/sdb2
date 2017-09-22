@@ -49,8 +49,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
-import javax.imageio.ImageIO;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -1075,6 +1075,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	protected void handleSongPresent() {
 		boolean success = controller.present(new Presentable(presentListSelected, null));
+		controller.stopSlideShow();
 		if (success) {
 			clearSectionButtons();
 			List<AddressablePart> parts = controller.getParts();
@@ -1091,8 +1092,8 @@ public class MainWindow extends JFrame implements UIScroller {
 				listSectionButtons.get(0).setActiveLine(0);
 			}
 			
-			// add empty component to consume any space that is left (so the parts appear at the top of the scrollpane
-			// view)
+			// add empty component to consume any space that is left (so the parts appear at the top of the
+			// scrollpane view)
 			panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
 			
 			panelSectionButtons.revalidate();
@@ -1103,6 +1104,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	protected void handleBlankScreen() {
 		boolean success = controller.present(BLANK_SCREEN);
+		controller.stopSlideShow();
 		if (success) {
 			clearSectionButtons();
 			btnJumpToPresented.setEnabled(false);
@@ -1110,7 +1112,13 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	protected void handleLogoPresent() {
-		boolean success = controller.present(new Presentable(null, loadLogo()));
+		boolean success;
+		try {
+			success = controller.present(new Presentable(null, controller.loadLogo()));
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		controller.stopSlideShow();
 		if (success) {
 			clearSectionButtons();
 			btnJumpToPresented.setEnabled(false);
@@ -1118,6 +1126,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	protected void handleSlideShowPresent() {
+		controller.stopSlideShow();
 		boolean success = controller.presentSlideShow();
 		if (success) {
 			clearSectionButtons();
@@ -1130,23 +1139,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelSectionButtons.removeAll();
 		panelSectionButtons.revalidate();
 		panelSectionButtons.repaint();
-	}
-	
-	private Image loadLogo() {
-		String logoPath = settingsModel.get(SettingKey.LOGO_FILE, String.class);
-		if (logoPath != null && !logoPath.equals("")) {
-			File logoFile = new File(logoPath);
-			if (logoFile.isFile() && logoFile.canRead()) {
-				Image logo = null;
-				try {
-					logo = ImageIO.read(logoFile);
-				} catch (IOException ex) {
-					handleError(ex);
-				}
-				return logo;
-			}
-		}
-		return null;
 	}
 	
 	protected void handleImportFromSDBv1() {
@@ -1341,13 +1333,10 @@ public class MainWindow extends JFrame implements UIScroller {
 		textFieldFilter.setColumns(10);
 		
 		btnClearFilter = new JButton("");
-		btnClearFilter.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				textFieldFilter.setText("");
-				textFieldFilter.requestFocusInWindow();
-			}
-		});
+		btnClearFilter.addActionListener(safeAction(e -> {
+			textFieldFilter.setText("");
+			textFieldFilter.requestFocusInWindow();
+		}));
 		btnClearFilter.setMargin(new Insets(0, 0, 0, 0));
 		btnClearFilter.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/clear.gif"));
 		GridBagConstraints gbcBtnClearFilter = new GridBagConstraints();
@@ -1400,16 +1389,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelSongListButtons.setLayout(gblPanelSongListButtons);
 		
 		btnNewSong = new JButton("New");
-		btnNewSong.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSongNew();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnNewSong.addActionListener(safeAction(e -> handleSongNew()));
 		btnNewSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/newHighlighter.gif"));
 		GridBagConstraints gbcBtnNewSong = new GridBagConstraints();
 		gbcBtnNewSong.fill = GridBagConstraints.VERTICAL;
@@ -1420,16 +1400,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelSongListButtons.add(btnNewSong, gbcBtnNewSong);
 		
 		btnDeleteSong = new JButton("Delete");
-		btnDeleteSong.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSongDelete();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnDeleteSong.addActionListener(safeAction(e -> handleSongDelete()));
 		btnDeleteSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/deleteHighlighter.gif"));
 		GridBagConstraints gbcBtnDeleteSong = new GridBagConstraints();
 		gbcBtnDeleteSong.fill = GridBagConstraints.VERTICAL;
@@ -1440,16 +1411,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelSongListButtons.add(btnDeleteSong, gbcBtnDeleteSong);
 		
 		btnSelectSong = new JButton("Select");
-		btnSelectSong.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSongSelect();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnSelectSong.addActionListener(safeAction(e -> handleSongSelect()));
 		btnSelectSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/month-up.png"));
 		GridBagConstraints gbcBtnSelectSong = new GridBagConstraints();
 		gbcBtnSelectSong.fill = GridBagConstraints.VERTICAL;
@@ -1857,16 +1819,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		selectedSongListButtons.setLayout(gblPanelSelectedSongListButtons);
 		
 		btnUp = new JButton("");
-		btnUp.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSongUp();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnUp.addActionListener(safeAction(e -> handleSongUp()));
 		btnUp.setToolTipText("Up");
 		btnUp.setIcon(ResourceTools.getIcon(getClass(), "/javax/swing/plaf/metal/icons/sortUp.png"));
 		GridBagConstraints gbcBtnUp = new GridBagConstraints();
@@ -1879,16 +1832,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		
 		btnUnselect = new JButton("");
 		btnUnselect.setToolTipText("Unselect");
-		btnUnselect.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSongUnselect();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnUnselect.addActionListener(safeAction(e -> handleSongUnselect()));
 		btnUnselect.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/JXErrorPane16.png"));
 		GridBagConstraints gbcBtnUnselect = new GridBagConstraints();
 		gbcBtnUnselect.fill = GridBagConstraints.HORIZONTAL;
@@ -1899,16 +1843,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		selectedSongListButtons.add(btnUnselect, gbcBtnUnselect);
 		
 		btnDown = new JButton("");
-		btnDown.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSongDown();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnDown.addActionListener(safeAction(e -> handleSongDown()));
 		btnDown.setIcon(ResourceTools.getIcon(getClass(), "/javax/swing/plaf/metal/icons/sortDown.png"));
 		btnDown.setToolTipText("Down");
 		GridBagConstraints gbcBtnDown = new GridBagConstraints();
@@ -1919,16 +1854,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		selectedSongListButtons.add(btnDown, gbcBtnDown);
 		
 		btnJumpToSelected = new JButton("Jump to selected song");
-		btnJumpToSelected.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleJumpToSelectedSong();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnJumpToSelected.addActionListener(safeAction(e -> handleJumpToSelectedSong()));
 		panelPresentLeft.add(btnJumpToSelected, BorderLayout.SOUTH);
 		
 		// right part, controls and active song
@@ -1951,16 +1877,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		btnPresentSelectedSong.setIcon(ResourceTools.getIcon(getClass(), "/milky/play.png"));
 		btnPresentSelectedSong.setVerticalTextPosition(SwingConstants.BOTTOM);
 		btnPresentSelectedSong.setHorizontalTextPosition(SwingConstants.CENTER);
-		btnPresentSelectedSong.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSongPresent();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnPresentSelectedSong.addActionListener(safeAction(e -> handleSongPresent()));
 		GridBagConstraints gbcBtnPresentSelectedSong = new GridBagConstraints();
 		gbcBtnPresentSelectedSong.fill = GridBagConstraints.BOTH;
 		gbcBtnPresentSelectedSong.insets = new Insets(10, 0, 15, 5);
@@ -1976,16 +1893,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		btnShowBlankScreen.setIcon(ResourceTools.getIcon(getClass(), "/milky/stop.png"));
 		btnShowBlankScreen.setVerticalTextPosition(SwingConstants.BOTTOM);
 		btnShowBlankScreen.setHorizontalTextPosition(SwingConstants.CENTER);
-		btnShowBlankScreen.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleBlankScreen();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnShowBlankScreen.addActionListener(safeAction(e -> handleBlankScreen()));
 		GridBagConstraints gbcBtnShowBlankScreen = new GridBagConstraints();
 		gbcBtnShowBlankScreen.fill = GridBagConstraints.BOTH;
 		gbcBtnShowBlankScreen.insets = new Insets(10, 0, 15, 5);
@@ -2001,16 +1909,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		btnShowLogo.setIcon(ResourceTools.getIcon(getClass(), "/milky/picture.png"));
 		btnShowLogo.setVerticalTextPosition(SwingConstants.BOTTOM);
 		btnShowLogo.setHorizontalTextPosition(SwingConstants.CENTER);
-		btnShowLogo.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleLogoPresent();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnShowLogo.addActionListener(safeAction(e -> handleLogoPresent()));
 		GridBagConstraints gbcBtnShowLogo = new GridBagConstraints();
 		gbcBtnShowLogo.fill = GridBagConstraints.BOTH;
 		gbcBtnShowLogo.insets = new Insets(10, 0, 15, 5);
@@ -2026,16 +1925,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		btnSlideshow.setIcon(ResourceTools.getIcon(getClass(), "/milky/movie.png"));
 		btnSlideshow.setVerticalTextPosition(SwingConstants.BOTTOM);
 		btnSlideshow.setHorizontalTextPosition(SwingConstants.CENTER);
-		btnSlideshow.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSlideShowPresent();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnSlideshow.addActionListener(safeAction(e -> handleSlideShowPresent()));
 		GridBagConstraints gbcBtnSlideshow = new GridBagConstraints();
 		gbcBtnSlideshow.fill = GridBagConstraints.BOTH;
 		gbcBtnSlideshow.gridheight = 3;
@@ -2081,16 +1971,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelSectionButtons.setLayout(new GridBagLayout());
 		
 		btnJumpToPresented = new JButton("Jump to presented song");
-		btnJumpToPresented.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleJumpToPresentedSong();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnJumpToPresented.addActionListener(safeAction(e -> handleJumpToPresentedSong()));
 		panelPresentRight.add(btnJumpToPresented, BorderLayout.SOUTH);
 		
 		// MARK Export/Import Panel
@@ -2116,13 +1997,9 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(lblSelectedSong2, gbcLblSelectedSong2);
 		
 		btnExportLyricsOnlyPdfSelected = new JButton("Export lyrics-only PDF");
-		btnExportLyricsOnlyPdfSelected.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(MainWindow.this, "This function is not implemented yet!", "Information",
-					JOptionPane.INFORMATION_MESSAGE);
-			}
-		});
+		btnExportLyricsOnlyPdfSelected.addActionListener(safeAction(e -> JOptionPane.showMessageDialog(MainWindow.this,
+			"This function is not implemented yet!", "Information",
+			JOptionPane.INFORMATION_MESSAGE)));
 		GridBagConstraints gbcBtnExportLyricsOnlyPdfSelected = new GridBagConstraints();
 		gbcBtnExportLyricsOnlyPdfSelected.anchor = GridBagConstraints.NORTH;
 		gbcBtnExportLyricsOnlyPdfSelected.insets = new Insets(0, 0, 5, 5);
@@ -2132,13 +2009,9 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(btnExportLyricsOnlyPdfSelected, gbcBtnExportLyricsOnlyPdfSelected);
 		
 		btnExportCompletePdfSelected = new JButton("Export complete PDF");
-		btnExportCompletePdfSelected.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(MainWindow.this, "This function is not implemented yet!", "Information",
-					JOptionPane.INFORMATION_MESSAGE);
-			}
-		});
+		btnExportCompletePdfSelected.addActionListener(safeAction(e -> JOptionPane.showMessageDialog(MainWindow.this,
+			"This function is not implemented yet!", "Information",
+			JOptionPane.INFORMATION_MESSAGE)));
 		GridBagConstraints gbcBtnExportCompletePdfSelected = new GridBagConstraints();
 		gbcBtnExportCompletePdfSelected.anchor = GridBagConstraints.NORTH;
 		gbcBtnExportCompletePdfSelected.fill = GridBagConstraints.HORIZONTAL;
@@ -2148,13 +2021,9 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(btnExportCompletePdfSelected, gbcBtnExportCompletePdfSelected);
 		
 		btnExportStatisticsSelected = new JButton("Export statistics");
-		btnExportStatisticsSelected.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(MainWindow.this, "This function is not implemented yet!", "Information",
-					JOptionPane.INFORMATION_MESSAGE);
-			}
-		});
+		btnExportStatisticsSelected.addActionListener(safeAction(e -> JOptionPane.showMessageDialog(MainWindow.this,
+			"This function is not implemented yet!", "Information",
+			JOptionPane.INFORMATION_MESSAGE)));
 		GridBagConstraints gbcBtnExportStatisticsSelected = new GridBagConstraints();
 		gbcBtnExportStatisticsSelected.anchor = GridBagConstraints.NORTH;
 		gbcBtnExportStatisticsSelected.fill = GridBagConstraints.HORIZONTAL;
@@ -2174,13 +2043,9 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(lblAllSongs2, gbcLblAllSongs2);
 		
 		btnExportLyricsOnlyPdfAll = new JButton("Export lyrics-only PDF");
-		btnExportLyricsOnlyPdfAll.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(MainWindow.this, "This function is not implemented yet!", "Information",
-					JOptionPane.INFORMATION_MESSAGE);
-			}
-		});
+		btnExportLyricsOnlyPdfAll.addActionListener(safeAction(e -> JOptionPane.showMessageDialog(MainWindow.this,
+			"This function is not implemented yet!", "Information",
+			JOptionPane.INFORMATION_MESSAGE)));
 		GridBagConstraints gbcBtnExportLyricsOnlyPdfAll = new GridBagConstraints();
 		gbcBtnExportLyricsOnlyPdfAll.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnExportLyricsOnlyPdfAll.insets = new Insets(0, 0, 5, 5);
@@ -2189,13 +2054,9 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(btnExportLyricsOnlyPdfAll, gbcBtnExportLyricsOnlyPdfAll);
 		
 		btnExportCompletePdfAll = new JButton("Export complete PDF");
-		btnExportCompletePdfAll.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(MainWindow.this, "This function is not implemented yet!", "Information",
-					JOptionPane.INFORMATION_MESSAGE);
-			}
-		});
+		btnExportCompletePdfAll.addActionListener(safeAction(e -> JOptionPane.showMessageDialog(MainWindow.this,
+			"This function is not implemented yet!", "Information",
+			JOptionPane.INFORMATION_MESSAGE)));
 		GridBagConstraints gbcBtnExportCompletePdfAll = new GridBagConstraints();
 		gbcBtnExportCompletePdfAll.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnExportCompletePdfAll.insets = new Insets(0, 0, 5, 5);
@@ -2204,30 +2065,27 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(btnExportCompletePdfAll, gbcBtnExportCompletePdfAll);
 		
 		btnExportStatisticsAll = new JButton("Export statistics");
-		btnExportStatisticsAll.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// select target
-				JFileChooser chooser = new JFileChooser();
-				chooser.setDialogTitle("choose target file for statistics export");
-				CustomFileFilter filter = new CustomFileFilter("Excel", ".xls");
-				chooser.addChoosableFileFilter(filter);
-				chooser.setFileFilter(filter);
-				chooser.setApproveButtonText("Export");
-				chooser.setSelectedFile(new File("song-statistics.xls"));
-				int result = chooser.showOpenDialog(MainWindow.this);
-				
-				if (result == JFileChooser.APPROVE_OPTION) {
-					File target = chooser.getSelectedFile();
-					// export
-					try {
-						controller.exportStatisticsAll(target);
-					} catch (Throwable ex) {
-						handleError(ex);
-					}
+		btnExportStatisticsAll.addActionListener(safeAction(e -> {
+			// select target
+			JFileChooser chooser = new JFileChooser();
+			chooser.setDialogTitle("choose target file for statistics export");
+			CustomFileFilter filter = new CustomFileFilter("Excel", ".xls");
+			chooser.addChoosableFileFilter(filter);
+			chooser.setFileFilter(filter);
+			chooser.setApproveButtonText("Export");
+			chooser.setSelectedFile(new File("song-statistics.xls"));
+			int result = chooser.showOpenDialog(MainWindow.this);
+			
+			if (result == JFileChooser.APPROVE_OPTION) {
+				File target = chooser.getSelectedFile();
+				// export
+				try {
+					controller.exportStatisticsAll(target);
+				} catch (Throwable ex) {
+					handleError(ex);
 				}
 			}
-		});
+		}));
 		GridBagConstraints gbcBtnExportStatisticsAll = new GridBagConstraints();
 		gbcBtnExportStatisticsAll.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnExportStatisticsAll.insets = new Insets(0, 0, 5, 5);
@@ -2247,16 +2105,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		
 		// TODO handle importers dynamically, load every implementation of "Importer" as button (=> ServiceLoader?)
 		btnImportFromSdb1 = new JButton("Import from SDB 1.x");
-		btnImportFromSdb1.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleImportFromSDBv1();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnImportFromSdb1.addActionListener(safeAction(e -> handleImportFromSDBv1()));
 		GridBagConstraints gbcBtnImportFromSdb1 = new GridBagConstraints();
 		gbcBtnImportFromSdb1.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnImportFromSdb1.insets = new Insets(0, 0, 5, 5);
@@ -2265,16 +2114,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(btnImportFromSdb1, gbcBtnImportFromSdb1);
 		
 		btnImportFromEasiSlides = new JButton("Import from EasiSlides 4.0");
-		btnImportFromEasiSlides.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleImportFromEasiSlides();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnImportFromEasiSlides.addActionListener(safeAction(e -> handleImportFromEasiSlides()));
 		GridBagConstraints gbcBtnImportFromEasiSlides = new GridBagConstraints();
 		gbcBtnImportFromEasiSlides.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnImportFromEasiSlides.insets = new Insets(0, 0, 5, 5);
@@ -2327,16 +2167,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panel.setLayout(gblPanel);
 		
 		btnUnlock = new JButton("Unlock");
-		btnUnlock.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSettingsUnlock();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnUnlock.addActionListener(safeAction(e -> handleSettingsUnlock()));
 		GridBagConstraints gbcBtnUnlock = new GridBagConstraints();
 		gbcBtnUnlock.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnUnlock.gridwidth = 3;
@@ -2354,16 +2185,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panel.add(lblTitleFont, gbcLblTitleFont);
 		
 		btnSelectTitleFont = new JButton("Select...");
-		btnSelectTitleFont.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSelectTitleFont();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnSelectTitleFont.addActionListener(safeAction(e -> handleSelectTitleFont()));
 		GridBagConstraints gbcBtnSelectTitleFont = new GridBagConstraints();
 		gbcBtnSelectTitleFont.insets = new Insets(0, 0, 5, 5);
 		gbcBtnSelectTitleFont.fill = GridBagConstraints.HORIZONTAL;
@@ -2380,16 +2202,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panel.add(lblLyricsFont, gbcLblLyricsFont);
 		
 		btnSelectLyricsFont = new JButton("Select...");
-		btnSelectLyricsFont.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSelectLyricsFont();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnSelectLyricsFont.addActionListener(safeAction(e -> handleSelectLyricsFont()));
 		GridBagConstraints gbcBtnSelectLyricsFont = new GridBagConstraints();
 		gbcBtnSelectLyricsFont.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnSelectLyricsFont.insets = new Insets(0, 0, 5, 5);
@@ -2406,16 +2219,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panel.add(lblTranslationFont, gbcLblTranslationFont);
 		
 		btnSelectTranslationFont = new JButton("Select...");
-		btnSelectTranslationFont.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSelectTranslationFont();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnSelectTranslationFont.addActionListener(safeAction(e -> handleSelectTranslationFont()));
 		GridBagConstraints gbcBtnSelectTranslationFont = new GridBagConstraints();
 		gbcBtnSelectTranslationFont.insets = new Insets(0, 0, 5, 5);
 		gbcBtnSelectTranslationFont.fill = GridBagConstraints.HORIZONTAL;
@@ -2432,16 +2236,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panel.add(lblCopyrightFont, gbcLblCopyrightFont);
 		
 		btnSelectCopyrightFont = new JButton("Select...");
-		btnSelectCopyrightFont.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSelectCopyrightFont();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnSelectCopyrightFont.addActionListener(safeAction(e -> handleSelectCopyrightFont()));
 		GridBagConstraints gbcBtnSelectCopyrightFont = new GridBagConstraints();
 		gbcBtnSelectCopyrightFont.insets = new Insets(0, 0, 5, 5);
 		gbcBtnSelectCopyrightFont.fill = GridBagConstraints.HORIZONTAL;
@@ -2458,16 +2253,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panel.add(lblTextColor, gbcLblTextColor);
 		
 		btnSelectTextColor = new JButton("Select...");
-		btnSelectTextColor.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSelectTextColor();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnSelectTextColor.addActionListener(safeAction(e -> handleSelectTextColor()));
 		GridBagConstraints gbcBtnSelectTextColor = new GridBagConstraints();
 		gbcBtnSelectTextColor.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnSelectTextColor.insets = new Insets(0, 0, 5, 5);
@@ -2484,16 +2270,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panel.add(lblBackgroundColor, gbcLblBackgroundColor);
 		
 		btnSelectBackgroundColor = new JButton("Select...");
-		btnSelectBackgroundColor.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSelectBackgroundColor();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnSelectBackgroundColor.addActionListener(safeAction(e -> handleSelectBackgroundColor()));
 		GridBagConstraints gbcBtnSelectBackgroundColor = new GridBagConstraints();
 		gbcBtnSelectBackgroundColor.insets = new Insets(0, 0, 5, 5);
 		gbcBtnSelectBackgroundColor.fill = GridBagConstraints.HORIZONTAL;
@@ -2510,16 +2287,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panel.add(lblLogo, gbcLblLogo);
 		
 		btnSelectLogo = new JButton("Select...");
-		btnSelectLogo.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSelectLogo();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnSelectLogo.addActionListener(safeAction(e -> handleSelectLogo()));
 		GridBagConstraints gbcBtnSelectLogo = new GridBagConstraints();
 		gbcBtnSelectLogo.insets = new Insets(0, 0, 5, 5);
 		gbcBtnSelectLogo.fill = GridBagConstraints.HORIZONTAL;
@@ -2744,16 +2512,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panel.add(lblSlideShowDirectory, gbc_lblSlideShowDirectory);
 		
 		btnSlideShowDirectory = new JButton("Select...");
-		btnSlideShowDirectory.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				try {
-					handleSelectSlideShowDirectory();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		btnSlideShowDirectory.addActionListener(safeAction(e -> handleSelectSlideShowDirectory()));
 		GridBagConstraints gbc_btnSlideShowDirectory = new GridBagConstraints();
 		gbc_btnSlideShowDirectory.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnSlideShowDirectory.insets = new Insets(0, 0, 5, 5);
@@ -2790,18 +2549,25 @@ public class MainWindow extends JFrame implements UIScroller {
 		buttonPanel.setOpaque(false);
 		saveButton = new JButton("Save");
 		saveButton.setFocusable(false);
-		saveButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				handleSave();
-				displayNotification("SAVED", 3500);
-			}
-		});
+		saveButton.addActionListener(safeAction(e -> {
+			handleSave();
+			displayNotification("SAVED", 3500);
+		}));
 		saveButton.setFont(new Font(null, Font.PLAIN, 10));
 		buttonPanel.add(saveButton);
 		glassPane.add(buttonPanel, gbc);
 		
 		afterConstruction();
+	}
+	
+	private ActionListener safeAction(Consumer<ActionEvent> listener) {
+		return e -> {
+			try {
+				listener.accept(e);
+			} catch (Throwable ex) {
+				handleError(ex);
+			}
+		};
 	}
 	
 	private void displayNotification(String textToDisplay, long millis) {

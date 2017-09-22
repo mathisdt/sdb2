@@ -16,22 +16,31 @@
  */
 package org.zephyrsoft.sdb2;
 
+import static java.util.stream.Collectors.toList;
+
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.Image;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
+import javax.imageio.ImageIO;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -61,6 +70,8 @@ import org.zephyrsoft.sdb2.presenter.Scroller;
 import org.zephyrsoft.util.StringTools;
 import org.zephyrsoft.util.gui.ErrorDialog;
 
+import com.google.common.collect.Iterables;
+
 /**
  * Controller for {@link MainWindow}.
  * 
@@ -80,8 +91,11 @@ public class MainController implements Scroller {
 	private PresenterBundle presentationControl;
 	private Song currentlyPresentedSong = null;
 	
-	private ExecutorService executor = Executors.newSingleThreadExecutor();
+	private ExecutorService executor = Executors.newCachedThreadPool();
 	private Future<?> countDownFuture;
+	private Iterator<File> slideShowImages;
+	private Future<?> slideShowFuture;
+	private final static Pattern imagePattern = Pattern.compile("(?i)^.*\\.(png|jpg|jpeg|gif|bmp)$");
 	
 	public MainController(StatisticsController statisticsController) {
 		this.statisticsController = statisticsController;
@@ -141,19 +155,19 @@ public class MainController implements Scroller {
 		Runnable countDownRunnable = new Runnable() {
 			@Override
 			public void run() {
-				LOG.debug("start sleeping for {} seconds", seconds);
+				LOG.debug("start sleeping for {} seconds (count-down)", seconds);
 				try {
 					Thread.sleep(seconds * 1000);
 					statisticsController.countSongAsPresentedToday(song);
 				} catch (InterruptedException e) {
 					// if interrupted, do nothing (the countdown was stopped)
-					LOG.debug("interrupted");
+					LOG.debug("interrupted (count-down)");
 				}
 			}
 		};
 		stopCountDown();
 		if (executor.isShutdown()) {
-			throw new IllegalStateException("background executor is already stopped");
+			throw new IllegalStateException("background executor is stopped");
 		} else {
 			countDownFuture = executor.submit(countDownRunnable);
 		}
@@ -407,9 +421,104 @@ public class MainController implements Scroller {
 		animationTimer.init();
 	}
 	
+	public void startSlideShowCycle(final int seconds) {
+		Runnable slideShowRunnable = () -> {
+			LOG.debug("start sleeping for {} seconds (slide show)", seconds);
+			try {
+				if (slideShowImages == null || !slideShowImages.hasNext()) {
+					LOG.info("no image files available for slide show");
+					return;
+				}
+				showSlide(slideShowImages.next());
+				Thread.sleep(seconds * 1000);
+				startSlideShowCycle(seconds);
+			} catch (InterruptedException e) {
+				// if interrupted, do nothing (the slide show was stopped)
+				LOG.debug("interrupted (slide show)");
+			}
+		};
+		if (executor.isShutdown()) {
+			throw new IllegalStateException("background executor is stopped");
+		} else {
+			slideShowFuture = executor.submit(slideShowRunnable);
+		}
+	}
+	
+	public Image loadLogo() throws IOException {
+		String logoPath = settings.get(SettingKey.LOGO_FILE, String.class);
+		if (logoPath != null && !logoPath.equals("")) {
+			File logoFile = new File(logoPath);
+			return readImage(logoFile);
+		}
+		return null;
+	}
+	
+	public Image readImage(File imageFile) throws IOException {
+		if (imageFile.isFile() && imageFile.canRead()) {
+			return ImageIO.read(imageFile);
+		} else {
+			return null;
+		}
+	}
+	
+	private void showSlide(File imageFile) {
+		Image image = null;
+		try {
+			image = readImage(imageFile);
+		} catch (IOException ioe) {
+			LOG.warn("couldn't load image file {}", imageFile);
+		}
+		present(new Presentable(null, image));
+	}
+	
+	public void stopSlideShow() {
+		if (slideShowFuture != null) {
+			LOG.debug("stopping slide show");
+			slideShowFuture.cancel(true);
+			slideShowFuture = null;
+			slideShowImages = null;
+		} else {
+			LOG.debug("wanted to stop slide show, but nothing to do");
+		}
+	}
+	
 	public boolean presentSlideShow() {
-		// TODO
+		Path imageDirectory = Paths.get(settings.get(SettingKey.SLIDE_SHOW_DIRECTORY, String.class));
+		if (imageDirectory == null || !Files.exists(imageDirectory) || !Files.isReadable(imageDirectory) || !Files.isDirectory(imageDirectory)) {
+			LOG.warn("directory {} could not be opened", imageDirectory);
+			return false;
+		}
+		
+		slideShowImages = getImageIterator(imageDirectory);
+		if (slideShowImages == null) {
+			LOG.warn("images could not be loaded from directory {}", imageDirectory.toString());
+			return false;
+		}
+		
+		Integer seconds = settings.get(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, Integer.class);
+		if (seconds == null) {
+			LOG.warn("slide show settings: seconds until next picture missing");
+			return false;
+		}
+		
+		// stop the "old" slide show if it is still running
+		stopSlideShow();
+		
+		startSlideShowCycle(seconds);
 		return true;
+	}
+	
+	private Iterator<File> getImageIterator(Path imageDirectory) {
+		try {
+			List<File> images = Files.list(imageDirectory)
+				.map(path -> path.toFile())
+				.filter(file -> imagePattern.matcher(file.getName()).matches())
+				.sorted()
+				.collect(toList());
+			return Iterables.cycle(images).iterator();
+		} catch (IOException e) {
+			return null;
+		}
 	}
 	
 }
