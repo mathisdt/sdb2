@@ -22,11 +22,12 @@ The Song Database is a program to show lyrics on a digital projector for worship
 
 ## Why use this software and not Powerpoint?
 
-- you can configure two separate presentation screens: one for the congregation (only text) 
-  and one for the band (text and chords) - hint: you need three graphics outputs to implement this setting
-- database format is not binary, but XML - you can easily modify it by hand, synchronize it using 
-  any cloud service or even put it into a Git repository (producing nice diffs)
-- the days on which a song is presented are counted (in a separate statistics file)
+- the database format is not binary, but XML (essentially a text file) - you can easily modify it by hand,
+  synchronize it using any cloud service or even put it into a Git repository (producing nice diffs)
+- the days on which a song is presented are counted automatically (in a separate statistics file)
+- the song texts are displayed continually, not on individual slides, so everyone sees how the song continues
+  after the current part
+  - animation when displaying another part of a song
 
 The program has evolved through more than 10 years at my church. If you find a bug or want a new feature, 
 you are welcome to fix things yourself - or file an issue in the [GitHub project](https://github.com/mathisdt/sdb2/)
