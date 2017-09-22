@@ -21,17 +21,15 @@ package org.zephyrsoft.sdb2.gui;
  * 
  * @author Mathis Dirksen-Thedens
  */
-public abstract class KeyboardShortcut {
-	private int keyCode = -1;
-	private boolean shiftModifier = false;
-	private boolean altModifier = false;
-	private boolean ctrlModifier = false;
+public class KeyboardShortcut {
+	private final int keyCode;
+	private final Modifiers modifiers;
+	private final Runnable action;
 	
-	public KeyboardShortcut(int keyCode, boolean shiftModifier, boolean altModifier, boolean ctrlModifier) {
+	public KeyboardShortcut(int keyCode, Modifiers modifiers, Runnable action) {
 		this.keyCode = keyCode;
-		this.shiftModifier = shiftModifier;
-		this.altModifier = altModifier;
-		this.ctrlModifier = ctrlModifier;
+		this.modifiers = modifiers;
+		this.action = action;
 	}
 	
 	public int getKeyCode() {
@@ -39,16 +37,51 @@ public abstract class KeyboardShortcut {
 	}
 	
 	public boolean usesShiftModifier() {
-		return shiftModifier;
+		return modifiers.hasShift();
 	}
 	
 	public boolean usesAltModifier() {
-		return altModifier;
+		return modifiers.hasAlt();
 	}
 	
 	public boolean usesCtrlModifier() {
-		return ctrlModifier;
+		return modifiers.hasCtrl();
 	}
 	
-	public abstract void doAction();
+	public void doAction() {
+		action.run();
+	}
+	
+	public enum Modifiers {
+		NONE(false, false, false),
+		SHIFT(true, false, false),
+		ALT(false, true, false),
+		CTRL(false, false, true),
+		SHIFT_ALT(true, true, false),
+		CTRL_ALT(false, true, true),
+		SHIFT_CTRL(true, false, true),
+		SHIFT_ALT_CTRL(true, true, true);
+		
+		private final boolean shift;
+		private final boolean alt;
+		private final boolean ctrl;
+		
+		private Modifiers(boolean shift, boolean alt, boolean ctrl) {
+			this.shift = shift;
+			this.alt = alt;
+			this.ctrl = ctrl;
+		}
+		
+		public boolean hasShift() {
+			return shift;
+		}
+		
+		public boolean hasAlt() {
+			return alt;
+		}
+		
+		public boolean hasCtrl() {
+			return ctrl;
+		}
+	}
 }

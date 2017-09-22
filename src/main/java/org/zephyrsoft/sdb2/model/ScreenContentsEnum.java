@@ -22,5 +22,15 @@ package org.zephyrsoft.sdb2.model;
  * @author Mathis Dirksen-Thedens
  */
 public enum ScreenContentsEnum {
-	ONLY_LYRICS, LYRICS_AND_CHORDS;
+	ONLY_LYRICS("only lyrics"), LYRICS_AND_CHORDS("lyrics and chords");
+	
+	private final String description;
+	
+	private ScreenContentsEnum(String description) {
+		this.description = description;
+	}
+	
+	public String getDescription() {
+		return description;
+	}
 }

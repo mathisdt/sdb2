@@ -16,21 +16,23 @@
  */
 package org.zephyrsoft.sdb2.model.statistics;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
+
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.XMLConverter;
+
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 /**
  * Statistics about the displaying of songs.
@@ -41,6 +43,8 @@ import org.zephyrsoft.sdb2.model.XMLConverter;
 public class StatisticsModel {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(StatisticsModel.class);
+	
+	DateTimeFormatter yearMonthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
 	
 	@XStreamImplicit(itemFieldName = "songStatistics")
 	private List<SongStatistics> songStatistics = null;
@@ -60,7 +64,7 @@ public class StatisticsModel {
 		}
 	}
 	
-	public void addStatisticsEntry(Song song, Date date) {
+	public void addStatisticsEntry(Song song, LocalDate date) {
 		SongStatistics stats = getStatistics(song);
 		if (stats == null) {
 			LOG.debug("creating SongStatistics for {} / UUID={}", song.getTitle(), song.getUUID());
@@ -88,20 +92,14 @@ public class StatisticsModel {
 		return ret;
 	}
 	
-	private static SimpleDateFormat createYearMonthFormatter() {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
-		return sdf;
-	}
-	
 	public List<String> getUsedMonths() {
 		SortedSet<String> ret = new TreeSet<>();
-
-		SimpleDateFormat sdf = createYearMonthFormatter();
+		
 		for (SongStatistics stat : songStatistics) {
-			for (Date date : stat)
-				ret.add(sdf.format(date));
+			for (LocalDate date : stat)
+				ret.add(date.format(yearMonthFormatter));
 		}
-
+		
 		return new ArrayList<>(ret);
 	}
 	
@@ -110,10 +108,9 @@ public class StatisticsModel {
 			return null;
 		}
 		Map<String, Integer> ret = new HashMap<>();
-		SimpleDateFormat sdf = createYearMonthFormatter();
 		for (SongStatistics stat : songStatistics) {
-			for (Date date : stat) {
-				if (yearAndMonth.equals(sdf.format(date))) {
+			for (LocalDate date : stat) {
+				if (yearAndMonth.equals(date.format(yearMonthFormatter))) {
 					Integer upToNow = ret.get(stat.getSongUUID());
 					if (upToNow == null) {
 						upToNow = 1;

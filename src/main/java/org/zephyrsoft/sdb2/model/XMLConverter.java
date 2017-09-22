@@ -80,7 +80,7 @@ public class XMLConverter {
 		xstream.addPermission(NullPermission.NULL);
 		xstream.addPermission(PrimitiveTypePermission.PRIMITIVES);
 		xstream.allowTypeHierarchy(Collection.class);
-		xstream.allowTypesByWildcard(new String[] { "java.lang.**", "java.util.**", "java.awt.**",
+		xstream.allowTypesByWildcard(new String[] { "java.lang.**", "java.util.**", "java.awt.**", "java.time.**",
 			"org.zephyrsoft.sdb2.**" });
 		
 		// aliases and omitted fields of model classes are defined via annotations
@@ -95,7 +95,7 @@ public class XMLConverter {
 		xstream.registerConverter(new GenericEnumConverter<>(LanguageEnum.class));
 		xstream.registerConverter(new GenericEnumConverter<>(ScreenContentsEnum.class));
 		xstream.registerConverter(new FontConverter());
-		xstream.registerConverter(new DateWithoutTimeConverter());
+		xstream.registerConverter(new LocalDateConverter());
 		
 		// unknown XML elements can be ignored (e.g. <linkedSongs> which was removed)
 		xstream.ignoreUnknownElements();

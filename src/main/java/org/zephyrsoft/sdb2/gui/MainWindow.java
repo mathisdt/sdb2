@@ -74,18 +74,16 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.text.JTextComponent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.FileAndDirectoryLocations;
 import org.zephyrsoft.sdb2.MainController;
+import org.zephyrsoft.sdb2.gui.KeyboardShortcut.Modifiers;
 import org.zephyrsoft.sdb2.gui.renderer.FilterTypeCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.LanguageCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
@@ -110,7 +108,6 @@ import org.zephyrsoft.sdb2.service.IndexType;
 import org.zephyrsoft.sdb2.service.IndexerService;
 import org.zephyrsoft.util.CustomFileFilter;
 import org.zephyrsoft.util.ResourceTools;
-import org.zephyrsoft.util.SongsModelListener;
 import org.zephyrsoft.util.StringTools;
 import org.zephyrsoft.util.VersionTools;
 import org.zephyrsoft.util.VersionTools.VersionUpdate;
@@ -371,12 +368,9 @@ public class MainWindow extends JFrame implements UIScroller {
 		});
 		
 		// lock setting controls to prevent accidental changes
-		tabbedPane.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				// on every tab switch, lock the settings again
-				handleSettingsSaveAndLock();
-			}
+		tabbedPane.addChangeListener(e -> {
+			// on every tab switch, lock the settings again
+			handleSettingsSaveAndLock();
 		});
 		addWindowFocusListener(new WindowAdapter() {
 			@Override
@@ -399,51 +393,45 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	private void checkForUpdateAsync() {
-		Runnable task = new Runnable() {
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(3000);
-				} catch (InterruptedException e1) {
-					// do nothing
-				}
-				
-				final VersionUpdate updateAvailable = VersionTools.getLatest();
-				if (updateAvailable != null) {
-					final JLabel updateLabel = new JLabel("new version available since "
-						+ updateAvailable.getVersionTimestamp());
-					updateLabel.setForeground(Color.BLUE);
-					updateLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
-					updateLabel.addMouseListener(new MouseAdapter() {
-						@Override
-						public void mouseClicked(MouseEvent event) {
-							if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(
-								Desktop.Action.BROWSE)) {
-								try {
-									LOG.info("starting browse action for {}", updateAvailable.getWebUrl());
-									Desktop.getDesktop().browse(new URI(updateAvailable.getWebUrl()));
-								} catch (Exception e) {
-									LOG.warn("could not start browsing", e);
-								}
-							} else {
-								LOG.warn("browsing not supported on this platform");
+		Runnable task = () -> {
+			try {
+				Thread.sleep(3000);
+			} catch (InterruptedException e1) {
+				// do nothing
+			}
+			
+			final VersionUpdate updateAvailable = VersionTools.getLatest();
+			if (updateAvailable != null) {
+				final JLabel updateLabel = new JLabel("new version available since "
+					+ updateAvailable.getVersionTimestamp());
+				updateLabel.setForeground(Color.BLUE);
+				updateLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+				updateLabel.addMouseListener(new MouseAdapter() {
+					@Override
+					public void mouseClicked(MouseEvent event) {
+						if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(
+							Desktop.Action.BROWSE)) {
+							try {
+								LOG.info("starting browse action for {}", updateAvailable.getWebUrl());
+								Desktop.getDesktop().browse(new URI(updateAvailable.getWebUrl()));
+							} catch (Exception e) {
+								LOG.warn("could not start browsing", e);
 							}
+						} else {
+							LOG.warn("browsing not supported on this platform");
 						}
-					});
-					SwingUtilities.invokeLater(new Runnable() {
-						@Override
-						public void run() {
-							GridBagConstraints gbc = new GridBagConstraints();
-							gbc.weightx = 1.0;
-							gbc.weighty = 1.0;
-							gbc.fill = GridBagConstraints.NONE;
-							gbc.insets = new Insets(5, 20, 5, 20);
-							gbc.anchor = GridBagConstraints.NORTHEAST;
-							glassPane.add(updateLabel, gbc, 0);
-							glassPane.revalidate();
-						}
-					});
-				}
+					}
+				});
+				SwingUtilities.invokeLater(() -> {
+					GridBagConstraints gbc = new GridBagConstraints();
+					gbc.weightx = 1.0;
+					gbc.weighty = 1.0;
+					gbc.fill = GridBagConstraints.NONE;
+					gbc.insets = new Insets(5, 20, 5, 20);
+					gbc.anchor = GridBagConstraints.NORTHEAST;
+					glassPane.add(updateLabel, gbc, 0);
+					glassPane.revalidate();
+				});
 			}
 		};
 		Thread thread = new Thread(task);
@@ -456,12 +444,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		songsListModel = songs.getFilterableListModel();
 		songsList.setModel(songsListModel);
 		
-		songsModel.addSongsModelListener(new SongsModelListener() {
-			@Override
-			public void songsModelChanged() {
-				indexAllSongs();
-			}
-		});
+		songsModel.addSongsModelListener(() -> indexAllSongs());
 		// start indexing once after initialization
 		indexAllSongs();
 		
@@ -1185,55 +1168,43 @@ public class MainWindow extends JFrame implements UIScroller {
 		KeyboardFocusManager focusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		focusManager.addKeyEventDispatcher(keyboardShortcutManager);
 		
-		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_ESCAPE, false, false, false) {
-			@Override
-			public void doAction() {
-				LOG.debug("escape action");
-				if (textFieldFilter.isFocusOwner()) {
-					// empty the search field
-					textFieldFilter.setText("");
-				} else {
-					// focus the search field:
-					// NOT using requestFocusInWindow() because then the presentation
-					// could prevent the field from being focused (if the user configured
-					// a presentation to be on the primary display)
-					textFieldFilter.requestFocus();
-				}
+		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_ESCAPE, Modifiers.NONE, () -> {
+			LOG.debug("escape action");
+			if (textFieldFilter.isFocusOwner()) {
+				// empty the search field
+				textFieldFilter.setText("");
+			} else {
+				// focus the search field:
+				// NOT using requestFocusInWindow() because then the presentation
+				// could prevent the field from being focused (if the user configured
+				// a presentation to be on the primary display)
+				textFieldFilter.requestFocus();
 			}
-		});
+		}));
 		
-		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_S, false, false, true) {
-			@Override
-			public void doAction() {
-				LOG.debug("ctrl-s action");
-				saveSongWithoutChangingGUI();
-				boolean success = controller.saveAll();
-				if (!success) {
-					ErrorDialog.openDialog(MainWindow.this, PROBLEM_WHILE_SAVING
-						+ FileAndDirectoryLocations.getLogDir());
-				}
+		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_S, Modifiers.CTRL, () -> {
+			LOG.debug("ctrl-s action");
+			saveSongWithoutChangingGUI();
+			boolean success = controller.saveAll();
+			if (!success) {
+				ErrorDialog.openDialog(MainWindow.this, PROBLEM_WHILE_SAVING
+					+ FileAndDirectoryLocations.getLogDir());
 			}
-		});
+		}));
 		
 		// TODO use single Shortcut (without ctrl), put an option in the global settings tab
-		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_P, false, false, true) {
-			@Override
-			public void doAction() {
-				LOG.debug("ctrl-p action");
-				if (presentListSelected != null) {
-					handleSongPresent();
-				}
+		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_P, Modifiers.CTRL, () -> {
+			LOG.debug("ctrl-p action");
+			if (presentListSelected != null) {
+				handleSongPresent();
 			}
-		});
+		}));
 		
 		// TODO use single Shortcut (without ctrl), put an option in the global settings tab
-		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_B, false, false, true) {
-			@Override
-			public void doAction() {
-				LOG.debug("ctrl-b action");
-				handleBlankScreen();
-			}
-		});
+		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_B, Modifiers.CTRL, () -> {
+			LOG.debug("ctrl-b action");
+			handleBlankScreen();
+		}));
 	}
 	
 	public void handleError(Throwable ex) {
@@ -1365,14 +1336,11 @@ public class MainWindow extends JFrame implements UIScroller {
 		});
 		songsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		((DefaultListSelectionModel) songsList.getSelectionModel())
-			.addListSelectionListener(new ListSelectionListener() {
-				@Override
-				public void valueChanged(ListSelectionEvent e) {
-					try {
-						handleSongsListSelectionChanged(e);
-					} catch (Throwable ex) {
-						handleError(ex);
-					}
+			.addListSelectionListener(e -> {
+				try {
+					handleSongsListSelectionChanged(e);
+				} catch (Throwable ex) {
+					handleError(ex);
 				}
 			});
 		scrollPaneSongList.setViewportView(songsList);
@@ -1771,14 +1739,11 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelPresentLeft.add(scrollPanePresentSongList, BorderLayout.CENTER);
 		
 		presentList = new FixedWidthJList<>();
-		presentList.addListSelectionListener(new ListSelectionListener() {
-			@Override
-			public void valueChanged(ListSelectionEvent e) {
-				try {
-					handlePresentListSelectionChanged(e);
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
+		presentList.addListSelectionListener(e -> {
+			try {
+				handlePresentListSelectionChanged(e);
+			} catch (Throwable ex) {
+				handleError(ex);
 			}
 		});
 		presentList.addMouseListener(new MouseAdapter() {

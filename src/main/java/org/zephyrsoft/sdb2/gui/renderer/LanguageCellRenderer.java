@@ -17,10 +17,12 @@
 package org.zephyrsoft.sdb2.gui.renderer;
 
 import java.awt.Component;
+
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
@@ -39,19 +41,11 @@ public class LanguageCellRenderer implements ListCellRenderer<LanguageEnum> {
 	@Override
 	public Component getListCellRendererComponent(JList<? extends LanguageEnum> list, LanguageEnum value, int index,
 		boolean isSelected, boolean cellHasFocus) {
-		JLabel ret =
-			(JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+		JLabel ret = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 		if (value == null) {
 			ret.setText("");
-		} else if (value == LanguageEnum.GERMAN) {
-			ret.setText("German");
-		} else if (value == LanguageEnum.ENGLISH) {
-			ret.setText("English");
-		} else if (value == LanguageEnum.MIXED) {
-			ret.setText("Mixed");
 		} else {
-			LOG.warn("unknown language enum value: {}", value.toString());
-			ret.setText(value.name());
+			ret.setText(value.getDescription());
 		}
 		return ret;
 	}

@@ -22,5 +22,15 @@ package org.zephyrsoft.sdb2.model;
  * @author Mathis Dirksen-Thedens
  */
 public enum LanguageEnum {
-	GERMAN, ENGLISH, MIXED;
+	GERMAN("German"), ENGLISH("English"), MIXED("Mixed");
+	
+	private final String description;
+	
+	private LanguageEnum(String description) {
+		this.description = description;
+	}
+	
+	public String getDescription() {
+		return description;
+	}
 }

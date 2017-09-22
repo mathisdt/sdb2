@@ -22,7 +22,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +75,7 @@ public class StatisticsController {
 	public void countSongAsPresentedToday(Song song) {
 		Validate.notNull(song, "counted song must be different from null");
 		LOG.info("counting song \"{}\" as presented today", song.getTitle());
-		statistics.addStatisticsEntry(song, new Date());
+		statistics.addStatisticsEntry(song, LocalDate.now());
 	}
 	
 	public synchronized boolean saveStatistics() {

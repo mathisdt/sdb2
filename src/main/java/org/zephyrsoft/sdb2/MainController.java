@@ -152,17 +152,14 @@ public class MainController implements Scroller {
 	}
 	
 	public void startCountDown(final int seconds, final Song song) {
-		Runnable countDownRunnable = new Runnable() {
-			@Override
-			public void run() {
-				LOG.debug("start sleeping for {} seconds (count-down)", seconds);
-				try {
-					Thread.sleep(seconds * 1000);
-					statisticsController.countSongAsPresentedToday(song);
-				} catch (InterruptedException e) {
-					// if interrupted, do nothing (the countdown was stopped)
-					LOG.debug("interrupted (count-down)");
-				}
+		Runnable countDownRunnable = () -> {
+			LOG.debug("start sleeping for {} seconds (count-down)", seconds);
+			try {
+				Thread.sleep(seconds * 1000);
+				statisticsController.countSongAsPresentedToday(song);
+			} catch (InterruptedException e) {
+				// if interrupted, do nothing (the countdown was stopped)
+				LOG.debug("interrupted (count-down)");
 			}
 		};
 		stopCountDown();
@@ -179,7 +176,7 @@ public class MainController implements Scroller {
 			countDownFuture.cancel(true);
 			countDownFuture = null;
 		} else {
-			LOG.debug("wanted to stop countdown, but nothing to do");
+			LOG.trace("wanted to stop countdown, but nothing to do");
 		}
 	}
 	
@@ -478,7 +475,7 @@ public class MainController implements Scroller {
 			slideShowFuture = null;
 			slideShowImages = null;
 		} else {
-			LOG.debug("wanted to stop slide show, but nothing to do");
+			LOG.trace("wanted to stop slide show, but nothing to do");
 		}
 	}
 	
