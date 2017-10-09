@@ -30,9 +30,9 @@
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
 		<!-- dependency versions -->
-		<version.spring>4.3.11.RELEASE</version.spring>
+		<version.spring>5.0.0.RELEASE</version.spring>
 		<version.slf4j>1.7.25</version.slf4j>
-		<version.log4j>2.9.0</version.log4j>
+		<version.log4j>2.9.1</version.log4j>
 		<version.args4j>2.33</version.args4j>
 		<version.commons-lang3>3.6</version.commons-lang3>
 		<version.commons-text>1.1</version.commons-text>
@@ -44,7 +44,7 @@
 		<version.timingframework>7.3.1</version.timingframework>
 		<version.xstream>1.4.10</version.xstream>
 		<version.github-api>1.89</version.github-api>
-		<version.lucene>7.0.0</version.lucene>
+		<version.lucene>7.0.1</version.lucene>
 		<version.guava>23.0</version.guava>
 		<version.junit>4.12</version.junit>
 		<version.mockito>2.10.0</version.mockito>
@@ -194,9 +194,15 @@
 	        <email>dev@zephyrsoft.org</email>
 	    </developer>
 	</developers>
-
+	
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>versions-maven-plugin</artifactId>
+				<version>2.5</version>
+			</plugin>
+			
 			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
