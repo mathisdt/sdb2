@@ -44,11 +44,22 @@
 		<version.timingframework>7.3.1</version.timingframework>
 		<version.xstream>1.4.10</version.xstream>
 		<version.github-api>1.89</version.github-api>
+		<version.jackson-databind>2.9.1</version.jackson-databind>
 		<version.lucene>7.0.1</version.lucene>
 		<version.guava>23.0</version.guava>
 		<version.junit>4.12</version.junit>
 		<version.mockito>2.10.0</version.mockito>
 	</properties>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.fasterxml.jackson.core</groupId>
+				<artifactId>jackson-databind</artifactId>
+				<version>[${version.jackson-databind},)</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<dependencies>
 		<!-- application -->
