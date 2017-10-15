@@ -30,6 +30,10 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -70,7 +74,9 @@ import org.zephyrsoft.util.StringTools;
 import org.zephyrsoft.util.gui.ErrorDialog;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 
 /**
  * Controller for {@link MainWindow}.
@@ -361,15 +367,75 @@ public class MainController implements Scroller {
 	}
 	
 	public synchronized boolean saveSongs() {
-		File file = new File(getSongsFileName());
-		try {
-			OutputStream xmlOutputStream = new FileOutputStream(file);
-			XMLConverter.fromSongsModelToXML(songs, xmlOutputStream);
-			xmlOutputStream.close();
-			return true;
-		} catch (IOException e) {
-			LOG.error("could not write songs to \"" + file.getAbsolutePath() + "\"");
+		File songsBackupFile = saveSongsToBackupFile();
+		if (songsBackupFile == null) {
+			LOG.error("could not write backup file while saving database");
+			ErrorDialog.openDialog(null, "Could not save songs!\n\n(Phase 1 - write backup file)");
 			return false;
+		}
+		try {
+			Path source = songsBackupFile.toPath();
+			Path target = Paths.get(getSongsFileName());
+			LOG.info("copying {} to {}", source, target);
+			Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+			LOG.error("could not copy backup to real file while saving database");
+			ErrorDialog.openDialog(null, "Could not save songs!\n\n(Phase 2 - write file)");
+			return false;
+		}
+		
+		manageOldBackups();
+		
+		return true;
+	}
+	
+	private File saveSongsToBackupFile() {
+		File file = new File(FileAndDirectoryLocations.getSongsBackupFile());
+		try (OutputStream xmlOutputStream = new FileOutputStream(file)) {
+			LOG.debug("writing songs to backup file \"{}\"", file.getAbsolutePath());
+			XMLConverter.fromSongsModelToXML(songs, xmlOutputStream);
+			return file;
+		} catch (IOException e) {
+			LOG.error("could not write songs to backup file \"" + file.getAbsolutePath() + "\"", e);
+			return null;
+		}
+	}
+	
+	/**
+	 * delete backup files older than 15 days, but retain 10 backups at least
+	 */
+	private void manageOldBackups() {
+		try {
+			Files.list(Paths.get(FileAndDirectoryLocations.getSongsBackupDir()))
+				// ordering: firstly by modification date DESC, secondly by file name DESC
+				.sorted((p1, p2) -> ComparisonChain.start()
+					.compare(lastModified(p1), lastModified(p2), Ordering.natural().reversed())
+					.compare(p1, p2, Ordering.natural().reversed())
+					.result())
+				.skip(10)
+				.filter(p -> lastModified(p).isBefore(LocalDateTime.now().minusDays(15)))
+				.forEach(p -> {
+					LOG.info("deleting old backup {}", p);
+					delete(p);
+				});
+		} catch (Exception e) {
+			LOG.warn("error while managing backup files");
+		}
+	}
+	
+	private LocalDateTime lastModified(Path path) {
+		try {
+			return Instant.ofEpochMilli(Files.getLastModifiedTime(path).toMillis()).atZone(ZoneId.systemDefault()).toLocalDateTime();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private void delete(Path p) {
+		try {
+			Files.delete(p);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 	

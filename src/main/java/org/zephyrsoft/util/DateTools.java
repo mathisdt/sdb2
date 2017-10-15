@@ -30,8 +30,10 @@ import java.util.TimeZone;
  */
 public class DateTools {
 	
+	private static final String TIMESTAMP_PATTERN = "yyyy-MM-dd-HH-mm-ss";
 	private static final String DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm";
 	private static final String YEAR_MONTH_PATTERN = "yyyy-MM";
+	private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern(TIMESTAMP_PATTERN);
 	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_PATTERN);
 	
 	public static LocalDateTime parseDateTime(String toParse) {
@@ -61,6 +63,10 @@ public class DateTools {
 	
 	public static String format(LocalDateTime latestReleaseTimestamp) {
 		return latestReleaseTimestamp.format(DATE_TIME_FORMATTER);
+	}
+	
+	public static String timestamp() {
+		return LocalDateTime.now().format(TIMESTAMP_FORMATTER);
 	}
 	
 	public static Date fromLocalDate(LocalDate localDate) {
