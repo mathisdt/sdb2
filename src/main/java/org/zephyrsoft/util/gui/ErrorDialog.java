@@ -19,16 +19,21 @@ package org.zephyrsoft.util.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dialog;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
+
 import org.zephyrsoft.sdb2.gui.MainWindow;
 
 /**
@@ -47,42 +52,47 @@ public class ErrorDialog extends JDialog {
 		setIconImages(MainWindow.getIconsFromResources(getClass()));
 		setTitle("Error");
 		setSize(400, 250);
-		setLocationRelativeTo(parent);
+		if (parent != null) {
+			setLocationRelativeTo(parent);
+		} else {
+			Rectangle defaultScreenRectangle = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration()
+				.getBounds();
+			setLocation((int) (defaultScreenRectangle.getWidth() / 2 - getSize().getWidth() / 2),
+				(int) (defaultScreenRectangle.getHeight() / 2 - getSize().getHeight() / 2));
+		}
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setLayout(new BorderLayout());
 		contentPanel.setBorder(null);
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
+		
+		JScrollPane scrollPane = new JScrollPane();
+		contentPanel.add(scrollPane, BorderLayout.CENTER);
 		{
-			JScrollPane scrollPane = new JScrollPane();
-			contentPanel.add(scrollPane, BorderLayout.CENTER);
-			{
-				txtrAaa = new JTextArea();
-				txtrAaa.setText("AAA");
-				txtrAaa.setBorder(new EmptyBorder(15, 15, 15, 15));
-				txtrAaa.setBackground(new Color(255, 255, 153));
-				txtrAaa.setOpaque(true);
-				txtrAaa.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 10));
-				txtrAaa.setEditable(false);
-				scrollPane.setViewportView(txtrAaa);
-			}
+			txtrAaa = new JTextArea();
+			txtrAaa.setText("AAA");
+			txtrAaa.setBorder(new EmptyBorder(15, 15, 15, 15));
+			txtrAaa.setBackground(new Color(255, 255, 153));
+			txtrAaa.setOpaque(true);
+			txtrAaa.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 10));
+			txtrAaa.setEditable(false);
+			scrollPane.setViewportView(txtrAaa);
 		}
+		JPanel buttonPane = new JPanel();
+		buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
+		getContentPane().add(buttonPane, BorderLayout.SOUTH);
 		{
-			JPanel buttonPane = new JPanel();
-			buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
-			getContentPane().add(buttonPane, BorderLayout.SOUTH);
-			{
-				JButton okButton = new JButton("Close");
-				okButton.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						ErrorDialog.this.setVisible(false);
-						ErrorDialog.this.dispose();
-					}
-				});
-				buttonPane.add(okButton);
-				getRootPane().setDefaultButton(okButton);
-			}
+			JButton okButton = new JButton("Close");
+			okButton.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					ErrorDialog.this.setVisible(false);
+					ErrorDialog.this.dispose();
+				}
+			});
+			buttonPane.add(okButton);
+			getRootPane().setDefaultButton(okButton);
 		}
+		
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 	}
 	
@@ -94,13 +104,31 @@ public class ErrorDialog extends JDialog {
 	/**
 	 * Open an error dialog.
 	 * 
-	 * @param parent the parent component
-	 * @param text the message to display
+	 * @param parent
+	 *            the parent component
+	 * @param text
+	 *            the message to display
 	 */
 	public static void openDialog(Component parent, String text) {
 		ErrorDialog dialog = new ErrorDialog(parent);
 		dialog.setText(text);
 		dialog.setVisible(true);
+	}
+	
+	/**
+	 * Open an error dialog.
+	 * 
+	 * @param parent
+	 *            the parent component
+	 * @param text
+	 *            the message to display
+	 */
+	public static void openDialogBlocking(Component parent, String text) {
+		ErrorDialog dialog = new ErrorDialog(parent);
+		dialog.setText(text);
+		dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+		dialog.setVisible(true);
+		
 	}
 	
 }
