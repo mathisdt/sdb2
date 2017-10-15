@@ -249,7 +249,7 @@ public class MainController implements Scroller {
 	}
 	
 	public void shutdown(int exitCode) {
-		LOG.debug("closing application, exit code " + exitCode);
+		LOG.debug("closing application, exit code {}", exitCode);
 		executor.shutdownNow();
 		System.exit(exitCode);
 	}
@@ -352,8 +352,10 @@ public class MainController implements Scroller {
 			SongsModel modelToReturn = XMLConverter.fromXMLToSongsModel(xmlInputStream);
 			xmlInputStream.close();
 			return modelToReturn;
-		} catch (IOException e) {
-			LOG.error("could not read songs from " + file.getAbsolutePath());
+		} catch (Exception e) {
+			LOG.error("could not read songs from " + file.getAbsolutePath(), e);
+			ErrorDialog.openDialogBlocking(null, "Could not load songs from file\n" + file.getAbsolutePath());
+			shutdown(-1);
 			return null;
 		}
 	}
