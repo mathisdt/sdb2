@@ -178,6 +178,12 @@ public class PresenterWindow extends JFrame implements Presenter {
 	}
 	
 	@Override
+	public void disposePresenter() {
+		LOG.debug("disposing presenter for {}", presentable);
+		dispose();
+	}
+	
+	@Override
 	public void moveToPart(Integer part) {
 		if (songView != null) {
 			songView.moveToPart(part);

@@ -116,16 +116,16 @@ public class MainController implements Scroller {
 		
 		presentationControl = new PresenterBundle();
 		
-		Presenter presenter1 = createPresenter(
-			ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class)), presentable,
-			settings.get(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.class));
+		SelectableScreen screen1 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class));
+		ScreenContentsEnum screen1Contents = settings.get(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.class);
+		Presenter presenter1 = createPresenter(screen1, presentable, screen1Contents);
 		if (presenter1 != null) {
 			presentationControl.addPresenter(presenter1);
 		}
 		
-		Presenter presenter2 = createPresenter(
-			ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)), presentable,
-			settings.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class));
+		SelectableScreen screen2 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class));
+		ScreenContentsEnum screen2Contents = settings.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class);
+		Presenter presenter2 = createPresenter(screen2, presentable, screen2Contents);
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
 		}
@@ -151,6 +151,7 @@ public class MainController implements Scroller {
 			// now stop old presentation (if any)
 			if (oldPresentationControl != null) {
 				oldPresentationControl.hidePresenter();
+				oldPresentationControl.disposePresenter();
 			}
 			
 			return true;

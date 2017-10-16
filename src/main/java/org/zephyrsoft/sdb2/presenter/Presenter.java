@@ -33,4 +33,9 @@ public interface Presenter extends Scroller {
 	 */
 	void hidePresenter();
 	
+	/**
+	 * Permanently dispose of the presenter. It cannot be shown again after calling this method.
+	 */
+	void disposePresenter();
+	
 }

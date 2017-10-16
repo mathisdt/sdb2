@@ -52,4 +52,13 @@ public class Presentable {
 		return image;
 	}
 	
+	@Override
+	public String toString() {
+		return song != null
+			? song.getTitle()
+			: (image != null
+				? image.toString()
+				: "blank");
+	}
+	
 }

@@ -17,7 +17,6 @@
 package org.zephyrsoft.sdb2.presenter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.zephyrsoft.sdb2.model.AddressablePart;
@@ -29,15 +28,7 @@ import org.zephyrsoft.sdb2.model.AddressablePart;
  */
 public class PresenterBundle implements Presenter {
 	
-	private final List<Presenter> presenters;
-	
-	public PresenterBundle() {
-		presenters = new ArrayList<>();
-	}
-	
-	public PresenterBundle(Presenter... presenters) {
-		this.presenters = Arrays.asList(presenters);
-	}
+	private final List<Presenter> presenters = new ArrayList<>();
 	
 	public void addPresenter(Presenter presenter) {
 		presenters.add(presenter);
@@ -54,6 +45,13 @@ public class PresenterBundle implements Presenter {
 	public void hidePresenter() {
 		for (Presenter presenter : presenters) {
 			presenter.hidePresenter();
+		}
+	}
+	
+	@Override
+	public void disposePresenter() {
+		for (Presenter presenter : presenters) {
+			presenter.disposePresenter();
 		}
 	}
 	
