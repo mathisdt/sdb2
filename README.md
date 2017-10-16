@@ -9,7 +9,7 @@ The Song Database is a program to show lyrics on a digital projector for worship
   to have two outputs, or you need two graphics cards)
   - you have a control monitor to display the database and the presentation control while the seperate 
     projection screen shows only the content which the congregation wants to see - no confusion, very professional
-- show/hide the song title on foils
+- show or hide the song title for the audience
 - guitar chords can be included in the database, but will not be shown when presenting songs - they are 
   useful when printing song sheets for the band
 - english user interface
@@ -19,6 +19,7 @@ The Song Database is a program to show lyrics on a digital projector for worship
 - show the song beginnings in the song list (additionally to the song title) - you can find songs faster 
   in spontaneous worship sessions
 - filter on title or text parts
+- image slide show possible for announcements, e.g. before or after the service
 
 ## Why use this software and not Powerpoint?
 
