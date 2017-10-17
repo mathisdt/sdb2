@@ -87,7 +87,8 @@ public class MainController implements Scroller {
 	
 	private static Logger LOG = LoggerFactory.getLogger(MainController.class);
 	
-	private StatisticsController statisticsController;
+	private final IOController ioController;
+	private final StatisticsController statisticsController;
 	
 	private String songsFileName = null;
 	private SongsModel songs = null;
@@ -103,7 +104,8 @@ public class MainController implements Scroller {
 	private Future<?> slideShowFuture;
 	private final static Pattern imagePattern = Pattern.compile("(?i)^.*\\.(png|jpg|jpeg|gif|bmp)$");
 	
-	public MainController(StatisticsController statisticsController) {
+	public MainController(IOController ioController, StatisticsController statisticsController) {
+		this.ioController = ioController;
 		this.statisticsController = statisticsController;
 	}
 	
@@ -278,14 +280,7 @@ public class MainController implements Scroller {
 	
 	public void loadSettings() {
 		LOG.debug("loading settings from file");
-		File file = new File(FileAndDirectoryLocations.getSettingsFileName());
-		try {
-			InputStream xmlInputStream = new FileInputStream(file);
-			settings = XMLConverter.fromXMLToSettingsModel(xmlInputStream);
-			xmlInputStream.close();
-		} catch (IOException e) {
-			LOG.error("could not read settings from \"" + file.getAbsolutePath() + "\"");
-		}
+		settings = ioController.readSettings(is -> XMLConverter.fromXMLToSettingsModel(is));
 		if (settings == null) {
 			// there was a problem while reading
 			settings = new SettingsModel();
@@ -310,7 +305,10 @@ public class MainController implements Scroller {
 		List<SelectableScreen> availableScreens = ScreenHelper.getScreens();
 		if (availableScreens.size() > 1) {
 			putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_DISPLAY, Integer.valueOf(availableScreens.get(1).getIndex()));
+		} else {
+			putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_DISPLAY, null);
 		}
+		putDefaultIfKeyIsUnset(SettingKey.SCREEN_2_DISPLAY, null);
 		
 		putDefaultIfKeyIsUnset(SettingKey.SHOW_TITLE, Boolean.TRUE);
 		putDefaultIfKeyIsUnset(SettingKey.TITLE_FONT, new Font(Font.SERIF, Font.BOLD, 10));
@@ -338,6 +336,7 @@ public class MainController implements Scroller {
 	}
 	
 	public synchronized boolean saveSettings() {
+		// TODO move to IOController !?
 		File file = new File(FileAndDirectoryLocations.getSettingsFileName());
 		try {
 			OutputStream xmlOutputStream = new FileOutputStream(file);
@@ -368,6 +367,7 @@ public class MainController implements Scroller {
 	}
 	
 	public synchronized boolean saveSongs() {
+		// TODO move to IOController !?
 		File songsBackupFile = saveSongsToBackupFile();
 		if (songsBackupFile == null) {
 			LOG.error("could not write backup file while saving database");
@@ -391,6 +391,7 @@ public class MainController implements Scroller {
 	}
 	
 	private File saveSongsToBackupFile() {
+		// TODO move to IOController !?
 		File file = new File(FileAndDirectoryLocations.getSongsBackupFile());
 		try (OutputStream xmlOutputStream = new FileOutputStream(file)) {
 			LOG.debug("writing songs to backup file \"{}\"", file.getAbsolutePath());
@@ -406,6 +407,7 @@ public class MainController implements Scroller {
 	 * delete backup files older than 15 days, but retain 10 backups at least
 	 */
 	private void manageOldBackups() {
+		// TODO move to IOController !?
 		try {
 			Files.list(Paths.get(FileAndDirectoryLocations.getSongsBackupDir()))
 				// ordering: firstly by modification date DESC, secondly by file name DESC
@@ -449,6 +451,7 @@ public class MainController implements Scroller {
 	}
 	
 	private String getSongsFileName() {
+		// TODO move to IOController !?
 		if (songsFileName == null) {
 			return FileAndDirectoryLocations.getDefaultSongsFileName();
 		} else {

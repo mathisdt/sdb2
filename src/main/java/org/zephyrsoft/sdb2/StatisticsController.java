@@ -56,8 +56,14 @@ public class StatisticsController {
 	private static final Logger LOG = LoggerFactory.getLogger(StatisticsController.class);
 	
 	private StatisticsModel statistics = null;
+	private final IOController ioController;
+	
+	public StatisticsController(IOController ioController) {
+		this.ioController = ioController;
+	}
 	
 	public void loadStatistics() {
+		// TODO move to IOController !?
 		LOG.debug("loading statistics from file");
 		File file = new File(FileAndDirectoryLocations.getStatisticsFileName());
 		try {
@@ -80,6 +86,7 @@ public class StatisticsController {
 	}
 	
 	public synchronized boolean saveStatistics() {
+		// TODO move to IOController !?
 		File file = new File(FileAndDirectoryLocations.getStatisticsFileName());
 		try {
 			OutputStream xmlOutputStream = new FileOutputStream(file);

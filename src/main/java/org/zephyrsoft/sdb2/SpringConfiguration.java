@@ -33,15 +33,20 @@ import org.zephyrsoft.sdb2.service.IndexerServiceImpl;
 public class SpringConfiguration {
 	
 	@Bean
+	public IOController ioController() {
+		return new IOController();
+	}
+	
+	@Bean
 	public StatisticsController statisticsController() {
-		StatisticsController statisticsController = new StatisticsController();
+		StatisticsController statisticsController = new StatisticsController(ioController());
 		statisticsController.loadStatistics();
 		return statisticsController;
 	}
 	
 	@Bean
 	public MainController mainController() {
-		MainController mainController = new MainController(statisticsController());
+		MainController mainController = new MainController(ioController(), statisticsController());
 		mainController.setupLookAndFeel();
 		mainController.loadSettings();
 		return mainController;
