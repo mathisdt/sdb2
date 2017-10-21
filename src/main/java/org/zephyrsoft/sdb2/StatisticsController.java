@@ -17,10 +17,8 @@
 package org.zephyrsoft.sdb2;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -63,16 +61,8 @@ public class StatisticsController {
 	}
 	
 	public void loadStatistics() {
-		// TODO move to IOController !?
 		LOG.debug("loading statistics from file");
-		File file = new File(FileAndDirectoryLocations.getStatisticsFileName());
-		try {
-			InputStream xmlInputStream = new FileInputStream(file);
-			statistics = XMLConverter.fromXMLToStatisticsModel(xmlInputStream);
-			xmlInputStream.close();
-		} catch (IOException e) {
-			LOG.error("could not read statistics from \"" + file.getAbsolutePath() + "\"");
-		}
+		statistics = ioController.readStatistics(is -> XMLConverter.fromXMLToStatisticsModel(is));
 		if (statistics == null) {
 			// there was a problem while reading
 			statistics = new StatisticsModel();
@@ -176,6 +166,7 @@ public class StatisticsController {
 			sheet.createFreezePane(0, 1);
 		}
 		
+		// TODO move to IOController !?
 		try (FileOutputStream out = new FileOutputStream(targetExcelFile)) {
 			workbook.write(out);
 			out.close();

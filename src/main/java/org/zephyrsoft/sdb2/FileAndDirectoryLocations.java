@@ -18,6 +18,7 @@ package org.zephyrsoft.sdb2;
 
 import java.io.File;
 
+import org.apache.commons.lang3.StringUtils;
 import org.zephyrsoft.util.DateTools;
 
 /**
@@ -40,6 +41,17 @@ public class FileAndDirectoryLocations {
 	
 	public static String getDefaultSongsFileName() {
 		return getSongsDir() + File.separator + SONGS_FILE_STRING;
+	}
+	
+	/**
+	 * If the parameter is not blank, return it - else return the default location for the songs file.
+	 */
+	public static String getSongsFileName(String fileName) {
+		if (StringUtils.isBlank(fileName)) {
+			return FileAndDirectoryLocations.getDefaultSongsFileName();
+		} else {
+			return fileName;
+		}
 	}
 	
 	public static String getSettingsFileName() {

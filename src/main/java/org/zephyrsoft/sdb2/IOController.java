@@ -34,6 +34,19 @@ public class IOController {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(IOController.class);
 	
+	public <T> T readSongs(String fileName, Function<InputStream, T> handler) {
+		String fileNameToUse = FileAndDirectoryLocations.getSongsFileName(fileName);
+		File file = new File(fileNameToUse);
+		LOG.debug("reading songs from {}", file.getAbsolutePath());
+		T result = null;
+		try (InputStream xmlInputStream = new FileInputStream(file)) {
+			result = handler.apply(xmlInputStream);
+		} catch (IOException e) {
+			LOG.error("could not read songs from \"" + file.getAbsolutePath() + "\"", e);
+		}
+		return result;
+	}
+	
 	public <T> T readSettings(Function<InputStream, T> handler) {
 		File file = new File(FileAndDirectoryLocations.getSettingsFileName());
 		LOG.debug("reading settings from {}", file.getAbsolutePath());
@@ -42,6 +55,20 @@ public class IOController {
 			result = handler.apply(xmlInputStream);
 		} catch (IOException e) {
 			LOG.error("could not read settings from \"" + file.getAbsolutePath() + "\"", e);
+		}
+		return result;
+	}
+	
+	public <T> T readStatistics(Function<InputStream, T> handler) {
+		File file = new File(FileAndDirectoryLocations.getStatisticsFileName());
+		LOG.debug("reading statistics from {}", file.getAbsolutePath());
+		T result = null;
+		try {
+			InputStream xmlInputStream = new FileInputStream(file);
+			result = handler.apply(xmlInputStream);
+			xmlInputStream.close();
+		} catch (IOException e) {
+			LOG.error("could not read statistics from \"" + file.getAbsolutePath() + "\"");
 		}
 		return result;
 	}

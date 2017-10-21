@@ -22,10 +22,8 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Image;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -267,7 +265,7 @@ public class MainController implements Scroller {
 		if (!StringTools.isBlank(fileName)) {
 			songsFileName = fileName;
 		}
-		songs = populateSongsModel();
+		songs = populateSongsModel(songsFileName);
 		if (songs == null) {
 			// there was a problem while reading
 			songs = new SongsModel();
@@ -349,18 +347,16 @@ public class MainController implements Scroller {
 		}
 	}
 	
-	private SongsModel populateSongsModel() {
-		File file = new File(getSongsFileName());
-		LOG.debug("loading songs from file {}", file.getAbsolutePath());
-		
-		try {
-			InputStream xmlInputStream = new FileInputStream(file);
-			SongsModel modelToReturn = XMLConverter.fromXMLToSongsModel(xmlInputStream);
-			xmlInputStream.close();
-			return modelToReturn;
-		} catch (Exception e) {
-			LOG.error("could not read songs from " + file.getAbsolutePath(), e);
-			ErrorDialog.openDialogBlocking(null, "Could not load songs from file\n" + file.getAbsolutePath());
+	private SongsModel populateSongsModel(String fileName) {
+		LOG.debug("loading songs from file {}", fileName);
+		SongsModel songsModel = ioController.readSongs(fileName, is -> XMLConverter.fromXMLToSongsModel(is));
+		if (songsModel != null) {
+			return songsModel;
+		} else {
+			String fileNameUsed = FileAndDirectoryLocations.getSongsFileName(fileName);
+			LOG.error("could not load songs from {}", fileNameUsed);
+			ErrorDialog.openDialogBlocking(null, "Could not load songs from file:\n" + fileNameUsed
+				+ "\n\nThis is a fatal error, exiting.\nSee log file for more details.");
 			shutdown(-1);
 			return null;
 		}
@@ -376,7 +372,7 @@ public class MainController implements Scroller {
 		}
 		try {
 			Path source = songsBackupFile.toPath();
-			Path target = Paths.get(getSongsFileName());
+			Path target = Paths.get(FileAndDirectoryLocations.getSongsFileName(songsFileName));
 			LOG.info("copying {} to {}", source, target);
 			Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
@@ -404,7 +400,7 @@ public class MainController implements Scroller {
 	}
 	
 	/**
-	 * delete backup files older than 15 days, but retain 10 backups at least
+	 * delete backup files older than 15 days, but retain 20 backups at least
 	 */
 	private void manageOldBackups() {
 		// TODO move to IOController !?
@@ -415,7 +411,7 @@ public class MainController implements Scroller {
 					.compare(lastModified(p1), lastModified(p2), Ordering.natural().reversed())
 					.compare(p1, p2, Ordering.natural().reversed())
 					.result())
-				.skip(10)
+				.skip(20)
 				.filter(p -> lastModified(p).isBefore(LocalDateTime.now().minusDays(15)))
 				.forEach(p -> {
 					LOG.info("deleting old backup {}", p);
@@ -448,15 +444,6 @@ public class MainController implements Scroller {
 	
 	public SettingsModel getSettings() {
 		return settings;
-	}
-	
-	private String getSongsFileName() {
-		// TODO move to IOController !?
-		if (songsFileName == null) {
-			return FileAndDirectoryLocations.getDefaultSongsFileName();
-		} else {
-			return songsFileName;
-		}
 	}
 	
 	/**
