@@ -45,7 +45,7 @@
 		<version.xstream>1.4.10</version.xstream>
 		<version.github-api>1.89</version.github-api>
 		<version.jackson-databind>2.9.1</version.jackson-databind>
-		<version.lucene>7.0.1</version.lucene>
+		<version.lucene>7.1.0</version.lucene>
 		<version.guava>23.3-jre</version.guava>
 		<version.junit>4.12</version.junit>
 		<version.mockito>2.10.0</version.mockito>
