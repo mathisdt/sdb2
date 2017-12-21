@@ -1,1 +1,3 @@
 /target/
+/src/main/resources/rebel.xml
+/.settings/.rebel.xml.bak

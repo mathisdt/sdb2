@@ -26,7 +26,7 @@ import com.google.common.base.Preconditions;
 public class SelectableScreen {
 	
 	private final int index;
-	private final boolean available;
+	private boolean available;
 	
 	/**
 	 * @param index
@@ -54,6 +54,10 @@ public class SelectableScreen {
 	
 	public boolean isAvailable() {
 		return available;
+	}
+	
+	public void setAvailable(boolean available) {
+		this.available = available;
 	}
 	
 	/**

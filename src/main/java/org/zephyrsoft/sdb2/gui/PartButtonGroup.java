@@ -43,7 +43,8 @@ public class PartButtonGroup extends JPanel {
 	
 	private static final long serialVersionUID = -3707530126058854873L;
 	
-	private static final int MARGIN = 10;
+	private static final int MARGIN_LEFT_RIGHT = 10;
+	private static final int MARGIN_TOP_BOTTOM = 4;
 	
 	private Scroller scroller;
 	private UIScroller uiScroller;
@@ -68,7 +69,7 @@ public class PartButtonGroup extends JPanel {
 		add(lineButtons, BorderLayout.CENTER);
 		lineButtons.setLayout(new BoxLayout(lineButtons, BoxLayout.Y_AXIS));
 		
-		partMarker = new PartMarker(Color.WHITE, MARGIN, this);
+		partMarker = new PartMarker(Color.WHITE, MARGIN_TOP_BOTTOM, this);
 		defaultForeground = partMarker.getForeground();
 		Dimension preferredSize = new Dimension(180, 10);
 		partMarker.setPreferredSize(preferredSize);
@@ -140,13 +141,13 @@ public class PartButtonGroup extends JPanel {
 	}
 	
 	private Border createInactiveBorder() {
-		return BorderFactory.createEmptyBorder(MARGIN, MARGIN, MARGIN, MARGIN);
+		return BorderFactory.createEmptyBorder(MARGIN_TOP_BOTTOM, MARGIN_LEFT_RIGHT, MARGIN_TOP_BOTTOM, MARGIN_LEFT_RIGHT);
 	}
 	
 	private Border createActiveBorder() {
 		return BorderFactory.createCompoundBorder(
-			BorderFactory.createMatteBorder(MARGIN / 2, MARGIN / 2, MARGIN / 2, MARGIN / 2, Color.WHITE),
-			BorderFactory.createEmptyBorder(MARGIN / 2, MARGIN / 2, MARGIN / 2, MARGIN / 2));
+			BorderFactory.createMatteBorder(MARGIN_TOP_BOTTOM / 2, MARGIN_LEFT_RIGHT / 2, MARGIN_TOP_BOTTOM / 2, MARGIN_LEFT_RIGHT / 2, Color.WHITE),
+			BorderFactory.createEmptyBorder(MARGIN_TOP_BOTTOM / 2, MARGIN_LEFT_RIGHT / 2, MARGIN_TOP_BOTTOM / 2, MARGIN_LEFT_RIGHT / 2));
 	}
 	
 	protected void setActiveLine(int lineIndex) {
