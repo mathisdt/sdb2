@@ -275,6 +275,22 @@
 					</execution>
 				</executions>
 			</plugin>
+			
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>3.0.2</version>
+				<configuration>
+					<failBuildOnCVSS>3</failBuildOnCVSS>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
