@@ -30,7 +30,7 @@
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
 		<!-- dependency versions -->
-		<version.spring>5.0.2.RELEASE</version.spring>
+		<version.spring>5.0.3.RELEASE</version.spring>
 		<version.slf4j>1.7.25</version.slf4j>
 		<version.log4j>2.10.0</version.log4j>
 		<version.args4j>2.33</version.args4j>
