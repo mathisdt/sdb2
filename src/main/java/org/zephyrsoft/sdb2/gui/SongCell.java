@@ -26,7 +26,7 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import org.zephyrsoft.sdb2.model.Song;
-import org.zephyrsoft.util.StringTools;
+import org.zephyrsoft.sdb2.util.StringTools;
 
 /**
  * List entry for a {@link Song}.

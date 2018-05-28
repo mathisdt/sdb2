@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.zephyrsoft.util.StringTools;
+import org.zephyrsoft.sdb2.util.StringTools;
 
 import com.google.common.base.Preconditions;
 

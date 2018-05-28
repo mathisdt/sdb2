@@ -23,7 +23,6 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.geom.Area;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -52,7 +51,7 @@ import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
 import org.zephyrsoft.sdb2.model.SongParser;
-import org.zephyrsoft.util.StringTools;
+import org.zephyrsoft.sdb2.util.StringTools;
 
 import com.google.common.base.Preconditions;
 
@@ -349,8 +348,8 @@ public class SongView extends JPanel implements Scroller {
 		try {
 			AddressablePart addressablePart = parts.get(part);
 			Preconditions.checkArgument(addressablePart != null, "part index does not correspond to a part of the song");
-			Rectangle target = text.modelToView(addressablePart.getPosition());
-			animatedMoveTo(new Point(text.getLocation().x, topMargin - target.y));
+			Rectangle2D target = text.modelToView2D(addressablePart.getPosition());
+			animatedMoveTo(new Point((int) text.getLocation().getX(), (int) (topMargin - target.getY())));
 		} catch (BadLocationException e) {
 			throw new IllegalStateException("could not identify position in text", e);
 		}
@@ -365,8 +364,8 @@ public class SongView extends JPanel implements Scroller {
 			Preconditions.checkArgument(addressablePart != null, "part index does not correspond to a part of the song");
 			AddressableLine addressableLine = addressablePart.get(line);
 			Preconditions.checkArgument(addressableLine != null, "line index does not correspond to a line of the addressed part");
-			Rectangle target = text.modelToView(addressableLine.getPosition());
-			animatedMoveTo(new Point(text.getLocation().x, topMargin - target.y));
+			Rectangle2D target = text.modelToView2D(addressableLine.getPosition());
+			animatedMoveTo(new Point((int) text.getLocation().getX(), (int) (topMargin - target.getY())));
 		} catch (BadLocationException e) {
 			throw new IllegalStateException("could not identify position in text", e);
 		}

@@ -25,7 +25,7 @@
 	</scm>
 
 	<properties>
-		<version.java>1.8</version.java>
+		<version.java>10</version.java>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
@@ -45,10 +45,10 @@
 		<version.xstream>1.4.10</version.xstream>
 		<version.github-api>1.92</version.github-api>
 		<version.jackson-databind>2.9.4</version.jackson-databind>
-		<version.lucene>7.1.0</version.lucene>
+		<version.lucene>7.3.1</version.lucene>
 		<version.guava>25.0-jre</version.guava>
 		<version.junit>4.12</version.junit>
-		<version.mockito>2.10.0</version.mockito>
+		<version.mockito>2.18.3</version.mockito>
 	</properties>
 	
 	<dependencyManagement>
@@ -123,16 +123,14 @@
 			<artifactId>lucene-core</artifactId>
 			<version>${version.lucene}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-analyzers-common</artifactId>
-			<version>${version.lucene}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-queryparser</artifactId>
-			<version>${version.lucene}</version>
-		</dependency>
+		<!-- this is commented out (and partly repackaged in org.zephyrsoft.sdb2.util.repackaged.lucene.analyzers.common) 
+			because Java 9+ modules are not supported by Lucene yet 
+			- there are split package issues when using lucene-core AND lucene-analyzers-common -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.apache.lucene</groupId> -->
+<!-- 			<artifactId>lucene-analyzers-common</artifactId> -->
+<!-- 			<version>${version.lucene}</version> -->
+<!-- 		</dependency> -->
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
@@ -298,14 +296,20 @@
 				<version>3.7.0</version>
 				<inherited>true</inherited>
 				<configuration>
-					<source>${version.java}</source>
-					<target>${version.java}</target>
+					<release>${version.java}</release>
 				</configuration>
+				<dependencies>
+			        <dependency>
+			            <groupId>org.ow2.asm</groupId>
+			            <artifactId>asm</artifactId>
+			            <version>6.1.1</version> <!-- use newer version of ASM -->
+			        </dependency>
+			    </dependencies>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
-				<version>3.0.2</version>
+				<version>3.1.0</version>
 				<executions>
 					<execution>
 						<id>copy-dependencies</id>
@@ -362,7 +366,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.0.2</version>
+				<version>3.1.0</version>
 				<configuration>
 					<outputDirectory>${project.build.directory}/distribution/bin</outputDirectory>
 					<finalName>${project.artifactId}</finalName>

@@ -68,8 +68,8 @@ import org.zephyrsoft.sdb2.presenter.PresenterBundle;
 import org.zephyrsoft.sdb2.presenter.PresenterWindow;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.Scroller;
-import org.zephyrsoft.util.StringTools;
-import org.zephyrsoft.util.gui.ErrorDialog;
+import org.zephyrsoft.sdb2.util.StringTools;
+import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;

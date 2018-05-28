@@ -39,8 +39,8 @@ import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.XMLConverter;
 import org.zephyrsoft.sdb2.model.statistics.StatisticsModel;
-import org.zephyrsoft.util.DateTools;
-import org.zephyrsoft.util.gui.ErrorDialog;
+import org.zephyrsoft.sdb2.util.DateTools;
+import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
 import com.google.common.base.Preconditions;
 

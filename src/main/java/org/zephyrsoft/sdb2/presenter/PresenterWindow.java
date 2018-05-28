@@ -40,7 +40,7 @@ import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableScreen;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
-import org.zephyrsoft.util.gui.ImagePanel;
+import org.zephyrsoft.sdb2.util.gui.ImagePanel;
 
 /**
  * The presentation display for the lyrics.

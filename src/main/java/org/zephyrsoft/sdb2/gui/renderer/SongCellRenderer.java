@@ -33,7 +33,7 @@ import org.zephyrsoft.sdb2.gui.SongCell;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.sdb2.service.IndexerServiceImpl;
-import org.zephyrsoft.util.gui.SongCellHighlighter;
+import org.zephyrsoft.sdb2.util.gui.SongCellHighlighter;
 
 /**
  * A {@link ListCellRenderer} for {@link Song} values.

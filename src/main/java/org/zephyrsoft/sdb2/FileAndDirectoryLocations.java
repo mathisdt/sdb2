@@ -19,7 +19,7 @@ package org.zephyrsoft.sdb2;
 import java.io.File;
 
 import org.apache.commons.lang3.StringUtils;
-import org.zephyrsoft.util.DateTools;
+import org.zephyrsoft.sdb2.util.DateTools;
 
 /**
  * Manages (default) locations of directories and files.

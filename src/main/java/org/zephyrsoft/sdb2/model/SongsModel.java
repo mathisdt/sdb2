@@ -29,9 +29,9 @@ import javax.swing.event.ListDataListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.gui.MainWindow;
-import org.zephyrsoft.util.SongsModelListener;
-import org.zephyrsoft.util.gui.TransparentFilterableListModel;
-import org.zephyrsoft.util.gui.TransparentListModel;
+import org.zephyrsoft.sdb2.util.SongsModelListener;
+import org.zephyrsoft.sdb2.util.gui.TransparentFilterableListModel;
+import org.zephyrsoft.sdb2.util.gui.TransparentListModel;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;

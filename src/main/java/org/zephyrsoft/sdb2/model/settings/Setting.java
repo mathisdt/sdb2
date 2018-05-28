@@ -16,8 +16,9 @@
  */
 package org.zephyrsoft.sdb2.model.settings;
 
+import org.zephyrsoft.sdb2.util.StringTools;
+
 import com.thoughtworks.xstream.annotations.XStreamAlias;
-import org.zephyrsoft.util.StringTools;
 
 /**
  * A global setting.

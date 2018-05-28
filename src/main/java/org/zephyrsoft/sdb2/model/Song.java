@@ -18,7 +18,7 @@ package org.zephyrsoft.sdb2.model;
 
 import java.io.Serializable;
 
-import org.zephyrsoft.util.StringTools;
+import org.zephyrsoft.sdb2.util.StringTools;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 

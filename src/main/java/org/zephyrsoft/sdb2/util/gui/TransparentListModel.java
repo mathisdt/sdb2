@@ -14,42 +14,42 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.model;
+package org.zephyrsoft.sdb2.util.gui;
 
-import org.zephyrsoft.sdb2.util.StringTools;
+import java.util.List;
+import javax.swing.AbstractListModel;
 
 /**
- * Holds one element of a {@link Song}, e.g. one lyrics line or the title.
+ * A list model which transparently uses an underlying {@link List}.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class SongElement {
+public class TransparentListModel<T> extends AbstractListModel<T> {
 	
-	private SongElementEnum type;
-	private String element;
+	private static final long serialVersionUID = -2952298254786461472L;
 	
-	public SongElement(SongElementEnum type, String element) {
-		this.type = type;
-		this.element = element;
-	}
+	private final List<T> underlyingList;
 	
-	public SongElementEnum getType() {
-		return type;
-	}
-	
-	public String getElement() {
-		return element;
+	public TransparentListModel(List<T> underlyingList) {
+		this.underlyingList = underlyingList;
 	}
 	
 	@Override
-	public String toString() {
-		return type + (element != null ? "[" + element + "]" : "");
+	public int getSize() {
+		return underlyingList.size();
 	}
 	
 	@Override
-	public boolean equals(Object obj) {
-		return obj instanceof SongElement && type == ((SongElement) obj).getType()
-			&& StringTools.equals(element, ((SongElement) obj).getElement());
+	public T getElementAt(int index) {
+		return underlyingList.get(index);
+	}
+	
+	public List<T> getAllElements() {
+		return underlyingList;
+	}
+	
+	public boolean contains(T element) {
+		return underlyingList.contains(element);
 	}
 	
 }

@@ -27,9 +27,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.custom.CustomAnalyzer;
-import org.apache.lucene.analysis.util.TokenFilterFactory;
-import org.apache.lucene.analysis.util.TokenizerFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
@@ -50,6 +47,10 @@ import org.apache.lucene.store.RAMDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.Song;
+import org.zephyrsoft.sdb2.util.repackaged.lucene.analyzers.common.CustomAnalyzer;
+import org.zephyrsoft.sdb2.util.repackaged.lucene.analyzers.common.LowerCaseFilterFactory;
+import org.zephyrsoft.sdb2.util.repackaged.lucene.analyzers.common.NGramFilterFactory;
+import org.zephyrsoft.sdb2.util.repackaged.lucene.analyzers.common.StandardTokenizerFactory;
 
 import com.google.common.base.Stopwatch;
 
@@ -93,13 +94,12 @@ public class IndexerServiceImpl implements IndexerService<Song> {
 				
 				Directory directory = new RAMDirectory();
 				try {
-					LOG.debug("available tokenizers: {}", TokenizerFactory.availableTokenizers());
-					LOG.debug("available token filters: {}", TokenFilterFactory.availableTokenFilters());
 					Analyzer analyzer = CustomAnalyzer.builder()
-						.withTokenizer("standard")
-						.addTokenFilter("lowercase")
-						.addTokenFilter("ngram", "minGramSize", "1", "maxGramSize", "25")
+						.withTokenizer(StandardTokenizerFactory.class)
+						.addTokenFilter(LowerCaseFilterFactory.class)
+						.addTokenFilter(NGramFilterFactory.class, "minGramSize", "1", "maxGramSize", "25")
 						.build();
+					
 					IndexWriterConfig config = new IndexWriterConfig(analyzer);
 					try (IndexWriter writer = new IndexWriter(directory, config)) {
 						for (Song song : songs) {

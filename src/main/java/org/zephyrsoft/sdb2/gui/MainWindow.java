@@ -90,7 +90,6 @@ import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenDisplayCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
 import org.zephyrsoft.sdb2.importer.ImportFromEasiSlides;
-import org.zephyrsoft.sdb2.importer.ImportFromSDBv1;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
@@ -106,18 +105,18 @@ import org.zephyrsoft.sdb2.presenter.UIScroller;
 import org.zephyrsoft.sdb2.service.FieldName;
 import org.zephyrsoft.sdb2.service.IndexType;
 import org.zephyrsoft.sdb2.service.IndexerService;
-import org.zephyrsoft.util.CustomFileFilter;
-import org.zephyrsoft.util.ResourceTools;
-import org.zephyrsoft.util.StringTools;
-import org.zephyrsoft.util.VersionTools;
-import org.zephyrsoft.util.VersionTools.VersionUpdate;
-import org.zephyrsoft.util.gui.ErrorDialog;
-import org.zephyrsoft.util.gui.FixedWidthJList;
-import org.zephyrsoft.util.gui.ImagePreview;
-import org.zephyrsoft.util.gui.ListFilter;
-import org.zephyrsoft.util.gui.TransparentComboBoxModel;
-import org.zephyrsoft.util.gui.TransparentFilterableListModel;
-import org.zephyrsoft.util.gui.TransparentListModel;
+import org.zephyrsoft.sdb2.util.CustomFileFilter;
+import org.zephyrsoft.sdb2.util.ResourceTools;
+import org.zephyrsoft.sdb2.util.StringTools;
+import org.zephyrsoft.sdb2.util.VersionTools;
+import org.zephyrsoft.sdb2.util.VersionTools.VersionUpdate;
+import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
+import org.zephyrsoft.sdb2.util.gui.FixedWidthJList;
+import org.zephyrsoft.sdb2.util.gui.ImagePreview;
+import org.zephyrsoft.sdb2.util.gui.ListFilter;
+import org.zephyrsoft.sdb2.util.gui.TransparentComboBoxModel;
+import org.zephyrsoft.sdb2.util.gui.TransparentFilterableListModel;
+import org.zephyrsoft.sdb2.util.gui.TransparentListModel;
 
 import com.l2fprod.common.swing.JFontChooser;
 
@@ -1124,26 +1123,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelSectionButtons.repaint();
 	}
 	
-	protected void handleImportFromSDBv1() {
-		JFileChooser chooser = new JFileChooser();
-		chooser.setDialogTitle("choose file to import");
-		CustomFileFilter filter = new CustomFileFilter("SDB 1.x database files", ".sdb");
-		chooser.addChoosableFileFilter(filter);
-		int iValue = chooser.showOpenDialog(this);
-		
-		if (iValue == JFileChooser.APPROVE_OPTION) {
-			List<Song> imported = null;
-			ImportFromSDBv1 importer = new ImportFromSDBv1();
-			imported = importer.loadFromFile(chooser.getSelectedFile());
-			if (imported != null) {
-				for (Song song : imported) {
-					songsModel.addSong(song);
-				}
-				applyFilter();
-			}
-		}
-	}
-	
 	protected void handleImportFromEasiSlides() {
 		JFileChooser chooser = new JFileChooser();
 		chooser.setDialogTitle("choose file to import");
@@ -2069,22 +2048,13 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(lblImportingSongs, gbcLblImportingSongs);
 		
 		// TODO handle importers dynamically, load every implementation of "Importer" as button (=> ServiceLoader?)
-		btnImportFromSdb1 = new JButton("Import from SDB 1.x");
-		btnImportFromSdb1.addActionListener(safeAction(e -> handleImportFromSDBv1()));
-		GridBagConstraints gbcBtnImportFromSdb1 = new GridBagConstraints();
-		gbcBtnImportFromSdb1.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnImportFromSdb1.insets = new Insets(0, 0, 5, 5);
-		gbcBtnImportFromSdb1.gridx = 0;
-		gbcBtnImportFromSdb1.gridy = 9;
-		panelImportExportStatistics.add(btnImportFromSdb1, gbcBtnImportFromSdb1);
-		
 		btnImportFromEasiSlides = new JButton("Import from EasiSlides 4.0");
 		btnImportFromEasiSlides.addActionListener(safeAction(e -> handleImportFromEasiSlides()));
 		GridBagConstraints gbcBtnImportFromEasiSlides = new GridBagConstraints();
 		gbcBtnImportFromEasiSlides.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnImportFromEasiSlides.insets = new Insets(0, 0, 5, 5);
 		gbcBtnImportFromEasiSlides.gridx = 0;
-		gbcBtnImportFromEasiSlides.gridy = 10;
+		gbcBtnImportFromEasiSlides.gridy = 9;
 		panelImportExportStatistics.add(btnImportFromEasiSlides, gbcBtnImportFromEasiSlides);
 		
 		JLabel lblProgramVersionTitle = new JLabel("Program Version");
@@ -2095,7 +2065,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblProgramVersionTitle.anchor = GridBagConstraints.SOUTH;
 		gbcLblProgramVersionTitle.insets = new Insets(0, 0, 5, 5);
 		gbcLblProgramVersionTitle.gridx = 0;
-		gbcLblProgramVersionTitle.gridy = 11;
+		gbcLblProgramVersionTitle.gridy = 10;
 		panelImportExportStatistics.add(lblProgramVersionTitle, gbcLblProgramVersionTitle);
 		
 		lblProgramVersion = new JLabel("<PROGRAM VERSION>");
@@ -2106,7 +2076,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblProgramVersion.anchor = GridBagConstraints.NORTH;
 		gbcLblProgramVersion.gridwidth = 3;
 		gbcLblProgramVersion.gridx = 0;
-		gbcLblProgramVersion.gridy = 12;
+		gbcLblProgramVersion.gridy = 11;
 		panelImportExportStatistics.add(lblProgramVersion, gbcLblProgramVersion);
 		
 		// MARK Settings Panel

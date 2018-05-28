@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.importer.easislides.EasiSlides;
 import org.zephyrsoft.sdb2.importer.easislides.EasiSlidesSong;
 import org.zephyrsoft.sdb2.model.Song;
-import org.zephyrsoft.util.StringTools;
+import org.zephyrsoft.sdb2.util.StringTools;
 
 import com.google.common.base.Joiner;
 import com.thoughtworks.xstream.XStream;

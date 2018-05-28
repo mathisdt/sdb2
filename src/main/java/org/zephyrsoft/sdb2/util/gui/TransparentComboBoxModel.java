@@ -14,42 +14,40 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.model;
+package org.zephyrsoft.sdb2.util.gui;
 
-import org.zephyrsoft.sdb2.util.StringTools;
+import java.util.List;
+import javax.swing.ComboBoxModel;
 
 /**
- * Holds one element of a {@link Song}, e.g. one lyrics line or the title.
+ * A typed combo box model implementation which transparently uses an underlying {@link List} (as inherited).
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class SongElement {
+public class TransparentComboBoxModel<T> extends TransparentListModel<T> implements ComboBoxModel<T> {
 	
-	private SongElementEnum type;
-	private String element;
+	private static final long serialVersionUID = -1289734610645799530L;
 	
-	public SongElement(SongElementEnum type, String element) {
-		this.type = type;
-		this.element = element;
+	private Object selectedItem;
+	
+	public TransparentComboBoxModel(List<T> underlyingList) {
+		super(underlyingList);
 	}
 	
-	public SongElementEnum getType() {
-		return type;
-	}
-	
-	public String getElement() {
-		return element;
-	}
-	
+	/**
+	 * @see javax.swing.ComboBoxModel#setSelectedItem(java.lang.Object)
+	 */
 	@Override
-	public String toString() {
-		return type + (element != null ? "[" + element + "]" : "");
+	public void setSelectedItem(Object anItem) {
+		this.selectedItem = anItem;
 	}
 	
+	/**
+	 * @see javax.swing.ComboBoxModel#getSelectedItem()
+	 */
 	@Override
-	public boolean equals(Object obj) {
-		return obj instanceof SongElement && type == ((SongElement) obj).getType()
-			&& StringTools.equals(element, ((SongElement) obj).getElement());
+	public Object getSelectedItem() {
+		return selectedItem;
 	}
 	
 }

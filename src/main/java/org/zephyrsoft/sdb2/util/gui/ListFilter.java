@@ -14,20 +14,23 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.util;
+package org.zephyrsoft.sdb2.util.gui;
 
-import java.time.LocalDateTime;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.zephyrsoft.sdb2.util.DateTools;
-
-public class DateToolsTest {
+/**
+ * A filter template for {@link TransparentFilterableListModel}.
+ * 
+ * @author Mathis Dirksen-Thedens
+ */
+@FunctionalInterface
+public interface ListFilter<T> {
 	
-	@Test
-	public void parseDateTime() {
-		LocalDateTime dateTime = DateTools.parseDateTime("2016-10-09T20:24:25+02:00[Europe/Berlin]");
-		Assert.assertEquals(LocalDateTime.of(2016, 10, 9, 20, 24, 25), dateTime);
-	}
+	/**
+	 * Check an object to see if it should be in the filtered list.
+	 * 
+	 * @param object
+	 *            the object to check
+	 * @return {@code true} if the object should be in the filtered list; {@code false} otherwise
+	 */
+	boolean isAccepted(T object);
 	
 }
