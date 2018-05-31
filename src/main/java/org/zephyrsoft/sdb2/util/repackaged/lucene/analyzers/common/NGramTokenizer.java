@@ -156,7 +156,8 @@ public class NGramTokenizer extends Tokenizer {
 		this(DEFAULT_MIN_NGRAM_SIZE, DEFAULT_MAX_NGRAM_SIZE);
 	}
 	
-	private void init(int minGram, int maxGram, boolean edgesOnly) {
+	private void init(@SuppressWarnings("hiding") int minGram, @SuppressWarnings("hiding") int maxGram,
+		@SuppressWarnings("hiding") boolean edgesOnly) {
 		if (minGram < 1) {
 			throw new IllegalArgumentException("minGram must be greater than zero");
 		}
@@ -222,9 +223,8 @@ public class NGramTokenizer extends Tokenizer {
 			posLenAtt.setPositionLength(1);
 			offsetAtt.setOffset(correctOffset(offset), correctOffset(offset + length));
 			++gramSize;
-			break;
+			return true;
 		}
-		return true;
 	}
 	
 	private void updateLastNonTokenChar() {
@@ -246,7 +246,7 @@ public class NGramTokenizer extends Tokenizer {
 	}
 	
 	/** Only collect characters which satisfy this condition. */
-	protected boolean isTokenChar(int chr) {
+	protected boolean isTokenChar(@SuppressWarnings("unused") int chr) {
 		return true;
 	}
 	
