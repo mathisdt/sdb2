@@ -222,8 +222,9 @@ public class NGramTokenizer extends Tokenizer {
 			posLenAtt.setPositionLength(1);
 			offsetAtt.setOffset(correctOffset(offset), correctOffset(offset + length));
 			++gramSize;
-			return true;
+			break;
 		}
+		return true;
 	}
 	
 	private void updateLastNonTokenChar() {

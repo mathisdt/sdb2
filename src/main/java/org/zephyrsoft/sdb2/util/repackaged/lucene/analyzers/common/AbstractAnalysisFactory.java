@@ -57,6 +57,9 @@ import org.apache.lucene.util.Version;
 public abstract class AbstractAnalysisFactory {
 	public static final String LUCENE_MATCH_VERSION_PARAM = "luceneMatchVersion";
 	
+	private static final Pattern ITEM_PATTERN = Pattern.compile("[^,\\s]+");
+	private static final String CLASS_NAME = "class";
+	
 	/** The original args, before any processing */
 	private final Map<String, String> originalArgs;
 	
@@ -204,8 +207,6 @@ public abstract class AbstractAnalysisFactory {
 		}
 	}
 	
-	private static final Pattern ITEM_PATTERN = Pattern.compile("[^,\\s]+");
-	
 	/** Returns whitespace- and/or comma-separated set of values, or null if none are found */
 	public Set<String> getSet(Map<String, String> args, String name) {
 		String s = args.remove(name);
@@ -313,8 +314,6 @@ public abstract class AbstractAnalysisFactory {
 		
 		return result;
 	}
-	
-	private static final String CLASS_NAME = "class";
 	
 	/**
 	 * @return the string used to specify the concrete class name in a serialized representation: the class arg.

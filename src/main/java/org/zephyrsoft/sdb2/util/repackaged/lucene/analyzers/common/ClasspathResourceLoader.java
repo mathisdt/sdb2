@@ -80,17 +80,18 @@ public final class ClasspathResourceLoader implements ResourceLoader {
 		try {
 			return Class.forName(cname, true, loader).asSubclass(expectedType);
 		} catch (Exception e) {
-			throw new RuntimeException("Cannot load class: " + cname, e);
+			throw new IllegalStateException("Cannot load class: " + cname, e);
 		}
 	}
 	
 	@Override
 	public <T> T newInstance(String cname, Class<T> expectedType) {
+		@SuppressWarnings("hiding")
 		Class<? extends T> clazz = findClass(cname, expectedType);
 		try {
-			return clazz.newInstance();
+			return clazz.getDeclaredConstructor().newInstance();
 		} catch (Exception e) {
-			throw new RuntimeException("Cannot create instance: " + cname, e);
+			throw new IllegalStateException("Cannot create instance: " + cname, e);
 		}
 	}
 }

@@ -56,13 +56,14 @@ public final class AnalysisSPILoader<S extends AbstractAnalysisFactory> {
 		this.suffixes = suffixes;
 		// if clazz' classloader is not a parent of the given one, we scan clazz's classloader, too:
 		final ClassLoader clazzClassloader = clazz.getClassLoader();
-		if (classloader == null) {
-			classloader = clazzClassloader;
+		ClassLoader classloaderToUse = classloader;
+		if (classloaderToUse == null) {
+			classloaderToUse = clazzClassloader;
 		}
-		if (clazzClassloader != null && !SPIClassIterator.isParentClassLoader(clazzClassloader, classloader)) {
+		if (clazzClassloader != null && !SPIClassIterator.isParentClassLoader(clazzClassloader, classloaderToUse)) {
 			reload(clazzClassloader);
 		}
-		reload(classloader);
+		reload(classloaderToUse);
 	}
 	
 	/**
@@ -80,6 +81,7 @@ public final class AnalysisSPILoader<S extends AbstractAnalysisFactory> {
 	 */
 	public synchronized void reload(ClassLoader classloader) {
 		Objects.requireNonNull(classloader, "classloader");
+		@SuppressWarnings("hiding")
 		final LinkedHashMap<String, Class<? extends S>> services = new LinkedHashMap<>(this.services);
 		final SPIClassIterator<S> loader = SPIClassIterator.get(clazz, classloader);
 		while (loader.hasNext()) {
@@ -99,11 +101,6 @@ public final class AnalysisSPILoader<S extends AbstractAnalysisFactory> {
 			// only add the first one for each name, later services will be ignored
 			// this allows to place services before others in classpath to make
 			// them used instead of others
-			//
-			// TODO: Should we disallow duplicate names here?
-			// Allowing it may get confusing on collisions, as different packages
-			// could contain same factory class, which is a naming bug!
-			// When changing this be careful to allow reload()!
 			if (!services.containsKey(name)) {
 				services.put(name, service);
 			}
@@ -146,7 +143,7 @@ public final class AnalysisSPILoader<S extends AbstractAnalysisFactory> {
 			if (cause instanceof Error) {
 				throw (Error) cause;
 			}
-			throw new RuntimeException("Unexpected checked exception while calling constructor of " + clazz.getName(), cause);
+			throw new IllegalStateException("Unexpected checked exception while calling constructor of " + clazz.getName(), cause);
 		} catch (ReflectiveOperationException e) {
 			throw new UnsupportedOperationException("Factory " + clazz.getName()
 				+ " cannot be instantiated. This is likely due to missing Map<String,String> constructor.", e);

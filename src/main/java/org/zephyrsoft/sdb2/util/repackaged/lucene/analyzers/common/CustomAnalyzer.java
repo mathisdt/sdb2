@@ -72,6 +72,11 @@ import org.apache.lucene.util.Version;
  */
 public final class CustomAnalyzer extends Analyzer {
 	
+	private final CharFilterFactory[] charFilters;
+	private final TokenizerFactory tokenizer;
+	private final TokenFilterFactory[] tokenFilters;
+	private final Integer posIncGap, offsetGap;
+	
 	/**
 	 * Returns a builder for custom analyzers that loads all resources from
 	 * Lucene's classloader. All path names given must be absolute with package prefixes.
@@ -94,11 +99,6 @@ public final class CustomAnalyzer extends Analyzer {
 		return new Builder(loader);
 	}
 	
-	private final CharFilterFactory[] charFilters;
-	private final TokenizerFactory tokenizer;
-	private final TokenFilterFactory[] tokenFilters;
-	private final Integer posIncGap, offsetGap;
-	
 	CustomAnalyzer(Version defaultMatchVersion, CharFilterFactory[] charFilters, TokenizerFactory tokenizer, TokenFilterFactory[] tokenFilters,
 		Integer posIncGap, Integer offsetGap) {
 		this.charFilters = charFilters;
@@ -113,21 +113,23 @@ public final class CustomAnalyzer extends Analyzer {
 	
 	@Override
 	protected Reader initReader(String fieldName, Reader reader) {
+		Reader readerToUse = reader;
 		for (final CharFilterFactory charFilter : charFilters) {
-			reader = charFilter.create(reader);
+			readerToUse = charFilter.create(readerToUse);
 		}
-		return reader;
+		return readerToUse;
 	}
 	
 	@Override
 	protected Reader initReaderForNormalization(String fieldName, Reader reader) {
+		Reader readerToUse = reader;
 		for (CharFilterFactory charFilter : charFilters) {
 			if (charFilter instanceof MultiTermAwareComponent) {
 				charFilter = (CharFilterFactory) ((MultiTermAwareComponent) charFilter).getMultiTermComponent();
-				reader = charFilter.create(reader);
+				readerToUse = charFilter.create(readerToUse);
 			}
 		}
-		return reader;
+		return readerToUse;
 	}
 	
 	@Override
@@ -235,7 +237,7 @@ public final class CustomAnalyzer extends Analyzer {
 		 * 
 		 * @see Analyzer#getPositionIncrementGap(String)
 		 */
-		public Builder withPositionIncrementGap(int posIncGap) {
+		public Builder withPositionIncrementGap(@SuppressWarnings("hiding") int posIncGap) {
 			if (posIncGap < 0) {
 				throw new IllegalArgumentException("posIncGap must be >= 0");
 			}
@@ -249,7 +251,7 @@ public final class CustomAnalyzer extends Analyzer {
 		 * 
 		 * @see Analyzer#getOffsetGap(String)
 		 */
-		public Builder withOffsetGap(int offsetGap) {
+		public Builder withOffsetGap(@SuppressWarnings("hiding") int offsetGap) {
 			if (offsetGap < 0) {
 				throw new IllegalArgumentException("offsetGap must be >= 0");
 			}

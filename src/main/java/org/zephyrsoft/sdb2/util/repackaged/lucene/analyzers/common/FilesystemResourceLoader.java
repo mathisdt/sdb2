@@ -76,7 +76,7 @@ public final class FilesystemResourceLoader implements ResourceLoader {
 	 */
 	public FilesystemResourceLoader(Path baseDirectory, ResourceLoader delegate) {
 		if (baseDirectory == null) {
-			throw new NullPointerException();
+			throw new IllegalArgumentException("baseDirectory may not be null");
 		}
 		if (!Files.isDirectory(baseDirectory))
 			throw new IllegalArgumentException(baseDirectory + " is not a directory");
