@@ -279,7 +279,7 @@
 				<artifactId>dependency-check-maven</artifactId>
 				<version>3.0.2</version>
 				<configuration>
-					<failBuildOnCVSS>3</failBuildOnCVSS>
+					<failOnError>false</failOnError>
 				</configuration>
 				<executions>
 					<execution>
