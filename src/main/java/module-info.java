@@ -2,7 +2,7 @@ module org.zephyrsoft.sdb2 {
 	
 	requires slf4j.api;
 	requires org.apache.commons.lang3;
-	requires commons.text;
+	requires org.apache.commons.text;
 	requires com.google.common;
 	requires togglz.core;
 	requires spring.core;

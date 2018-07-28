@@ -30,14 +30,14 @@
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
 		<!-- dependency versions -->
-		<version.spring>5.0.7.RELEASE</version.spring>
+		<version.spring>5.0.8.RELEASE</version.spring>
 		<version.slf4j>1.7.25</version.slf4j>
-		<version.log4j>2.10.0</version.log4j>
+		<version.log4j>2.11.0</version.log4j>
 		<version.args4j>2.33</version.args4j>
-		<version.commons-lang3>3.6</version.commons-lang3>
-		<version.commons-text>1.1</version.commons-text>
-		<version.togglz>2.4.1.Final</version.togglz>
-		<version.itext>5.5.12</version.itext>
+		<version.commons-lang3>3.7</version.commons-lang3>
+		<version.commons-text>1.4</version.commons-text>
+		<version.togglz>2.6.1.Final</version.togglz>
+		<version.itext>5.5.13</version.itext>
 		<version.fontchooser>6.9.1</version.fontchooser>
 		<version.poi>3.17</version.poi>
 		<version.swingx>1.6.5-1</version.swingx>
