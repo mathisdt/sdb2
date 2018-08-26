@@ -6,5 +6,5 @@ if [ -z "$JAVA" ]; then
 	echo 'Java not found, please download and install the Java Runtime Environment'
 	echo 'from here:  =>  http://www.java.com/  <='
 else
-	$JAVA -Duser.language=de -Duser.country=DE -Dbase.dir="$BASE_DIR" -jar "$BIN_DIR/sdb2.jar" $*
+	$JAVA -Duser.language=de -Duser.country=DE -Dfile.encoding=UTF-8 -Dbase.dir="$BASE_DIR" -jar "$BIN_DIR/sdb2.jar" $*
 fi

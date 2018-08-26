@@ -16,7 +16,6 @@
  */
 package org.zephyrsoft.sdb2.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,6 +24,12 @@ import java.util.List;
 
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
+import javax.xml.bind.annotation.XmlAccessOrder;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorOrder;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,15 +48,17 @@ import com.thoughtworks.xstream.annotations.XStreamOmitField;
  * @author Mathis Dirksen-Thedens
  */
 @XStreamAlias("songs")
-public class SongsModel implements Iterable<Song>, Serializable {
-	
-	private static final long serialVersionUID = -2503516988752281994L;
+@XmlRootElement(name = "songs")
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
+public class SongsModel implements Iterable<Song>, Persistable {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SongsModel.class);
 	
 	private boolean autoSort = true;
 	
 	@XStreamImplicit(itemFieldName = "song")
+	@XmlElement(name = "song")
 	private List<Song> songs = null;
 	
 	@XStreamOmitField
@@ -78,11 +85,7 @@ public class SongsModel implements Iterable<Song>, Serializable {
 		return autoSort;
 	}
 	
-	/**
-	 * Is called from the local constructor and from {@link XMLConverter} to ensure a valid inner state after conversion
-	 * from XML and after creation via constructor. This is in this method because XStream might overwrite the value set
-	 * inside the constructor with {@code null}.
-	 */
+	@Override
 	public final void initIfNecessary() {
 		if (songs == null) {
 			songs = new ArrayList<>();

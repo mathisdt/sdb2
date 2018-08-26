@@ -18,89 +18,56 @@ package org.zephyrsoft.sdb2.model;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collection;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
-import org.zephyrsoft.sdb2.model.statistics.SongStatistics;
 import org.zephyrsoft.sdb2.model.statistics.StatisticsModel;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.security.NoTypePermission;
-import com.thoughtworks.xstream.security.NullPermission;
-import com.thoughtworks.xstream.security.PrimitiveTypePermission;
-
 /**
- * Converts models to and from XML.
+ * Converts {@link Persistable} models to and from XML.
  * 
  * @author Mathis Dirksen-Thedens
  */
 public class XMLConverter {
 	
-	public static void fromSongsModelToXML(SongsModel model, OutputStream outputStream) {
-		XStream xstream = initXStream();
-		xstream.toXML(model, outputStream);
+	public static void fromPersistableToXML(Persistable model, OutputStream outputStream) {
+		try {
+			Marshaller marshaller = createMarshaller();
+			marshaller.marshal(model, outputStream);
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
-	public static SongsModel fromXMLToSongsModel(InputStream xmlInputStream) {
-		XStream xstream = initXStream();
-		SongsModel model = (SongsModel) xstream.fromXML(xmlInputStream);
-		model.initIfNecessary();
-		return model;
+	public static <T extends Persistable> T fromXMLToPersistable(InputStream xmlInputStream) {
+		try {
+			Unmarshaller unmarshaller = createUnmarshaller();
+			@SuppressWarnings("unchecked")
+			T model = (T) unmarshaller.unmarshal(xmlInputStream);
+			model.initIfNecessary();
+			return model;
+		} catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
-	public static void fromSettingsModelToXML(SettingsModel model, OutputStream outputStream) {
-		XStream xstream = initXStream();
-		xstream.toXML(model, outputStream);
+	private static JAXBContext createContext() throws JAXBException {
+		JAXBContext context = JAXBContext.newInstance(SongsModel.class, SettingsModel.class, StatisticsModel.class);
+		return context;
 	}
 	
-	public static SettingsModel fromXMLToSettingsModel(InputStream xmlInputStream) {
-		XStream xstream = initXStream();
-		SettingsModel model = (SettingsModel) xstream.fromXML(xmlInputStream);
-		model.initIfNecessary();
-		return model;
+	private static Marshaller createMarshaller() throws JAXBException {
+		JAXBContext context = createContext();
+		return context.createMarshaller();
 	}
 	
-	public static void fromStatisticsModelToXML(StatisticsModel model, OutputStream outputStream) {
-		XStream xstream = initXStream();
-		xstream.toXML(model, outputStream);
-	}
-	
-	public static StatisticsModel fromXMLToStatisticsModel(InputStream xmlInputStream) {
-		XStream xstream = initXStream();
-		StatisticsModel model = (StatisticsModel) xstream.fromXML(xmlInputStream);
-		model.initIfNecessary();
-		return model;
-	}
-	
-	private static XStream initXStream() {
-		XStream xstream = new XStream();
-		// clear out existing permissions and set own ones
-		xstream.addPermission(NoTypePermission.NONE);
-		// allow some classes
-		xstream.addPermission(NullPermission.NULL);
-		xstream.addPermission(PrimitiveTypePermission.PRIMITIVES);
-		xstream.allowTypeHierarchy(Collection.class);
-		xstream.allowTypesByWildcard(new String[] { "java.lang.**", "java.util.**", "java.awt.**", "java.time.**",
-			"org.zephyrsoft.sdb2.**" });
-		
-		// aliases and omitted fields of model classes are defined via annotations
-		xstream.processAnnotations(SongsModel.class);
-		xstream.processAnnotations(Song.class);
-		xstream.processAnnotations(SettingsModel.class);
-		xstream.processAnnotations(StatisticsModel.class);
-		xstream.processAnnotations(SongStatistics.class);
-		
-		// custom converters
-		xstream.registerConverter(new GenericEnumConverter<>(FilterTypeEnum.class));
-		xstream.registerConverter(new GenericEnumConverter<>(LanguageEnum.class));
-		xstream.registerConverter(new GenericEnumConverter<>(ScreenContentsEnum.class));
-		xstream.registerConverter(new FontConverter());
-		xstream.registerConverter(new DateWithoutTimeConverter());
-		
-		// unknown XML elements can be ignored (e.g. <linkedSongs> which was removed)
-		xstream.ignoreUnknownElements();
-		
-		return xstream;
+	private static Unmarshaller createUnmarshaller() throws JAXBException {
+		JAXBContext context = createContext();
+		return context.createUnmarshaller();
 	}
 	
 }

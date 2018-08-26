@@ -1288,7 +1288,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			textFieldFilter.requestFocusInWindow();
 		}));
 		btnClearFilter.setMargin(new Insets(0, 0, 0, 0));
-		btnClearFilter.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/clear.gif"));
+		btnClearFilter.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/clear.gif"));
 		GridBagConstraints gbcBtnClearFilter = new GridBagConstraints();
 		gbcBtnClearFilter.anchor = GridBagConstraints.NORTHWEST;
 		gbcBtnClearFilter.gridx = 2;
@@ -1337,7 +1337,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		
 		btnNewSong = new JButton("New");
 		btnNewSong.addActionListener(safeAction(e -> handleSongNew()));
-		btnNewSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/newHighlighter.gif"));
+		btnNewSong.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/newHighlighter.gif"));
 		GridBagConstraints gbcBtnNewSong = new GridBagConstraints();
 		gbcBtnNewSong.fill = GridBagConstraints.VERTICAL;
 		gbcBtnNewSong.anchor = GridBagConstraints.WEST;
@@ -1348,7 +1348,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		
 		btnDeleteSong = new JButton("Delete");
 		btnDeleteSong.addActionListener(safeAction(e -> handleSongDelete()));
-		btnDeleteSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/deleteHighlighter.gif"));
+		btnDeleteSong.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/deleteHighlighter.gif"));
 		GridBagConstraints gbcBtnDeleteSong = new GridBagConstraints();
 		gbcBtnDeleteSong.fill = GridBagConstraints.VERTICAL;
 		gbcBtnDeleteSong.anchor = GridBagConstraints.WEST;
@@ -1359,7 +1359,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		
 		btnSelectSong = new JButton("Select");
 		btnSelectSong.addActionListener(safeAction(e -> handleSongSelect()));
-		btnSelectSong.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/month-up.png"));
+		btnSelectSong.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/month-up.png"));
 		GridBagConstraints gbcBtnSelectSong = new GridBagConstraints();
 		gbcBtnSelectSong.fill = GridBagConstraints.VERTICAL;
 		gbcBtnSelectSong.anchor = GridBagConstraints.EAST;
@@ -1765,7 +1765,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		btnUp = new JButton("");
 		btnUp.addActionListener(safeAction(e -> handleSongUp()));
 		btnUp.setToolTipText("Up");
-		btnUp.setIcon(ResourceTools.getIcon(getClass(), "/javax/swing/plaf/metal/icons/sortUp.png"));
+		btnUp.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/sortUp.png"));
 		GridBagConstraints gbcBtnUp = new GridBagConstraints();
 		gbcBtnUp.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnUp.anchor = GridBagConstraints.SOUTH;
@@ -1777,7 +1777,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		btnUnselect = new JButton("");
 		btnUnselect.setToolTipText("Unselect");
 		btnUnselect.addActionListener(safeAction(e -> handleSongUnselect()));
-		btnUnselect.setIcon(ResourceTools.getIcon(getClass(), "/org/jdesktop/swingx/JXErrorPane16.png"));
+		btnUnselect.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/JXErrorPane16.png"));
 		GridBagConstraints gbcBtnUnselect = new GridBagConstraints();
 		gbcBtnUnselect.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnUnselect.insets = new Insets(0, 0, 5, 0);
@@ -1788,7 +1788,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		
 		btnDown = new JButton("");
 		btnDown.addActionListener(safeAction(e -> handleSongDown()));
-		btnDown.setIcon(ResourceTools.getIcon(getClass(), "/javax/swing/plaf/metal/icons/sortDown.png"));
+		btnDown.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/sortDown.png"));
 		btnDown.setToolTipText("Down");
 		GridBagConstraints gbcBtnDown = new GridBagConstraints();
 		gbcBtnDown.fill = GridBagConstraints.HORIZONTAL;
@@ -1818,7 +1818,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelPresentationButtons.setLayout(gblPanelPresentationButtons);
 		
 		btnPresentSelectedSong = new JButton("Present selected song");
-		btnPresentSelectedSong.setIcon(ResourceTools.getIcon(getClass(), "/milky/play.png"));
+		btnPresentSelectedSong.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/play.png"));
 		btnPresentSelectedSong.setVerticalTextPosition(SwingConstants.BOTTOM);
 		btnPresentSelectedSong.setHorizontalTextPosition(SwingConstants.CENTER);
 		btnPresentSelectedSong.addActionListener(safeAction(e -> handleSongPresent()));
@@ -1834,7 +1834,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelPresentationButtons.add(btnPresentSelectedSong, gbcBtnPresentSelectedSong);
 		
 		btnShowBlankScreen = new JButton("Blank screen");
-		btnShowBlankScreen.setIcon(ResourceTools.getIcon(getClass(), "/milky/stop.png"));
+		btnShowBlankScreen.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/stop.png"));
 		btnShowBlankScreen.setVerticalTextPosition(SwingConstants.BOTTOM);
 		btnShowBlankScreen.setHorizontalTextPosition(SwingConstants.CENTER);
 		btnShowBlankScreen.addActionListener(safeAction(e -> handleBlankScreen()));
@@ -1850,7 +1850,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelPresentationButtons.add(btnShowBlankScreen, gbcBtnShowBlankScreen);
 		
 		btnShowLogo = new JButton("Show logo");
-		btnShowLogo.setIcon(ResourceTools.getIcon(getClass(), "/milky/picture.png"));
+		btnShowLogo.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/picture.png"));
 		btnShowLogo.setVerticalTextPosition(SwingConstants.BOTTOM);
 		btnShowLogo.setHorizontalTextPosition(SwingConstants.CENTER);
 		btnShowLogo.addActionListener(safeAction(e -> handleLogoPresent()));
@@ -1866,7 +1866,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelPresentationButtons.add(btnShowLogo, gbcBtnShowLogo);
 		
 		btnSlideshow = new JButton("Slide Show");
-		btnSlideshow.setIcon(ResourceTools.getIcon(getClass(), "/milky/movie.png"));
+		btnSlideshow.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/movie.png"));
 		btnSlideshow.setVerticalTextPosition(SwingConstants.BOTTOM);
 		btnSlideshow.setHorizontalTextPosition(SwingConstants.CENTER);
 		btnSlideshow.addActionListener(safeAction(e -> handleSlideShowPresent()));

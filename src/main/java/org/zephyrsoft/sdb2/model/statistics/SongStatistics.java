@@ -23,6 +23,13 @@ import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javax.xml.bind.annotation.XmlAccessOrder;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorOrder;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.zephyrsoft.sdb2.model.Song;
 
 import com.google.common.base.Preconditions;
@@ -34,19 +41,31 @@ import com.thoughtworks.xstream.annotations.XStreamAlias;
  * @author Mathis Dirksen-Thedens
  */
 @XStreamAlias("songStatistics")
+@XmlRootElement(name = "songStatistics")
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
 public class SongStatistics implements Comparable<SongStatistics>, Iterable<Date> {
 	
+	@XmlElement(name = "songUuid")
 	private String songUuid;
+	@XmlElement(name = "presentedOn")
 	private SortedSet<Date> presentedOn = new TreeSet<>();
 	
 	/**
-	 * Create a statistics element for a single {@link Song}. By only having a constructor with the UUID as argument,
-	 * everyone (who doesn't use reflection) is forced to supply the UUID.
+	 * CAUTION: every statistics element has to have a song UUID! This constructor is only necessary for
+	 * unmarshalling from XML.
+	 */
+	public SongStatistics() {
+		// default constructor
+	}
+	
+	/**
+	 * Create a statistics element for a single {@link Song}.
 	 * 
 	 * @param songUuid
 	 *            the UUID which belongs to the song that these statistics are kept for
 	 */
-	SongStatistics(String songUuid) {
+	public SongStatistics(String songUuid) {
 		Preconditions.checkArgument(songUuid != null, "the UUID must be different from null");
 		this.songUuid = songUuid;
 	}
@@ -80,8 +99,13 @@ public class SongStatistics implements Comparable<SongStatistics>, Iterable<Date
 	
 	@Override
 	public int compareTo(SongStatistics o) {
-		Preconditions.checkArgument(o != null, "cannot compare a SongStatistics object with null");
-		return songUuid.compareTo(o.getSongUUID());
+		if (o == null || o.getSongUUID() == null) {
+			return 1;
+		} else if (getSongUUID() == null) {
+			return -1;
+		} else {
+			return getSongUUID().compareTo(o.getSongUUID());
+		}
 	}
 	
 }

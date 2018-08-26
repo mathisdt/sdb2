@@ -25,10 +25,17 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javax.xml.bind.annotation.XmlAccessOrder;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorOrder;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zephyrsoft.sdb2.model.Persistable;
 import org.zephyrsoft.sdb2.model.Song;
-import org.zephyrsoft.sdb2.model.XMLConverter;
 
 import com.google.common.base.Preconditions;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
@@ -40,22 +47,22 @@ import com.thoughtworks.xstream.annotations.XStreamImplicit;
  * @author Mathis Dirksen-Thedens
  */
 @XStreamAlias("statistics")
-public class StatisticsModel {
+@XmlRootElement(name = "statistics")
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
+public class StatisticsModel implements Persistable {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(StatisticsModel.class);
 	
 	@XStreamImplicit(itemFieldName = "songStatistics")
+	@XmlElement(name = "songStatistics")
 	private List<SongStatistics> songStatistics = null;
 	
 	public StatisticsModel() {
 		initIfNecessary();
 	}
 	
-	/**
-	 * Is called from the local constructor and from {@link XMLConverter} to ensure a valid inner state after conversion
-	 * from XML and after creation via constructor. This is in this method because XStream might overwrite the value set
-	 * inside the constructor with {@code null}.
-	 */
+	@Override
 	public final void initIfNecessary() {
 		if (songStatistics == null) {
 			songStatistics = new ArrayList<>();

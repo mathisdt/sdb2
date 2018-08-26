@@ -62,7 +62,7 @@ public class StatisticsController {
 	
 	public void loadStatistics() {
 		LOG.debug("loading statistics from file");
-		statistics = ioController.readStatistics(is -> XMLConverter.fromXMLToStatisticsModel(is));
+		statistics = ioController.readStatistics(is -> XMLConverter.fromXMLToPersistable(is));
 		if (statistics == null) {
 			// there was a problem while reading
 			statistics = new StatisticsModel();
@@ -80,7 +80,7 @@ public class StatisticsController {
 		File file = new File(FileAndDirectoryLocations.getStatisticsFileName());
 		try {
 			OutputStream xmlOutputStream = new FileOutputStream(file);
-			XMLConverter.fromStatisticsModelToXML(statistics, xmlOutputStream);
+			XMLConverter.fromPersistableToXML(statistics, xmlOutputStream);
 			xmlOutputStream.close();
 			return true;
 		} catch (IOException e) {

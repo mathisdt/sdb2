@@ -16,7 +16,6 @@
  */
 package org.zephyrsoft.sdb2;
 
-import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.time.ZoneId;
 
@@ -64,12 +63,7 @@ public final class Start {
 			parser.printUsage(System.err);
 		} else {
 			try {
-				// set encoding to UTF-8 (the cache has to be reset to make the new definition effective)
-				System.setProperty("file.encoding", "UTF-8");
-				Field charset = Charset.class.getDeclaredField("defaultCharset");
-				charset.setAccessible(true);
-				charset.set(null, null);
-				
+				LOG.info("default file encoding is {}", Charset.defaultCharset().displayName());
 				LOG.info("default time zone is {}", ZoneId.systemDefault().getId());
 				
 				LOG.info("loading application context");
