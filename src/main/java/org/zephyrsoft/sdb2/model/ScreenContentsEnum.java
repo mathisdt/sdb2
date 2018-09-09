@@ -16,6 +16,8 @@
  */
 package org.zephyrsoft.sdb2.model;
 
+import org.apache.commons.text.WordUtils;
+
 /**
  * Types of presentation screen contents.
  * 
@@ -32,5 +34,18 @@ public enum ScreenContentsEnum {
 	
 	public String getDescription() {
 		return description;
+	}
+	
+	public String getInternalName() {
+		return WordUtils.capitalizeFully(name(), new char[] { '_' }).replaceAll("_", "");
+	}
+	
+	public static ScreenContentsEnum withInternalName(String internalName) {
+		for (ScreenContentsEnum sce : values()) {
+			if (sce.getInternalName().equalsIgnoreCase(internalName)) {
+				return sce;
+			}
+		}
+		return null;
 	}
 }

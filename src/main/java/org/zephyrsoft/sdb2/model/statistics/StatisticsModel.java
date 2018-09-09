@@ -16,9 +16,8 @@
  */
 package org.zephyrsoft.sdb2.model.statistics;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,17 +35,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.Persistable;
 import org.zephyrsoft.sdb2.model.Song;
+import org.zephyrsoft.sdb2.util.DateTools;
 
 import com.google.common.base.Preconditions;
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 /**
  * Statistics about the displaying of songs.
  * 
  * @author Mathis Dirksen-Thedens
  */
-@XStreamAlias("statistics")
 @XmlRootElement(name = "statistics")
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
@@ -54,7 +51,6 @@ public class StatisticsModel implements Persistable {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(StatisticsModel.class);
 	
-	@XStreamImplicit(itemFieldName = "songStatistics")
 	@XmlElement(name = "songStatistics")
 	private List<SongStatistics> songStatistics = null;
 	
@@ -69,7 +65,7 @@ public class StatisticsModel implements Persistable {
 		}
 	}
 	
-	public void addStatisticsEntry(Song song, Date date) {
+	public void addStatisticsEntry(Song song, LocalDate date) {
 		SongStatistics stats = getStatistics(song);
 		if (stats == null) {
 			LOG.debug("creating SongStatistics for {} / UUID={}", song.getTitle(), song.getUUID());
@@ -97,18 +93,12 @@ public class StatisticsModel implements Persistable {
 		return ret;
 	}
 	
-	private static SimpleDateFormat createYearMonthFormatter() {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM");
-		return sdf;
-	}
-	
 	public List<String> getUsedMonths() {
 		SortedSet<String> ret = new TreeSet<>();
 		
-		SimpleDateFormat sdf = createYearMonthFormatter();
 		for (SongStatistics stat : songStatistics) {
-			for (Date date : stat)
-				ret.add(sdf.format(date));
+			for (LocalDate date : stat)
+				ret.add(DateTools.formatYearMonth(date));
 		}
 		
 		return new ArrayList<>(ret);
@@ -119,10 +109,9 @@ public class StatisticsModel implements Persistable {
 			return null;
 		}
 		Map<String, Integer> ret = new HashMap<>();
-		SimpleDateFormat sdf = createYearMonthFormatter();
 		for (SongStatistics stat : songStatistics) {
-			for (Date date : stat) {
-				if (yearAndMonth.equals(sdf.format(date))) {
+			for (LocalDate date : stat) {
+				if (yearAndMonth.equals(DateTools.formatYearMonth(date))) {
 					Integer upToNow = ret.get(stat.getSongUUID());
 					if (upToNow == null) {
 						upToNow = 1;

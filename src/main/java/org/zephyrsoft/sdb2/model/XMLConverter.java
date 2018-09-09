@@ -37,6 +37,7 @@ public class XMLConverter {
 	public static void fromPersistableToXML(Persistable model, OutputStream outputStream) {
 		try {
 			Marshaller marshaller = createMarshaller();
+			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 			marshaller.marshal(model, outputStream);
 		} catch (JAXBException e) {
 			throw new RuntimeException(e);

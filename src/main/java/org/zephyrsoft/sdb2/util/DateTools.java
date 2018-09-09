@@ -16,7 +16,6 @@
  */
 package org.zephyrsoft.sdb2.util;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -31,10 +30,13 @@ import java.util.TimeZone;
 public class DateTools {
 	
 	private static final String TIMESTAMP_PATTERN = "yyyy-MM-dd-HH-mm-ss";
-	private static final String DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm";
+	private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm";
+	private static final String DATE_PATTERN = "yyyy-MM-dd";
 	private static final String YEAR_MONTH_PATTERN = "yyyy-MM";
 	private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern(TIMESTAMP_PATTERN);
 	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_PATTERN);
+	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DATE_PATTERN);
+	private static final DateTimeFormatter YEAR_MONTH_FORMATTER = DateTimeFormatter.ofPattern(YEAR_MONTH_PATTERN);
 	
 	public static LocalDateTime parseDateTime(String toParse) {
 		if (toParse != null && toParse.length() > 0) {
@@ -44,6 +46,9 @@ public class DateTools {
 		}
 	}
 	
+	/**
+	 * ONLY FOR LEGACY LIBRARIES WHICH DO NOT (YET) SUPPORT {@link LocalDate} / {@link LocalDateTime}!
+	 */
 	public static LocalDateTime toLocalDateTime(Date date) {
 		if (date != null) {
 			return date.toInstant().atZone(TimeZone.getTimeZone("GMT").toZoneId())
@@ -61,23 +66,27 @@ public class DateTools {
 		return one.isBefore(two.plusMinutes(15));
 	}
 	
-	public static String format(LocalDateTime latestReleaseTimestamp) {
+	public static String formatDateTime(LocalDateTime latestReleaseTimestamp) {
 		return latestReleaseTimestamp.format(DATE_TIME_FORMATTER);
+	}
+	
+	public static String formatDate(LocalDate date) {
+		return date.format(DATE_FORMATTER);
+	}
+	
+	public static LocalDate parseDate(String dateString) {
+		return LocalDate.parse(dateString, DATE_FORMATTER);
 	}
 	
 	public static String timestamp() {
 		return LocalDateTime.now().format(TIMESTAMP_FORMATTER);
 	}
 	
-	public static Date fromLocalDate(LocalDate localDate) {
-		return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	public static String formatYearMonth(LocalDate date) {
+		return date.format(YEAR_MONTH_FORMATTER);
 	}
 	
-	public static String formatYearMonth(Date date) {
-		return new SimpleDateFormat(YEAR_MONTH_PATTERN).format(date);
-	}
-	
-	public static Date now() {
-		return new Date();
+	public static LocalDate now() {
+		return LocalDate.now();
 	}
 }

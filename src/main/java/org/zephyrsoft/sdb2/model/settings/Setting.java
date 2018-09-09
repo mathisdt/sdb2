@@ -22,27 +22,25 @@ import javax.xml.bind.annotation.XmlAccessorOrder;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.zephyrsoft.sdb2.util.StringTools;
-
-import com.thoughtworks.xstream.annotations.XStreamAlias;
+import org.zephyrsoft.sdb2.util.converter.SettingValueAdapter;
 
 /**
  * A global setting.
  * 
  * @author Mathis Dirksen-Thedens
  */
-@XStreamAlias("setting")
 @XmlRootElement(name = "setting")
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
 public class Setting<T> implements Comparable<Setting<T>> {
 	
-	@XStreamAlias("key")
 	@XmlElement(name = "key")
 	private SettingKey key = null;
-	@XStreamAlias("value")
 	@XmlElement(name = "value")
+	@XmlJavaTypeAdapter(SettingValueAdapter.class)
 	private T value = null;
 	
 	/**

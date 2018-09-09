@@ -28,22 +28,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.zephyrsoft.sdb2.model.Persistable;
 
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
-
 /**
  * Global settings of the Song Database.
  * 
  * @author Mathis Dirksen-Thedens
  */
-@XStreamAlias("settings")
 @XmlRootElement(name = "settings")
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
 public class SettingsModel implements Persistable {
 	
 	// TODO possible optimization: use a map to make read and write access faster (no for loop needed)
-	@XStreamImplicit(itemFieldName = "setting")
 	@XmlElement(name = "setting")
 	private SortedSet<Setting<Object>> store;
 	

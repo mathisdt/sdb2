@@ -38,7 +38,7 @@ public class VersionTools {
 		String version = getImplementationVersion();
 		LocalDateTime timestamp = getTimestampAsLocalDateTime();
 		if (version != null && timestamp != null) {
-			version += " (" + DateTools.format(timestamp) + ")";
+			version += " (" + DateTools.formatDateTime(timestamp) + ")";
 		} else {
 			version = "development snapshot";
 		}
@@ -84,7 +84,7 @@ public class VersionTools {
 					LOG.error("release {} does not have any assets", latestRelease.getName());
 					return null;
 				} else {
-					return new VersionUpdate(DateTools.format(latestReleaseTimestamp),
+					return new VersionUpdate(DateTools.formatDateTime(latestReleaseTimestamp),
 						latestRelease.getHtmlUrl().toString(),
 						latestRelease.getAssets().get(0).getBrowserDownloadUrl());
 				}

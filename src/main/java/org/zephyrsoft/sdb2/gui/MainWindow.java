@@ -79,6 +79,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.text.JTextComponent;
 
+import org.jfree.ui.FontChooserDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.FileAndDirectoryLocations;
@@ -89,7 +90,6 @@ import org.zephyrsoft.sdb2.gui.renderer.LanguageCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenDisplayCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
-import org.zephyrsoft.sdb2.importer.ImportFromEasiSlides;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
@@ -117,8 +117,6 @@ import org.zephyrsoft.sdb2.util.gui.ListFilter;
 import org.zephyrsoft.sdb2.util.gui.TransparentComboBoxModel;
 import org.zephyrsoft.sdb2.util.gui.TransparentFilterableListModel;
 import org.zephyrsoft.sdb2.util.gui.TransparentListModel;
-
-import com.l2fprod.common.swing.JFontChooser;
 
 /**
  * Main window of the application.
@@ -561,13 +559,18 @@ public class MainWindow extends JFrame implements UIScroller {
 	 * @return {@code true} if the font was changed, {@code false} else
 	 */
 	private boolean selectFont(SettingKey target) {
-		JFontChooser fontChooser = new JFontChooser();
-		fontChooser.setSelectedFont(new Font("Dialog", Font.BOLD | Font.ITALIC, 56));
 		Font font = settingsModel.get(target, Font.class);
-		if (font != null) {
-			fontChooser.setSelectedFont(font);
-		}
-		Font selectedFont = fontChooser.showFontDialog(this, "Choose Font");
+		Font initialFontForDialog = font != null
+			? settingsModel.get(target, Font.class)
+			: new Font("Dialog", Font.BOLD | Font.ITALIC, 56);
+		// TODO replace this font chooser with something more flexible
+		// it should show a text sample with the selected font/size/style
+		// and also let the user select sizes that are not in the list
+		FontChooserDialog fontChooser = new FontChooserDialog(this, "Choose Font", true, initialFontForDialog);
+		fontChooser.pack();
+		fontChooser.setLocationByPlatform(true);
+		fontChooser.setVisible(true);
+		Font selectedFont = fontChooser.getSelectedFont();
 		if (selectedFont != null) {
 			settingsModel.put(target, selectedFont);
 			return true;
@@ -1121,26 +1124,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelSectionButtons.removeAll();
 		panelSectionButtons.revalidate();
 		panelSectionButtons.repaint();
-	}
-	
-	protected void handleImportFromEasiSlides() {
-		JFileChooser chooser = new JFileChooser();
-		chooser.setDialogTitle("choose file to import");
-		CustomFileFilter filter = new CustomFileFilter("EasiSlides 4.0 export files", ".xml");
-		chooser.addChoosableFileFilter(filter);
-		int iValue = chooser.showOpenDialog(this);
-		
-		if (iValue == JFileChooser.APPROVE_OPTION) {
-			List<Song> imported = null;
-			ImportFromEasiSlides importer = new ImportFromEasiSlides();
-			imported = importer.loadFromFile(chooser.getSelectedFile());
-			if (imported != null) {
-				for (Song song : imported) {
-					songsModel.addSong(song);
-				}
-				applyFilter();
-			}
-		}
 	}
 	
 	private final void defineShortcuts() {
@@ -2048,14 +2031,14 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(lblImportingSongs, gbcLblImportingSongs);
 		
 		// TODO handle importers dynamically, load every implementation of "Importer" as button (=> ServiceLoader?)
-		btnImportFromEasiSlides = new JButton("Import from EasiSlides 4.0");
-		btnImportFromEasiSlides.addActionListener(safeAction(e -> handleImportFromEasiSlides()));
-		GridBagConstraints gbcBtnImportFromEasiSlides = new GridBagConstraints();
-		gbcBtnImportFromEasiSlides.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnImportFromEasiSlides.insets = new Insets(0, 0, 5, 5);
-		gbcBtnImportFromEasiSlides.gridx = 0;
-		gbcBtnImportFromEasiSlides.gridy = 9;
-		panelImportExportStatistics.add(btnImportFromEasiSlides, gbcBtnImportFromEasiSlides);
+		// btnImportFromEasiSlides = new JButton("Import from EasiSlides 4.0");
+		// btnImportFromEasiSlides.addActionListener(safeAction(e -> handleImportFromEasiSlides()));
+		// GridBagConstraints gbcBtnImportFromEasiSlides = new GridBagConstraints();
+		// gbcBtnImportFromEasiSlides.fill = GridBagConstraints.HORIZONTAL;
+		// gbcBtnImportFromEasiSlides.insets = new Insets(0, 0, 5, 5);
+		// gbcBtnImportFromEasiSlides.gridx = 0;
+		// gbcBtnImportFromEasiSlides.gridy = 9;
+		// panelImportExportStatistics.add(btnImportFromEasiSlides, gbcBtnImportFromEasiSlides);
 		
 		JLabel lblProgramVersionTitle = new JLabel("Program Version");
 		lblProgramVersionTitle.setFont(new Font("DejaVu Sans", Font.ITALIC, 12));

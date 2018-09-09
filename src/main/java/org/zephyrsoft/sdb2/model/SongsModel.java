@@ -38,16 +38,11 @@ import org.zephyrsoft.sdb2.util.SongsModelListener;
 import org.zephyrsoft.sdb2.util.gui.TransparentFilterableListModel;
 import org.zephyrsoft.sdb2.util.gui.TransparentListModel;
 
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
-import com.thoughtworks.xstream.annotations.XStreamOmitField;
-
 /**
  * Model for {@link MainWindow}.
  * 
  * @author Mathis Dirksen-Thedens
  */
-@XStreamAlias("songs")
 @XmlRootElement(name = "songs")
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
@@ -55,16 +50,14 @@ public class SongsModel implements Iterable<Song>, Persistable {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SongsModel.class);
 	
+	@XmlElement(name = "autoSort")
 	private boolean autoSort = true;
 	
-	@XStreamImplicit(itemFieldName = "song")
 	@XmlElement(name = "song")
 	private List<Song> songs = null;
 	
-	@XStreamOmitField
 	private List<TransparentListModel<Song>> createdListModels = null;
 	
-	@XStreamOmitField
 	private List<SongsModelListener> songsModelListeners = null;
 	
 	public SongsModel() {

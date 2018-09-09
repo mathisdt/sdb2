@@ -4,7 +4,7 @@
 
 	<groupId>org.zephyrsoft</groupId>
 	<artifactId>sdb2</artifactId>
-	<version>2.0.0-SNAPSHOT</version>
+	<version>2.1.0-SNAPSHOT</version>
 	
 	<name>Song Database</name>
 	<description>present lyrics on a digital projector (intended for a congregation to sing)</description>
@@ -30,7 +30,7 @@
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
 		<!-- dependency versions -->
-		<version.spring>5.0.8.RELEASE</version.spring>
+		<version.spring>5.0.9.RELEASE</version.spring>
 		<version.slf4j>1.8.0-beta2</version.slf4j>
 		<version.log4j>2.11.0</version.log4j>
 		<version.args4j>2.33</version.args4j>
@@ -38,17 +38,20 @@
 		<version.commons-text>1.4</version.commons-text>
 		<version.togglz>2.6.1.Final</version.togglz>
 		<version.itext>5.5.13</version.itext>
-		<version.fontchooser>6.9.1</version.fontchooser>
 		<version.poi>3.17</version.poi>
+		<version.jcommon>1.0.24</version.jcommon>
 		<version.swingx>1.6.5-1</version.swingx>
 		<version.timingframework>7.3.1</version.timingframework>
-		<version.xstream>1.4.10</version.xstream>
 		<version.github-api>1.92</version.github-api>
 		<version.jackson-databind>2.9.4</version.jackson-databind>
 		<version.lucene>7.3.1</version.lucene>
 		<version.guava>26.0-jre</version.guava>
 		<version.junit>4.12</version.junit>
 		<version.mockito>2.18.3</version.mockito>
+		<version.javax-activation-api>1.2.0</version.javax-activation-api>
+		<version.javax.activation>1.1.1</version.javax.activation>
+		<version.jaxb-runtime>2.3.0.1</version.jaxb-runtime>
+		<version.jaxb-api>2.3.0</version.jaxb-api>
 	</properties>
 	
 	<dependencyManagement>
@@ -84,6 +87,11 @@
 			<version>${version.togglz}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.togglz</groupId>
+			<artifactId>togglz-slf4j</artifactId>
+			<version>${version.togglz}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itextpdf</artifactId>
 			<version>${version.itext}</version>
@@ -94,9 +102,9 @@
 			<version>${version.itext}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.l2fprod.common</groupId>
-			<artifactId>l2fprod-common-fontchooser</artifactId>
-			<version>${version.fontchooser}</version>
+		    <groupId>org.jfree</groupId>
+		    <artifactId>jcommon</artifactId>
+		    <version>${version.jcommon}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.poi</groupId>
@@ -112,11 +120,6 @@
 			<groupId>net.java.timingframework</groupId>
 			<artifactId>timingframework-swing</artifactId>
 			<version>${version.timingframework}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.thoughtworks.xstream</groupId>
-			<artifactId>xstream</artifactId>
-			<version>${version.xstream}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
@@ -178,14 +181,20 @@
 		
 		<!-- XML -->
 		<dependency>
-			<groupId>javax.xml.bind</groupId>
-			<artifactId>jaxb-api</artifactId>
-			<version>2.3.0</version>
+		    <groupId>javax.xml.bind</groupId>
+		    <artifactId>jaxb-api</artifactId>
+		    <version>${version.jaxb-api}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.glassfish.jaxb</groupId>
-			<artifactId>jaxb-runtime</artifactId>
-			<version>2.3.0.1</version>
+		    <groupId>org.glassfish.jaxb</groupId>
+		    <artifactId>jaxb-runtime</artifactId>
+		    <version>${version.jaxb-runtime}</version>
+		    <scope>runtime</scope>
+		</dependency>
+		<dependency>
+		    <groupId>javax.activation</groupId>
+		    <artifactId>javax.activation-api</artifactId>
+		    <version>${version.javax-activation-api}</version>
 		</dependency>
 
 		<!-- test -->
