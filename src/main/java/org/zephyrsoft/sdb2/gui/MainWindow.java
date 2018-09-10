@@ -207,7 +207,6 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JButton btnExportCompletePdfAll;
 	private JButton btnExportStatisticsAll;
 	private JButton btnImportFromSdb1;
-	private JButton btnImportFromEasiSlides;
 	private JLabel lblProgramVersion;
 	
 	private JButton btnUnlock;
