@@ -39,7 +39,7 @@
 		<version.togglz>2.6.1.Final</version.togglz>
 		<version.itext>5.5.13</version.itext>
 		<version.poi>3.17</version.poi>
-		<version.jcommon>1.0.24</version.jcommon>
+		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.swingx>1.6.5-1</version.swingx>
 		<version.timingframework>7.3.1</version.timingframework>
 		<version.github-api>1.92</version.github-api>
@@ -102,9 +102,9 @@
 			<version>${version.itext}</version>
 		</dependency>
 		<dependency>
-		    <groupId>org.jfree</groupId>
-		    <artifactId>jcommon</artifactId>
-		    <version>${version.jcommon}</version>
+			<groupId>com.rover12421.opensource</groupId>
+			<artifactId>JFontChooser</artifactId>
+			<version>${version.jfontchooser}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.poi</groupId>

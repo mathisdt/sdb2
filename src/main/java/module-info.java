@@ -17,7 +17,7 @@ open module org.zephyrsoft.sdb2 {
 	requires java.xml.bind;
 	requires java.desktop;
 	requires java.sql;
-	requires jcommon;
+	requires JFontChooser;
 	requires timingframework.core;
 	requires timingframework.swing;
 	// for togglz:

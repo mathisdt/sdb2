@@ -79,7 +79,6 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.text.JTextComponent;
 
-import org.jfree.ui.FontChooserDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.FileAndDirectoryLocations;
@@ -117,6 +116,8 @@ import org.zephyrsoft.sdb2.util.gui.ListFilter;
 import org.zephyrsoft.sdb2.util.gui.TransparentComboBoxModel;
 import org.zephyrsoft.sdb2.util.gui.TransparentFilterableListModel;
 import org.zephyrsoft.sdb2.util.gui.TransparentListModel;
+
+import say.swing.JFontChooser;
 
 /**
  * Main window of the application.
@@ -563,20 +564,17 @@ public class MainWindow extends JFrame implements UIScroller {
 		Font initialFontForDialog = font != null
 			? settingsModel.get(target, Font.class)
 			: new Font("Dialog", Font.BOLD | Font.ITALIC, 56);
-		// TODO replace this font chooser with something more flexible
-		// it should show a text sample with the selected font/size/style
-		// and also let the user select sizes that are not in the list
-		FontChooserDialog fontChooser = new FontChooserDialog(this, "Choose Font", true, initialFontForDialog);
-		fontChooser.pack();
-		fontChooser.setLocationByPlatform(true);
-		fontChooser.setVisible(true);
-		Font selectedFont = fontChooser.getSelectedFont();
-		if (selectedFont != null) {
-			settingsModel.put(target, selectedFont);
-			return true;
-		} else {
-			return false;
+		JFontChooser fontChooser = new JFontChooser();
+		fontChooser.setSelectedFont(initialFontForDialog);
+		int result = fontChooser.showDialog(this);
+		if (result == JFontChooser.OK_OPTION) {
+			Font selectedFont = fontChooser.getSelectedFont();
+			if (selectedFont != null) {
+				settingsModel.put(target, selectedFont);
+				return true;
+			}
 		}
+		return false;
 	}
 	
 	protected void handleSelectTitleFont() {
