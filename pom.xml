@@ -343,7 +343,7 @@
 			<plugin>
 				<groupId>com.akathist.maven.plugins.launch4j</groupId>
 				<artifactId>launch4j-maven-plugin</artifactId>
-				<version>1.7.21</version>
+				<version>1.7.23</version>
 				<executions>
 					<execution>
 						<id>l4j-gui</id>
@@ -359,7 +359,7 @@
 							<errTitle>SDB2 - Error</errTitle>
 							<icon>src/main/resources/org/zephyrsoft/sdb2/icon.ico</icon>
 							<jre>
-								<minVersion>1.8.0</minVersion>
+								<minVersion>10</minVersion>
 							</jre>
 							<versionInfo>
 								<fileVersion>1.0.0.0</fileVersion>
