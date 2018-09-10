@@ -16,36 +16,16 @@
  */
 package org.zephyrsoft.sdb2.model;
 
-import org.apache.commons.text.WordUtils;
-
 /**
- * Types of presentation screen contents.
+ * This marks models which can be persisted.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public enum ScreenContentsEnum {
-	ONLY_LYRICS("only lyrics"), LYRICS_AND_CHORDS("lyrics and chords");
+public interface Persistable {
 	
-	private final String description;
-	
-	private ScreenContentsEnum(String description) {
-		this.description = description;
-	}
-	
-	public String getDescription() {
-		return description;
-	}
-	
-	public String getInternalName() {
-		return WordUtils.capitalizeFully(name(), new char[] { '_' }).replaceAll("_", "");
-	}
-	
-	public static ScreenContentsEnum withInternalName(String internalName) {
-		for (ScreenContentsEnum sce : values()) {
-			if (sce.getInternalName().equalsIgnoreCase(internalName)) {
-				return sce;
-			}
-		}
-		return null;
-	}
+	/**
+	 * Is called from the implementation's constructor and from {@link XMLConverter} to ensure a valid inner state after
+	 * conversion from XML and after creation via constructor.
+	 */
+	void initIfNecessary();
 }

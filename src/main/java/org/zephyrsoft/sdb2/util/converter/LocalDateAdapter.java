@@ -14,36 +14,28 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.model;
+package org.zephyrsoft.sdb2.util.converter;
+
+import java.time.LocalDate;
+
+import javax.xml.bind.annotation.adapters.XmlAdapter;
+
+import org.zephyrsoft.sdb2.util.DateTools;
 
 /**
- * Determines the language of a song.
+ * XML adapter for {@link LocalDate}.
  * 
  * @author Mathis Dirksen-Thedens
  */
-public enum LanguageEnum {
-	GERMAN("German"), ENGLISH("English"), MIXED("Mixed");
+public class LocalDateAdapter extends XmlAdapter<String, LocalDate> {
 	
-	private final String description;
-	
-	private LanguageEnum(String description) {
-		this.description = description;
+	@Override
+	public LocalDate unmarshal(String v) throws Exception {
+		return DateTools.parseDate(v);
 	}
 	
-	public String getDescription() {
-		return description;
-	}
-	
-	public String getInternalName() {
-		return name().toLowerCase();
-	}
-	
-	public static LanguageEnum withInternalName(String internalName) {
-		for (LanguageEnum le : values()) {
-			if (le.getInternalName().equalsIgnoreCase(internalName)) {
-				return le;
-			}
-		}
-		return null;
+	@Override
+	public String marshal(LocalDate v) throws Exception {
+		return DateTools.formatDate(v);
 	}
 }

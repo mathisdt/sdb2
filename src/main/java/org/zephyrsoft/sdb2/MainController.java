@@ -278,7 +278,7 @@ public class MainController implements Scroller {
 	
 	public void loadSettings() {
 		LOG.debug("loading settings from file");
-		settings = ioController.readSettings(is -> XMLConverter.fromXMLToSettingsModel(is));
+		settings = ioController.readSettings(is -> XMLConverter.fromXMLToPersistable(is));
 		if (settings == null) {
 			// there was a problem while reading
 			settings = new SettingsModel();
@@ -338,7 +338,7 @@ public class MainController implements Scroller {
 		File file = new File(FileAndDirectoryLocations.getSettingsFileName());
 		try {
 			OutputStream xmlOutputStream = new FileOutputStream(file);
-			XMLConverter.fromSettingsModelToXML(settings, xmlOutputStream);
+			XMLConverter.fromPersistableToXML(settings, xmlOutputStream);
 			xmlOutputStream.close();
 			return true;
 		} catch (IOException e) {
@@ -349,7 +349,7 @@ public class MainController implements Scroller {
 	
 	private SongsModel populateSongsModel(String fileName) {
 		LOG.debug("loading songs from file {}", fileName);
-		SongsModel songsModel = ioController.readSongs(fileName, is -> XMLConverter.fromXMLToSongsModel(is));
+		SongsModel songsModel = ioController.readSongs(fileName, is -> XMLConverter.fromXMLToPersistable(is));
 		if (songsModel != null) {
 			return songsModel;
 		} else {
@@ -391,7 +391,7 @@ public class MainController implements Scroller {
 		File file = new File(FileAndDirectoryLocations.getSongsBackupFile());
 		try (OutputStream xmlOutputStream = new FileOutputStream(file)) {
 			LOG.debug("writing songs to backup file \"{}\"", file.getAbsolutePath());
-			XMLConverter.fromSongsModelToXML(songs, xmlOutputStream);
+			XMLConverter.fromPersistableToXML(songs, xmlOutputStream);
 			return file;
 		} catch (IOException e) {
 			LOG.error("could not write songs to backup file \"" + file.getAbsolutePath() + "\"", e);

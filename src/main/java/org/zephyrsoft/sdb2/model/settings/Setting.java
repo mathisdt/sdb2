@@ -16,22 +16,40 @@
  */
 package org.zephyrsoft.sdb2.model.settings;
 
-import org.zephyrsoft.sdb2.util.StringTools;
+import javax.xml.bind.annotation.XmlAccessOrder;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorOrder;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.thoughtworks.xstream.annotations.XStreamAlias;
+import org.zephyrsoft.sdb2.util.StringTools;
+import org.zephyrsoft.sdb2.util.converter.SettingValueAdapter;
 
 /**
  * A global setting.
  * 
  * @author Mathis Dirksen-Thedens
  */
-@XStreamAlias("setting")
+@XmlRootElement(name = "setting")
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
 public class Setting<T> implements Comparable<Setting<T>> {
 	
-	@XStreamAlias("key")
+	@XmlElement(name = "key")
 	private SettingKey key = null;
-	@XStreamAlias("value")
+	@XmlElement(name = "value")
+	@XmlJavaTypeAdapter(SettingValueAdapter.class)
 	private T value = null;
+	
+	/**
+	 * CAUTION: every setting has to have a key and a (possibly null) value! This constructor is only necessary for
+	 * unmarshalling from XML.
+	 */
+	public Setting() {
+		// default constructor
+	}
 	
 	public Setting(SettingKey key, T value) {
 		this.key = key;
@@ -56,8 +74,10 @@ public class Setting<T> implements Comparable<Setting<T>> {
 	
 	@Override
 	public int compareTo(Setting<T> o) {
-		if (o == null) {
+		if (o == null || o.getKey() == null) {
 			return 1;
+		} else if (getKey() == null) {
+			return -1;
 		} else {
 			return StringTools.compareWithNullFirst(getKey().name(), o.getKey().name());
 		}

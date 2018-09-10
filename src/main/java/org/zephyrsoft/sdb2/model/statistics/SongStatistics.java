@@ -16,37 +16,57 @@
  */
 package org.zephyrsoft.sdb2.model.statistics;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.time.LocalDate;
 import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import javax.xml.bind.annotation.XmlAccessOrder;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorOrder;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
 import org.zephyrsoft.sdb2.model.Song;
+import org.zephyrsoft.sdb2.util.converter.LocalDateAdapter;
 
 import com.google.common.base.Preconditions;
-import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 /**
  * Statistics about the displaying of one specific song.
  * 
  * @author Mathis Dirksen-Thedens
  */
-@XStreamAlias("songStatistics")
-public class SongStatistics implements Comparable<SongStatistics>, Iterable<Date> {
+@XmlRootElement(name = "songStatistics")
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
+public class SongStatistics implements Comparable<SongStatistics>, Iterable<LocalDate> {
 	
+	@XmlElement(name = "songUuid")
 	private String songUuid;
-	private SortedSet<Date> presentedOn = new TreeSet<>();
+	@XmlElementWrapper(name = "presentedOn")
+	@XmlElement(name = "date")
+	@XmlJavaTypeAdapter(LocalDateAdapter.class)
+	private SortedSet<LocalDate> presentedOn = new TreeSet<>();
 	
 	/**
-	 * Create a statistics element for a single {@link Song}. By only having a constructor with the UUID as argument,
-	 * everyone (who doesn't use reflection) is forced to supply the UUID.
+	 * CAUTION: every statistics element has to have a song UUID! This constructor is only necessary for
+	 * unmarshalling from XML.
+	 */
+	public SongStatistics() {
+		// default constructor
+	}
+	
+	/**
+	 * Create a statistics element for a single {@link Song}.
 	 * 
 	 * @param songUuid
 	 *            the UUID which belongs to the song that these statistics are kept for
 	 */
-	SongStatistics(String songUuid) {
+	public SongStatistics(String songUuid) {
 		Preconditions.checkArgument(songUuid != null, "the UUID must be different from null");
 		this.songUuid = songUuid;
 	}
@@ -56,7 +76,7 @@ public class SongStatistics implements Comparable<SongStatistics>, Iterable<Date
 	}
 	
 	@Override
-	public Iterator<Date> iterator() {
+	public Iterator<LocalDate> iterator() {
 		return presentedOn.iterator();
 	}
 	
@@ -64,24 +84,19 @@ public class SongStatistics implements Comparable<SongStatistics>, Iterable<Date
 		return presentedOn.size();
 	}
 	
-	public boolean dateAdd(Date date) {
-		return presentedOn.add(wipeTime(date));
-	}
-	
-	private Date wipeTime(Date date) {
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.setTime(date);
-		cal.set(Calendar.HOUR, 0);
-		cal.set(Calendar.MINUTE, 0);
-		cal.set(Calendar.SECOND, 0);
-		cal.set(Calendar.MILLISECOND, 0);
-		return cal.getTime();
+	public boolean dateAdd(LocalDate date) {
+		return presentedOn.add(date);
 	}
 	
 	@Override
 	public int compareTo(SongStatistics o) {
-		Preconditions.checkArgument(o != null, "cannot compare a SongStatistics object with null");
-		return songUuid.compareTo(o.getSongUUID());
+		if (o == null || o.getSongUUID() == null) {
+			return 1;
+		} else if (getSongUUID() == null) {
+			return -1;
+		} else {
+			return getSongUUID().compareTo(o.getSongUUID());
+		}
 	}
 	
 }

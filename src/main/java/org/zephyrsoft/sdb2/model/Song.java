@@ -18,36 +18,65 @@ package org.zephyrsoft.sdb2.model;
 
 import java.io.Serializable;
 
-import org.zephyrsoft.sdb2.util.StringTools;
+import javax.xml.bind.annotation.XmlAccessOrder;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorOrder;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.thoughtworks.xstream.annotations.XStreamAlias;
+import org.zephyrsoft.sdb2.util.StringTools;
+import org.zephyrsoft.sdb2.util.converter.LanguageEnumAdapter;
 
 /**
  * Representation of a song.
  * 
  * @author Mathis Dirksen-Thedens
  */
-@XStreamAlias("song")
+@XmlRootElement(name = "song")
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
 public class Song implements Serializable, Comparable<Song> {
 	
 	private static final long serialVersionUID = -7133402923581521674L;
 	
+	@XmlElement(name = "title")
 	private String title;
+	@XmlElement(name = "composer")
 	private String composer;
+	@XmlElement(name = "authorText")
 	private String authorText;
+	@XmlElement(name = "authorTranslation")
 	private String authorTranslation;
+	@XmlElement(name = "publisher")
 	private String publisher;
+	@XmlElement(name = "additionalCopyrightNotes")
 	private String additionalCopyrightNotes;
+	@XmlElement(name = "language")
+	@XmlJavaTypeAdapter(LanguageEnumAdapter.class)
 	private LanguageEnum language;
+	@XmlElement(name = "songNotes")
 	private String songNotes;
+	@XmlElement(name = "tonality")
 	private String tonality;
+	@XmlElement(name = "uuid")
 	private String uuid;
+	@XmlElement(name = "chordSequence")
 	private String chordSequence;
+	@XmlElement(name = "lyrics")
 	private String lyrics;
 	
 	/**
-	 * Create a song instance. By making this the only constructor, everyone (who doesn't use reflection) has to provide
-	 * a UUID.
+	 * Create a song instance. CAUTION: every song has to have a UUID! This constructor is only necessary for
+	 * unmarshalling from XML.
+	 */
+	public Song() {
+		// default constructor
+	}
+	
+	/**
+	 * Create a song instance.
 	 * 
 	 * @param uuid
 	 *            a UUID for this song

@@ -16,6 +16,7 @@
  */
 package org.zephyrsoft.sdb2.model;
 
+import org.apache.commons.text.WordUtils;
 import org.zephyrsoft.sdb2.service.FieldName;
 
 /**
@@ -34,5 +35,18 @@ public enum FilterTypeEnum {
 	
 	public FieldName[] getFields() {
 		return fields;
+	}
+	
+	public String getInternalName() {
+		return WordUtils.capitalizeFully(name(), new char[] { '_' }).replaceAll("_", "");
+	}
+	
+	public static FilterTypeEnum withInternalName(String internalName) {
+		for (FilterTypeEnum fte : values()) {
+			if (fte.getInternalName().equalsIgnoreCase(internalName)) {
+				return fte;
+			}
+		}
+		return null;
 	}
 }
