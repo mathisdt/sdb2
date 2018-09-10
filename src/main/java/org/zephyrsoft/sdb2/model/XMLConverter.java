@@ -40,7 +40,7 @@ public class XMLConverter {
 			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 			marshaller.marshal(model, outputStream);
 		} catch (JAXBException e) {
-			throw new RuntimeException(e);
+			throw new IllegalStateException("could not marshal model to XML", e);
 		}
 	}
 	
@@ -52,7 +52,7 @@ public class XMLConverter {
 			model.initIfNecessary();
 			return model;
 		} catch (JAXBException e) {
-			throw new RuntimeException(e);
+			throw new IllegalStateException("could not unmarshal model from XML", e);
 		}
 	}
 	
