@@ -68,9 +68,8 @@ public final class Start {
 				
 				LOG.info("loading application context");
 				@SuppressWarnings("resource")
-				AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-				context.register(SpringConfiguration.class);
-				context.refresh();
+				AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SpringConfiguration.class);
+				context.registerShutdownHook();
 				
 				context.getAutowireCapableBeanFactory().autowireBean(this);
 				mainController.loadSongs(options.getSongsFile());
