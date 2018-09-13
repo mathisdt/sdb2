@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions
+	xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.1.xsd">
+	<suppress>
+		<notes>currently there is no good alternative (in Java 10+) to using this in version 1.8.0-beta2</notes>
+		<gav>org.slf4j:slf4j-api:1.8.0-beta2</gav>
+		<cve>CVE-2018-8088</cve>
+	</suppress>
+	<suppress>
+		<notes>currently there is no good alternative (in Java 10+) to using this in version 1.8.0-beta2</notes>
+		<gav>org.slf4j:jcl-over-slf4j:1.8.0-beta2</gav>
+		<cve>CVE-2018-8088</cve>
+	</suppress>
+</suppressions>
