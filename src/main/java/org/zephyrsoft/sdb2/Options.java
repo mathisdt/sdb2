@@ -24,31 +24,33 @@ import org.kohsuke.args4j.Option;
  * 
  * @author Mathis Dirksen-Thedens
  */
-public class Options {
-
-	/** used as key in system properties */
-	public static final String SONGS_FILE = "songdatabase.songs.file";
-
+public enum Options {
+	INSTANCE;
+	
+	public static Options getInstance() {
+		return INSTANCE;
+	}
+	
 	@Option(name = "--help", aliases = { "-help", "-h" }, usage = "display a short description of the available command line options (this message)")
 	private boolean help = false;
-
+	
 	@Argument(metaVar = "<FILE>", usage = "use this file to load from and save to (optional, the default is ~/.songdatabase/songs/songs.xml)")
 	private String songsFile = null;
-
+	
 	public boolean isHelp() {
 		return help;
 	}
-
+	
 	public void setHelp(boolean help) {
 		this.help = help;
 	}
-
+	
 	public String getSongsFile() {
 		return songsFile;
 	}
-
+	
 	public void setSongsFile(String songsFile) {
 		this.songsFile = songsFile;
 	}
-
+	
 }

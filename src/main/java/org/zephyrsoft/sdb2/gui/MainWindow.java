@@ -380,9 +380,7 @@ public class MainWindow extends JFrame implements UIScroller {
 				}
 			}
 		});
-	}
-	
-	public void startup() {
+		
 		setModels(controller.getSongs(), controller.getSettings());
 		setVisible(true);
 		textFieldFilter.requestFocusInWindow();
@@ -2017,15 +2015,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcBtnExportStatisticsAll.gridy = 7;
 		panelImportExportStatistics.add(btnExportStatisticsAll, gbcBtnExportStatisticsAll);
 		
-		JLabel lblImportingSongs = new JLabel("Importing Songs");
-		GridBagConstraints gbcLblImportingSongs = new GridBagConstraints();
-		gbcLblImportingSongs.gridwidth = 3;
-		gbcLblImportingSongs.fill = GridBagConstraints.HORIZONTAL;
-		gbcLblImportingSongs.anchor = GridBagConstraints.SOUTH;
-		gbcLblImportingSongs.insets = new Insets(0, 0, 5, 0);
-		gbcLblImportingSongs.gridx = 0;
-		gbcLblImportingSongs.gridy = 8;
-		panelImportExportStatistics.add(lblImportingSongs, gbcLblImportingSongs);
+		// TODO comment in again when there are importers
+		// JLabel lblImportingSongs = new JLabel("Importing Songs");
+		// GridBagConstraints gbcLblImportingSongs = new GridBagConstraints();
+		// gbcLblImportingSongs.gridwidth = 3;
+		// gbcLblImportingSongs.fill = GridBagConstraints.HORIZONTAL;
+		// gbcLblImportingSongs.anchor = GridBagConstraints.SOUTH;
+		// gbcLblImportingSongs.insets = new Insets(0, 0, 5, 0);
+		// gbcLblImportingSongs.gridx = 0;
+		// gbcLblImportingSongs.gridy = 8;
+		// panelImportExportStatistics.add(lblImportingSongs, gbcLblImportingSongs);
 		
 		// TODO handle importers dynamically, load every implementation of "Importer" as button (=> ServiceLoader?)
 		// btnImportFromEasiSlides = new JButton("Import from EasiSlides 4.0");

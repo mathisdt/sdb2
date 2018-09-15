@@ -88,7 +88,7 @@ public class MainController implements Scroller {
 	private final IOController ioController;
 	private final StatisticsController statisticsController;
 	
-	private String songsFileName = null;
+	private String songsFileName = FileAndDirectoryLocations.getDefaultSongsFileName();
 	private SongsModel songs = null;
 	private SettingsModel settings = null;
 	
@@ -239,9 +239,17 @@ public class MainController implements Scroller {
 		}
 	}
 	
+	private boolean disposePresenter() {
+		if (presentationControl != null) {
+			presentationControl.hidePresenter();
+			presentationControl.disposePresenter();
+		}
+		return true;
+	}
+	
 	public boolean prepareClose() {
 		LOG.debug("preparing to close application");
-		return saveAll();
+		return saveAll() && disposePresenter();
 	}
 	
 	public boolean saveAll() {

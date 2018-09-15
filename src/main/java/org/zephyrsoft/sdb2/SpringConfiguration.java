@@ -79,6 +79,7 @@ public class SpringConfiguration {
 		MainController mainController = new MainController(ioController(), statisticsController());
 		mainController.setupLookAndFeel();
 		mainController.loadSettings();
+		mainController.loadSongs(Options.getInstance().getSongsFile());
 		return mainController;
 	}
 	
@@ -96,4 +97,5 @@ public class SpringConfiguration {
 	public MainWindow mainWindow() {
 		return new MainWindow(mainController(), keyboardShortcutManager(), indexerService());
 	}
+	
 }

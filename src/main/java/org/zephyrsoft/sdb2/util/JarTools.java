@@ -16,7 +16,6 @@
  */
 package org.zephyrsoft.sdb2.util;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -27,11 +26,11 @@ import java.util.jar.Manifest;
  * @author Mathis Dirksen-Thedens
  */
 public final class JarTools {
-
+	
 	private JarTools() {
 		// this class is not intended for instantiation
 	}
-
+	
 	public static String getAttributeFromManifest(Class<?> classToUse, String attributeName) {
 		String ret = null;
 		InputStream manifestStream = ResourceTools.getInputStream(classToUse, "/META-INF/MANIFEST.MF");
@@ -39,11 +38,11 @@ public final class JarTools {
 			Manifest manifest = new Manifest(manifestStream);
 			Attributes attributes = manifest.getMainAttributes();
 			ret = attributes.getValue(attributeName);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// swallow exception here, just return null
 		}
-
+		
 		return ret;
 	}
-
+	
 }

@@ -23,9 +23,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.zephyrsoft.sdb2.gui.MainWindow;
 
 /**
  * Startup class for SDBv2.
@@ -36,18 +34,15 @@ public final class Start {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(Start.class);
 	
-	private final Options options = new Options();
-	
-	private MainController mainController;
-	
-	private MainWindow mainWindow;
-	
 	public static void main(String[] args) {
 		new Start(args);
 	}
 	
+	@SuppressWarnings("resource")
 	private Start(String[] args) {
 		LOG.debug("starting application");
+		
+		Options options = Options.getInstance();
 		
 		// parse command line arguments
 		CmdLineParser parser = new CmdLineParser(options);
@@ -67,29 +62,13 @@ public final class Start {
 				LOG.info("default time zone is {}", ZoneId.systemDefault().getId());
 				
 				LOG.info("loading application context");
-				@SuppressWarnings("resource")
-				AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SpringConfiguration.class);
-				context.registerShutdownHook();
 				
-				context.getAutowireCapableBeanFactory().autowireBean(this);
-				mainController.loadSongs(options.getSongsFile());
-				
-				mainWindow.startup();
+				new AnnotationConfigApplicationContext(SpringConfiguration.class);
 			} catch (Exception e) {
 				LOG.error("problem while starting up the application", e);
 				System.exit(-1);
 			}
 		}
-	}
-	
-	@Autowired
-	public void setMainController(MainController mainController) {
-		this.mainController = mainController;
-	}
-	
-	@Autowired
-	public void setMainWindow(MainWindow mainWindow) {
-		this.mainWindow = mainWindow;
 	}
 	
 }
