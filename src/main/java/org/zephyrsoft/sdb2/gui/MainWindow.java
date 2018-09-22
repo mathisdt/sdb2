@@ -397,7 +397,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			
 			final VersionUpdate updateAvailable = VersionTools.getLatest();
 			if (updateAvailable != null) {
-				final JLabel updateLabel = new JLabel("new version available since "
+				final JLabel updateLabel = new JLabel("new version available with timestamp "
 					+ updateAvailable.getVersionTimestamp());
 				updateLabel.setForeground(Color.BLUE);
 				updateLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
