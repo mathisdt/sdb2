@@ -102,6 +102,8 @@ public class MainController implements Scroller {
 	private Future<?> slideShowFuture;
 	private final static Pattern imagePattern = Pattern.compile("(?i)^.*\\.(png|jpg|jpeg|gif|bmp)$");
 	
+	private Thread shutdownHook = null;
+	
 	public MainController(IOController ioController, StatisticsController statisticsController) {
 		this.ioController = ioController;
 		this.statisticsController = statisticsController;
@@ -278,6 +280,24 @@ public class MainController implements Scroller {
 			// there was a problem while reading
 			songs = new SongsModel();
 		}
+		
+		if (shutdownHook != null) {
+			Runtime.getRuntime().removeShutdownHook(shutdownHook);
+		}
+		shutdownHook = new Thread() {
+			@Override
+			public void run() {
+				// don't use LOG here because the logger may already have shut down itself
+				try {
+					saveSongs();
+					System.out.println("done saving songs on regular shutdown");
+				} catch (Exception e) {
+					System.err.println("could not save songs on regular shutdown: ");
+					e.printStackTrace();
+				}
+			}
+		};
+		Runtime.getRuntime().addShutdownHook(shutdownHook);
 	}
 	
 	public void exportStatisticsAll(File targetExcelFile) {
