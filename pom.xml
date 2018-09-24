@@ -19,7 +19,7 @@
 	</licenses>
 
 	<scm>
-		<url>scm:git:ssh:git@github.com:mathisdt/sdb2.git</url>
+		<url>https://github.com/mathisdt/sdb2</url>
 		<connection>scm:git:ssh:git@github.com:mathisdt/sdb2.git</connection>
 		<developerConnection>scm:git:ssh:git@github.com:mathisdt/sdb2.git</developerConnection>
 	</scm>
