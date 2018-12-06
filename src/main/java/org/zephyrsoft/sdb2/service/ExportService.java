@@ -67,6 +67,7 @@ public class ExportService {
 			document.add(new Paragraph("Hello World!"));
 			
 			// TODO output song(s)
+			// TODO => if export format is LYRICS_WITH_CHORDS, only export songs which actually have chords?
 			
 			document.close();
 		} catch (DocumentException de) {
