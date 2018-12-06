@@ -97,11 +97,6 @@
 			<version>${version.itext}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.itextpdf</groupId>
-			<artifactId>itext-xtra</artifactId>
-			<version>${version.itext}</version>
-		</dependency>
-		<dependency>
 			<groupId>com.rover12421.opensource</groupId>
 			<artifactId>JFontChooser</artifactId>
 			<version>${version.jfontchooser}</version>

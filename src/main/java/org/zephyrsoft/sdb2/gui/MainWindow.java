@@ -41,6 +41,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -101,6 +102,8 @@ import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.UIScroller;
+import org.zephyrsoft.sdb2.service.ExportFormat;
+import org.zephyrsoft.sdb2.service.ExportService;
 import org.zephyrsoft.sdb2.service.FieldName;
 import org.zephyrsoft.sdb2.service.IndexType;
 import org.zephyrsoft.sdb2.service.IndexerService;
@@ -116,6 +119,8 @@ import org.zephyrsoft.sdb2.util.gui.ListFilter;
 import org.zephyrsoft.sdb2.util.gui.TransparentComboBoxModel;
 import org.zephyrsoft.sdb2.util.gui.TransparentFilterableListModel;
 import org.zephyrsoft.sdb2.util.gui.TransparentListModel;
+
+import com.google.common.io.Files;
 
 import say.swing.JFontChooser;
 
@@ -163,6 +168,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	private KeyboardShortcutManager keyboardShortcutManager;
 	private final MainController controller;
 	private IndexerService indexer;
+	private ExportService exportService;
 	
 	private SettingsModel settingsModel;
 	
@@ -1197,10 +1203,11 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	public MainWindow(MainController mainController, KeyboardShortcutManager keyboardShortcutManager,
-		IndexerService indexer) {
+		IndexerService indexer, ExportService exportService) {
 		controller = mainController;
 		this.keyboardShortcutManager = keyboardShortcutManager;
 		this.indexer = indexer;
+		this.exportService = exportService;
 		setIconImages(getIconsFromResources(getClass()));
 		setTitle("Song Database");
 		defineShortcuts();
@@ -1919,9 +1926,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(lblSelectedSong2, gbcLblSelectedSong2);
 		
 		btnExportLyricsOnlyPdfSelected = new JButton("Export lyrics-only PDF");
-		btnExportLyricsOnlyPdfSelected.addActionListener(safeAction(e -> JOptionPane.showMessageDialog(MainWindow.this,
-			"This function is not implemented yet!", "Information",
-			JOptionPane.INFORMATION_MESSAGE)));
+		btnExportLyricsOnlyPdfSelected.addActionListener(safeAction(e -> handleExport(ExportFormat.LYRICS_ONLY, Arrays.asList(songsListSelected))));
 		GridBagConstraints gbcBtnExportLyricsOnlyPdfSelected = new GridBagConstraints();
 		gbcBtnExportLyricsOnlyPdfSelected.anchor = GridBagConstraints.NORTH;
 		gbcBtnExportLyricsOnlyPdfSelected.insets = new Insets(0, 0, 5, 5);
@@ -1931,9 +1936,8 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(btnExportLyricsOnlyPdfSelected, gbcBtnExportLyricsOnlyPdfSelected);
 		
 		btnExportCompletePdfSelected = new JButton("Export complete PDF");
-		btnExportCompletePdfSelected.addActionListener(safeAction(e -> JOptionPane.showMessageDialog(MainWindow.this,
-			"This function is not implemented yet!", "Information",
-			JOptionPane.INFORMATION_MESSAGE)));
+		btnExportCompletePdfSelected.addActionListener(safeAction(e -> handleExport(ExportFormat.LYRICS_WITH_CHORDS, Arrays.asList(
+			songsListSelected))));
 		GridBagConstraints gbcBtnExportCompletePdfSelected = new GridBagConstraints();
 		gbcBtnExportCompletePdfSelected.anchor = GridBagConstraints.NORTH;
 		gbcBtnExportCompletePdfSelected.fill = GridBagConstraints.HORIZONTAL;
@@ -1965,9 +1969,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(lblAllSongs2, gbcLblAllSongs2);
 		
 		btnExportLyricsOnlyPdfAll = new JButton("Export lyrics-only PDF");
-		btnExportLyricsOnlyPdfAll.addActionListener(safeAction(e -> JOptionPane.showMessageDialog(MainWindow.this,
-			"This function is not implemented yet!", "Information",
-			JOptionPane.INFORMATION_MESSAGE)));
+		btnExportLyricsOnlyPdfAll.addActionListener(safeAction(e -> handleExport(ExportFormat.LYRICS_ONLY, songsModel.getSongs())));
 		GridBagConstraints gbcBtnExportLyricsOnlyPdfAll = new GridBagConstraints();
 		gbcBtnExportLyricsOnlyPdfAll.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnExportLyricsOnlyPdfAll.insets = new Insets(0, 0, 5, 5);
@@ -1976,9 +1978,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(btnExportLyricsOnlyPdfAll, gbcBtnExportLyricsOnlyPdfAll);
 		
 		btnExportCompletePdfAll = new JButton("Export complete PDF");
-		btnExportCompletePdfAll.addActionListener(safeAction(e -> JOptionPane.showMessageDialog(MainWindow.this,
-			"This function is not implemented yet!", "Information",
-			JOptionPane.INFORMATION_MESSAGE)));
+		btnExportCompletePdfAll.addActionListener(safeAction(e -> handleExport(ExportFormat.LYRICS_WITH_CHORDS, songsModel.getSongs())));
 		GridBagConstraints gbcBtnExportCompletePdfAll = new GridBagConstraints();
 		gbcBtnExportCompletePdfAll.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnExportCompletePdfAll.insets = new Insets(0, 0, 5, 5);
@@ -2472,6 +2472,30 @@ public class MainWindow extends JFrame implements UIScroller {
 		glassPane.add(buttonPanel, gbc);
 		
 		afterConstruction();
+	}
+	
+	private void handleExport(ExportFormat exportFormat, Collection<Song> songs) {
+		// TODO let user select target file
+		
+		JFileChooser chooser = new JFileChooser();
+		chooser.setDialogTitle("choose target file for PDF export");
+		CustomFileFilter filter = new CustomFileFilter("PDF", ".pdf");
+		chooser.addChoosableFileFilter(filter);
+		chooser.setFileFilter(filter);
+		chooser.setApproveButtonText("Export");
+		chooser.setSelectedFile(new File("songs.pdf"));
+		int result = chooser.showOpenDialog(MainWindow.this);
+		
+		if (result == JFileChooser.APPROVE_OPTION) {
+			File target = chooser.getSelectedFile();
+			// export
+			ByteArrayOutputStream outputStream = exportService.export(exportFormat, songs);
+			try {
+				Files.write(outputStream.toByteArray(), target);
+			} catch (IOException e) {
+				handleError(e);
+			}
+		}
 	}
 	
 	private ActionListener safeAction(Consumer<ActionEvent> listener) {

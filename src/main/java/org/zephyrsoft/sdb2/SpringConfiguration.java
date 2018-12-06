@@ -28,6 +28,7 @@ import org.togglz.core.repository.mem.InMemoryStateRepository;
 import org.togglz.core.user.NoOpUserProvider;
 import org.zephyrsoft.sdb2.gui.KeyboardShortcutManager;
 import org.zephyrsoft.sdb2.gui.MainWindow;
+import org.zephyrsoft.sdb2.service.ExportService;
 import org.zephyrsoft.sdb2.service.IndexerService;
 
 /**
@@ -92,8 +93,13 @@ public class SpringConfiguration {
 	}
 	
 	@Bean
+	public ExportService exportService() {
+		return new ExportService();
+	}
+	
+	@Bean
 	public MainWindow mainWindow() {
-		return new MainWindow(mainController(), keyboardShortcutManager(), indexerService());
+		return new MainWindow(mainController(), keyboardShortcutManager(), indexerService(), exportService());
 	}
 	
 }
