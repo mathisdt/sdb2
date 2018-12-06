@@ -1,16 +1,16 @@
 /*
  * This file is part of the Song Database (SDB).
- * 
+ *
  * SDB is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -121,7 +121,7 @@ import say.swing.JFontChooser;
 
 /**
  * Main window of the application.
- * 
+ *
  * @author Mathis Dirksen-Thedens
  */
 public class MainWindow extends JFrame implements UIScroller {
@@ -162,7 +162,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	private KeyboardShortcutManager keyboardShortcutManager;
 	private final MainController controller;
-	private IndexerService<Song> indexer;
+	private IndexerService indexer;
 	
 	private SettingsModel settingsModel;
 	
@@ -551,7 +551,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	/**
 	 * Let the user select a font and save it into the {@link SettingsModel}.
-	 * 
+	 *
 	 * @param target
 	 *            the target setting for the newly selected font
 	 * @return {@code true} if the font was changed, {@code false} else
@@ -812,7 +812,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	/**
 	 * Stores all data contained in the GUI elements.
-	 * 
+	 *
 	 * @param song
 	 *            the songsModel object to which the data should be written
 	 */
@@ -923,7 +923,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	/**
 	 * Reads song data and puts the values into the GUI elements.
-	 * 
+	 *
 	 * @param song
 	 *            the songsModel object which should be read
 	 */
@@ -1197,7 +1197,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	public MainWindow(MainController mainController, KeyboardShortcutManager keyboardShortcutManager,
-		IndexerService<Song> indexer) {
+		IndexerService indexer) {
 		controller = mainController;
 		this.keyboardShortcutManager = keyboardShortcutManager;
 		this.indexer = indexer;

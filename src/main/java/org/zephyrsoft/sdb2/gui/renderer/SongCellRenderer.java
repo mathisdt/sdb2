@@ -1,16 +1,16 @@
 /*
  * This file is part of the Song Database (SDB).
- * 
+ *
  * SDB is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -32,12 +32,12 @@ import org.zephyrsoft.sdb2.Feature;
 import org.zephyrsoft.sdb2.gui.SongCell;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongParser;
-import org.zephyrsoft.sdb2.service.IndexerServiceImpl;
+import org.zephyrsoft.sdb2.service.IndexerService;
 import org.zephyrsoft.sdb2.util.gui.SongCellHighlighter;
 
 /**
  * A {@link ListCellRenderer} for {@link Song} values.
- * 
+ *
  * @author Mathis Dirksen-Thedens
  */
 public class SongCellRenderer implements ListCellRenderer<Song> {
@@ -92,7 +92,7 @@ public class SongCellRenderer implements ListCellRenderer<Song> {
 		}
 		StringBuilder ret = new StringBuilder();
 		ret.append("(?i)^(.*)(");
-		String[] filterParts = filter.toLowerCase().split(IndexerServiceImpl.TERM_SPLIT_REGEX);
+		String[] filterParts = filter.toLowerCase().split(IndexerService.TERM_SPLIT_REGEX);
 		boolean isFirst = true;
 		for (String filterPart : filterParts) {
 			if (isFirst) {
@@ -112,7 +112,7 @@ public class SongCellRenderer implements ListCellRenderer<Song> {
 		}
 		StringBuilder ret = new StringBuilder();
 		ret.append("<html>$1<b>");
-		String[] filterParts = filter.toLowerCase().split(IndexerServiceImpl.TERM_SPLIT_REGEX);
+		String[] filterParts = filter.toLowerCase().split(IndexerService.TERM_SPLIT_REGEX);
 		int matchNumber = 2;
 		for (@SuppressWarnings("unused")
 		String filterPart : filterParts) {

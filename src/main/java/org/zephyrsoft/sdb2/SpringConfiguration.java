@@ -1,16 +1,16 @@
 /*
  * This file is part of the Song Database (SDB).
- * 
+ *
  * SDB is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -28,13 +28,11 @@ import org.togglz.core.repository.mem.InMemoryStateRepository;
 import org.togglz.core.user.NoOpUserProvider;
 import org.zephyrsoft.sdb2.gui.KeyboardShortcutManager;
 import org.zephyrsoft.sdb2.gui.MainWindow;
-import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.service.IndexerService;
-import org.zephyrsoft.sdb2.service.IndexerServiceImpl;
 
 /**
  * Configures the DI context.
- * 
+ *
  * @author Mathis Dirksen-Thedens
  */
 @Configuration
@@ -89,8 +87,8 @@ public class SpringConfiguration {
 	}
 	
 	@Bean
-	public IndexerService<Song> indexerService() {
-		return new IndexerServiceImpl();
+	public IndexerService indexerService() {
+		return new IndexerService();
 	}
 	
 	@Bean
