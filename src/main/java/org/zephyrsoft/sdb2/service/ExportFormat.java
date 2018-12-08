@@ -22,6 +22,22 @@ package org.zephyrsoft.sdb2.service;
  * @author Mathis Dirksen-Thedens
  */
 public enum ExportFormat {
-	LYRICS_WITH_CHORDS,
-	LYRICS_ONLY;
+	LYRICS_WITH_CHORDS(true, true),
+	LYRICS_ONLY(false, true);
+	
+	private boolean showChords;
+	private boolean showTranslation;
+	
+	private ExportFormat(boolean showChords, boolean showTranslation) {
+		this.showChords = showChords;
+		this.showTranslation = showTranslation;
+	}
+	
+	public boolean areChordsShown() {
+		return showChords;
+	}
+	
+	public boolean isTranslationShown() {
+		return showTranslation;
+	}
 }
