@@ -63,7 +63,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -91,6 +90,7 @@ import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenDisplayCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
 import org.zephyrsoft.sdb2.model.AddressablePart;
+import org.zephyrsoft.sdb2.model.ExportFormat;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
@@ -102,7 +102,6 @@ import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.UIScroller;
-import org.zephyrsoft.sdb2.service.ExportFormat;
 import org.zephyrsoft.sdb2.service.ExportService;
 import org.zephyrsoft.sdb2.service.FieldName;
 import org.zephyrsoft.sdb2.service.IndexType;
@@ -206,11 +205,8 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JButton btnPresentSelectedSong;
 	private JScrollPane scrollPaneSectionButtons;
 	private JButton btnJumpToPresented;
-	private JButton btnExportLyricsOnlyPdfSelected;
-	private JButton btnExportCompletePdfSelected;
-	private JButton btnExportStatisticsSelected;
-	private JButton btnExportLyricsOnlyPdfAll;
-	private JButton btnExportCompletePdfAll;
+	private JButton btnExportPdfSelected;
+	private JButton btnExportPdfAll;
 	private JButton btnExportStatisticsAll;
 	private JButton btnImportFromSdb1;
 	private JLabel lblProgramVersion;
@@ -245,6 +241,10 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JLabel lblSlideShowDirectory;
 	private JLabel lblSlideShowSeconds;
 	private JButton btnSlideshow;
+	private JCheckBox chckbxWithTranslation;
+	private JCheckBox chckbxWithChords;
+	private JCheckBox chckbxOnlyExportSongs;
+	private JLabel labelExportStatisctics;
 	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
@@ -283,10 +283,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		btnPresentSelectedSong.setEnabled(false);
 		btnJumpToSelected.setEnabled(false);
 		btnJumpToPresented.setEnabled(false);
-		// disable single-song export and stats buttons
-		btnExportLyricsOnlyPdfSelected.setEnabled(false);
-		btnExportCompletePdfSelected.setEnabled(false);
-		btnExportStatisticsSelected.setEnabled(false);
+		btnExportPdfSelected.setEnabled(false);
 		// create empty songsModel for the "selected songs" list
 		presentModel = new SongsModel();
 		presentModel.setAutoSort(false);
@@ -754,9 +751,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			// disable buttons
 			btnDeleteSong.setEnabled(false);
 			btnSelectSong.setEnabled(false);
-			btnExportLyricsOnlyPdfSelected.setEnabled(false);
-			btnExportCompletePdfSelected.setEnabled(false);
-			btnExportStatisticsSelected.setEnabled(false);
+			btnExportPdfSelected.setEnabled(false);
 		}
 	}
 	
@@ -773,9 +768,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			// enable buttons
 			btnDeleteSong.setEnabled(true);
 			btnSelectSong.setEnabled(true);
-			btnExportLyricsOnlyPdfSelected.setEnabled(true);
-			btnExportCompletePdfSelected.setEnabled(true);
-			btnExportStatisticsSelected.setEnabled(true);
+			btnExportPdfSelected.setEnabled(true);
 		}
 	}
 	
@@ -1909,82 +1902,63 @@ public class MainWindow extends JFrame implements UIScroller {
 		tabbedPane.addTab("Import / Export / Statistics", null, panelImportExportStatistics, null);
 		GridBagLayout gblPanelImportExportStatistics = new GridBagLayout();
 		gblPanelImportExportStatistics.columnWidths = new int[] { 0, 70, 0, 0 };
-		gblPanelImportExportStatistics.rowHeights = new int[] { 30, 0, 0, 30, 30, 0, 0, 0, 30, 0, 30, 30, 0 };
+		gblPanelImportExportStatistics.rowHeights = new int[] { 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 0 };
 		gblPanelImportExportStatistics.columnWeights = new double[] { 1.0, 0.0, 1.0, Double.MIN_VALUE };
-		gblPanelImportExportStatistics.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-			0.0, 0.0, Double.MIN_VALUE };
+		gblPanelImportExportStatistics.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
 		panelImportExportStatistics.setLayout(gblPanelImportExportStatistics);
 		
-		JLabel lblSelectedSong2 = new JLabel("Selected Song");
-		GridBagConstraints gbcLblSelectedSong2 = new GridBagConstraints();
-		gbcLblSelectedSong2.fill = GridBagConstraints.HORIZONTAL;
-		gbcLblSelectedSong2.gridwidth = 3;
-		gbcLblSelectedSong2.anchor = GridBagConstraints.SOUTH;
-		gbcLblSelectedSong2.insets = new Insets(0, 0, 5, 0);
-		gbcLblSelectedSong2.gridx = 0;
-		gbcLblSelectedSong2.gridy = 0;
-		panelImportExportStatistics.add(lblSelectedSong2, gbcLblSelectedSong2);
+		JLabel lblExportToPDF = new JLabel("Songs as PDF");
+		GridBagConstraints gbc_lblExportToPDF = new GridBagConstraints();
+		gbc_lblExportToPDF.fill = GridBagConstraints.HORIZONTAL;
+		gbc_lblExportToPDF.gridwidth = 3;
+		gbc_lblExportToPDF.anchor = GridBagConstraints.SOUTH;
+		gbc_lblExportToPDF.insets = new Insets(0, 0, 5, 0);
+		gbc_lblExportToPDF.gridx = 0;
+		gbc_lblExportToPDF.gridy = 0;
+		panelImportExportStatistics.add(lblExportToPDF, gbc_lblExportToPDF);
 		
-		btnExportLyricsOnlyPdfSelected = new JButton("Export lyrics-only PDF");
-		btnExportLyricsOnlyPdfSelected.addActionListener(safeAction(e -> handleExport(ExportFormat.LYRICS_ONLY, Arrays.asList(songsListSelected))));
-		GridBagConstraints gbcBtnExportLyricsOnlyPdfSelected = new GridBagConstraints();
-		gbcBtnExportLyricsOnlyPdfSelected.anchor = GridBagConstraints.NORTH;
-		gbcBtnExportLyricsOnlyPdfSelected.insets = new Insets(0, 0, 5, 5);
-		gbcBtnExportLyricsOnlyPdfSelected.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnExportLyricsOnlyPdfSelected.gridx = 0;
-		gbcBtnExportLyricsOnlyPdfSelected.gridy = 1;
-		panelImportExportStatistics.add(btnExportLyricsOnlyPdfSelected, gbcBtnExportLyricsOnlyPdfSelected);
+		chckbxWithTranslation = new JCheckBox("with translation");
+		GridBagConstraints gbc_chckbxWithTranslation = new GridBagConstraints();
+		gbc_chckbxWithTranslation.anchor = GridBagConstraints.NORTHWEST;
+		gbc_chckbxWithTranslation.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxWithTranslation.gridx = 0;
+		gbc_chckbxWithTranslation.gridy = 1;
+		panelImportExportStatistics.add(chckbxWithTranslation, gbc_chckbxWithTranslation);
 		
-		btnExportCompletePdfSelected = new JButton("Export complete PDF");
-		btnExportCompletePdfSelected.addActionListener(safeAction(e -> handleExport(ExportFormat.LYRICS_WITH_CHORDS, Arrays.asList(
-			songsListSelected))));
-		GridBagConstraints gbcBtnExportCompletePdfSelected = new GridBagConstraints();
-		gbcBtnExportCompletePdfSelected.anchor = GridBagConstraints.NORTH;
-		gbcBtnExportCompletePdfSelected.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnExportCompletePdfSelected.insets = new Insets(0, 0, 5, 5);
-		gbcBtnExportCompletePdfSelected.gridx = 0;
-		gbcBtnExportCompletePdfSelected.gridy = 2;
-		panelImportExportStatistics.add(btnExportCompletePdfSelected, gbcBtnExportCompletePdfSelected);
+		chckbxWithChords = new JCheckBox("with chords");
+		GridBagConstraints gbc_chckbxWithChords = new GridBagConstraints();
+		gbc_chckbxWithChords.anchor = GridBagConstraints.NORTHWEST;
+		gbc_chckbxWithChords.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxWithChords.gridx = 0;
+		gbc_chckbxWithChords.gridy = 2;
+		panelImportExportStatistics.add(chckbxWithChords, gbc_chckbxWithChords);
 		
-		btnExportStatisticsSelected = new JButton("Export statistics");
-		btnExportStatisticsSelected.addActionListener(safeAction(e -> JOptionPane.showMessageDialog(MainWindow.this,
-			"This function is not implemented yet!", "Information",
-			JOptionPane.INFORMATION_MESSAGE)));
-		GridBagConstraints gbcBtnExportStatisticsSelected = new GridBagConstraints();
-		gbcBtnExportStatisticsSelected.anchor = GridBagConstraints.NORTH;
-		gbcBtnExportStatisticsSelected.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnExportStatisticsSelected.insets = new Insets(0, 0, 5, 5);
-		gbcBtnExportStatisticsSelected.gridx = 0;
-		gbcBtnExportStatisticsSelected.gridy = 3;
-		panelImportExportStatistics.add(btnExportStatisticsSelected, gbcBtnExportStatisticsSelected);
+		btnExportPdfSelected = new JButton("Export selected song");
+		btnExportPdfSelected.addActionListener(safeAction(e -> handleExport(Arrays.asList(songsListSelected))));
 		
-		JLabel lblAllSongs2 = new JLabel("All Songs");
-		GridBagConstraints gbcLblAllSongs2 = new GridBagConstraints();
-		gbcLblAllSongs2.fill = GridBagConstraints.HORIZONTAL;
-		gbcLblAllSongs2.insets = new Insets(0, 0, 5, 0);
-		gbcLblAllSongs2.gridwidth = 3;
-		gbcLblAllSongs2.anchor = GridBagConstraints.SOUTH;
-		gbcLblAllSongs2.gridx = 0;
-		gbcLblAllSongs2.gridy = 4;
-		panelImportExportStatistics.add(lblAllSongs2, gbcLblAllSongs2);
+		chckbxOnlyExportSongs = new JCheckBox("only export songs which have chords");
+		GridBagConstraints gbc_chckbxOnlyExportSongs = new GridBagConstraints();
+		gbc_chckbxOnlyExportSongs.anchor = GridBagConstraints.NORTHWEST;
+		gbc_chckbxOnlyExportSongs.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxOnlyExportSongs.gridx = 0;
+		gbc_chckbxOnlyExportSongs.gridy = 3;
+		panelImportExportStatistics.add(chckbxOnlyExportSongs, gbc_chckbxOnlyExportSongs);
+		GridBagConstraints gbc_btnExportPdfSelected = new GridBagConstraints();
+		gbc_btnExportPdfSelected.anchor = GridBagConstraints.NORTH;
+		gbc_btnExportPdfSelected.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnExportPdfSelected.insets = new Insets(0, 0, 5, 5);
+		gbc_btnExportPdfSelected.gridx = 0;
+		gbc_btnExportPdfSelected.gridy = 4;
+		panelImportExportStatistics.add(btnExportPdfSelected, gbc_btnExportPdfSelected);
 		
-		btnExportLyricsOnlyPdfAll = new JButton("Export lyrics-only PDF");
-		btnExportLyricsOnlyPdfAll.addActionListener(safeAction(e -> handleExport(ExportFormat.LYRICS_ONLY, songsModel.getSongs())));
-		GridBagConstraints gbcBtnExportLyricsOnlyPdfAll = new GridBagConstraints();
-		gbcBtnExportLyricsOnlyPdfAll.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnExportLyricsOnlyPdfAll.insets = new Insets(0, 0, 5, 5);
-		gbcBtnExportLyricsOnlyPdfAll.gridx = 0;
-		gbcBtnExportLyricsOnlyPdfAll.gridy = 5;
-		panelImportExportStatistics.add(btnExportLyricsOnlyPdfAll, gbcBtnExportLyricsOnlyPdfAll);
-		
-		btnExportCompletePdfAll = new JButton("Export complete PDF");
-		btnExportCompletePdfAll.addActionListener(safeAction(e -> handleExport(ExportFormat.LYRICS_WITH_CHORDS, songsModel.getSongs())));
-		GridBagConstraints gbcBtnExportCompletePdfAll = new GridBagConstraints();
-		gbcBtnExportCompletePdfAll.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnExportCompletePdfAll.insets = new Insets(0, 0, 5, 5);
-		gbcBtnExportCompletePdfAll.gridx = 0;
-		gbcBtnExportCompletePdfAll.gridy = 6;
-		panelImportExportStatistics.add(btnExportCompletePdfAll, gbcBtnExportCompletePdfAll);
+		btnExportPdfAll = new JButton("Export all songs");
+		btnExportPdfAll.addActionListener(safeAction(e -> handleExport(songsModel.getSongs())));
+		GridBagConstraints gbc_btnExportPdfAll = new GridBagConstraints();
+		gbc_btnExportPdfAll.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnExportPdfAll.insets = new Insets(0, 0, 5, 5);
+		gbc_btnExportPdfAll.gridx = 0;
+		gbc_btnExportPdfAll.gridy = 5;
+		panelImportExportStatistics.add(btnExportPdfAll, gbc_btnExportPdfAll);
 		
 		btnExportStatisticsAll = new JButton("Export statistics");
 		btnExportStatisticsAll.addActionListener(safeAction(e -> {
@@ -2008,11 +1982,21 @@ public class MainWindow extends JFrame implements UIScroller {
 				}
 			}
 		}));
+		
+		labelExportStatisctics = new JLabel("Statistics");
+		GridBagConstraints gbc_labelExportStatisctics = new GridBagConstraints();
+		gbc_labelExportStatisctics.anchor = GridBagConstraints.SOUTH;
+		gbc_labelExportStatisctics.gridwidth = 3;
+		gbc_labelExportStatisctics.fill = GridBagConstraints.HORIZONTAL;
+		gbc_labelExportStatisctics.insets = new Insets(0, 0, 5, 5);
+		gbc_labelExportStatisctics.gridx = 0;
+		gbc_labelExportStatisctics.gridy = 7;
+		panelImportExportStatistics.add(labelExportStatisctics, gbc_labelExportStatisctics);
 		GridBagConstraints gbcBtnExportStatisticsAll = new GridBagConstraints();
 		gbcBtnExportStatisticsAll.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnExportStatisticsAll.insets = new Insets(0, 0, 5, 5);
 		gbcBtnExportStatisticsAll.gridx = 0;
-		gbcBtnExportStatisticsAll.gridy = 7;
+		gbcBtnExportStatisticsAll.gridy = 8;
 		panelImportExportStatistics.add(btnExportStatisticsAll, gbcBtnExportStatisticsAll);
 		
 		// TODO comment in again when there are importers
@@ -2042,7 +2026,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblProgramVersionTitle.gridwidth = 3;
 		gbcLblProgramVersionTitle.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblProgramVersionTitle.anchor = GridBagConstraints.SOUTH;
-		gbcLblProgramVersionTitle.insets = new Insets(0, 0, 5, 5);
+		gbcLblProgramVersionTitle.insets = new Insets(0, 0, 5, 0);
 		gbcLblProgramVersionTitle.gridx = 0;
 		gbcLblProgramVersionTitle.gridy = 10;
 		panelImportExportStatistics.add(lblProgramVersionTitle, gbcLblProgramVersionTitle);
@@ -2474,9 +2458,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		afterConstruction();
 	}
 	
-	private void handleExport(ExportFormat exportFormat, Collection<Song> songs) {
-		// TODO let user select target file
-		
+	private void handleExport(Collection<Song> songs) {
 		JFileChooser chooser = new JFileChooser();
 		chooser.setDialogTitle("choose target file for PDF export");
 		CustomFileFilter filter = new CustomFileFilter("PDF", ".pdf");
@@ -2489,7 +2471,9 @@ public class MainWindow extends JFrame implements UIScroller {
 		if (result == JFileChooser.APPROVE_OPTION) {
 			File target = chooser.getSelectedFile();
 			// export
-			ByteArrayOutputStream outputStream = exportService.export(exportFormat, songs);
+			ExportFormat format = new ExportFormat(chckbxWithTranslation.isSelected(),
+				chckbxWithChords.isSelected(), chckbxOnlyExportSongs.isSelected());
+			ByteArrayOutputStream outputStream = exportService.export(format, songs);
 			try {
 				Files.write(outputStream.toByteArray(), target);
 			} catch (IOException e) {

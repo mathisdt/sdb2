@@ -17,6 +17,7 @@
 package org.zephyrsoft.sdb2.service;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -24,6 +25,7 @@ import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zephyrsoft.sdb2.model.ExportFormat;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
@@ -85,11 +87,14 @@ public class ExportService {
 		copyrightFont = new Font(baseFont, 10);
 	}
 	
-	public ByteArrayOutputStream export(ExportFormat exportFormat, Collection<Song> songs) {
+	public ByteArrayOutputStream export(ExportFormat exportFormat, Collection<Song> songsToExport) {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		
-		// TODO if export format is LYRICS_WITH_CHORDS, only export songs which actually have chords?
-		// (which would mean to remove all songs that don't have CHORDS elements)
+		Collection<Song> songs = new ArrayList<>(songsToExport);
+		if (exportFormat.onlySongsWithChords()) {
+			// TODO remove all songs with no chods line
+			
+		}
 		
 		try {
 			Document document = new Document();

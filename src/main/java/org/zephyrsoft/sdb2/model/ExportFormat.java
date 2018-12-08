@@ -14,30 +14,33 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.service;
+package org.zephyrsoft.sdb2.model;
 
 /**
  * Determines the format for an export.
  *
  * @author Mathis Dirksen-Thedens
  */
-public enum ExportFormat {
-	LYRICS_WITH_CHORDS(true, true),
-	LYRICS_ONLY(false, true);
-	
-	private boolean showChords;
+public class ExportFormat {
 	private boolean showTranslation;
+	private boolean showChords;
+	private boolean onlySongsWithChords;
 	
-	private ExportFormat(boolean showChords, boolean showTranslation) {
-		this.showChords = showChords;
+	public ExportFormat(boolean showTranslation, boolean showChords, boolean onlySongsWithChords) {
 		this.showTranslation = showTranslation;
+		this.showChords = showChords;
+		this.onlySongsWithChords = onlySongsWithChords;
+	}
+	
+	public boolean isTranslationShown() {
+		return showTranslation;
 	}
 	
 	public boolean areChordsShown() {
 		return showChords;
 	}
 	
-	public boolean isTranslationShown() {
-		return showTranslation;
+	public boolean onlySongsWithChords() {
+		return onlySongsWithChords;
 	}
 }
