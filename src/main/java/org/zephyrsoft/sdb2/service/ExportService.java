@@ -19,12 +19,17 @@ package org.zephyrsoft.sdb2.service;
 import java.io.ByteArrayOutputStream;
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
 import org.zephyrsoft.sdb2.model.SongParser;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
@@ -44,10 +49,7 @@ import com.itextpdf.text.pdf.PdfWriter;
  */
 public class ExportService {
 	
-	private Font titleFont;
-	private Font lyricsFont;
-	private Font translationFont;
-	private Font copyrightFont;
+	private static final Logger LOG = LoggerFactory.getLogger(ExportService.class);
 	
 	private class PageNumbers extends PdfPageEventHelper {
 		Font ffont = new Font(Font.FontFamily.UNDEFINED, 10, Font.ITALIC);
@@ -62,6 +64,13 @@ public class ExportService {
 				document.bottom() - 10, 0);
 		}
 	}
+	
+	private static final Pattern CHORD_PATTERN = Pattern.compile("(\\s*+)\\b(\\S+)\\b");
+	
+	private Font titleFont;
+	private Font lyricsFont;
+	private Font translationFont;
+	private Font copyrightFont;
 	
 	public ExportService() {
 		BaseFont baseFont = null;
@@ -155,9 +164,22 @@ public class ExportService {
 		return outputStream;
 	}
 	
-	private String correctChordSpaces(String chords, String lyrics) {
-		// TODO
-		return chords;
+	@VisibleForTesting
+	String correctChordSpaces(String chords, String lyrics) {
+		try {
+			StringBuilder result = new StringBuilder();
+			Matcher matcher = CHORD_PATTERN.matcher(chords);
+			while (matcher.find()) {
+				String lyricsPart = lyrics.substring(0, matcher.end(1) > lyrics.length() ? lyrics.length() : matcher.end(1));
+				while (renderedLength(lyricsPart) > renderedLength(result.toString() + " ")) {
+					result.append(" ");
+				}
+				result.append(matcher.group(2)).append(" ");
+			}
+			return result.toString();
+		} catch (Exception e) {
+			throw new IllegalStateException("problem while correcting chord spaces - chord line: '" + chords + "' - lyrics: '" + lyrics + "'", e);
+		}
 	}
 	
 	private float renderedLength(String text) {
