@@ -17,6 +17,7 @@
 package org.zephyrsoft.sdb2.service;
 
 import java.io.ByteArrayOutputStream;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -32,17 +33,22 @@ import org.zephyrsoft.sdb2.model.SongElementEnum;
 import org.zephyrsoft.sdb2.model.SongParser;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
+import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.ColumnText;
+import com.itextpdf.text.pdf.PdfAction;
 import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfDestination;
 import com.itextpdf.text.pdf.PdfPageEventHelper;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.draw.DottedLineSeparator;
 
 /**
  * Exports songs in various formats.
@@ -67,6 +73,24 @@ public class ExportService {
 		}
 	}
 	
+	public class TOC extends PdfPageEventHelper {
+		
+		protected int counter = 0;
+		protected List<SimpleEntry<String, SimpleEntry<String, Integer>>> toc = new ArrayList<>();
+		
+		@Override
+		public void onGenericTag(PdfWriter writer, Document document, Rectangle rect, String text) {
+			String name = "dest" + (counter++);
+			int page = writer.getPageNumber();
+			toc.add(new SimpleEntry<>(text, new SimpleEntry<>(name, page)));
+			writer.addNamedDestination(name, page, new PdfDestination(PdfDestination.FITH, rect.getTop()));
+		}
+		
+		public List<SimpleEntry<String, SimpleEntry<String, Integer>>> getTOC() {
+			return toc;
+		}
+	}
+	
 	private static final Pattern CHORD_PATTERN = Pattern.compile("(\\s*+)\\b(\\S+)\\b");
 	
 	private Font titleFont;
@@ -87,40 +111,35 @@ public class ExportService {
 		copyrightFont = new Font(baseFont, 10);
 	}
 	
-	public ByteArrayOutputStream export(ExportFormat exportFormat, Collection<Song> songsToExport) {
+	public ByteArrayOutputStream export(ExportFormat exportFormat, Collection<Song> songs) {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		
-		Collection<Song> songs = new ArrayList<>(songsToExport);
-		if (exportFormat.onlySongsWithChords()) {
-			// TODO remove all songs with no chods line
-			
-		}
 		
 		try {
 			Document document = new Document();
 			PdfWriter writer = PdfWriter.getInstance(document, outputStream);
+			TOC toc = new TOC();
+			writer.setPageEvent(toc);
 			writer.setPageEvent(new PageNumbers());
 			document.setMargins(50, 50, 30, 30);
 			document.open();
 			
-			// output content overview
-			document.add(paragraph("Contents", titleFont));
-			Paragraph contents = paragraph(lyricsFont);
-			contents.add(new Phrase("\n"));
-			for (Song song : songs) {
-				contents.add(new Phrase(song.getTitle() + "\n"));
-			}
-			document.add(contents);
-			document.newPage();
-			
 			for (Song song : songs) {
 				List<SongElement> songElements = SongParser.parse(song, true, true);
+				
+				if (exportFormat.onlySongsWithChords()
+					&& songElements.stream().noneMatch(e -> e.getType() == SongElementEnum.CHORDS)) {
+					continue;
+				}
 				
 				SongElement previousSongElement = null;
 				for (SongElement songElement : songElements) {
 					switch (songElement.getType()) {
 						case TITLE:
-							document.add(paragraph(song.getTitle() + "\n", titleFont));
+							Chunk chunk = new Chunk(song.getTitle() + "\n");
+							chunk.setGenericTag(song.getTitle());
+							Paragraph paragraph = paragraph(titleFont);
+							paragraph.add(chunk);
+							document.add(paragraph);
 							break;
 						case LYRICS:
 							String chordsLine = "";
@@ -161,6 +180,26 @@ public class ExportService {
 				document.newPage();
 			}
 			
+			// output TOC
+			document.add(paragraph("Table of Contents", titleFont));
+			Chunk dottedLine = new Chunk(new DottedLineSeparator());
+			List<SimpleEntry<String, SimpleEntry<String, Integer>>> entries = toc.getTOC();
+			for (SimpleEntry<String, SimpleEntry<String, Integer>> entry : entries) {
+				String songTitle = entry.getKey();
+				String destination = entry.getValue().getKey();
+				Integer pageNumber = entry.getValue().getValue();
+				
+				Paragraph p = paragraph(lyricsFont);
+				Chunk title = new Chunk(songTitle);
+				title.setAction(PdfAction.gotoLocalPage(destination, false));
+				p.add(title);
+				p.add(dottedLine);
+				Chunk number = new Chunk(String.valueOf(pageNumber));
+				number.setAction(PdfAction.gotoLocalPage(destination, false));
+				p.add(number);
+				document.add(p);
+			}
+			
 			document.close();
 		} catch (DocumentException e) {
 			throw new RuntimeException("error while creating PDF document", e);
@@ -181,7 +220,7 @@ public class ExportService {
 				}
 				result.append(matcher.group(2)).append(" ");
 			}
-			return result.toString();
+			return result.toString().replaceAll("\\s$", "");
 		} catch (Exception e) {
 			throw new IllegalStateException("problem while correcting chord spaces - chord line: '" + chords + "' - lyrics: '" + lyrics + "'", e);
 		}
