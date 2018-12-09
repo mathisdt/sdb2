@@ -34,14 +34,14 @@
 		<version.slf4j>1.8.0-beta2</version.slf4j>
 		<version.log4j>2.11.0</version.log4j>
 		<version.args4j>2.33</version.args4j>
-		<version.commons-lang3>3.8</version.commons-lang3>
-		<version.commons-text>1.4</version.commons-text>
+		<version.commons-lang3>3.8.1</version.commons-lang3>
+		<version.commons-text>1.6</version.commons-text>
 		<version.togglz>2.6.1.Final</version.togglz>
 		<version.itext>5.5.13</version.itext>
-		<version.poi>4.0.0</version.poi>
+		<version.poi>4.0.1</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
-		<version.github-api>1.94</version.github-api>
+		<version.github-api>1.95</version.github-api>
 		<version.jackson-databind>2.9.4</version.jackson-databind>
 		<version.lucene>7.4.0</version.lucene>
 		<version.guava>27.0-jre</version.guava>
