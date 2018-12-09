@@ -40,7 +40,6 @@
 		<version.itext>5.5.13</version.itext>
 		<version.poi>4.0.0</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
-		<version.swingx>1.6.5-1</version.swingx>
 		<version.timingframework>7.3.1</version.timingframework>
 		<version.github-api>1.94</version.github-api>
 		<version.jackson-databind>2.9.4</version.jackson-databind>
@@ -50,8 +49,8 @@
 		<version.mockito>2.22.0</version.mockito>
 		<version.javax-activation-api>1.2.0</version.javax-activation-api>
 		<version.javax.activation>1.1.1</version.javax.activation>
-		<version.jaxb-runtime>2.3.0.1</version.jaxb-runtime>
-		<version.jaxb-api>2.3.0</version.jaxb-api>
+		<version.jaxb-runtime>2.4.0-b180830.0438</version.jaxb-runtime>
+		<version.jaxb-api>2.4.0-b180830.0359</version.jaxb-api>
 	</properties>
 
 	<dependencyManagement>
@@ -107,11 +106,6 @@
 			<version>${version.poi}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.swinglabs.swingx</groupId>
-			<artifactId>swingx-core</artifactId>
-			<version>${version.swingx}</version>
-		</dependency>
-		<dependency>
 			<groupId>net.java.timingframework</groupId>
 			<artifactId>timingframework-swing</artifactId>
 			<version>${version.timingframework}</version>
@@ -133,6 +127,12 @@
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>${version.guava}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>failureaccess</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
