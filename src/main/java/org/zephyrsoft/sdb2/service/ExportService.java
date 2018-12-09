@@ -31,6 +31,7 @@ import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
 import org.zephyrsoft.sdb2.model.SongParser;
+import org.zephyrsoft.sdb2.util.StringTools;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.itextpdf.text.Chunk;
@@ -132,6 +133,7 @@ public class ExportService {
 				}
 				
 				SongElement previousSongElement = null;
+				SongElement previousSongElementForNewLines = null;
 				for (SongElement songElement : songElements) {
 					switch (songElement.getType()) {
 						case TITLE:
@@ -161,17 +163,28 @@ public class ExportService {
 							}
 							document.add(copyright);
 							break;
+						case NEW_LINE:
+							// ignored for export when coming alone, but
+							// when there are two NEW_LINE elements in a row, we add a blank line
+							if (previousSongElementForNewLines != null
+								&& previousSongElementForNewLines.getType() == SongElementEnum.NEW_LINE) {
+								document.add(paragraph("\n", lyricsFont));
+							}
+							break;
 						case CHORDS:
 							// handled by following LYRICS element
-							break;
-						case NEW_LINE:
-							// ignored for export
 							break;
 						default:
 							throw new IllegalStateException("unsupported song element type");
 					}
 					
-					// NEW_LINE elements are ignored for export
+					if ((songElement.getType() == SongElementEnum.LYRICS
+						|| songElement.getType() == SongElementEnum.CHORDS
+						|| songElement.getType() == SongElementEnum.TRANSLATION
+						|| songElement.getType() == SongElementEnum.NEW_LINE)
+						&& !StringTools.isEmpty(songElement.getElement())) {
+						previousSongElementForNewLines = songElement;
+					}
 					if (songElement.getType() != SongElementEnum.NEW_LINE) {
 						previousSongElement = songElement;
 					}
