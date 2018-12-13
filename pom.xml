@@ -347,7 +347,7 @@
 							<errTitle>SDB2 - Error</errTitle>
 							<icon>src/main/resources/org/zephyrsoft/sdb2/icon.ico</icon>
 							<jre>
-								<minVersion>10</minVersion>
+								<minVersion>${version.java}</minVersion>
 							</jre>
 							<versionInfo>
 								<fileVersion>1.0.0.0</fileVersion>
