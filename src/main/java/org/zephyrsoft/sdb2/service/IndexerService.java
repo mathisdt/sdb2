@@ -43,7 +43,6 @@ import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.RAMDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.Song;
@@ -91,7 +90,8 @@ public class IndexerService {
 			public void run() {
 				Stopwatch stopwatch = Stopwatch.createStarted();
 				
-				Directory directory = new RAMDirectory();
+				@SuppressWarnings("deprecation")
+				Directory directory = new org.apache.lucene.store.RAMDirectory();
 				try {
 					Analyzer analyzer = CustomAnalyzer.builder()
 						.withTokenizer(StandardTokenizerFactory.class)
