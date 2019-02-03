@@ -28,10 +28,20 @@ The Song Database is a program to show lyrics on a digital projector for worship
 - the database format is not binary, but XML (essentially a text file) - you can easily modify it by hand,
   synchronize it using any cloud service or even put it into a Git repository (producing nice diffs)
 - the days on which a song is presented are counted automatically (in a separate statistics file)
+  so you have the data ready when the collecting society wants to know which songs you used
 - the song texts are displayed continually, not on individual slides, so everyone sees how the song continues
   after the current part
-  - animation when displaying another part of a song
+  - there's an animation when displaying another part of a song
+
+## Getting started
+
+- if you don't have it yet: download and install [Java 11 or later](https://github.com/ojdkbuild/ojdkbuild#readme)
+  (use the MSI download if your platform is Windows)
+- download a [SDB2 release](https://github.com/mathisdt/sdb2/releases) and unpack it
+- use the starter contained in the "bin" subdirectory which corresponds to your system
+
+## Contributing
 
 The program has evolved through more than 10 years at my church. If you find a bug or want a new feature,
-you are welcome to fix things yourself - or file an issue in the [GitHub project](https://github.com/mathisdt/sdb2/)
-(or at least drop me a line)!
+you are welcome to [file an issue](https://github.com/mathisdt/sdb2/issues)
+or even fix things yourself and create a pull request!
