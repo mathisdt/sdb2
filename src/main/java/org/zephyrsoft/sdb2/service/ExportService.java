@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.ExportFormat;
@@ -142,6 +143,14 @@ public class ExportService {
 							Paragraph paragraph = paragraph(titleFont);
 							paragraph.add(chunk);
 							document.add(paragraph);
+							
+							// insert chord sequence directly after title
+							if (exportFormat.areChordsShown() && StringUtils.isNotBlank(song.getChordSequence())) {
+								Paragraph chordSequence = paragraph(song.getChordSequence() + "\n", lyricsFont);
+								chordSequence.setIndentationLeft(30);
+								document.add(chordSequence);
+							}
+							
 							break;
 						case LYRICS:
 							String chordsLine = "";
