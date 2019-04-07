@@ -145,8 +145,8 @@ public class ExportService {
 							document.add(paragraph);
 							
 							// insert chord sequence directly after title
-							if (exportFormat.areChordsShown() && StringUtils.isNotBlank(song.getChordSequence())) {
-								Paragraph chordSequence = paragraph(song.getChordSequence() + "\n", lyricsFont);
+							if (exportFormat.areChordsShown() && StringUtils.isNotBlank(getCleanChordSequence(song))) {
+								Paragraph chordSequence = paragraph(getCleanChordSequence(song) + "\n\n", lyricsFont);
 								chordSequence.setIndentationLeft(30);
 								document.add(chordSequence);
 							}
@@ -228,6 +228,12 @@ public class ExportService {
 		}
 		
 		return outputStream;
+	}
+	
+	private String getCleanChordSequence(Song song) {
+		return song.getChordSequence() == null
+			? null
+			: song.getChordSequence().replaceAll("^\\p{Space}+", "").replaceAll("\\p{Space}+$", "");
 	}
 	
 	@VisibleForTesting
