@@ -1,16 +1,16 @@
 /*
  * This file is part of the Song Database (SDB).
- * 
+ *
  * SDB is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -78,7 +78,7 @@ import com.google.common.collect.Ordering;
 
 /**
  * Controller for {@link MainWindow}.
- * 
+ *
  * @author Mathis Dirksen-Thedens
  */
 public class MainController implements Scroller {
@@ -327,7 +327,7 @@ public class MainController implements Scroller {
 		
 		putDefaultIfKeyIsUnset(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.TITLE_AND_LYRICS);
 		putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.ONLY_LYRICS);
-		putDefaultIfKeyIsUnset(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.LYRICS_AND_CHORDS);
+		putDefaultIfKeyIsUnset(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.LYRICS_AND_CHORDS_AND_CHORD_SEQUENCE);
 		List<SelectableScreen> availableScreens = ScreenHelper.getScreens();
 		if (availableScreens.size() > 1) {
 			putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_DISPLAY, Integer.valueOf(availableScreens.get(1).getIndex()));
@@ -476,7 +476,7 @@ public class MainController implements Scroller {
 	
 	/**
 	 * Use a nice LaF.
-	 * 
+	 *
 	 * @return {@code true} if the LaF could be applied, {@code false} otherwise
 	 */
 	public boolean setupLookAndFeel() {

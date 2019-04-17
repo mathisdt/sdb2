@@ -44,7 +44,7 @@ import org.zephyrsoft.sdb2.util.gui.ImagePanel;
 
 /**
  * The presentation display for the lyrics.
- * 
+ *
  * @author Mathis Dirksen-Thedens
  */
 public class PresenterWindow extends JFrame implements Presenter {
@@ -106,7 +106,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 		if (presentable.getSong() != null) {
 			// determine WHAT to present and HOW to present it
 			boolean showTitle = settings.get(SettingKey.SHOW_TITLE, Boolean.class).booleanValue();
-			boolean showChords = (contents == ScreenContentsEnum.LYRICS_AND_CHORDS);
+			boolean showChords = contents.shouldShowChords();
 			Font titleFont = settings.get(SettingKey.TITLE_FONT, Font.class);
 			Font lyricsFont = settings.get(SettingKey.LYRICS_FONT, Font.class);
 			Font translationFont = settings.get(SettingKey.TRANSLATION_FONT, Font.class);
@@ -116,7 +116,8 @@ public class PresenterWindow extends JFrame implements Presenter {
 			Color foregroundColor = settings.get(SettingKey.TEXT_COLOR, Color.class);
 			
 			// create a SongView to render the song
-			songView = new SongView.Builder(presentable.getSong()).showTitle(showTitle).showChords(showChords)
+			songView = new SongView.Builder(presentable.getSong())
+				.showTitle(showTitle).showChords(showChords)
 				.titleFont(titleFont).lyricsFont(lyricsFont).translationFont(translationFont)
 				.copyrightFont(copyrightFont).topMargin(topMargin).leftMargin(leftMargin).rightMargin(rightMargin)
 				.bottomMargin(bottomMargin).titleLyricsDistance(titleLyricsDistance)
@@ -124,6 +125,11 @@ public class PresenterWindow extends JFrame implements Presenter {
 				.backgroundColor(backgroundColor).build();
 			songView.setOpaque(true);
 			contentPane.add(songView, BorderLayout.CENTER);
+			
+			if (contents.shouldShowChordSequence()) {
+				contentPane.add(new ChordSequenceView(presentable.getSong(), lyricsFont, foregroundColor, backgroundColor), BorderLayout.SOUTH);
+			}
+			
 		} else if (presentable.getImage() != null) {
 			// display the image (fullscreen, but with margin)
 			Image image = presentable.getImage();

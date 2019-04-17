@@ -20,20 +20,41 @@ import org.apache.commons.text.WordUtils;
 
 /**
  * Types of presentation screen contents.
- * 
+ *
  * @author Mathis Dirksen-Thedens
  */
 public enum ScreenContentsEnum {
-	ONLY_LYRICS("only lyrics"), LYRICS_AND_CHORDS("lyrics and chords");
+	ONLY_LYRICS("only lyrics", true, false, false),
+	LYRICS_AND_CHORDS("lyrics and chords", true, true, false),
+	LYRICS_AND_CHORD_SEQUENCE("lyrics and chord sequence", true, false, true),
+	LYRICS_AND_CHORDS_AND_CHORD_SEQUENCE("lyrics, chords and chord sequence", true, true, true);
 	
 	private final String description;
+	private final boolean showLyrics;
+	private final boolean showChords;
+	private final boolean showChordSequence;
 	
-	private ScreenContentsEnum(String description) {
+	private ScreenContentsEnum(String description, boolean showLyrics, boolean showChords, boolean showChordSequence) {
 		this.description = description;
+		this.showLyrics = showLyrics;
+		this.showChords = showChords;
+		this.showChordSequence = showChordSequence;
 	}
 	
 	public String getDescription() {
 		return description;
+	}
+	
+	public boolean shouldShowLyrics() {
+		return showLyrics;
+	}
+	
+	public boolean shouldShowChords() {
+		return showChords;
+	}
+	
+	public boolean shouldShowChordSequence() {
+		return showChordSequence;
 	}
 	
 	public String getInternalName() {
