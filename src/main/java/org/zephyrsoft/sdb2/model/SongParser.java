@@ -27,7 +27,7 @@ import com.google.common.base.Preconditions;
 
 /**
  * Parses a {@link Song} and thus prepares it for being shown in the editor or as presentation.
- * 
+ *
  * @author Mathis Dirksen-Thedens
  */
 public class SongParser {
@@ -47,7 +47,7 @@ public class SongParser {
 	/**
 	 * Breaks down a {@link Song} into its elements. See {@link SongElementEnum} for more information about the line
 	 * break policy used in the returned list!
-	 * 
+	 *
 	 * @param song
 	 *            the song to parse
 	 * @param includeTitle
@@ -56,7 +56,7 @@ public class SongParser {
 	 *            should all the chord lines be included?
 	 * @return a list containing the elements, marked up using {@link SongElementEnum}s
 	 */
-	public static List<SongElement> parse(Song song, boolean includeTitle, boolean includeChords) {
+	public static List<SongElement> parse(Song song, boolean includeTranslation, boolean includeTitle, boolean includeChords) {
 		Preconditions.checkArgument(song != null, "song may not be null");
 		
 		List<SongElement> ret = new ArrayList<>();
@@ -72,18 +72,20 @@ public class SongParser {
 			for (String line : song.getLyrics().split(NEWLINE_REGEX)) {
 				Matcher translationMatcher = TRANSLATION_PATTERN.matcher(line);
 				if (translationMatcher.matches()) {
-					isFirst = addNewlineIfNotFirstLine(ret, isFirst);
-					String prefix = translationMatcher.group(1);
-					String translation = translationMatcher.group(2);
-					String suffix = translationMatcher.group(3);
-					if (!StringTools.isEmpty(prefix)) {
-						ret.add(new SongElement(SongElementEnum.LYRICS, prefix));
-					}
-					if (!StringTools.isEmpty(translation)) {
-						ret.add(new SongElement(SongElementEnum.TRANSLATION, translation));
-					}
-					if (!StringTools.isEmpty(suffix)) {
-						ret.add(new SongElement(SongElementEnum.LYRICS, suffix));
+					if (includeTranslation) {
+						isFirst = addNewlineIfNotFirstLine(ret, isFirst);
+						String prefix = translationMatcher.group(1);
+						String translation = translationMatcher.group(2);
+						String suffix = translationMatcher.group(3);
+						if (!StringTools.isEmpty(prefix)) {
+							ret.add(new SongElement(SongElementEnum.LYRICS, prefix));
+						}
+						if (!StringTools.isEmpty(translation)) {
+							ret.add(new SongElement(SongElementEnum.TRANSLATION, translation));
+						}
+						if (!StringTools.isEmpty(suffix)) {
+							ret.add(new SongElement(SongElementEnum.LYRICS, suffix));
+						}
 					}
 				} else if (isChordsLine(line)) {
 					if (includeChords) {
@@ -154,7 +156,7 @@ public class SongParser {
 	
 	/**
 	 * Calculates the percentage of spaces in the given string.
-	 * 
+	 *
 	 * @return a value between 0.0 and 1.0
 	 */
 	private static double percentOfSpaces(String toParse) {

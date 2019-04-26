@@ -126,7 +126,7 @@ public class ExportService {
 			document.open();
 			
 			for (Song song : songs) {
-				List<SongElement> songElements = SongParser.parse(song, true, true);
+				List<SongElement> songElements = SongParser.parse(song, true, true, true);
 				
 				if (exportFormat.onlySongsWithChords()
 					&& songElements.stream().noneMatch(e -> e.getType() == SongElementEnum.CHORDS)) {

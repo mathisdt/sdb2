@@ -22,6 +22,7 @@ import java.awt.Font;
 
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
+import javax.swing.border.MatteBorder;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
@@ -31,6 +32,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 
+import org.springframework.util.StringUtils;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
@@ -70,6 +72,10 @@ public class ChordSequenceView extends JPanel {
 		text.setRequestFocusEnabled(false);
 		text.setEditable(false);
 		text.setEnabled(false);
+		
+		if (StringUtils.hasText(song.getChordSequence())) {
+			setBorder(new MatteBorder(1, 0, 0, 0, foregroundColor));
+		}
 		
 		setLayout(new BorderLayout());
 		add(text, BorderLayout.CENTER);

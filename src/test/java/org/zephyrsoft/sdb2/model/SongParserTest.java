@@ -17,7 +17,9 @@
 package org.zephyrsoft.sdb2.model;
 
 import static org.mockito.Mockito.when;
+
 import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +28,7 @@ import org.mockito.MockitoAnnotations;
 
 /**
  * Tests the behaviour of {@link SongParser}.
- * 
+ *
  * @author Mathis Dirksen-Thedens
  */
 public class SongParserTest {
@@ -80,7 +82,7 @@ public class SongParserTest {
 	
 	@Test
 	public void testParsing() {
-		List<SongElement> result = SongParser.parse(song, true, true);
+		List<SongElement> result = SongParser.parse(song, true, true, true);
 		Assert.assertTrue(result.size() == 19);
 		
 		Assert.assertEquals(new SongElement(SongElementEnum.TITLE, TITLE), result.get(0));

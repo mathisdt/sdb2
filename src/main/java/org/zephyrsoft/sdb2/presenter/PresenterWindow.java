@@ -106,6 +106,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 		if (presentable.getSong() != null) {
 			// determine WHAT to present and HOW to present it
 			boolean showTitle = settings.get(SettingKey.SHOW_TITLE, Boolean.class).booleanValue();
+			boolean showTranslation = contents.shouldShowTranslation();
 			boolean showChords = contents.shouldShowChords();
 			Font titleFont = settings.get(SettingKey.TITLE_FONT, Font.class);
 			Font lyricsFont = settings.get(SettingKey.LYRICS_FONT, Font.class);
@@ -117,7 +118,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 			
 			// create a SongView to render the song
 			songView = new SongView.Builder(presentable.getSong())
-				.showTitle(showTitle).showChords(showChords)
+				.showTitle(showTitle).showTranslation(showTranslation).showChords(showChords)
 				.titleFont(titleFont).lyricsFont(lyricsFont).translationFont(translationFont)
 				.copyrightFont(copyrightFont).topMargin(topMargin).leftMargin(leftMargin).rightMargin(rightMargin)
 				.bottomMargin(bottomMargin).titleLyricsDistance(titleLyricsDistance)
