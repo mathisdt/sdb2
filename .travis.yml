@@ -2,8 +2,10 @@ sudo: required
 
 language: java
 
+dist: xenial
+
 jdk:
-- openjdk12
+- openjdk11
 
 branches:
   only:
