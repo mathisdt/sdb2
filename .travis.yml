@@ -19,6 +19,7 @@ install: true
 
 before_script:
 - export TZ=Europe/Berlin
+- export DISPLAY=:99.0
 
 script: mvn clean verify
 
