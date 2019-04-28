@@ -21,8 +21,6 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -32,9 +30,9 @@ import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
 import org.zephyrsoft.sdb2.model.SongParser;
+import org.zephyrsoft.sdb2.util.ChordSpaceCorrector;
 import org.zephyrsoft.sdb2.util.StringTools;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
@@ -93,12 +91,11 @@ public class ExportService {
 		}
 	}
 	
-	private static final Pattern CHORD_PATTERN = Pattern.compile("(\\s*+)\\b(\\S+)\\b");
-	
 	private Font titleFont;
 	private Font lyricsFont;
 	private Font translationFont;
 	private Font copyrightFont;
+	private ChordSpaceCorrector chordSpaceCorrector;
 	
 	public ExportService() {
 		BaseFont baseFont = null;
@@ -111,6 +108,8 @@ public class ExportService {
 		lyricsFont = new Font(baseFont, 12);
 		translationFont = new Font(baseFont, 8, Font.ITALIC);
 		copyrightFont = new Font(baseFont, 10);
+		chordSpaceCorrector = new ChordSpaceCorrector(
+			text -> (int) lyricsFont.getBaseFont().getWidthPointKerned(text, lyricsFont.getSize()));
 	}
 	
 	public ByteArrayOutputStream export(ExportFormat exportFormat, Collection<Song> songs) {
@@ -156,7 +155,8 @@ public class ExportService {
 							String chordsLine = "";
 							if (previousSongElement != null && previousSongElement.getType() == SongElementEnum.CHORDS
 								&& exportFormat.areChordsShown()) {
-								chordsLine = correctChordSpaces(previousSongElement.getElement(), songElement.getElement()) + "\n";
+								chordsLine = chordSpaceCorrector.correctChordSpaces(previousSongElement.getElement(), songElement.getElement())
+									+ "\n";
 							}
 							document.add(paragraph(chordsLine + songElement.getElement(), lyricsFont));
 							break;
@@ -234,28 +234,6 @@ public class ExportService {
 		return song.getChordSequence() == null
 			? null
 			: song.getChordSequence().replaceAll("^\\p{Space}+", "").replaceAll("\\p{Space}+$", "");
-	}
-	
-	@VisibleForTesting
-	String correctChordSpaces(String chords, String lyrics) {
-		try {
-			StringBuilder result = new StringBuilder();
-			Matcher matcher = CHORD_PATTERN.matcher(chords);
-			while (matcher.find()) {
-				String lyricsPart = lyrics.substring(0, matcher.end(1) > lyrics.length() ? lyrics.length() : matcher.end(1));
-				while (renderedLength(lyricsPart) > renderedLength(result.toString() + " ")) {
-					result.append(" ");
-				}
-				result.append(matcher.group(2)).append(" ");
-			}
-			return result.toString().replaceAll("\\s$", "");
-		} catch (Exception e) {
-			throw new IllegalStateException("problem while correcting chord spaces - chord line: '" + chords + "' - lyrics: '" + lyrics + "'", e);
-		}
-	}
-	
-	private float renderedLength(String text) {
-		return lyricsFont.getBaseFont().getWidthPointKerned(text, lyricsFont.getSize());
 	}
 	
 	private Paragraph paragraph(String text, Font font) {

@@ -16,15 +16,24 @@
  */
 package org.zephyrsoft.sdb2.presenter;
 
+import static org.zephyrsoft.sdb2.model.SongElementEnum.CHORDS;
+import static org.zephyrsoft.sdb2.model.SongElementEnum.COPYRIGHT;
+import static org.zephyrsoft.sdb2.model.SongElementEnum.LYRICS;
+import static org.zephyrsoft.sdb2.model.SongElementEnum.NEW_LINE;
+import static org.zephyrsoft.sdb2.model.SongElementEnum.TITLE;
+import static org.zephyrsoft.sdb2.model.SongElementEnum.TRANSLATION;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.Area;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -51,6 +60,7 @@ import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
 import org.zephyrsoft.sdb2.model.SongParser;
+import org.zephyrsoft.sdb2.util.ChordSpaceCorrector;
 import org.zephyrsoft.sdb2.util.StringTools;
 
 import com.google.common.base.Preconditions;
@@ -62,16 +72,16 @@ import com.google.common.base.Preconditions;
  * @author Mathis Dirksen-Thedens
  */
 public class SongView extends JPanel implements Scroller {
-
+	
 	private static final long serialVersionUID = 4746652382939122421L;
-
+	
 	private static final Style DEFAULT_STYLE = StyleContext.getDefaultStyleContext().getStyle(
 		StyleContext.DEFAULT_STYLE);
 	private static final String TITLE_LYRICS_DISTANCE = "TITLE_LYRICS_DISTANCE";
 	private static final String LYRICS_COPYRIGHT_DISTANCE = "LYRICS_COPYRIGHT_DISTANCE";
 	private static final String LYRICS_FINAL_NEWLINE = "\n";
 	private static final String LYRICS_COPYRIGHT_DISTANCE_TEXT = " \n";
-
+	
 	private Song song;
 	private boolean showTitle;
 	private boolean showTranslation;
@@ -88,15 +98,15 @@ public class SongView extends JPanel implements Scroller {
 	private int lyricsCopyrightDistance;
 	private Color foregroundColor;
 	private Color backgroundColor;
-
+	
 	private JTextPane text;
 	private List<AddressablePart> parts;
-
+	
 	private StyledDocument document;
-
+	
 	protected Animator animator;
 	protected Point animatorTarget;
-
+	
 	/**
 	 * Private constructor: only the builder may call it.
 	 */
@@ -117,43 +127,43 @@ public class SongView extends JPanel implements Scroller {
 		lyricsCopyrightDistance = builder.lyricsCopyrightDistance;
 		foregroundColor = builder.foregroundColor;
 		backgroundColor = builder.backgroundColor;
-
+		
 		text = new JTextPane();
 		((DefaultCaret) text.getCaret()).setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
 		text.setRequestFocusEnabled(false);
 		text.setEditable(false);
 		text.setEnabled(false);
-
+		
 		setLayout(new BorderLayout());
 		add(text, BorderLayout.CENTER);
 		setBackground(backgroundColor);
 		setOpaque(true);
 		text.setForeground(foregroundColor);
 		text.setDisabledTextColor(foregroundColor);
-
+		
 		text.setBorder(BorderFactory.createEmptyBorder(topMargin, leftMargin, 0, rightMargin));
-
+		
 		render();
-
+		
 		// workaround for Nimbus L&F:
 		text.setOpaque(false);
 		text.setBackground(new Color(0, 0, 0, 0));
 	}
-
+	
 	@Override
 	public void paint(Graphics g) {
 		super.paint(g);
 		Graphics2D g2d = (Graphics2D) g;
 		int topBorderHeight = topMargin;
 		int bottomBorderHeight = bottomMargin;
-
+		
 		// gradient upper border as overlay
 		Area areaUpper = new Area(new Rectangle2D.Double(0, 0, getWidth(), topBorderHeight));
 		g2d.setPaint(new GradientPaint(0, 0, new Color(backgroundColor.getRed(), backgroundColor.getGreen(),
 			backgroundColor.getBlue(), 255), 0, topBorderHeight, new Color(backgroundColor.getRed(), backgroundColor
 				.getGreen(), backgroundColor.getBlue(), 0), false));
 		g2d.fill(areaUpper);
-
+		
 		// gradient lower border as overlay
 		Area areaLower = new Area(new Rectangle2D.Double(0, getHeight() - bottomBorderHeight, getWidth(), getHeight()));
 		g2d.setPaint(new GradientPaint(0, getHeight() - bottomBorderHeight, new Color(backgroundColor.getRed(),
@@ -161,92 +171,98 @@ public class SongView extends JPanel implements Scroller {
 				.getRed(), backgroundColor.getGreen(), backgroundColor.getBlue(), 255), false));
 		g2d.fill(areaLower);
 	}
-
+	
 	/**
 	 * Display the song inside the JTextPane using the constraints indicated by the fields, e.g. "showTitle", and create
 	 * a list of addressable parts (paragraphs) and lines for the {@link Scroller} methods.
 	 */
 	private void render() {
-		// TODO chord lines: correct spacing (in specific font) to correspond to the words below the chords (see ExportService)
-
 		List<SongElement> toDisplay = SongParser.parse(song, showTranslation, showTitle, showChords);
-		if (toDisplay.size() > 0 && toDisplay.get(toDisplay.size() - 1).getType() != SongElementEnum.COPYRIGHT) {
+		if (toDisplay.size() > 0 && is(toDisplay.get(toDisplay.size() - 1), COPYRIGHT)) {
 			// add final newline to fetch the last line of the last part always
-			toDisplay.add(new SongElement(SongElementEnum.NEW_LINE, LYRICS_FINAL_NEWLINE));
+			toDisplay.add(new SongElement(NEW_LINE, LYRICS_FINAL_NEWLINE));
 		}
-
+		
+		// chord lines: correct spacing (in lyrics font) to make the chords correspond to the words
+		FontMetrics fm = createFontMetricsForLyrics();
+		ChordSpaceCorrector chordSpaceCorrector = new ChordSpaceCorrector(str -> fm.stringWidth(str));
+		SongElement previousChordsElement = null;
+		for (SongElement songElement : toDisplay) {
+			switch (songElement.getType()) {
+				case LYRICS:
+					if (previousChordsElement == null) {
+						continue;
+					}
+					previousChordsElement.setElement(
+						chordSpaceCorrector.correctChordSpaces(previousChordsElement.getElement(), songElement.getElement()));
+					previousChordsElement = null;
+					break;
+				case CHORDS:
+					previousChordsElement = songElement;
+					break;
+			}
+		}
+		
 		parts = new ArrayList<>();
 		AddressablePart currentPart = new AddressablePart();
 		Integer position = null;
-		String currentLineText = null;
-
+		
 		document = text.getStyledDocument();
 		addStyles();
-
+		
 		// handle the elements of the song
 		SongElement prevPrevElement = null;
 		SongElement prevElement = null;
 		for (SongElement element : toDisplay) {
 			handleCopyrightLine(prevElement, element);
-
+			
 			handleTitlePosition(element);
-
-			if ((element.getType() == SongElementEnum.NEW_LINE || element.getType() == SongElementEnum.COPYRIGHT)
-				&& prevElement != null
-				// && isContentElement(prevElement)
-				&& !StringTools.isBlank(prevElement.getElement())
-				// && ((prevPrevElement != null && (prevPrevElement.getType() == SongElementEnum.NEW_LINE
-				// || prevPrevElement.getType() == SongElementEnum.TITLE)) || prevPrevElement == null)
+			
+			if ((is(element, NEW_LINE) || is(element, COPYRIGHT))
+				&& !isEmpty(prevElement)
+				&& !is(prevElement, SongElementEnum.TRANSLATION)
 				&& position == null) {
 				position = createPosition(prevElement);
 			}
-
+			
 			if (isBodyElement(element)) {
-				if (((element.getType() == SongElementEnum.NEW_LINE && prevElement != null && prevElement.getType() == SongElementEnum.NEW_LINE)
-					|| (element.getType() == SongElementEnum.NEW_LINE
-						&& prevElement != null
-						&& StringTools.isBlank(prevElement.getElement()) && ((prevPrevElement != null && prevPrevElement
-							.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null)))
+				if ((bothAreNewlines(prevElement, element)
+					|| (is(element, NEW_LINE)
+						&& isEmpty(prevElement)
+						&& (prevPrevElement == null || is(prevPrevElement, NEW_LINE))))
 					&& currentPart.size() > 0) {
 					// [ two consecutive newlines OR two newlines, only separated by a blank line ] AND current part is
 					// populated with at least one line => save current part and begin a new one
 					parts.add(currentPart);
 					currentPart = new AddressablePart();
-				} else if (element.getType() == SongElementEnum.NEW_LINE
-					&& prevElement != null
-					&& prevElement.getType() == SongElementEnum.LYRICS
-					&& !StringTools.isBlank(prevElement.getElement())
-					&& ((prevPrevElement != null && (prevPrevElement.getType() == SongElementEnum.NEW_LINE || prevPrevElement
-						.getType() == SongElementEnum.TITLE)) || prevPrevElement == null)) {
-					// two newlines OR a title element and a newline, separated by a non-blank lyrics line =>
+				} else if (is(element, NEW_LINE)
+					&& is(prevElement, LYRICS)
+					&& !isEmpty(prevElement)
+					&& (prevPrevElement == null || (is(prevPrevElement, NEW_LINE) || is(prevPrevElement, TITLE)))) {
 					// save current line and begin a new one
-					currentLineText = prevElement.getElement();
-					AddressableLine currentLine = new AddressableLine(currentLineText, position);
+					AddressableLine currentLine = new AddressableLine(prevElement, position);
 					currentPart.add(currentLine);
 					position = null;
 				}
-			} else if (element.getType() == SongElementEnum.COPYRIGHT
-				&& prevElement != null
+			} else if (is(element, COPYRIGHT)
 				&& isContentElement(prevElement)
-				&& !StringTools.isBlank(prevElement.getElement())
-				&& ((prevPrevElement != null && prevPrevElement.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null)) {
-				// a newline and a copyright element, separated by a non-blank lyrics line =>
+				&& !isEmpty(prevElement)
+				&& !is(prevElement, SongElementEnum.TRANSLATION)
+				&& (prevPrevElement == null || is(prevPrevElement, NEW_LINE))) {
 				// save current line and begin a new one
-				currentLineText = prevElement.getElement();
-				AddressableLine currentLine = new AddressableLine(currentLineText, position);
+				AddressableLine currentLine = new AddressableLine(prevElement, position);
 				currentPart.add(currentLine);
 				position = null;
 			}
-
-			String type = element.getType().name();
-			if ((element.getType() == SongElementEnum.NEW_LINE && prevElement != null && prevElement.getType() == SongElementEnum.NEW_LINE)
-				|| (element.getType() == SongElementEnum.NEW_LINE && prevElement != null
-					&& StringTools.isBlank(prevElement.getElement()) && ((prevPrevElement != null && prevPrevElement
-						.getType() == SongElementEnum.NEW_LINE) || prevPrevElement == null))) {
-				type = SongElementEnum.LYRICS.name();
+			
+			if (bothAreNewlines(prevElement, element)
+				|| (is(element, NEW_LINE) && prevElement != null && isEmpty(prevElement)
+					&& (prevPrevElement == null || is(prevPrevElement, NEW_LINE)))) {
+				appendText(element.getElement(), LYRICS);
+			} else {
+				appendText(element.getElement(), element.getType());
 			}
-			appendText(element.getElement(), type);
-
+			
 			handleTitleLine(element);
 			// keep history
 			prevPrevElement = prevElement;
@@ -256,18 +272,27 @@ public class SongView extends JPanel implements Scroller {
 			// current part is populated with at least one line => save current part
 			parts.add(currentPart);
 		}
-
 	}
-
+	
+	private boolean bothAreNewlines(SongElement prevElement, SongElement element) {
+		return is(element, NEW_LINE) && is(prevElement, NEW_LINE);
+	}
+	
+	private FontMetrics createFontMetricsForLyrics() {
+		BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = img.createGraphics();
+		return g.getFontMetrics(lyricsFont);
+	}
+	
 	private void handleTitlePosition(SongElement element) {
-		if (element.getType() == SongElementEnum.TITLE) {
+		if (is(element, TITLE)) {
 			Integer position = createPosition();
 			AddressablePart titlePart = new AddressablePart();
-			titlePart.add(new AddressableLine(element.getElement(), position));
+			titlePart.add(new AddressableLine(element, position));
 			parts.add(titlePart);
 		}
 	}
-
+	
 	private Integer createPosition(SongElement... toSubtract) {
 		int toSubtractInt = 0;
 		for (SongElement element : toSubtract) {
@@ -275,67 +300,72 @@ public class SongView extends JPanel implements Scroller {
 		}
 		return document.getLength() - toSubtractInt + 1;
 	}
-
+	
 	private void addStyles() {
-		addStyleFromFont(SongElementEnum.TITLE.name(), titleFont);
+		addStyleFromFont(TITLE.name(), titleFont);
 		addStyle(TITLE_LYRICS_DISTANCE, false, false, lyricsFont.getFamily(), titleLyricsDistance);
-		addStyleFromFont(SongElementEnum.CHORDS.name(), lyricsFont);
-		addStyleFromFont(SongElementEnum.LYRICS.name(), lyricsFont);
-		addStyleFromFont(SongElementEnum.TRANSLATION.name(), translationFont);
+		addStyleFromFont(CHORDS.name(), lyricsFont);
+		addStyleFromFont(LYRICS.name(), lyricsFont);
+		addStyleFromFont(TRANSLATION.name(), translationFont);
 		addStyle(LYRICS_COPYRIGHT_DISTANCE, false, false, lyricsFont.getFamily(), lyricsCopyrightDistance);
-		addStyleFromFont(SongElementEnum.COPYRIGHT.name(), copyrightFont);
+		addStyleFromFont(COPYRIGHT.name(), copyrightFont);
 	}
-
+	
 	private void handleTitleLine(SongElement element) {
-		if (isTitleLine(element)) {
+		if (is(element, TITLE)) {
 			// append space
-			appendText(LYRICS_FINAL_NEWLINE, SongElementEnum.NEW_LINE.name());
+			appendText(LYRICS_FINAL_NEWLINE, NEW_LINE);
 			appendText(LYRICS_COPYRIGHT_DISTANCE_TEXT, TITLE_LYRICS_DISTANCE);
 		}
 	}
-
-	private static boolean isTitleLine(SongElement element) {
-		return element.getType() == SongElementEnum.TITLE;
+	
+	private static boolean isEmpty(SongElement element) {
+		return element == null || StringTools.isBlank(element.getElement());
 	}
-
+	
+	private static boolean is(SongElement element, SongElementEnum type) {
+		return element != null && element.getType() == type;
+	}
+	
+	/** chords, lyrics, translation or newline */
 	private static boolean isBodyElement(SongElement element) {
-		return element.getType() == SongElementEnum.CHORDS || element.getType() == SongElementEnum.LYRICS
-			|| element.getType() == SongElementEnum.TRANSLATION || element.getType() == SongElementEnum.NEW_LINE;
+		return is(element, CHORDS) || is(element, LYRICS) || is(element, TRANSLATION) || is(element, NEW_LINE);
 	}
-
-	/** body elements without newlines */
+	
+	/** chords, lyrics or translation */
 	private static boolean isContentElement(SongElement element) {
-		return element.getType() == SongElementEnum.CHORDS || element.getType() == SongElementEnum.LYRICS
-			|| element.getType() == SongElementEnum.TRANSLATION;
+		return is(element, CHORDS) || is(element, LYRICS) || is(element, TRANSLATION);
 	}
-
+	
 	private void handleCopyrightLine(SongElement previousElement, SongElement element) {
 		if (isFirstCopyrightLine(previousElement, element)) {
 			// prepend space
-			appendText(LYRICS_FINAL_NEWLINE, SongElementEnum.NEW_LINE.name());
+			appendText(LYRICS_FINAL_NEWLINE, NEW_LINE);
 			appendText(LYRICS_COPYRIGHT_DISTANCE_TEXT, LYRICS_COPYRIGHT_DISTANCE);
 		} else if (isCopyrightLineButNotFirstOne(previousElement, element)) {
 			// prepend newline
-			appendText(LYRICS_FINAL_NEWLINE, SongElementEnum.NEW_LINE.name());
+			appendText(LYRICS_FINAL_NEWLINE, NEW_LINE);
 		}
 	}
-
+	
 	private static boolean isCopyrightLineButNotFirstOne(SongElement previousElement, SongElement element) {
-		return previousElement != null && previousElement.getType() == SongElementEnum.COPYRIGHT
-			&& element.getType() == SongElementEnum.COPYRIGHT;
+		return is(previousElement, COPYRIGHT) && is(element, COPYRIGHT);
 	}
-
+	
 	private static boolean isFirstCopyrightLine(SongElement previousElement, SongElement element) {
-		return previousElement != null && previousElement.getType() != SongElementEnum.COPYRIGHT
-			&& element.getType() == SongElementEnum.COPYRIGHT;
+		return !is(previousElement, COPYRIGHT) && is(element, COPYRIGHT);
 	}
-
+	
+	private void appendText(String string, SongElementEnum type) {
+		appendText(string, type.name());
+	}
+	
 	private void appendText(String string, String type) {
 		try {
 			int offset = document.getLength();
 			// add style only if type is anything apart from NEW_LINE
 			AttributeSet style = SimpleAttributeSet.EMPTY;
-			if (type != null && type != SongElementEnum.NEW_LINE.name()) {
+			if (type != null && type != NEW_LINE.name()) {
 				style = document.getStyle(type);
 			}
 			document.insertString(offset, string, style);
@@ -343,11 +373,11 @@ public class SongView extends JPanel implements Scroller {
 			throw new IllegalStateException("could not insert text into document", e);
 		}
 	}
-
+	
 	private Style addStyleFromFont(String styleName, Font font) {
 		return addStyle(styleName, font.isItalic(), font.isBold(), font.getFamily(), font.getSize());
 	}
-
+	
 	private Style addStyle(String styleName, boolean italic, boolean bold, String fontFamily, int fontSize) {
 		Style style = document.addStyle(styleName, DEFAULT_STYLE);
 		StyleConstants.setItalic(style, italic);
@@ -356,13 +386,13 @@ public class SongView extends JPanel implements Scroller {
 		StyleConstants.setFontSize(style, fontSize);
 		return style;
 	}
-
+	
 	@Override
 	public List<AddressablePart> getParts() {
 		Preconditions.checkArgument(parts != null, "the song parts are not initialized");
 		return parts;
 	}
-
+	
 	@Override
 	public void moveToPart(Integer part) {
 		Preconditions.checkArgument(parts != null, "the song parts are not initialized");
@@ -376,7 +406,7 @@ public class SongView extends JPanel implements Scroller {
 			throw new IllegalStateException("could not identify position in text", e);
 		}
 	}
-
+	
 	@Override
 	public void moveToLine(Integer part, Integer line) {
 		Preconditions.checkArgument(parts != null, "the song parts are not initialized");
@@ -392,7 +422,7 @@ public class SongView extends JPanel implements Scroller {
 			throw new IllegalStateException("could not identify position in text", e);
 		}
 	}
-
+	
 	private void animatedMoveTo(Point targetLocation) {
 		if (animator != null && animator.isRunning() && animatorTarget != null && animatorTarget.equals(targetLocation)) {
 			// animator is already moving the song text to the requested location
@@ -411,18 +441,18 @@ public class SongView extends JPanel implements Scroller {
 		animator.addTarget(target);
 		animator.start();
 	}
-
+	
 	private Animator createAnimator() {
 		return new Animator.Builder().setDuration(1200, TimeUnit.MILLISECONDS).build();
 	}
-
+	
 	private void adjustHeightIfNecessary() {
 		// adjust height to meet at least the required value so that all text is visible
 		if (text.getSize().height < text.getPreferredSize().height) {
 			text.setSize(text.getSize().width, text.getPreferredSize().height);
 		}
 	}
-
+	
 	public static class Builder {
 		private Song song;
 		private Boolean showTitle;
@@ -440,86 +470,86 @@ public class SongView extends JPanel implements Scroller {
 		private Integer lyricsCopyrightDistance;
 		private Color foregroundColor;
 		private Color backgroundColor;
-
+		
 		public Builder(Song song) {
 			this.song = song;
 		}
-
+		
 		public Builder showTitle(Boolean bool) {
 			this.showTitle = bool;
 			return this;
 		}
-
+		
 		public Builder showTranslation(Boolean bool) {
 			this.showTranslation = bool;
 			return this;
 		}
-
+		
 		public Builder showChords(Boolean bool) {
 			this.showChords = bool;
 			return this;
 		}
-
+		
 		public Builder titleFont(Font font) {
 			this.titleFont = font;
 			return this;
 		}
-
+		
 		public Builder lyricsFont(Font font) {
 			this.lyricsFont = font;
 			return this;
 		}
-
+		
 		public Builder translationFont(Font font) {
 			this.translationFont = font;
 			return this;
 		}
-
+		
 		public Builder copyrightFont(Font font) {
 			this.copyrightFont = font;
 			return this;
 		}
-
+		
 		public Builder topMargin(Integer pixels) {
 			this.topMargin = pixels;
 			return this;
 		}
-
+		
 		public Builder leftMargin(Integer pixels) {
 			this.leftMargin = pixels;
 			return this;
 		}
-
+		
 		public Builder rightMargin(Integer pixels) {
 			this.rightMargin = pixels;
 			return this;
 		}
-
+		
 		public Builder bottomMargin(Integer pixels) {
 			this.bottomMargin = pixels;
 			return this;
 		}
-
+		
 		public Builder titleLyricsDistance(Integer pixels) {
 			this.titleLyricsDistance = pixels;
 			return this;
 		}
-
+		
 		public Builder lyricsCopyrightDistance(Integer pixels) {
 			this.lyricsCopyrightDistance = pixels;
 			return this;
 		}
-
+		
 		public Builder foregroundColor(Color color) {
 			this.foregroundColor = color;
 			return this;
 		}
-
+		
 		public Builder backgroundColor(Color color) {
 			this.backgroundColor = color;
 			return this;
 		}
-
+		
 		public SongView build() {
 			// make sure every variable was initialized
 			if (song == null || showTitle == null || showTranslation == null || showChords == null
@@ -529,9 +559,9 @@ public class SongView extends JPanel implements Scroller {
 				|| foregroundColor == null || backgroundColor == null) {
 				throw new IllegalStateException("not every builder method was called with a non-null value");
 			}
-
+			
 			return new SongView(this);
 		}
-
+		
 	}
 }

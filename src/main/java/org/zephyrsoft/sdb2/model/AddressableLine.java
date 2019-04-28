@@ -16,10 +16,9 @@
  */
 package org.zephyrsoft.sdb2.model;
 
-
 /**
  * A line that can be addressed.
- * 
+ *
  * @author Mathis Dirksen-Thedens
  */
 public class AddressableLine implements Addressable {
@@ -27,8 +26,10 @@ public class AddressableLine implements Addressable {
 	private String text;
 	private Integer position;
 	
-	public AddressableLine(String text, Integer position) {
-		this.text = text;
+	public AddressableLine(SongElement element, Integer position) {
+		this.text = element == null || element.getElement() == null
+			? ""
+			: element.getElement();
 		this.position = position;
 	}
 	
