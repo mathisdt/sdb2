@@ -3,7 +3,7 @@ sudo: required
 language: java
 
 jdk:
-- openjdk11
+- openjdk12
 
 branches:
   only:
