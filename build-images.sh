@@ -52,7 +52,8 @@ ls $DIR/target/distribution/lib/*.jar | while read JAR; do
 		TMPDIR=$(mktemp -d)
 		cd $TMPDIR
 
-		$JDK/bin/jdeps -v --multi-release base --generate-module-info . --module-path $DIR/target/distribution/lib/:$DIR/target/distribution/bin/sdb2.jar:$JDK/jmods/ $JAR
+		LIBS_WITHOUT_CURRENT=$(ls $DIR/target/distribution/lib/*.jar | grep -v "$JAR" | xargs -I{} echo -n "{}:")
+		$JDK/bin/jdeps -v --multi-release base --generate-module-info . --module-path ${LIBS_WITHOUT_CURRENT}$JDK/jmods/ $JAR
 		MODULE_NAME=$(find . -type f -name module-info.java | sed -e 's#^\./##' -e 's#/.*$##')
 		echo "using name $MODULE_NAME"
 		cd $MODULE_NAME
