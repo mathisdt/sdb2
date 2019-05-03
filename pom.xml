@@ -35,7 +35,7 @@
 		<!-- dependency versions -->
 		<version.spring>5.1.6.RELEASE</version.spring>
 		<version.slf4j>1.8.0-beta4</version.slf4j>
-		<version.log4j>2.11.2</version.log4j>
+		<version.log4j>2.11.0</version.log4j><!-- there was a problem introduced in 2.11.1, don't update! -->
 		<version.args4j>2.33</version.args4j>
 		<version.commons-lang3>3.9</version.commons-lang3>
 		<version.commons-text>1.6</version.commons-text>
@@ -337,44 +337,6 @@
 			</plugin>
 
 			<plugin>
-				<groupId>com.akathist.maven.plugins.launch4j</groupId>
-				<artifactId>launch4j-maven-plugin</artifactId>
-				<version>1.7.23</version>
-				<executions>
-					<execution>
-						<id>l4j-gui</id>
-						<phase>package</phase>
-						<goals>
-							<goal>launch4j</goal>
-						</goals>
-						<configuration>
-							<headerType>gui</headerType>
-							<outfile>target/distribution/bin/${project.artifactId}.exe</outfile>
-							<jar>${project.artifactId}.jar</jar>
-							<dontWrapJar>true</dontWrapJar>
-							<errTitle>SDB2 - Error</errTitle>
-							<icon>src/main/resources/org/zephyrsoft/sdb2/icon.ico</icon>
-							<jre>
-								<minVersion>${version.java}</minVersion>
-							</jre>
-							<versionInfo>
-								<fileVersion>1.0.0.0</fileVersion>
-								<txtFileVersion>${project.version}</txtFileVersion>
-								<fileDescription>Launcher for ${project.artifactId}</fileDescription>
-								<copyright>ZephyrSoft</copyright>
-								<companyName>ZephyrSoft</companyName>
-								<productVersion>0.0.0.0</productVersion>
-								<txtProductVersion>${project.version}</txtProductVersion>
-								<productName>${project.artifactId}</productName>
-								<internalName>${project.artifactId}</internalName>
-								<originalFilename>${project.artifactId}.exe</originalFilename>
-							</versionInfo>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.1.0</version>
@@ -451,7 +413,7 @@
 				</executions>
 				<configuration>
 					<outputDirectory>${project.build.directory}</outputDirectory>
-					<finalName>${project.artifactId}-${project.version}</finalName>
+					<finalName>sdb2-without-jre</finalName>
 					<appendAssemblyId>false</appendAssemblyId>
 					<descriptors>
 						<descriptor>src/main/assembly/assembly.xml</descriptor>

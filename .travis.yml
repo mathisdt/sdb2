@@ -25,7 +25,9 @@ install: true
 before_script:
 - export TZ=Europe/Berlin
 
-script: mvn clean verify
+script:
+- mvn clean verify
+- ./build-jre-distributions.sh
 
 deploy:
   provider: releases
