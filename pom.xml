@@ -29,6 +29,9 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
+		<!-- override when building locally using -DskipOwasp=true -->
+		<skipOwasp>false</skipOwasp>
+
 		<!-- dependency versions -->
 		<version.spring>5.1.6.RELEASE</version.spring>
 		<version.slf4j>1.8.0-beta4</version.slf4j>
@@ -289,6 +292,7 @@
 				<artifactId>dependency-check-maven</artifactId>
 				<version>3.0.2</version>
 				<configuration>
+					<skip>${skipOwasp}</skip>
 					<failBuildOnCVSS>3</failBuildOnCVSS>
 					<failOnError>false</failOnError>
 					<suppressionFiles>
