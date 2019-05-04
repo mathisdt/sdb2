@@ -35,6 +35,7 @@ BASE_DIR=\$(readlink -f "\$BIN_DIR/..")
 \$BASE_DIR/jre/bin/java -Duser.language=de -Duser.country=DE -Dfile.encoding=UTF-8 -jar "\$BIN_DIR/sdb2.jar" \$*
 EOF
 chmod a+x $DIR/target/sdb2-bundle-linux/bin/sdb2.sh
+cp $DIR/src/main/resources/org/zephyrsoft/sdb2/icon-128.png $DIR/target/sdb2-bundle-linux/bin/icon.png
 
 echo "creating a Windows JRE"
 $JDK_LINUX/bin/jlink \
@@ -46,6 +47,7 @@ cat <<EOF >$DIR/target/sdb2-bundle-windows/bin/sdb2.bat
 ..\jre\bin\javaw.exe -Duser.language=de -Duser.country=DE -Dfile.encoding=UTF-8 -jar sdb2.jar $*
 EOF
 rm $DIR/target/sdb2-bundle-windows/bin/sdb2.sh
+cp $DIR/src/main/resources/org/zephyrsoft/sdb2/icon.ico $DIR/target/sdb2-bundle-windows/bin/icon.ico
 
 echo "packing the distributions"
 cd $DIR/target
