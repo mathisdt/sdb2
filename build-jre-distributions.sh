@@ -8,9 +8,9 @@ if [ ! -d "$JDK_LINUX" -o ! -d "$JDK_LINUX/jmods" ]; then
 	exit 1
 fi
 
-echo "downloading a Windows JDK"
+echo "downloading a Windows JDK from adoptopenjdk.net"
 # ATTENTION: has to match the version used on Linux -> .travis.yml
-wget -O /tmp/windows-jdk.zip 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?openjdk_impl=hotspot&os=windows&arch=x64&release=latest&type=jdk&heap_size=normal'
+wget -q -O /tmp/windows-jdk.zip 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?openjdk_impl=hotspot&os=windows&arch=x64&release=latest&type=jdk&heap_size=normal'
 unzip -qq -d /tmp/windows-jdk /tmp/windows-jdk.zip
 JDK_WINDOWS=$(ls -d /tmp/windows-jdk/*)
 if [ ! -d "$JDK_WINDOWS" -o ! -d "$JDK_WINDOWS/jmods" ]; then
@@ -43,7 +43,7 @@ $JDK_LINUX/bin/jlink \
     --output $DIR/target/sdb2-bundle-windows/jre
 cp -r $DIR/target/distribution/* $DIR/target/sdb2-bundle-windows/
 cat <<EOF >$DIR/target/sdb2-bundle-windows/bin/sdb2.bat
-..\jre\bin\javaw.exe -Duser.language=de -Duser.country=DE -Dfile.encoding=UTF-8 sdb2.jar $*
+..\jre\bin\javaw.exe -Duser.language=de -Duser.country=DE -Dfile.encoding=UTF-8 -jar sdb2.jar $*
 EOF
 rm $DIR/target/sdb2-bundle-windows/bin/sdb2.sh
 
