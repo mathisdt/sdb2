@@ -79,7 +79,7 @@ public class SongView extends JPanel implements Scroller {
 		StyleContext.DEFAULT_STYLE);
 	private static final String TITLE_LYRICS_DISTANCE = "TITLE_LYRICS_DISTANCE";
 	private static final String LYRICS_COPYRIGHT_DISTANCE = "LYRICS_COPYRIGHT_DISTANCE";
-	private static final String LYRICS_FINAL_NEWLINE = "\n";
+	private static final String NEWLINE_CHAR = "\n";
 	private static final String LYRICS_COPYRIGHT_DISTANCE_TEXT = " \n";
 	
 	private Song song;
@@ -178,9 +178,9 @@ public class SongView extends JPanel implements Scroller {
 	 */
 	private void render() {
 		List<SongElement> toDisplay = SongParser.parse(song, showTranslation, showTitle, showChords);
-		if (toDisplay.size() > 0 && is(toDisplay.get(toDisplay.size() - 1), COPYRIGHT)) {
+		if (toDisplay.size() > 0 && !is(toDisplay.get(toDisplay.size() - 1), COPYRIGHT)) {
 			// add final newline to fetch the last line of the last part always
-			toDisplay.add(new SongElement(NEW_LINE, LYRICS_FINAL_NEWLINE));
+			toDisplay.add(new SongElement(NEW_LINE, NEWLINE_CHAR));
 		}
 		
 		// chord lines: correct spacing (in lyrics font) to make the chords correspond to the words
@@ -220,7 +220,8 @@ public class SongView extends JPanel implements Scroller {
 			
 			if ((is(element, NEW_LINE) || is(element, COPYRIGHT))
 				&& !isEmpty(prevElement)
-				&& !is(prevElement, SongElementEnum.TRANSLATION)
+				&& (!is(prevElement, SongElementEnum.TRANSLATION)
+					|| currentPart.isEmpty()) // translation line is first line in part
 				&& position == null) {
 				position = createPosition(prevElement);
 			}
@@ -238,7 +239,7 @@ public class SongView extends JPanel implements Scroller {
 				} else if (is(element, NEW_LINE)
 					&& is(prevElement, LYRICS)
 					&& !isEmpty(prevElement)
-					&& (prevPrevElement == null || (is(prevPrevElement, NEW_LINE) || is(prevPrevElement, TITLE)))) {
+					&& (prevPrevElement == null || is(prevPrevElement, NEW_LINE) || is(prevPrevElement, TITLE))) {
 					// save current line and begin a new one
 					AddressableLine currentLine = new AddressableLine(prevElement, position);
 					currentPart.add(currentLine);
@@ -314,7 +315,7 @@ public class SongView extends JPanel implements Scroller {
 	private void handleTitleLine(SongElement element) {
 		if (is(element, TITLE)) {
 			// append space
-			appendText(LYRICS_FINAL_NEWLINE, NEW_LINE);
+			appendText(NEWLINE_CHAR, NEW_LINE);
 			appendText(LYRICS_COPYRIGHT_DISTANCE_TEXT, TITLE_LYRICS_DISTANCE);
 		}
 	}
@@ -340,11 +341,11 @@ public class SongView extends JPanel implements Scroller {
 	private void handleCopyrightLine(SongElement previousElement, SongElement element) {
 		if (isFirstCopyrightLine(previousElement, element)) {
 			// prepend space
-			appendText(LYRICS_FINAL_NEWLINE, NEW_LINE);
+			appendText(NEWLINE_CHAR, NEW_LINE);
 			appendText(LYRICS_COPYRIGHT_DISTANCE_TEXT, LYRICS_COPYRIGHT_DISTANCE);
 		} else if (isCopyrightLineButNotFirstOne(previousElement, element)) {
 			// prepend newline
-			appendText(LYRICS_FINAL_NEWLINE, NEW_LINE);
+			appendText(NEWLINE_CHAR, NEW_LINE);
 		}
 	}
 	
