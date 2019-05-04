@@ -45,7 +45,7 @@
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
 		<version.github-api>1.95</version.github-api>
-		<version.jackson-databind>2.9.4</version.jackson-databind>
+		<version.jackson-databind>2.9.8</version.jackson-databind>
 		<version.lucene>8.0.0</version.lucene>
 		<version.guava>27.1-jre</version.guava>
 		<version.junit>4.12</version.junit>
@@ -61,7 +61,7 @@
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-databind</artifactId>
-				<version>[${version.jackson-databind},)</version>
+				<version>${version.jackson-databind}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
