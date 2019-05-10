@@ -28,6 +28,7 @@ $JDK_LINUX/bin/jlink \
     --add-modules $MODULES \
     --output $DIR/target/sdb2-bundle-linux/jre
 cp -r $DIR/target/distribution/* $DIR/target/sdb2-bundle-linux/
+mkdir -p $DIR/target/sdb2-bundle-linux/bin
 cat <<EOF >$DIR/target/sdb2-bundle-linux/bin/sdb2.sh
 #!/bin/sh
 BIN_DIR=\$(dirname \$(readlink -f "\$0"))
@@ -43,10 +44,10 @@ $JDK_LINUX/bin/jlink \
     --add-modules $MODULES \
     --output $DIR/target/sdb2-bundle-windows/jre
 cp -r $DIR/target/distribution/* $DIR/target/sdb2-bundle-windows/
+mkdir -p $DIR/target/sdb2-bundle-windows/bin
 cat <<EOF >$DIR/target/sdb2-bundle-windows/bin/sdb2.bat
 ..\jre\bin\javaw.exe -Duser.language=de -Duser.country=DE -Dfile.encoding=UTF-8 -jar sdb2.jar $*
 EOF
-rm $DIR/target/sdb2-bundle-windows/bin/sdb2.sh
 cp $DIR/src/main/resources/org/zephyrsoft/sdb2/icon.ico $DIR/target/sdb2-bundle-windows/bin/icon.ico
 
 echo "packing the distributions"
