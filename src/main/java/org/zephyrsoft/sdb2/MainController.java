@@ -275,6 +275,17 @@ public class MainController implements Scroller {
 		if (!StringTools.isBlank(fileName)) {
 			songsFileName = fileName;
 		}
+		try {
+			ioController.startWatching(songsFileName, () -> {
+				LOG.info("change in file {} detected", songsFileName);
+				
+				// TODO offer to reload the songs file (overwriting any changes the user made up to now)
+				// => make clear that songs already put into presentation list will remain there untouched
+				
+			});
+		} catch (Exception e) {
+			LOG.warn("could not start watching the songs file", e);
+		}
 		songs = populateSongsModel(songsFileName);
 		if (songs == null) {
 			// there was a problem while reading
