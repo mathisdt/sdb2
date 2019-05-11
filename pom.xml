@@ -44,10 +44,9 @@
 		<version.poi>4.1.0</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
-		<version.github-api>1.95</version.github-api>
-		<version.jackson-databind>2.9.8</version.jackson-databind>
 		<version.lucene>8.0.0</version.lucene>
 		<version.guava>27.1-jre</version.guava>
+		<version.gson>2.8.5</version.gson>
 		<version.junit>4.12</version.junit>
 		<version.mockito>2.27.0</version.mockito>
 		<version.javax-activation-api>1.2.0</version.javax-activation-api>
@@ -55,16 +54,6 @@
 		<version.jaxb-runtime>2.4.0-b180830.0438</version.jaxb-runtime>
 		<version.jaxb-api>2.4.0-b180830.0359</version.jaxb-api>
 	</properties>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.fasterxml.jackson.core</groupId>
-				<artifactId>jackson-databind</artifactId>
-				<version>${version.jackson-databind}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 	<dependencies>
 		<!-- application -->
@@ -138,6 +127,11 @@
 			</exclusions>
 		</dependency>
 		<dependency>
+		    <groupId>com.google.code.gson</groupId>
+		    <artifactId>gson</artifactId>
+		    <version>${version.gson}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
 			<version>${version.spring}</version>
@@ -151,11 +145,6 @@
 					<artifactId>spring-jcl</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.kohsuke</groupId>
-			<artifactId>github-api</artifactId>
-			<version>${version.github-api}</version>
 		</dependency>
 
 		<!-- logging -->

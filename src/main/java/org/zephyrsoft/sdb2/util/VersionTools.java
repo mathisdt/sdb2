@@ -1,33 +1,36 @@
 /*
  * This file is part of the Song Database (SDB).
- * 
+ *
  * SDB is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
 package org.zephyrsoft.sdb2.util;
 
-import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
-import java.util.List;
 
-import org.kohsuke.github.GHRelease;
-import org.kohsuke.github.GitHub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 /**
  * Extracts the current version from the manifest and checks for updates.
- * 
+ *
  * @author Mathis Dirksen-Thedens
  */
 public class VersionTools {
@@ -63,15 +66,19 @@ public class VersionTools {
 	 */
 	public static VersionUpdate getLatest() {
 		try {
-			GitHub gitHub = GitHub.connectAnonymously();
-			List<GHRelease> releases = gitHub.getUser("mathisdt").getRepository("sdb2").listReleases().asList();
-			GHRelease latestRelease = releases == null || releases.isEmpty()
-				? null
-				: releases.get(0);
-			if (latestRelease == null) {
+			HttpRequest request = HttpRequest.newBuilder()
+				.uri(new URI("https://api.github.com/repos/mathisdt/sdb2/releases/latest"))
+				.GET()
+				.build();
+			HttpResponse<String> latestReleaseResponse = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			
+			if (latestReleaseResponse == null) {
 				return null;
 			}
-			LocalDateTime latestReleaseTimestamp = DateTools.toLocalDateTime(latestRelease.getPublished_at());
+			
+			JsonObject latestRelease = new JsonParser().parse(latestReleaseResponse.body()).getAsJsonObject();
+			
+			LocalDateTime latestReleaseTimestamp = DateTools.parseDateTime(latestRelease.get("published_at").getAsString());
 			LocalDateTime ownTimestamp = getTimestampAsLocalDateTime();
 			
 			LOG.info("own timestamp: {} / latest release timestamp: {}", ownTimestamp, latestReleaseTimestamp);
@@ -80,17 +87,11 @@ public class VersionTools {
 				// is already latest release or we cannot tell
 				return null;
 			} else {
-				if (latestRelease.getAssets() == null || latestRelease.getAssets().isEmpty()) {
-					LOG.error("release {} does not have any assets", latestRelease.getName());
-					return null;
-				} else {
-					return new VersionUpdate(DateTools.formatDateTime(latestReleaseTimestamp),
-						latestRelease.getHtmlUrl().toString(),
-						latestRelease.getAssets().get(0).getBrowserDownloadUrl());
-				}
+				return new VersionUpdate(DateTools.formatDateTime(latestReleaseTimestamp),
+					latestRelease.get("html_url").getAsString());
 			}
-		} catch (IOException ioe) {
-			LOG.error("error communicating with GitHub", ioe);
+		} catch (Exception e) {
+			LOG.error("error communicating with GitHub", e);
 			return null;
 		}
 	}
@@ -98,12 +99,10 @@ public class VersionTools {
 	public static class VersionUpdate {
 		private final String versionTimestamp;
 		private final String webUrl;
-		private final String updateUrl;
 		
-		public VersionUpdate(String versionTimestamp, String webUrl, String updateUrl) {
+		public VersionUpdate(String versionTimestamp, String webUrl) {
 			this.versionTimestamp = versionTimestamp;
 			this.webUrl = webUrl;
-			this.updateUrl = updateUrl;
 		}
 		
 		public String getVersionTimestamp() {
@@ -112,10 +111,6 @@ public class VersionTools {
 		
 		public String getWebUrl() {
 			return webUrl;
-		}
-		
-		public String getUpdateUrl() {
-			return updateUrl;
 		}
 	}
 	
