@@ -31,7 +31,6 @@ import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
 import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.sdb2.util.ChordSpaceCorrector;
-import org.zephyrsoft.sdb2.util.StringTools;
 
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
@@ -60,12 +59,12 @@ public class ExportService {
 	private static final Logger LOG = LoggerFactory.getLogger(ExportService.class);
 	
 	private class PageNumbers extends PdfPageEventHelper {
-		Font ffont = new Font(Font.FontFamily.UNDEFINED, 10, Font.ITALIC);
+		private Font footerFont = new Font(Font.FontFamily.UNDEFINED, 10, Font.ITALIC);
 		
 		@Override
 		public void onEndPage(PdfWriter writer, Document document) {
 			PdfContentByte cb = writer.getDirectContent();
-			Phrase footer = new Phrase("- " + document.getPageNumber() + " -", ffont);
+			Phrase footer = new Phrase("- " + document.getPageNumber() + " -", footerFont);
 			ColumnText.showTextAligned(cb, Element.ALIGN_CENTER,
 				footer,
 				(document.right() - document.left()) / 2 + document.leftMargin(),
@@ -97,13 +96,8 @@ public class ExportService {
 	private Font copyrightFont;
 	private ChordSpaceCorrector chordSpaceCorrector;
 	
-	public ExportService() {
-		BaseFont baseFont = null;
-		try {
-			baseFont = BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.WINANSI, BaseFont.EMBEDDED);
-		} catch (Exception e) {
-			throw new RuntimeException("error while setting up export service", e);
-		}
+	public ExportService() throws Exception {
+		BaseFont baseFont = BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.WINANSI, BaseFont.EMBEDDED);
 		titleFont = new Font(baseFont, 20, Font.BOLD);
 		lyricsFont = new Font(baseFont, 12);
 		translationFont = new Font(baseFont, 8, Font.ITALIC);
@@ -135,6 +129,7 @@ public class ExportService {
 				SongElement previousSongElement = null;
 				SongElement previousSongElementForNewLines = null;
 				for (SongElement songElement : songElements) {
+					// TODO use a Map containing handlers for each type instead of switch!?
 					switch (songElement.getType()) {
 						case TITLE:
 							Chunk chunk = new Chunk(song.getTitle() + "\n");
@@ -155,18 +150,18 @@ public class ExportService {
 							String chordsLine = "";
 							if (previousSongElement != null && previousSongElement.getType() == SongElementEnum.CHORDS
 								&& exportFormat.areChordsShown()) {
-								chordsLine = chordSpaceCorrector.correctChordSpaces(previousSongElement.getElement(), songElement.getElement())
+								chordsLine = chordSpaceCorrector.correctChordSpaces(previousSongElement.getContent(), songElement.getContent())
 									+ "\n";
 							}
-							document.add(paragraph(chordsLine + songElement.getElement(), lyricsFont));
+							document.add(paragraph(chordsLine + songElement.getContent(), lyricsFont));
 							break;
 						case TRANSLATION:
 							if (exportFormat.isTranslationShown()) {
-								document.add(paragraph(songElement.getElement(), translationFont));
+								document.add(paragraph(songElement.getContent(), translationFont));
 							}
 							break;
 						case COPYRIGHT:
-							Paragraph copyright = paragraph(songElement.getElement(), copyrightFont);
+							Paragraph copyright = paragraph(songElement.getContent(), copyrightFont);
 							if (previousSongElement != null && previousSongElement.getType() != SongElementEnum.COPYRIGHT) {
 								copyright.setSpacingBefore(20);
 							}
@@ -187,11 +182,7 @@ public class ExportService {
 							throw new IllegalStateException("unsupported song element type");
 					}
 					
-					if ((songElement.getType() == SongElementEnum.LYRICS
-						|| songElement.getType() == SongElementEnum.CHORDS
-						|| songElement.getType() == SongElementEnum.TRANSLATION
-						|| songElement.getType() == SongElementEnum.NEW_LINE)
-						&& !StringTools.isEmpty(songElement.getElement())) {
+					if (isBodyElement(songElement) && !songElement.isEmpty()) {
 						previousSongElementForNewLines = songElement;
 					}
 					if (songElement.getType() != SongElementEnum.NEW_LINE) {
@@ -228,6 +219,13 @@ public class ExportService {
 		}
 		
 		return outputStream;
+	}
+	
+	private boolean isBodyElement(SongElement songElement) {
+		return songElement.getType() == SongElementEnum.LYRICS
+			|| songElement.getType() == SongElementEnum.CHORDS
+			|| songElement.getType() == SongElementEnum.TRANSLATION
+			|| songElement.getType() == SongElementEnum.NEW_LINE;
 	}
 	
 	private String getCleanChordSequence(Song song) {

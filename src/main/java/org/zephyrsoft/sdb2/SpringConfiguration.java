@@ -94,7 +94,11 @@ public class SpringConfiguration {
 	
 	@Bean
 	public ExportService exportService() {
-		return new ExportService();
+		try {
+			return new ExportService();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	@Bean

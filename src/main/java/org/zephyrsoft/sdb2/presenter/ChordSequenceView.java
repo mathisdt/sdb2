@@ -103,7 +103,7 @@ public class ChordSequenceView extends JPanel {
 	private Integer createPosition(SongElement... toSubtract) {
 		int toSubtractInt = 0;
 		for (SongElement element : toSubtract) {
-			toSubtractInt += element.getElement() == null ? 0 : element.getElement().length();
+			toSubtractInt += element.getContent() == null ? 0 : element.getContent().length();
 		}
 		return document.getLength() - toSubtractInt + 1;
 	}

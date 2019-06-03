@@ -27,9 +27,9 @@ public class AddressableLine implements Addressable {
 	private Integer position;
 	
 	public AddressableLine(SongElement element, Integer position) {
-		this.text = element == null || element.getElement() == null
+		this.text = element == null || element.getContent() == null
 			? ""
-			: element.getElement();
+			: element.getContent();
 		this.position = position;
 	}
 	

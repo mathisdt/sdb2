@@ -182,6 +182,7 @@ public class SongView extends JPanel implements Scroller {
 			// add final newline to fetch the last line of the last part always
 			toDisplay.add(new SongElement(NEW_LINE, NEWLINE_CHAR));
 		}
+		SongElementHistory elements = new SongElementHistory(toDisplay);
 		
 		// chord lines: correct spacing (in lyrics font) to make the chords correspond to the words
 		FontMetrics fm = createFontMetricsForLyrics();
@@ -193,8 +194,8 @@ public class SongView extends JPanel implements Scroller {
 					if (previousChordsElement == null) {
 						continue;
 					}
-					previousChordsElement.setElement(
-						chordSpaceCorrector.correctChordSpaces(previousChordsElement.getElement(), songElement.getElement()));
+					previousChordsElement.setContent(
+						chordSpaceCorrector.correctChordSpaces(previousChordsElement.getContent(), songElement.getContent()));
 					previousChordsElement = null;
 					break;
 				case CHORDS:
@@ -211,63 +212,79 @@ public class SongView extends JPanel implements Scroller {
 		addStyles();
 		
 		// handle the elements of the song
-		SongElement prevPrevElement = null;
-		SongElement prevElement = null;
-		for (SongElement element : toDisplay) {
-			handleCopyrightLine(prevElement, element);
+		for (SongElement element : elements) {
+			SongElement previousElement = elements.previous();
+			SongElement beforePreviousElement = elements.beforePrevious();
+			
+			handleCopyrightLine(previousElement, element);
 			
 			handleTitlePosition(element);
 			
 			if ((is(element, NEW_LINE) || is(element, COPYRIGHT))
-				&& !isEmpty(prevElement)
-				&& (!is(prevElement, SongElementEnum.TRANSLATION)
+				&& !isEmpty(previousElement)
+				&& (!is(previousElement, TRANSLATION)
 					|| currentPart.isEmpty()) // translation line is first line in part
 				&& position == null) {
-				position = createPosition(prevElement);
+				position = createPosition(previousElement);
+			} else if ((is(element, NEW_LINE) || is(element, COPYRIGHT))
+				&& !isEmpty(beforePreviousElement)
+				&& !is(beforePreviousElement, TRANSLATION)
+				&& position == null) {
+				position = createPosition(beforePreviousElement);
 			}
 			
 			if (isBodyElement(element)) {
-				if ((bothAreNewlines(prevElement, element)
+				if ((bothAreNewlines(previousElement, element)
 					|| (is(element, NEW_LINE)
-						&& isEmpty(prevElement)
-						&& (prevPrevElement == null || is(prevPrevElement, NEW_LINE))))
+						&& isEmpty(previousElement)
+						&& (beforePreviousElement == null || is(beforePreviousElement, NEW_LINE))))
 					&& currentPart.size() > 0) {
 					// [ two consecutive newlines OR two newlines, only separated by a blank line ] AND current part is
 					// populated with at least one line => save current part and begin a new one
 					parts.add(currentPart);
 					currentPart = new AddressablePart();
 				} else if (is(element, NEW_LINE)
-					&& is(prevElement, LYRICS)
-					&& !isEmpty(prevElement)
-					&& (prevPrevElement == null || is(prevPrevElement, NEW_LINE) || is(prevPrevElement, TITLE))) {
+					&& is(previousElement, LYRICS)
+				// && !isEmpty(previousElement)
+				// && (beforePreviousElement == null || is(beforePreviousElement, NEW_LINE) || is(beforePreviousElement,
+				// TITLE))
+				) {
 					// save current line and begin a new one
-					AddressableLine currentLine = new AddressableLine(prevElement, position);
+					AddressableLine currentLine = new AddressableLine(previousElement, position);
+					currentPart.add(currentLine);
+					position = null;
+				} else if (is(element, NEW_LINE)
+					&& is(beforePreviousElement, LYRICS)
+					&& is(previousElement, TRANSLATION)
+				// && !isEmpty(previousElement)
+				// && (beforePreviousElement == null || is(beforePreviousElement, NEW_LINE) || is(beforePreviousElement,
+				// TITLE))
+				) {
+					// save current line and begin a new one
+					AddressableLine currentLine = new AddressableLine(beforePreviousElement, position);
 					currentPart.add(currentLine);
 					position = null;
 				}
 			} else if (is(element, COPYRIGHT)
-				&& isContentElement(prevElement)
-				&& !isEmpty(prevElement)
-				&& !is(prevElement, SongElementEnum.TRANSLATION)
-				&& (prevPrevElement == null || is(prevPrevElement, NEW_LINE))) {
+				&& isContentElement(previousElement)
+				&& !isEmpty(previousElement)
+				&& !is(previousElement, TRANSLATION)
+				&& (beforePreviousElement == null || is(beforePreviousElement, NEW_LINE))) {
 				// save current line and begin a new one
-				AddressableLine currentLine = new AddressableLine(prevElement, position);
+				AddressableLine currentLine = new AddressableLine(previousElement, position);
 				currentPart.add(currentLine);
 				position = null;
 			}
 			
-			if (bothAreNewlines(prevElement, element)
-				|| (is(element, NEW_LINE) && prevElement != null && isEmpty(prevElement)
-					&& (prevPrevElement == null || is(prevPrevElement, NEW_LINE)))) {
-				appendText(element.getElement(), LYRICS);
+			if (bothAreNewlines(previousElement, element)
+				|| (is(element, NEW_LINE) && previousElement != null && isEmpty(previousElement)
+					&& (beforePreviousElement == null || is(beforePreviousElement, NEW_LINE)))) {
+				appendText(element.getContent(), LYRICS);
 			} else {
-				appendText(element.getElement(), element.getType());
+				appendText(element.getContent(), element.getType());
 			}
 			
 			handleTitleLine(element);
-			// keep history
-			prevPrevElement = prevElement;
-			prevElement = element;
 		}
 		if (currentPart.size() > 0) {
 			// current part is populated with at least one line => save current part
@@ -297,7 +314,7 @@ public class SongView extends JPanel implements Scroller {
 	private Integer createPosition(SongElement... toSubtract) {
 		int toSubtractInt = 0;
 		for (SongElement element : toSubtract) {
-			toSubtractInt += element.getElement() == null ? 0 : element.getElement().length();
+			toSubtractInt += element.getContent() == null ? 0 : element.getContent().length();
 		}
 		return document.getLength() - toSubtractInt + 1;
 	}
@@ -321,7 +338,7 @@ public class SongView extends JPanel implements Scroller {
 	}
 	
 	private static boolean isEmpty(SongElement element) {
-		return element == null || StringTools.isBlank(element.getElement());
+		return element == null || StringTools.isBlank(element.getContent());
 	}
 	
 	private static boolean is(SongElement element, SongElementEnum type) {

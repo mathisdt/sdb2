@@ -26,34 +26,38 @@ import org.zephyrsoft.sdb2.util.StringTools;
 public class SongElement {
 	
 	private final SongElementEnum type;
-	private String element;
+	private String content;
 	
-	public SongElement(SongElementEnum type, String element) {
+	public SongElement(SongElementEnum type, String content) {
 		this.type = type;
-		this.element = element;
+		this.content = content;
 	}
 	
 	public SongElementEnum getType() {
 		return type;
 	}
 	
-	public String getElement() {
-		return element;
+	public String getContent() {
+		return content;
 	}
 	
-	public void setElement(String element) {
-		this.element = element;
+	public void setContent(String content) {
+		this.content = content;
+	}
+	
+	public boolean isEmpty() {
+		return StringTools.isEmpty(getContent());
 	}
 	
 	@Override
 	public String toString() {
-		return type + (element != null ? "[" + element + "]" : "");
+		return type + (isEmpty() ? "[" + content + "]" : "");
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
 		return obj instanceof SongElement && type == ((SongElement) obj).getType()
-			&& StringTools.equals(element, ((SongElement) obj).getElement());
+			&& StringTools.equals(content, ((SongElement) obj).getContent());
 	}
 	
 }
