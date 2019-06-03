@@ -87,7 +87,7 @@ public class SongElementHistoryTest {
 		assertTrue(history.query()
 			.without(SongElementEnum.NEW_LINE)
 			.lastSeen(SongElementEnum.CHORDS, SongElementEnum.LYRICS, SongElementEnum.TRANSLATION)
-			.end());
+			.end().isMatched());
 	}
 	
 	@Test
@@ -97,7 +97,7 @@ public class SongElementHistoryTest {
 		assertFalse(history.query()
 			.without(SongElementEnum.NEW_LINE)
 			.lastSeen(SongElementEnum.CHORDS, SongElementEnum.TRANSLATION)
-			.end());
+			.end().isMatched());
 	}
 	
 	@Test
@@ -107,7 +107,7 @@ public class SongElementHistoryTest {
 		assertTrue(history.query()
 			.without(SongElementEnum.NEW_LINE)
 			.lastSeen(SongElementEnum.TRANSLATION, SongElementEnum.LYRICS)
-			.end());
+			.end().isMatched());
 	}
 	
 	@Test
@@ -116,7 +116,7 @@ public class SongElementHistoryTest {
 		iterate(history, 9);
 		assertFalse(history.query()
 			.lastSeen(SongElementEnum.TRANSLATION, SongElementEnum.LYRICS)
-			.end());
+			.end().isMatched());
 	}
 	
 	@Test
@@ -126,7 +126,7 @@ public class SongElementHistoryTest {
 		assertTrue(history.query()
 			.without(SongElementEnum.NEW_LINE)
 			.lastSeen(SongElementEnum.TRANSLATION, SongElementEnum.LYRICS, SongElementEnum.TRANSLATION)
-			.end());
+			.end().isMatched());
 	}
 	
 }

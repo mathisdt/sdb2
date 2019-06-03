@@ -37,6 +37,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -213,6 +214,7 @@ public class SongView extends JPanel implements Scroller {
 		
 		// handle the elements of the song
 		for (SongElement element : elements) {
+			// TODO use elements.query()...
 			SongElement previousElement = elements.previous();
 			SongElement beforePreviousElement = elements.beforePrevious();
 			
@@ -220,13 +222,13 @@ public class SongView extends JPanel implements Scroller {
 			
 			handleTitlePosition(element);
 			
-			if ((is(element, NEW_LINE) || is(element, COPYRIGHT))
+			if ((is(element, NEW_LINE, COPYRIGHT))
 				&& !isEmpty(previousElement)
 				&& (!is(previousElement, TRANSLATION)
 					|| currentPart.isEmpty()) // translation line is first line in part
 				&& position == null) {
 				position = createPosition(previousElement);
-			} else if ((is(element, NEW_LINE) || is(element, COPYRIGHT))
+			} else if (is(element, NEW_LINE, COPYRIGHT)
 				&& !isEmpty(beforePreviousElement)
 				&& !is(beforePreviousElement, TRANSLATION)
 				&& position == null) {
@@ -341,18 +343,19 @@ public class SongView extends JPanel implements Scroller {
 		return element == null || StringTools.isBlank(element.getContent());
 	}
 	
-	private static boolean is(SongElement element, SongElementEnum type) {
-		return element != null && element.getType() == type;
+	public static boolean is(SongElement element, SongElementEnum... songElementEnums) {
+		return element != null && Stream.of(songElementEnums)
+			.anyMatch(e -> element.getType() == e);
 	}
 	
 	/** chords, lyrics, translation or newline */
 	private static boolean isBodyElement(SongElement element) {
-		return is(element, CHORDS) || is(element, LYRICS) || is(element, TRANSLATION) || is(element, NEW_LINE);
+		return is(element, CHORDS, LYRICS, TRANSLATION, NEW_LINE);
 	}
 	
 	/** chords, lyrics or translation */
 	private static boolean isContentElement(SongElement element) {
-		return is(element, CHORDS) || is(element, LYRICS) || is(element, TRANSLATION);
+		return is(element, CHORDS, LYRICS, TRANSLATION);
 	}
 	
 	private void handleCopyrightLine(SongElement previousElement, SongElement element) {

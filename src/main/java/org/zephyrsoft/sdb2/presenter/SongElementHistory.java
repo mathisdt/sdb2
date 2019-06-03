@@ -98,38 +98,66 @@ public class SongElementHistory implements Iterable<SongElement> {
 		}
 		
 		/** execute the query */
-		public boolean end() {
+		public SongElementHistoryQueryResult end() {
 			if (handedOut.size() == 0) {
-				return false;
+				return SongElementHistoryQueryResult.NO_MATCH;
 			}
 			List<SongElement> workingCopy = Lists.newArrayList(handedOut);
 			// remove last element as we want to know what was before it
 			workingCopy.remove(workingCopy.size() - 1);
 			// filter unwanted types and convert to types only
-			List<SongElementEnum> types = workingCopy.stream()
+			List<SongElement> filteredElements = workingCopy.stream()
 				.filter(e -> !without.contains(e.getType()))
-				.map(SongElement::getType)
 				.collect(toList());
 			// see if one of the type sequence matches
 			for (List<SongElementEnum> sequence : lastSeen) {
-				if (lengthOkAndEndOfFirstMatchesSecond(types, sequence)) {
-					return true;
+				if (lengthOkAndEndOfFirstMatchesSecond(filteredElements, sequence)) {
+					return new SongElementHistoryQueryResult(
+						filteredElements.subList(filteredElements.size() - sequence.size(), filteredElements.size() - 1));
 				}
 			}
-			return false;
+			return SongElementHistoryQueryResult.NO_MATCH;
 		}
 		
-		private boolean lengthOkAndEndOfFirstMatchesSecond(List<SongElementEnum> types, List<SongElementEnum> sequence) {
-			return types.size() >= sequence.size() && endOfFirstMatchesSecond(types, sequence);
+		private boolean lengthOkAndEndOfFirstMatchesSecond(List<SongElement> filteredElements, List<SongElementEnum> sequence) {
+			return filteredElements.size() >= sequence.size() && endOfFirstMatchesSecond(filteredElements, sequence);
 		}
 		
-		private boolean endOfFirstMatchesSecond(List<SongElementEnum> types, List<SongElementEnum> sequence) {
+		private boolean endOfFirstMatchesSecond(List<SongElement> filteredElements, List<SongElementEnum> sequence) {
 			for (int i = 1; i <= sequence.size(); i++) {
-				if (types.get(types.size() - i) != sequence.get(sequence.size() - i)) {
+				if (filteredElements.get(filteredElements.size() - i).getType() != sequence.get(sequence.size() - i)) {
 					return false;
 				}
 			}
 			return true;
 		}
+	}
+	
+	public static class SongElementHistoryQueryResult {
+		public static final SongElementHistoryQueryResult NO_MATCH = new SongElementHistoryQueryResult();
+		
+		private final boolean isMatched;
+		private final List<SongElement> matchedElements;
+		
+		/** not matched */
+		private SongElementHistoryQueryResult() {
+			this.isMatched = false;
+			this.matchedElements = Lists.newArrayList();
+		}
+		
+		/** matched with these elements */
+		public SongElementHistoryQueryResult(List<SongElement> matchedElements) {
+			this.isMatched = true;
+			this.matchedElements = matchedElements;
+		}
+		
+		public boolean isMatched() {
+			return isMatched;
+		}
+		
+		public List<SongElement> getMatchedElements() {
+			return matchedElements;
+		}
+		
 	}
 }
