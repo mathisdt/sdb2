@@ -82,9 +82,20 @@ public class SongElementHistory implements Iterable<SongElement> {
 		return new SongElementHistoryQuery();
 	}
 	
+	public SongElementHistoryQuery queryIncludingCurrent() {
+		SongElementHistoryQuery query = new SongElementHistoryQuery();
+		query.includeCurrent();
+		return query;
+	}
+	
 	public class SongElementHistoryQuery {
+		private boolean includeCurrent = false;
 		private Set<SongElementEnum> without = Sets.newHashSet();
 		private List<List<SongElementMatcher>> lastSeen = Lists.newArrayList();
+		
+		public void includeCurrent() {
+			includeCurrent = true;
+		}
 		
 		/** filter these types from history for this query (aggregated when called multiple times) */
 		public SongElementHistoryQuery without(SongElementEnum... withoutTypes) {
@@ -104,8 +115,10 @@ public class SongElementHistory implements Iterable<SongElement> {
 				return SongElementHistoryQueryResult.NO_MATCH;
 			}
 			List<SongElement> workingCopy = Lists.newArrayList(handedOut);
-			// remove last element as we want to know what was before it
-			workingCopy.remove(workingCopy.size() - 1);
+			if (!includeCurrent) {
+				// remove last element as we only want to know what was before it
+				workingCopy.remove(workingCopy.size() - 1);
+			}
 			// filter unwanted types and convert to types only
 			List<SongElement> filteredElements = workingCopy.stream()
 				.filter(e -> !without.contains(e.getType()))

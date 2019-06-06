@@ -93,6 +93,16 @@ public class SongElementHistoryTest {
 	}
 	
 	@Test
+	public void historyFullElementsFoundIncludingCurrent() {
+		SongElementHistory history = historyFull();
+		iterate(history, 8);
+		assertTrue(history.queryIncludingCurrent()
+			.without(SongElementEnum.NEW_LINE)
+			.lastSeen(is(SongElementEnum.CHORDS), is(SongElementEnum.LYRICS), is(SongElementEnum.TRANSLATION), is(SongElementEnum.CHORDS))
+			.end().isMatched());
+	}
+	
+	@Test
 	public void historyFullElementsNotFound() {
 		SongElementHistory history = historyFull();
 		iterate(history, 7);
