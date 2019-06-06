@@ -18,6 +18,8 @@ package org.zephyrsoft.sdb2.presenter;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.zephyrsoft.sdb2.model.SongElementMatcher.is;
+import static org.zephyrsoft.sdb2.model.SongElementMatcher.oneOf;
 
 import java.util.Iterator;
 
@@ -86,7 +88,7 @@ public class SongElementHistoryTest {
 		iterate(history, 7);
 		assertTrue(history.query()
 			.without(SongElementEnum.NEW_LINE)
-			.lastSeen(SongElementEnum.CHORDS, SongElementEnum.LYRICS, SongElementEnum.TRANSLATION)
+			.lastSeen(is(SongElementEnum.CHORDS), is(SongElementEnum.LYRICS), is(SongElementEnum.TRANSLATION))
 			.end().isMatched());
 	}
 	
@@ -96,7 +98,7 @@ public class SongElementHistoryTest {
 		iterate(history, 7);
 		assertFalse(history.query()
 			.without(SongElementEnum.NEW_LINE)
-			.lastSeen(SongElementEnum.CHORDS, SongElementEnum.TRANSLATION)
+			.lastSeen(is(SongElementEnum.CHORDS), is(SongElementEnum.TRANSLATION))
 			.end().isMatched());
 	}
 	
@@ -106,7 +108,7 @@ public class SongElementHistoryTest {
 		iterate(history, 9);
 		assertTrue(history.query()
 			.without(SongElementEnum.NEW_LINE)
-			.lastSeen(SongElementEnum.TRANSLATION, SongElementEnum.LYRICS)
+			.lastSeen(is(SongElementEnum.TRANSLATION), oneOf(SongElementEnum.LYRICS))
 			.end().isMatched());
 	}
 	
@@ -115,7 +117,7 @@ public class SongElementHistoryTest {
 		SongElementHistory history = historyMinimal();
 		iterate(history, 9);
 		assertFalse(history.query()
-			.lastSeen(SongElementEnum.TRANSLATION, SongElementEnum.LYRICS)
+			.lastSeen(is(SongElementEnum.TRANSLATION), oneOf(SongElementEnum.LYRICS))
 			.end().isMatched());
 	}
 	
@@ -125,7 +127,7 @@ public class SongElementHistoryTest {
 		iterate(history, 17);
 		assertTrue(history.query()
 			.without(SongElementEnum.NEW_LINE)
-			.lastSeen(SongElementEnum.TRANSLATION, SongElementEnum.LYRICS, SongElementEnum.TRANSLATION)
+			.lastSeen(is(SongElementEnum.TRANSLATION), oneOf(SongElementEnum.LYRICS), is(SongElementEnum.TRANSLATION))
 			.end().isMatched());
 	}
 	

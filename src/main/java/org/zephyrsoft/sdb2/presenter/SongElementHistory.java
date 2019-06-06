@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
+import org.zephyrsoft.sdb2.model.SongElementMatcher;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -83,7 +84,7 @@ public class SongElementHistory implements Iterable<SongElement> {
 	
 	public class SongElementHistoryQuery {
 		private Set<SongElementEnum> without = Sets.newHashSet();
-		private List<List<SongElementEnum>> lastSeen = Lists.newArrayList();
+		private List<List<SongElementMatcher>> lastSeen = Lists.newArrayList();
 		
 		/** filter these types from history for this query (aggregated when called multiple times) */
 		public SongElementHistoryQuery without(SongElementEnum... withoutTypes) {
@@ -92,7 +93,7 @@ public class SongElementHistory implements Iterable<SongElement> {
 		}
 		
 		/** were these types seen before the current element? (concatenated using OR when called multiple times) */
-		public SongElementHistoryQuery lastSeen(SongElementEnum... lastSeenTypes) {
+		public SongElementHistoryQuery lastSeen(SongElementMatcher... lastSeenTypes) {
 			lastSeen.add(Lists.newArrayList(lastSeenTypes));
 			return this;
 		}
@@ -110,7 +111,7 @@ public class SongElementHistory implements Iterable<SongElement> {
 				.filter(e -> !without.contains(e.getType()))
 				.collect(toList());
 			// see if one of the type sequence matches
-			for (List<SongElementEnum> sequence : lastSeen) {
+			for (List<SongElementMatcher> sequence : lastSeen) {
 				if (lengthOkAndEndOfFirstMatchesSecond(filteredElements, sequence)) {
 					return new SongElementHistoryQueryResult(
 						filteredElements.subList(filteredElements.size() - sequence.size(), filteredElements.size() - 1));
@@ -119,13 +120,13 @@ public class SongElementHistory implements Iterable<SongElement> {
 			return SongElementHistoryQueryResult.NO_MATCH;
 		}
 		
-		private boolean lengthOkAndEndOfFirstMatchesSecond(List<SongElement> filteredElements, List<SongElementEnum> sequence) {
+		private boolean lengthOkAndEndOfFirstMatchesSecond(List<SongElement> filteredElements, List<SongElementMatcher> sequence) {
 			return filteredElements.size() >= sequence.size() && endOfFirstMatchesSecond(filteredElements, sequence);
 		}
 		
-		private boolean endOfFirstMatchesSecond(List<SongElement> filteredElements, List<SongElementEnum> sequence) {
+		private boolean endOfFirstMatchesSecond(List<SongElement> filteredElements, List<SongElementMatcher> sequence) {
 			for (int i = 1; i <= sequence.size(); i++) {
-				if (filteredElements.get(filteredElements.size() - i).getType() != sequence.get(sequence.size() - i)) {
+				if (!sequence.get(sequence.size() - i).matches(filteredElements.get(filteredElements.size() - i))) {
 					return false;
 				}
 			}
