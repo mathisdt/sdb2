@@ -30,6 +30,15 @@ public interface SongElementMatcher {
 	
 	boolean matches(SongElement songElement);
 	
+	static final SongElementMatcher IS_PRESENT_MATCHER = songElement -> songElement != null;
+	
+	/** Creates a matcher for non-null {@link SongElement}s. */
+	public static SongElementMatcher isPresent() {
+		return IS_PRESENT_MATCHER;
+	}
+	
+	// TODO cache all created matchers!
+	
 	/** Creates a matcher for {@link SongElement}s of the given type. */
 	public static SongElementMatcher is(SongElementEnum value) {
 		if (value == null) {
@@ -39,8 +48,17 @@ public interface SongElementMatcher {
 			&& songElement.getType() == value;
 	}
 	
+	/** Creates a matcher for {@link SongElement}s of any other than the given type. */
+	public static SongElementMatcher isNot(SongElementEnum value) {
+		if (value == null) {
+			throw new IllegalArgumentException("the given SongElementEnum cannot be null");
+		}
+		return songElement -> songElement != null
+			&& songElement.getType() != value;
+	}
+	
 	/** Creates a matcher for {@link SongElement}s of one of the given types. */
-	public static SongElementMatcher oneOf(SongElementEnum... values) {
+	public static SongElementMatcher isOneOf(SongElementEnum... values) {
 		if (values == null || values.length == 0) {
 			throw new IllegalArgumentException("the given SongElementEnums cannot be empty");
 		}
