@@ -20,7 +20,7 @@ fi
 
 DIR=$(dirname $(readlink -f $0))
 
-MODULES=java.desktop,java.scripting,java.xml,java.sql,java.management,java.naming,jdk.crypto.cryptoki,jdk.crypto.ec
+MODULES=java.desktop,java.scripting,java.xml,java.sql,java.net.http,java.management,java.naming,jdk.crypto.cryptoki,jdk.crypto.ec
 
 echo "creating a Linux JRE"
 $JDK_LINUX/bin/jlink \
