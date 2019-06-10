@@ -41,7 +41,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -2473,9 +2472,9 @@ public class MainWindow extends JFrame implements UIScroller {
 			// export
 			ExportFormat format = new ExportFormat(chckbxWithTranslation.isSelected(),
 				chckbxWithChords.isSelected(), chckbxOnlyExportSongs.isSelected());
-			ByteArrayOutputStream outputStream = exportService.export(format, songs);
+			byte[] exported = exportService.export(format, songs);
 			try {
-				Files.write(outputStream.toByteArray(), target);
+				Files.write(exported, target);
 			} catch (IOException e) {
 				handleError(e);
 			}

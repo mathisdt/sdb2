@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.presenter;
+package org.zephyrsoft.sdb2.model;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -26,6 +26,7 @@ import java.util.Iterator;
 import org.junit.Test;
 import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
+import org.zephyrsoft.sdb2.model.SongElementHistory;
 
 import com.google.common.collect.Lists;
 

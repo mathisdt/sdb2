@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.presenter;
+package org.zephyrsoft.sdb2.model;
 
 import static java.util.stream.Collectors.toList;
 
@@ -22,10 +22,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import org.zephyrsoft.sdb2.model.SongElement;
-import org.zephyrsoft.sdb2.model.SongElementEnum;
-import org.zephyrsoft.sdb2.model.SongElementMatcher;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -64,6 +60,12 @@ public class SongElementHistory implements Iterable<SongElement> {
 				return nextElement;
 			}
 		};
+	}
+	
+	public SongElement current() {
+		return handedOut == null || handedOut.size() < 1
+			? null
+			: handedOut.get(handedOut.size() - 1);
 	}
 	
 	public SongElement previous() {
@@ -127,7 +129,7 @@ public class SongElementHistory implements Iterable<SongElement> {
 			for (List<SongElementMatcher> sequence : lastSeen) {
 				if (lengthOkAndEndOfFirstMatchesSecond(filteredElements, sequence)) {
 					return new SongElementHistoryQueryResult(
-						filteredElements.subList(filteredElements.size() - sequence.size(), filteredElements.size() - 1));
+						filteredElements.subList(filteredElements.size() - sequence.size(), filteredElements.size()));
 				}
 			}
 			return SongElementHistoryQueryResult.NO_MATCH;

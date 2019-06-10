@@ -16,11 +16,21 @@
  */
 package org.zephyrsoft.sdb2.service;
 
+import static org.zephyrsoft.sdb2.model.SongElementEnum.CHORDS;
+import static org.zephyrsoft.sdb2.model.SongElementEnum.COPYRIGHT;
+import static org.zephyrsoft.sdb2.model.SongElementEnum.LYRICS;
+import static org.zephyrsoft.sdb2.model.SongElementEnum.NEW_LINE;
+import static org.zephyrsoft.sdb2.model.SongElementEnum.TITLE;
+import static org.zephyrsoft.sdb2.model.SongElementEnum.TRANSLATION;
+import static org.zephyrsoft.sdb2.model.SongElementMatcher.is;
+
 import java.io.ByteArrayOutputStream;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -29,6 +39,8 @@ import org.zephyrsoft.sdb2.model.ExportFormat;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
+import org.zephyrsoft.sdb2.model.SongElementHistory;
+import org.zephyrsoft.sdb2.model.SongElementHistory.SongElementHistoryQueryResult;
 import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.sdb2.util.ChordSpaceCorrector;
 
@@ -59,7 +71,7 @@ public class ExportService {
 	private static final Logger LOG = LoggerFactory.getLogger(ExportService.class);
 	
 	private class PageNumbers extends PdfPageEventHelper {
-		private Font footerFont = new Font(Font.FontFamily.UNDEFINED, 10, Font.ITALIC);
+		private final Font footerFont = new Font(Font.FontFamily.UNDEFINED, 10, Font.ITALIC);
 		
 		@Override
 		public void onEndPage(PdfWriter writer, Document document) {
@@ -72,10 +84,10 @@ public class ExportService {
 		}
 	}
 	
-	public class TOC extends PdfPageEventHelper {
+	private class TOC extends PdfPageEventHelper {
 		
 		protected int counter = 0;
-		protected List<SimpleEntry<String, SimpleEntry<String, Integer>>> toc = new ArrayList<>();
+		protected final List<SimpleEntry<String, SimpleEntry<String, Integer>>> toc = new ArrayList<>();
 		
 		@Override
 		public void onGenericTag(PdfWriter writer, Document document, Rectangle rect, String text) {
@@ -90,11 +102,54 @@ public class ExportService {
 		}
 	}
 	
-	private Font titleFont;
-	private Font lyricsFont;
-	private Font translationFont;
-	private Font copyrightFont;
-	private ChordSpaceCorrector chordSpaceCorrector;
+	private class ExportInProgress {
+		private ExportFormat exportFormat;
+		private Document document;
+		/** only used in song body (not for title or copyright) */
+		private Paragraph currentLine;
+		
+		public ExportInProgress(ExportFormat exportFormat, Document document) {
+			this.exportFormat = exportFormat;
+			this.document = document;
+		}
+		
+		public ExportFormat getExportFormat() {
+			return exportFormat;
+		}
+		
+		public void setExportFormat(ExportFormat exportFormat) {
+			this.exportFormat = exportFormat;
+		}
+		
+		public Document getDocument() {
+			return document;
+		}
+		
+		public void setDocument(Document document) {
+			this.document = document;
+		}
+		
+		public Paragraph getCurrentLine() {
+			return currentLine;
+		}
+		
+		public void setCurrentLine(Paragraph currentLine) {
+			this.currentLine = currentLine;
+		}
+	}
+	
+	@FunctionalInterface
+	private interface SongElementHandler {
+		void handleElement(ExportInProgress exportInProgress, Song song, SongElementHistory history)
+			throws DocumentException;
+	}
+	
+	private final Font titleFont;
+	private final Font lyricsFont;
+	private final Font translationFont;
+	private final Font copyrightFont;
+	private final ChordSpaceCorrector chordSpaceCorrector;
+	private final Map<SongElementEnum, SongElementHandler> songElementHandlers;
 	
 	public ExportService() throws Exception {
 		BaseFont baseFont = BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.WINANSI, BaseFont.EMBEDDED);
@@ -102,136 +157,138 @@ public class ExportService {
 		lyricsFont = new Font(baseFont, 12);
 		translationFont = new Font(baseFont, 8, Font.ITALIC);
 		copyrightFont = new Font(baseFont, 10);
+		
 		chordSpaceCorrector = new ChordSpaceCorrector(
 			text -> (int) lyricsFont.getBaseFont().getWidthPointKerned(text, lyricsFont.getSize()));
+		
+		songElementHandlers = buildSongElementHandlerMap();
 	}
 	
-	public ByteArrayOutputStream export(ExportFormat exportFormat, Collection<Song> songs) {
+	private Map<SongElementEnum, SongElementHandler> buildSongElementHandlerMap() {
+		Map<SongElementEnum, SongElementHandler> handlers = new HashMap<>();
+		handlers.put(TITLE, (exportInProgress, song, history) -> {
+			Chunk chunk = new Chunk(song.getTitle() + "\n");
+			chunk.setGenericTag(song.getTitle());
+			Paragraph paragraph = paragraph(titleFont);
+			paragraph.add(chunk);
+			exportInProgress.getDocument().add(paragraph);
+			
+			// insert chord sequence directly after title
+			if (exportInProgress.getExportFormat().areChordsShown() && StringUtils.isNotBlank(song.getCleanChordSequence())) {
+				Paragraph chordSequence = paragraph(song.getCleanChordSequence() + "\n\n", lyricsFont);
+				chordSequence.setIndentationLeft(30);
+				exportInProgress.getDocument().add(chordSequence);
+			}
+		});
+		handlers.put(LYRICS, (exportInProgress, song, history) -> {
+			String chordsLine = "";
+			SongElementHistoryQueryResult queryResult = history.query()
+				.without(NEW_LINE)
+				.lastSeen(is(CHORDS))
+				.end();
+			
+			if (queryResult.isMatched() && exportInProgress.getExportFormat().areChordsShown()) {
+				chordsLine = chordSpaceCorrector.correctChordSpaces(queryResult.getMatchedElements().get(0).getContent(),
+					history.current().getContent()) + "\n";
+			}
+			exportInProgress.getDocument().add(paragraph(chordsLine + history.current().getContent(), lyricsFont));
+		});
+		handlers.put(TRANSLATION, (exportInProgress, song, history) -> {
+			if (exportInProgress.getExportFormat().isTranslationShown()) {
+				exportInProgress.getDocument().add(paragraph(history.current().getContent(), translationFont));
+			}
+		});
+		handlers.put(NEW_LINE, (exportInProgress, song, history) -> {
+			// ignored for export when coming alone,
+			// but when there are two NEW_LINE elements in a row, we add a blank line
+			SongElementHistoryQueryResult queryResult = history.query()
+				.lastSeen(is(NEW_LINE))
+				.end();
+			if (queryResult.isMatched()) {
+				exportInProgress.getDocument().add(paragraph("\n", lyricsFont));
+			}
+		});
+		handlers.put(COPYRIGHT, (exportInProgress, song, history) -> {
+			Paragraph copyright = paragraph(history.current().getContent(), copyrightFont);
+			SongElementHistoryQueryResult queryResult = history.query()
+				.without(NEW_LINE)
+				.lastSeen(is(COPYRIGHT))
+				.end();
+			if (!queryResult.isMatched()) {
+				copyright.setSpacingBefore(20);
+			}
+			exportInProgress.getDocument().add(copyright);
+		});
+		// CHORDS -> handled by following LYRICS element
+		return handlers;
+	}
+	
+	public byte[] export(ExportFormat exportFormat, Collection<Song> songs) {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		
 		try {
-			Document document = new Document();
-			PdfWriter writer = PdfWriter.getInstance(document, outputStream);
 			TOC toc = new TOC();
-			writer.setPageEvent(toc);
-			writer.setPageEvent(new PageNumbers());
-			document.setMargins(50, 50, 30, 30);
-			document.open();
+			Document document = beginDocument(toc, outputStream);
 			
+			ExportInProgress exportInProgress = new ExportInProgress(exportFormat, document);
 			for (Song song : songs) {
 				List<SongElement> songElements = SongParser.parse(song, true, true, true);
 				
 				if (exportFormat.onlySongsWithChords()
-					&& songElements.stream().noneMatch(e -> e.getType() == SongElementEnum.CHORDS)) {
+					&& songElements.stream().noneMatch(e -> e.getType() == CHORDS)) {
 					continue;
 				}
 				
-				SongElement previousSongElement = null;
-				SongElement previousSongElementForNewLines = null;
-				for (SongElement songElement : songElements) {
-					// TODO use a Map containing handlers for each type instead of switch!?
-					switch (songElement.getType()) {
-						case TITLE:
-							Chunk chunk = new Chunk(song.getTitle() + "\n");
-							chunk.setGenericTag(song.getTitle());
-							Paragraph paragraph = paragraph(titleFont);
-							paragraph.add(chunk);
-							document.add(paragraph);
-							
-							// insert chord sequence directly after title
-							if (exportFormat.areChordsShown() && StringUtils.isNotBlank(getCleanChordSequence(song))) {
-								Paragraph chordSequence = paragraph(getCleanChordSequence(song) + "\n\n", lyricsFont);
-								chordSequence.setIndentationLeft(30);
-								document.add(chordSequence);
-							}
-							
-							break;
-						case LYRICS:
-							String chordsLine = "";
-							if (previousSongElement != null && previousSongElement.getType() == SongElementEnum.CHORDS
-								&& exportFormat.areChordsShown()) {
-								chordsLine = chordSpaceCorrector.correctChordSpaces(previousSongElement.getContent(), songElement.getContent())
-									+ "\n";
-							}
-							document.add(paragraph(chordsLine + songElement.getContent(), lyricsFont));
-							break;
-						case TRANSLATION:
-							if (exportFormat.isTranslationShown()) {
-								document.add(paragraph(songElement.getContent(), translationFont));
-							}
-							break;
-						case COPYRIGHT:
-							Paragraph copyright = paragraph(songElement.getContent(), copyrightFont);
-							if (previousSongElement != null && previousSongElement.getType() != SongElementEnum.COPYRIGHT) {
-								copyright.setSpacingBefore(20);
-							}
-							document.add(copyright);
-							break;
-						case NEW_LINE:
-							// ignored for export when coming alone, but
-							// when there are two NEW_LINE elements in a row, we add a blank line
-							if (previousSongElementForNewLines != null
-								&& previousSongElementForNewLines.getType() == SongElementEnum.NEW_LINE) {
-								document.add(paragraph("\n", lyricsFont));
-							}
-							break;
-						case CHORDS:
-							// handled by following LYRICS element
-							break;
-						default:
-							throw new IllegalStateException("unsupported song element type");
-					}
-					
-					if (isBodyElement(songElement) && !songElement.isEmpty()) {
-						previousSongElementForNewLines = songElement;
-					}
-					if (songElement.getType() != SongElementEnum.NEW_LINE) {
-						previousSongElement = songElement;
+				SongElementHistory history = new SongElementHistory(songElements);
+				for (SongElement songElement : history) {
+					SongElementHandler handler = songElementHandlers.get(songElement.getType());
+					if (handler != null) {
+						handler.handleElement(exportInProgress, song, history);
 					}
 				}
 				
 				document.newPage();
 			}
 			
-			// output TOC
-			document.add(paragraph("Table of Contents", titleFont));
-			Chunk dottedLine = new Chunk(new DottedLineSeparator());
-			List<SimpleEntry<String, SimpleEntry<String, Integer>>> entries = toc.getTOC();
-			for (SimpleEntry<String, SimpleEntry<String, Integer>> entry : entries) {
-				String songTitle = entry.getKey();
-				String destination = entry.getValue().getKey();
-				Integer pageNumber = entry.getValue().getValue();
-				
-				Paragraph p = paragraph(lyricsFont);
-				Chunk title = new Chunk(songTitle);
-				title.setAction(PdfAction.gotoLocalPage(destination, false));
-				p.add(title);
-				p.add(dottedLine);
-				Chunk number = new Chunk(String.valueOf(pageNumber));
-				number.setAction(PdfAction.gotoLocalPage(destination, false));
-				p.add(number);
-				document.add(p);
-			}
+			appendTableOfContents(document, toc);
 			
 			document.close();
 		} catch (DocumentException e) {
 			throw new RuntimeException("error while creating PDF document", e);
 		}
 		
-		return outputStream;
+		return outputStream.toByteArray();
 	}
 	
-	private boolean isBodyElement(SongElement songElement) {
-		return songElement.getType() == SongElementEnum.LYRICS
-			|| songElement.getType() == SongElementEnum.CHORDS
-			|| songElement.getType() == SongElementEnum.TRANSLATION
-			|| songElement.getType() == SongElementEnum.NEW_LINE;
+	private Document beginDocument(TOC toc, ByteArrayOutputStream outputStream) throws DocumentException {
+		Document document = new Document();
+		PdfWriter writer = PdfWriter.getInstance(document, outputStream);
+		writer.setPageEvent(toc);
+		writer.setPageEvent(new PageNumbers());
+		document.setMargins(50, 50, 30, 30);
+		document.open();
+		return document;
 	}
 	
-	private String getCleanChordSequence(Song song) {
-		return song.getChordSequence() == null
-			? null
-			: song.getChordSequence().replaceAll("^\\p{Space}+", "").replaceAll("\\p{Space}+$", "");
+	private void appendTableOfContents(Document document, TOC toc) throws DocumentException {
+		document.add(paragraph("Table of Contents", titleFont));
+		Chunk dottedLine = new Chunk(new DottedLineSeparator());
+		List<SimpleEntry<String, SimpleEntry<String, Integer>>> entries = toc.getTOC();
+		for (SimpleEntry<String, SimpleEntry<String, Integer>> entry : entries) {
+			String songTitle = entry.getKey();
+			String destination = entry.getValue().getKey();
+			Integer pageNumber = entry.getValue().getValue();
+			
+			Paragraph p = paragraph(lyricsFont);
+			Chunk title = new Chunk(songTitle);
+			title.setAction(PdfAction.gotoLocalPage(destination, false));
+			p.add(title);
+			p.add(dottedLine);
+			Chunk number = new Chunk(String.valueOf(pageNumber));
+			number.setAction(PdfAction.gotoLocalPage(destination, false));
+			p.add(number);
+			document.add(p);
+		}
 	}
 	
 	private Paragraph paragraph(String text, Font font) {
@@ -244,13 +301,7 @@ public class ExportService {
 	}
 	
 	private Paragraph paragraph(Font font) {
-		Paragraph paragraph = new Paragraph();
-		paragraph.setFont(font);
-		paragraph.setExtraParagraphSpace(0);
-		paragraph.setPaddingTop(0);
-		paragraph.setSpacingBefore(0);
-		paragraph.setSpacingAfter(0);
-		return paragraph;
+		return paragraph(null, font);
 	}
 	
 }

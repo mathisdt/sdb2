@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 import org.junit.Before;
@@ -48,15 +47,15 @@ public class ExportServiceTest {
 		song3.setTitle("Test-Song 3");
 		song1.setLyrics("A     B          X\nLyrics of Song 1\n[Translation of Song 1]");
 		song2.setLyrics("[Intro of a part of Song 2]\nA     B          Y\nLyrics of Song 2");
-		song3.setLyrics("Lyrics of Song 3");
+		song3.setLyrics("Lyrics of Song 3\n\nSecond paragraph of Song 3");
 		songs = Lists.newArrayList(song1, song2, song3);
 	}
 	
 	@Test
 	public void exportAll() throws Exception {
-		ByteArrayOutputStream exported = exportService.export(new ExportFormat(true, true, false), songs);
+		byte[] exported = exportService.export(new ExportFormat(true, true, false), songs);
 		
-		PdfReader reader = new PdfReader(exported.toByteArray());
+		PdfReader reader = new PdfReader(exported);
 		assertEquals(reader.getNumberOfPages(), 4);
 		
 		String page1 = PdfTextExtractor.getTextFromPage(reader, 1);
@@ -75,9 +74,9 @@ public class ExportServiceTest {
 	
 	@Test
 	public void exportOnlyWithChords() throws Exception {
-		ByteArrayOutputStream exported = exportService.export(new ExportFormat(true, true, true), songs);
+		byte[] exported = exportService.export(new ExportFormat(true, true, true), songs);
 		
-		PdfReader reader = new PdfReader(exported.toByteArray());
+		PdfReader reader = new PdfReader(exported);
 		assertEquals(reader.getNumberOfPages(), 3);
 		
 		String page1 = PdfTextExtractor.getTextFromPage(reader, 1);
@@ -93,9 +92,9 @@ public class ExportServiceTest {
 	
 	@Test
 	public void exportWithoutChords() throws Exception {
-		ByteArrayOutputStream exported = exportService.export(new ExportFormat(true, false, false), songs);
+		byte[] exported = exportService.export(new ExportFormat(true, false, false), songs);
 		
-		PdfReader reader = new PdfReader(exported.toByteArray());
+		PdfReader reader = new PdfReader(exported);
 		assertEquals(reader.getNumberOfPages(), 4);
 		
 		String page1 = PdfTextExtractor.getTextFromPage(reader, 1);
@@ -114,9 +113,9 @@ public class ExportServiceTest {
 	
 	@Test
 	public void exportWithoutChordsAndTranslation() throws Exception {
-		ByteArrayOutputStream exported = exportService.export(new ExportFormat(false, false, false), songs);
+		byte[] exported = exportService.export(new ExportFormat(false, false, false), songs);
 		
-		PdfReader reader = new PdfReader(exported.toByteArray());
+		PdfReader reader = new PdfReader(exported);
 		assertEquals(reader.getNumberOfPages(), 4);
 		
 		String page1 = PdfTextExtractor.getTextFromPage(reader, 1);

@@ -94,7 +94,9 @@ public class SongParser {
 					}
 				} else {
 					isFirst = addNewlineIfNotFirstLine(ret, isFirst);
-					ret.add(new SongElement(SongElementEnum.LYRICS, line));
+					if (!line.isEmpty()) {
+						ret.add(new SongElement(SongElementEnum.LYRICS, line));
+					}
 				}
 				
 			}

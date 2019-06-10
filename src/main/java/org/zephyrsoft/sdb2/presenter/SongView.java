@@ -60,6 +60,7 @@ import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongElement;
 import org.zephyrsoft.sdb2.model.SongElementEnum;
+import org.zephyrsoft.sdb2.model.SongElementHistory;
 import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.sdb2.util.ChordSpaceCorrector;
 import org.zephyrsoft.sdb2.util.StringTools;
