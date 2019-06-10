@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -133,6 +134,13 @@ public class ExportService {
 			return currentLine;
 		}
 		
+		public Paragraph getOrCreateCurrentLine(Supplier<Paragraph> paragraphSupplier) {
+			if (currentLine == null) {
+				currentLine = paragraphSupplier.get();
+			}
+			return currentLine;
+		}
+		
 		public void setCurrentLine(Paragraph currentLine) {
 			this.currentLine = currentLine;
 		}
@@ -191,22 +199,26 @@ public class ExportService {
 				chordsLine = chordSpaceCorrector.correctChordSpaces(queryResult.getMatchedElements().get(0).getContent(),
 					history.current().getContent()) + "\n";
 			}
-			exportInProgress.getDocument().add(paragraph(chordsLine + history.current().getContent(), lyricsFont));
+			exportInProgress.getOrCreateCurrentLine(() -> paragraph())
+				.add(chunk(chordsLine + history.current().getContent(), lyricsFont));
 		});
 		handlers.put(TRANSLATION, (exportInProgress, song, history) -> {
 			if (exportInProgress.getExportFormat().isTranslationShown()) {
-				exportInProgress.getDocument().add(paragraph(history.current().getContent(), translationFont));
+				exportInProgress.getOrCreateCurrentLine(() -> paragraph())
+					.add(chunk(history.current().getContent(), translationFont));
 			}
 		});
 		handlers.put(NEW_LINE, (exportInProgress, song, history) -> {
+			appendNewLine(exportInProgress);
+			
 			// ignored for export when coming alone,
 			// but when there are two NEW_LINE elements in a row, we add a blank line
-			SongElementHistoryQueryResult queryResult = history.query()
-				.lastSeen(is(NEW_LINE))
-				.end();
-			if (queryResult.isMatched()) {
-				exportInProgress.getDocument().add(paragraph("\n", lyricsFont));
-			}
+			// SongElementHistoryQueryResult queryResult = history.query()
+			// .lastSeen(is(NEW_LINE))
+			// .end();
+			// if (queryResult.isMatched()) {
+			// exportInProgress.getDocument().add(paragraph("\n", lyricsFont));
+			// }
 		});
 		handlers.put(COPYRIGHT, (exportInProgress, song, history) -> {
 			Paragraph copyright = paragraph(history.current().getContent(), copyrightFont);
@@ -221,6 +233,13 @@ public class ExportService {
 		});
 		// CHORDS -> handled by following LYRICS element
 		return handlers;
+	}
+	
+	private void appendNewLine(ExportInProgress exportInProgress) throws DocumentException {
+		if (exportInProgress.getCurrentLine() != null) {
+			exportInProgress.getDocument().add(exportInProgress.getCurrentLine());
+		}
+		exportInProgress.setCurrentLine(paragraph());
 	}
 	
 	public byte[] export(ExportFormat exportFormat, Collection<Song> songs) {
@@ -289,6 +308,19 @@ public class ExportService {
 			p.add(number);
 			document.add(p);
 		}
+	}
+	
+	private Chunk chunk(String text, Font font) {
+		return new Chunk(text, font);
+	}
+	
+	private Paragraph paragraph() {
+		Paragraph paragraph = new Paragraph();
+		paragraph.setExtraParagraphSpace(0);
+		paragraph.setPaddingTop(0);
+		paragraph.setSpacingBefore(0);
+		paragraph.setSpacingAfter(0);
+		return paragraph;
 	}
 	
 	private Paragraph paragraph(String text, Font font) {

@@ -101,6 +101,10 @@ public class SongParser {
 				
 			}
 		}
+		// always make sure there's a newline element after the lyrics part
+		if (!ret.isEmpty() && ret.get(ret.size() - 1).getType() != SongElementEnum.NEW_LINE) {
+			ret.add(newLineElement());
+		}
 		
 		// copyright
 		if (!StringTools.isEmpty(song.getComposer())) {
@@ -127,9 +131,13 @@ public class SongParser {
 		if (ret) {
 			ret = false;
 		} else {
-			elementList.add(new SongElement(SongElementEnum.NEW_LINE, "\n"));
+			elementList.add(newLineElement());
 		}
 		return ret;
+	}
+	
+	private static SongElement newLineElement() {
+		return new SongElement(SongElementEnum.NEW_LINE, "\n");
 	}
 	
 	/**

@@ -73,17 +73,18 @@ public class SongParserTest {
 			+ TRANSLATION_INTRO + TRANSLATION_2 + TRANSLATION_OUTRO // index 12
 			+ SPACES_2 // index 13
 		);
-		when(song.getComposer()).thenReturn(COMPOSER); // index 14
-		when(song.getAuthorText()).thenReturn(AUTHOR_TEXT); // index 15
-		when(song.getAuthorTranslation()).thenReturn(AUTHOR_TRANSLATION); // index 16
-		when(song.getPublisher()).thenReturn(PUBLISHER); // index 17
-		when(song.getAdditionalCopyrightNotes()).thenReturn(ADDITIONAL_NOTES); // index 18
+		// final newline after lyrics part (introduced by SongParser): index 14
+		when(song.getComposer()).thenReturn(COMPOSER); // index 15
+		when(song.getAuthorText()).thenReturn(AUTHOR_TEXT); // index 16
+		when(song.getAuthorTranslation()).thenReturn(AUTHOR_TRANSLATION); // index 17
+		when(song.getPublisher()).thenReturn(PUBLISHER); // index 18
+		when(song.getAdditionalCopyrightNotes()).thenReturn(ADDITIONAL_NOTES); // index 19
 	}
 	
 	@Test
 	public void testParsing() {
 		List<SongElement> result = SongParser.parse(song, true, true, true);
-		Assert.assertTrue(result.size() == 19);
+		Assert.assertEquals(20, result.size());
 		
 		Assert.assertEquals(new SongElement(SongElementEnum.TITLE, TITLE), result.get(0));
 		
@@ -102,14 +103,18 @@ public class SongParserTest {
 		Assert.assertEquals(new SongElement(SongElementEnum.TRANSLATION, TRANSLATION_2), result.get(12));
 		Assert.assertEquals(new SongElement(SongElementEnum.LYRICS, SPACES_2), result.get(13));
 		
+		// final newline after lyrics part
+		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(14));
+		
 		Assert.assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_MUSIC + COMPOSER),
-			result.get(14));
-		Assert.assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_TEXT + AUTHOR_TEXT),
 			result.get(15));
+		Assert.assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_TEXT + AUTHOR_TEXT),
+			result.get(16));
 		Assert.assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_TRANSLATION
-			+ AUTHOR_TRANSLATION), result.get(16));
+			+ AUTHOR_TRANSLATION), result.get(17));
 		Assert.assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_PUBLISHER + PUBLISHER),
-			result.get(17));
-		Assert.assertEquals(new SongElement(SongElementEnum.COPYRIGHT, ADDITIONAL_NOTES), result.get(18));
+			result.get(18));
+		Assert.assertEquals(new SongElement(SongElementEnum.COPYRIGHT, ADDITIONAL_NOTES), result.get(19));
+		
 	}
 }

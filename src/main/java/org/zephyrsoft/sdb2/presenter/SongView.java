@@ -180,10 +180,6 @@ public class SongView extends JPanel implements Scroller {
 	 */
 	private void render() {
 		List<SongElement> toDisplay = SongParser.parse(song, showTranslation, showTitle, showChords);
-		if (toDisplay.size() > 0 && !is(toDisplay.get(toDisplay.size() - 1), COPYRIGHT)) {
-			// add final newline to fetch the last line of the last part always
-			toDisplay.add(new SongElement(NEW_LINE, NEWLINE_CHAR));
-		}
 		SongElementHistory elements = new SongElementHistory(toDisplay);
 		
 		// chord lines: correct spacing (in lyrics font) to make the chords correspond to the words
@@ -224,16 +220,15 @@ public class SongView extends JPanel implements Scroller {
 			handleTitlePosition(element);
 			
 			if ((is(element, NEW_LINE, COPYRIGHT))
-				&& !isEmpty(previousElement)
+				&& (!isEmpty(previousElement))
 				&& (!is(previousElement, TRANSLATION)
 					|| currentPart.isEmpty()) // translation line is first line in part
 				&& position == null) {
 				position = createPosition(previousElement);
-			} else if (is(element, NEW_LINE, COPYRIGHT)
-				&& !isEmpty(beforePreviousElement)
-				&& !is(beforePreviousElement, TRANSLATION)
+			} else if (is(element, NEW_LINE)
+				&& is(previousElement, NEW_LINE)
 				&& position == null) {
-				position = createPosition(beforePreviousElement);
+				position = createPosition();
 			}
 			
 			if (isBodyElement(element)) {
@@ -247,22 +242,14 @@ public class SongView extends JPanel implements Scroller {
 					parts.add(currentPart);
 					currentPart = new AddressablePart();
 				} else if (is(element, NEW_LINE)
-					&& is(previousElement, LYRICS)
-				// && !isEmpty(previousElement)
-				// && (beforePreviousElement == null || is(beforePreviousElement, NEW_LINE) || is(beforePreviousElement,
-				// TITLE))
-				) {
+					&& is(previousElement, LYRICS)) {
 					// save current line and begin a new one
 					AddressableLine currentLine = new AddressableLine(previousElement, position);
 					currentPart.add(currentLine);
 					position = null;
 				} else if (is(element, NEW_LINE)
 					&& is(beforePreviousElement, LYRICS)
-					&& is(previousElement, TRANSLATION)
-				// && !isEmpty(previousElement)
-				// && (beforePreviousElement == null || is(beforePreviousElement, NEW_LINE) || is(beforePreviousElement,
-				// TITLE))
-				) {
+					&& is(previousElement, TRANSLATION)) {
 					// save current line and begin a new one
 					AddressableLine currentLine = new AddressableLine(beforePreviousElement, position);
 					currentPart.add(currentLine);
@@ -319,6 +306,7 @@ public class SongView extends JPanel implements Scroller {
 		for (SongElement element : toSubtract) {
 			toSubtractInt += element.getContent() == null ? 0 : element.getContent().length();
 		}
+		// +1 because the position "before the first character on the line" is still on the line before
 		return document.getLength() - toSubtractInt + 1;
 	}
 	
