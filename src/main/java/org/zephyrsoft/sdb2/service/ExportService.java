@@ -209,16 +209,13 @@ public class ExportService {
 			}
 		});
 		handlers.put(NEW_LINE, (exportInProgress, song, history) -> {
-			appendNewLine(exportInProgress);
-			
-			// ignored for export when coming alone,
-			// but when there are two NEW_LINE elements in a row, we add a blank line
-			// SongElementHistoryQueryResult queryResult = history.query()
-			// .lastSeen(is(NEW_LINE))
-			// .end();
-			// if (queryResult.isMatched()) {
-			// exportInProgress.getDocument().add(paragraph("\n", lyricsFont));
-			// }
+			if (exportInProgress.getCurrentLine() != null) {
+				if (exportInProgress.getCurrentLine().getChunks() == null || exportInProgress.getCurrentLine().getChunks().isEmpty()) {
+					exportInProgress.getCurrentLine().add(chunk("\n"));
+				}
+				exportInProgress.getDocument().add(exportInProgress.getCurrentLine());
+			}
+			exportInProgress.setCurrentLine(paragraph());
 		});
 		handlers.put(COPYRIGHT, (exportInProgress, song, history) -> {
 			Paragraph copyright = paragraph(history.current().getContent(), copyrightFont);
@@ -233,13 +230,6 @@ public class ExportService {
 		});
 		// CHORDS -> handled by following LYRICS element
 		return handlers;
-	}
-	
-	private void appendNewLine(ExportInProgress exportInProgress) throws DocumentException {
-		if (exportInProgress.getCurrentLine() != null) {
-			exportInProgress.getDocument().add(exportInProgress.getCurrentLine());
-		}
-		exportInProgress.setCurrentLine(paragraph());
 	}
 	
 	public byte[] export(ExportFormat exportFormat, Collection<Song> songs) {
@@ -308,6 +298,10 @@ public class ExportService {
 			p.add(number);
 			document.add(p);
 		}
+	}
+	
+	private Chunk chunk(String text) {
+		return new Chunk(text);
 	}
 	
 	private Chunk chunk(String text, Font font) {
