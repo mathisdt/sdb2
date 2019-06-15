@@ -18,8 +18,6 @@ package org.zephyrsoft.sdb2.presenter;
 
 /**
  * Control the presentation.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public interface Presenter extends Scroller {
 	

@@ -29,8 +29,6 @@ import org.zephyrsoft.sdb2.util.converter.SettingValueAdapter;
 
 /**
  * A global setting.
- * 
- * @author Mathis Dirksen-Thedens
  */
 @XmlRootElement(name = "setting")
 @XmlAccessorType(XmlAccessType.NONE)

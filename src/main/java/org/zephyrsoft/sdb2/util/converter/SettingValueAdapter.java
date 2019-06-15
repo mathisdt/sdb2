@@ -37,8 +37,6 @@ import org.zephyrsoft.sdb2.model.settings.Setting;
 
 /**
  * XML adapter for the different values of {@link Setting}s.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class SettingValueAdapter extends XmlAdapter<Object, Object> {
 	

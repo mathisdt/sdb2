@@ -64,8 +64,6 @@ import com.itextpdf.text.pdf.draw.DottedLineSeparator;
 
 /**
  * Exports songs as PDF in different variations.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class ExportService {
 	

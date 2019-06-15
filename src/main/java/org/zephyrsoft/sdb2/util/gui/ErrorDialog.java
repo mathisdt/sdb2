@@ -38,8 +38,6 @@ import org.zephyrsoft.sdb2.gui.MainWindow;
 
 /**
  * A dialog for displaying fatal errors (such as uncaught exceptions).
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class ErrorDialog extends JDialog {
 	
@@ -103,7 +101,7 @@ public class ErrorDialog extends JDialog {
 	
 	/**
 	 * Open an error dialog.
-	 * 
+	 *
 	 * @param parent
 	 *            the parent component
 	 * @param text
@@ -117,7 +115,7 @@ public class ErrorDialog extends JDialog {
 	
 	/**
 	 * Open an error dialog.
-	 * 
+	 *
 	 * @param parent
 	 *            the parent component
 	 * @param text

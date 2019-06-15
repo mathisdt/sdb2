@@ -18,8 +18,6 @@ package org.zephyrsoft.sdb2.model;
 
 /**
  * Indicates specific elements of a {@link Song}.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public enum SongElementEnum {
 	/** the title (if present, it is always exactly one line) */

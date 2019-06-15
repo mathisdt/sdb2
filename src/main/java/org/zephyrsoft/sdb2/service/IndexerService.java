@@ -55,8 +55,6 @@ import com.google.common.base.Stopwatch;
 
 /**
  * An in-memory index based on Lucene.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class IndexerService {
 	

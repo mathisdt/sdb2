@@ -18,8 +18,6 @@ package org.zephyrsoft.sdb2.gui;
 
 /**
  * Template for keyboard shortcut definitions.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class KeyboardShortcut {
 	private final int keyCode;

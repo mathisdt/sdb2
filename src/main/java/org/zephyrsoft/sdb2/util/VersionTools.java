@@ -30,8 +30,6 @@ import com.google.gson.JsonParser;
 
 /**
  * Extracts the current version from the manifest and checks for updates.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class VersionTools {
 	

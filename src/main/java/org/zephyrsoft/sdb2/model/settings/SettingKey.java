@@ -24,8 +24,6 @@ import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 
 /**
  * The keys to use with the {@link SettingsModel}.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public enum SettingKey {
 	/** should the song title be shown in presentation */

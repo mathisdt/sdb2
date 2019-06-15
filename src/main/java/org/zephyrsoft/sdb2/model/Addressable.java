@@ -20,8 +20,6 @@ import javax.swing.text.StyledDocument;
 
 /**
  * An element which is addressable by its position.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public interface Addressable {
 	

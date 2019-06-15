@@ -37,8 +37,6 @@ import org.zephyrsoft.sdb2.util.gui.SongCellHighlighter;
 
 /**
  * A {@link ListCellRenderer} for {@link Song} values.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class SongCellRenderer implements ListCellRenderer<Song> {
 	

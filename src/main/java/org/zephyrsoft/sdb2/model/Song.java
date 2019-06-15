@@ -31,8 +31,6 @@ import org.zephyrsoft.sdb2.util.converter.LanguageEnumAdapter;
 
 /**
  * Representation of a song.
- *
- * @author Mathis Dirksen-Thedens
  */
 @XmlRootElement(name = "song")
 @XmlAccessorType(XmlAccessType.NONE)

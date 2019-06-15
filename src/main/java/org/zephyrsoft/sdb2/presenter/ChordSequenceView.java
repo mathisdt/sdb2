@@ -39,8 +39,6 @@ import org.zephyrsoft.sdb2.model.SongElementEnum;
 
 /**
  * Renders the chord sequence of a {@link Song} in order to display it on a screen.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class ChordSequenceView extends JPanel {
 	

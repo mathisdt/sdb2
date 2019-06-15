@@ -1,16 +1,16 @@
 /*
  * This file is part of the Song Database (SDB).
- * 
+ *
  * SDB is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
@@ -27,8 +27,6 @@ import org.apache.commons.text.WordUtils;
  * Methods which are missing in the {@link String} class.<br/>
  * <br/>
  * <b>All arguments have to be non-{@code null}!</b>
- * 
- * @author Mathis Dirksen-Thedens
  */
 public final class StringTools {
 	
@@ -45,7 +43,7 @@ public final class StringTools {
 	
 	/**
 	 * Convert a string to an easily comparable form, especially remove all punctuation and newline characters.
-	 * 
+	 *
 	 * @param in
 	 *            the input string
 	 * @return the easily comparable form
@@ -61,7 +59,7 @@ public final class StringTools {
 	/**
 	 * Convert a string which is in camel case to all caps, separated with underscores. Example:
 	 * "camelCaseStringExample" => "CAMEL_CASE_STRING_EXAMPLE"
-	 * 
+	 *
 	 * @param camelCasedString
 	 *            the camel-cased string
 	 * @return the string with underscores in all caps
@@ -78,7 +76,7 @@ public final class StringTools {
 	/**
 	 * Convert a string which is separated with underscores to camel case. Example: "UNDERSCORED_STRING_EXAMPLE" =>
 	 * "underscoredStringExample"
-	 * 
+	 *
 	 * @param underscoredString
 	 *            the underscore-separated string
 	 * @return the camel-cased string
@@ -96,7 +94,7 @@ public final class StringTools {
 	/**
 	 * Compare two Strings with special care. If one of the Strings is {@code null}, it is assumed "smaller" than the
 	 * non-null String.
-	 * 
+	 *
 	 * @see String#compareTo(String)
 	 * @param one
 	 *            first parameter to compare
@@ -122,7 +120,7 @@ public final class StringTools {
 	/**
 	 * Compare two Strings with regards to the current default locale. If one of the Strings is {@code null}, it is
 	 * assumed "smaller" than the non-null String.
-	 * 
+	 *
 	 * @see String#compareTo(String)
 	 * @param one
 	 *            first parameter to compare
@@ -148,7 +146,7 @@ public final class StringTools {
 	
 	/**
 	 * A sibling of {@link String#replaceAll(String, String)} but without regex interpretation.
-	 * 
+	 *
 	 * @param in
 	 *            the String in which the replacement shall take place
 	 * @param toreplace
@@ -168,7 +166,7 @@ public final class StringTools {
 	
 	/**
 	 * Makes sure that a {@link String} does have a specific number of characters at maximum.
-	 * 
+	 *
 	 * @param in
 	 *            the input
 	 * @param maxlength
@@ -185,7 +183,7 @@ public final class StringTools {
 	
 	/**
 	 * Repeat a {@link String}.
-	 * 
+	 *
 	 * @param torepeat
 	 *            the String which is to be repeated
 	 * @param count
@@ -202,7 +200,7 @@ public final class StringTools {
 	
 	/**
 	 * Trim only the right side of a {@link String}.
-	 * 
+	 *
 	 * @param in
 	 *            the input
 	 * @return the input which was right-trimmed (any spaces to the left are still intact)
@@ -213,7 +211,7 @@ public final class StringTools {
 	
 	/**
 	 * A sibling of the {@link String#contains(CharSequence)} method, but ignorant of casing.
-	 * 
+	 *
 	 * @param haystack
 	 *            the String in which to search
 	 * @param needle
@@ -226,7 +224,7 @@ public final class StringTools {
 	
 	/**
 	 * Equals method capable of handling null values.
-	 * 
+	 *
 	 * @param one
 	 *            first string
 	 * @param two
@@ -240,7 +238,7 @@ public final class StringTools {
 	
 	/**
 	 * Equals method capable of handling null values. {@code null} values are treated as equal to empty strings.
-	 * 
+	 *
 	 * @param one
 	 *            first string
 	 * @param two
@@ -254,7 +252,7 @@ public final class StringTools {
 	
 	/**
 	 * Tests if a string is null or empty.
-	 * 
+	 *
 	 * @param toTest
 	 *            the string to test
 	 * @return {@code true} if the string is null or empty, {@code false} else
@@ -266,7 +264,7 @@ public final class StringTools {
 	/**
 	 * Returns exactly the argument, unless the argument is {@code null}. In this case, this method returns the empty
 	 * string.
-	 * 
+	 *
 	 * @param in
 	 *            the string to check
 	 * @return a non-null value
@@ -281,7 +279,7 @@ public final class StringTools {
 	
 	/**
 	 * Tests is a string is null, empty or only contains whitespace.
-	 * 
+	 *
 	 * @param in
 	 *            the string to test
 	 * @return {@code true} if the string is null, empty or only contains whitespace; {@code false} else

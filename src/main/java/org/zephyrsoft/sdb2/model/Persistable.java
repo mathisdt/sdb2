@@ -18,8 +18,6 @@ package org.zephyrsoft.sdb2.model;
 
 /**
  * This marks models which can be persisted.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public interface Persistable {
 	

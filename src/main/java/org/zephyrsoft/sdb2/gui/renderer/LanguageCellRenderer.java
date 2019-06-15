@@ -29,8 +29,6 @@ import org.zephyrsoft.sdb2.model.LanguageEnum;
 
 /**
  * A {@link ListCellRenderer} for {@link LanguageEnum} values.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class LanguageCellRenderer implements ListCellRenderer<LanguageEnum> {
 	

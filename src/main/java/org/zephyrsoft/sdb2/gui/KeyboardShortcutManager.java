@@ -23,13 +23,11 @@ import java.util.Set;
 
 /**
  * Manager for window-wide keyboard shortcuts.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class KeyboardShortcutManager implements KeyEventDispatcher {
-
+	
 	private Set<KeyboardShortcut> shortcuts = new HashSet<>();
-
+	
 	/**
 	 * @see java.awt.KeyEventDispatcher#dispatchKeyEvent(java.awt.event.KeyEvent)
 	 */

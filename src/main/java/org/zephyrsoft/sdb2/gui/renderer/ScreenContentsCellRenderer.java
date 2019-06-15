@@ -29,8 +29,6 @@ import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 
 /**
  * A {@link ListCellRenderer} for {@link ScreenContentsEnum} values.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class ScreenContentsCellRenderer implements ListCellRenderer<ScreenContentsEnum> {
 	

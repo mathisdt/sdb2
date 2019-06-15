@@ -27,8 +27,6 @@ import com.google.common.base.Preconditions;
 
 /**
  * Parses a {@link Song} and thus prepares it for being shown in the editor or as presentation.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class SongParser {
 	

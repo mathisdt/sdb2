@@ -28,8 +28,6 @@ import org.mockito.MockitoAnnotations;
 
 /**
  * Tests the behaviour of {@link SongParser}.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class SongParserTest {
 	

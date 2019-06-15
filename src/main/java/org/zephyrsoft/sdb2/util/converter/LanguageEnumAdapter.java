@@ -22,8 +22,6 @@ import org.zephyrsoft.sdb2.model.LanguageEnum;
 
 /**
  * XML adapter for {@link LanguageEnum}.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class LanguageEnumAdapter extends XmlAdapter<String, LanguageEnum> {
 	

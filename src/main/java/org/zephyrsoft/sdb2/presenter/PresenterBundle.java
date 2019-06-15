@@ -23,8 +23,6 @@ import org.zephyrsoft.sdb2.model.AddressablePart;
 
 /**
  * Provide control over any number of running presenter windows.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class PresenterBundle implements Presenter {
 	

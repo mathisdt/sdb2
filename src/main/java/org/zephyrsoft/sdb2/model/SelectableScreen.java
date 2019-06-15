@@ -20,8 +20,6 @@ import com.google.common.base.Preconditions;
 
 /**
  * Represents a screen connected to the computer.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class SelectableScreen {
 	

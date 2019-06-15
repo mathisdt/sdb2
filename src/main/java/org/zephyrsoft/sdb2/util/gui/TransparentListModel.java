@@ -17,12 +17,11 @@
 package org.zephyrsoft.sdb2.util.gui;
 
 import java.util.List;
+
 import javax.swing.AbstractListModel;
 
 /**
  * A list model which transparently uses an underlying {@link List}.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class TransparentListModel<T> extends AbstractListModel<T> {
 	

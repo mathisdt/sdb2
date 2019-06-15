@@ -33,8 +33,6 @@ import org.zephyrsoft.sdb2.model.statistics.StatisticsModel;
 
 /**
  * Tests the behaviour of {@link XMLConverter}.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class XMLConverterTest {
 	

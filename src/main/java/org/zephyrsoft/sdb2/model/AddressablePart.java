@@ -22,8 +22,6 @@ import java.util.List;
 
 /**
  * A part that can be positioned. Consists of one or more {@link AddressableLine}s.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class AddressablePart implements Addressable, Iterable<AddressableLine> {
 	

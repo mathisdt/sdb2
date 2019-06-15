@@ -28,8 +28,6 @@ import com.google.common.collect.Sets;
 
 /**
  * Keeps track of song elements. Not necessarily thread-safe!
- *
- * @author Mathis Dirksen-Thedens
  */
 public class SongElementHistory implements Iterable<SongElement> {
 	

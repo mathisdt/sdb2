@@ -24,8 +24,6 @@ import org.zephyrsoft.sdb2.util.DateTools;
 
 /**
  * XML adapter for {@link LocalDate}.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class LocalDateAdapter extends XmlAdapter<String, LocalDate> {
 	

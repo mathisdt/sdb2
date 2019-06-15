@@ -17,13 +17,12 @@
 package org.zephyrsoft.sdb2.presenter;
 
 import java.util.List;
+
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.Song;
 
 /**
  * Control the scrolling inside a {@link Song}.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public interface Scroller {
 	

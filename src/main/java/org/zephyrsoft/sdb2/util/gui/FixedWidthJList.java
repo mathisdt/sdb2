@@ -22,8 +22,6 @@ import javax.swing.ListSelectionModel;
 /**
  * A {@link JList} without horizontal scrolling. All cell renderers are fixed to the width of the list viewport
  * (horizontal scrolling is disabled).
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class FixedWidthJList<T> extends JList<T> {
 	

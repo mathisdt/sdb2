@@ -22,8 +22,6 @@ import com.google.common.collect.Lists;
 
 /**
  * Matches one or more {@link SongElement}s by their respective {@link SongElementEnum}.
- *
- * @author Mathis Dirksen-Thedens
  */
 @FunctionalInterface
 public interface SongElementMatcher {

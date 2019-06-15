@@ -21,8 +21,6 @@ import java.util.List;
 
 /**
  * A list model which transparently uses an underlying {@link List} and supports filtering the contents.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class TransparentFilterableListModel<T> extends TransparentListModel<T> {
 	

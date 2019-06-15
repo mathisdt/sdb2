@@ -22,8 +22,6 @@ import java.util.regex.Pattern;
 
 /**
  * Corrects spacing in chord lines so the chords are positioned above the right lyrics.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class ChordSpaceCorrector {
 	

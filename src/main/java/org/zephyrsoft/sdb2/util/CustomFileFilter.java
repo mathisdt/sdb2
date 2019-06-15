@@ -21,8 +21,6 @@ import java.io.File;
 /**
  * A filter that accepts all directories (with any extenion or none at all) and all files with the specified
  * extension(s).
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class CustomFileFilter extends javax.swing.filechooser.FileFilter implements java.io.FileFilter {
 	

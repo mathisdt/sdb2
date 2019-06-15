@@ -78,8 +78,6 @@ import com.google.common.collect.Ordering;
 
 /**
  * Controller for {@link MainWindow}.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class MainController implements Scroller {
 	

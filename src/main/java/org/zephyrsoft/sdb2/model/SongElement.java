@@ -20,8 +20,6 @@ import org.zephyrsoft.sdb2.util.StringTools;
 
 /**
  * Holds one element of a {@link Song}, e.g. one lyrics line or the title.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class SongElement {
 	

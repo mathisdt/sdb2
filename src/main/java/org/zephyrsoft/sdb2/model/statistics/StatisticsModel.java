@@ -41,8 +41,6 @@ import com.google.common.base.Preconditions;
 
 /**
  * Statistics about the displaying of songs.
- * 
- * @author Mathis Dirksen-Thedens
  */
 @XmlRootElement(name = "statistics")
 @XmlAccessorType(XmlAccessType.NONE)

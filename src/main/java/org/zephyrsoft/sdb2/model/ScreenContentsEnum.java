@@ -20,8 +20,6 @@ import org.apache.commons.text.WordUtils;
 
 /**
  * Types of presentation screen contents.
- *
- * @author Mathis Dirksen-Thedens
  */
 public enum ScreenContentsEnum {
 	ONLY_LYRICS("only lyrics", true, false, false, false),

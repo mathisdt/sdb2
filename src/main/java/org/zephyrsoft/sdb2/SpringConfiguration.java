@@ -33,8 +33,6 @@ import org.zephyrsoft.sdb2.service.IndexerService;
 
 /**
  * Configures the DI context.
- *
- * @author Mathis Dirksen-Thedens
  */
 @Configuration
 public class SpringConfiguration {

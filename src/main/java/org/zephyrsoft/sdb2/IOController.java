@@ -34,8 +34,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Controller for input/output operations.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class IOController {
 	

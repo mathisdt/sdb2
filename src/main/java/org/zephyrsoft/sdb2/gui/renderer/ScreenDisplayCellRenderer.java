@@ -30,8 +30,6 @@ import org.zephyrsoft.sdb2.model.SelectableScreen;
 
 /**
  * A {@link ListCellRenderer} for {@link GraphicsDevice} values.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class ScreenDisplayCellRenderer implements ListCellRenderer<SelectableScreen> {
 	

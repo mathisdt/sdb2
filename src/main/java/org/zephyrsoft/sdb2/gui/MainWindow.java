@@ -124,8 +124,6 @@ import say.swing.JFontChooser;
 
 /**
  * Main window of the application.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class MainWindow extends JFrame implements UIScroller {
 	

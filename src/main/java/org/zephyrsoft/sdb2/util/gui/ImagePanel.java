@@ -27,9 +27,6 @@ import com.google.common.base.Preconditions;
 
 /**
  * Display an image at the right scale to make it fit exactly into the container.
- * 
- * @author Scott Carpenter (scottc at movingtofreedom dot org)
- * @author Mathis Dirksen-Thedens
  */
 public class ImagePanel extends JPanel {
 	

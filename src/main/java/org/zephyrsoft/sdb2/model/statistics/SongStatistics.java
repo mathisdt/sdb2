@@ -37,8 +37,6 @@ import com.google.common.base.Preconditions;
 
 /**
  * Statistics about the displaying of one specific song.
- * 
- * @author Mathis Dirksen-Thedens
  */
 @XmlRootElement(name = "songStatistics")
 @XmlAccessorType(XmlAccessType.NONE)
@@ -62,7 +60,7 @@ public class SongStatistics implements Comparable<SongStatistics>, Iterable<Loca
 	
 	/**
 	 * Create a statistics element for a single {@link Song}.
-	 * 
+	 *
 	 * @param songUuid
 	 *            the UUID which belongs to the song that these statistics are kept for
 	 */

@@ -44,8 +44,6 @@ import org.zephyrsoft.sdb2.util.gui.ImagePanel;
 
 /**
  * The presentation display for the lyrics.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class PresenterWindow extends JFrame implements Presenter {
 	private static final long serialVersionUID = -2390663756699128439L;

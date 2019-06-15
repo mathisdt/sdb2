@@ -17,12 +17,11 @@
 package org.zephyrsoft.sdb2.util.gui;
 
 import java.util.List;
+
 import javax.swing.ComboBoxModel;
 
 /**
  * A typed combo box model implementation which transparently uses an underlying {@link List} (as inherited).
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class TransparentComboBoxModel<T> extends TransparentListModel<T> implements ComboBoxModel<T> {
 	

@@ -18,15 +18,13 @@ package org.zephyrsoft.sdb2.util.gui;
 
 /**
  * A filter template for {@link TransparentFilterableListModel}.
- * 
- * @author Mathis Dirksen-Thedens
  */
 @FunctionalInterface
 public interface ListFilter<T> {
 	
 	/**
 	 * Check an object to see if it should be in the filtered list.
-	 * 
+	 *
 	 * @param object
 	 *            the object to check
 	 * @return {@code true} if the object should be in the filtered list; {@code false} otherwise

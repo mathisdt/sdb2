@@ -18,8 +18,6 @@ package org.zephyrsoft.sdb2.model;
 
 /**
  * Determines the format for an export.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class ExportFormat {
 	private boolean showTranslation;

@@ -70,8 +70,6 @@ import com.google.common.base.Preconditions;
 /**
  * Renders the contents of a {@link Song} in order to display it on a screen. Scrolling is handled internally - no
  * scrollpane around this component is needed!
- *
- * @author Mathis Dirksen-Thedens
  */
 public class SongView extends JPanel implements Scroller {
 	

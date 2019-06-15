@@ -25,8 +25,6 @@ import org.mockito.MockitoAnnotations;
 
 /**
  * Tests the behaviour of {@link MainController}.
- * 
- * @author Mathis Dirksen-Thedens
  */
 public class MainControllerTest {
 	

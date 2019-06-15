@@ -18,8 +18,6 @@ package org.zephyrsoft.sdb2.model;
 
 /**
  * A line that can be addressed.
- *
- * @author Mathis Dirksen-Thedens
  */
 public class AddressableLine implements Addressable {
 	

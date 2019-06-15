@@ -30,8 +30,6 @@ import org.zephyrsoft.sdb2.model.Persistable;
 
 /**
  * Global settings of the Song Database.
- * 
- * @author Mathis Dirksen-Thedens
  */
 @XmlRootElement(name = "settings")
 @XmlAccessorType(XmlAccessType.NONE)
