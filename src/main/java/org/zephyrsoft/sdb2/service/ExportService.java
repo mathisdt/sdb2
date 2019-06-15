@@ -84,7 +84,6 @@ public class ExportService {
 	}
 	
 	private class TOC extends PdfPageEventHelper {
-		
 		protected int counter = 0;
 		protected final List<SimpleEntry<String, SimpleEntry<String, Integer>>> toc = new ArrayList<>();
 		
@@ -179,8 +178,8 @@ public class ExportService {
 			paragraph.add(chunk);
 			exportInProgress.getDocument().add(paragraph);
 			
-			// insert chord sequence directly after title
 			if (exportInProgress.getExportFormat().areChordsShown() && StringUtils.isNotBlank(song.getCleanChordSequence())) {
+				// insert chord sequence directly after title
 				Paragraph chordSequence = paragraph(song.getCleanChordSequence() + "\n\n", lyricsFont);
 				chordSequence.setIndentationLeft(30);
 				exportInProgress.getDocument().add(chordSequence);
@@ -209,7 +208,7 @@ public class ExportService {
 		handlers.put(NEW_LINE, (exportInProgress, song, history) -> {
 			if (exportInProgress.getCurrentLine() != null) {
 				if (exportInProgress.getCurrentLine().getChunks() == null || exportInProgress.getCurrentLine().getChunks().isEmpty()) {
-					// two empty paragraphs won't render as an empty line,
+					// two empty paragraphs won't render as an empty line (iText-specific behaviour),
 					// so we have to add a newline to the existing paragraph instead
 					exportInProgress.getCurrentLine().add(chunk("\n"));
 				}
@@ -228,7 +227,7 @@ public class ExportService {
 			}
 			exportInProgress.getDocument().add(copyright);
 		});
-		// CHORDS -> handled by following LYRICS element
+		// CHORDS don't have a handler, they are handled by the following LYRICS element
 		return handlers;
 	}
 	
@@ -309,16 +308,8 @@ public class ExportService {
 	}
 	
 	private Paragraph paragraph() {
+		// not using paragraph(String, Font) because it will look different (iText-specific behaviour)
 		Paragraph paragraph = new Paragraph();
-		paragraph.setExtraParagraphSpace(0);
-		paragraph.setPaddingTop(0);
-		paragraph.setSpacingBefore(0);
-		paragraph.setSpacingAfter(0);
-		return paragraph;
-	}
-	
-	private Paragraph paragraph(String text, Font font) {
-		Paragraph paragraph = new Paragraph(text, font);
 		paragraph.setExtraParagraphSpace(0);
 		paragraph.setPaddingTop(0);
 		paragraph.setSpacingBefore(0);
@@ -328,6 +319,15 @@ public class ExportService {
 	
 	private Paragraph paragraph(Font font) {
 		return paragraph(null, font);
+	}
+	
+	private Paragraph paragraph(String text, Font font) {
+		Paragraph paragraph = new Paragraph(text, font);
+		paragraph.setExtraParagraphSpace(0);
+		paragraph.setPaddingTop(0);
+		paragraph.setSpacingBefore(0);
+		paragraph.setSpacingAfter(0);
+		return paragraph;
 	}
 	
 }
