@@ -63,7 +63,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.DottedLineSeparator;
 
 /**
- * Exports songs in various formats.
+ * Exports songs as PDF in different variations.
  *
  * @author Mathis Dirksen-Thedens
  */
@@ -211,6 +211,8 @@ public class ExportService {
 		handlers.put(NEW_LINE, (exportInProgress, song, history) -> {
 			if (exportInProgress.getCurrentLine() != null) {
 				if (exportInProgress.getCurrentLine().getChunks() == null || exportInProgress.getCurrentLine().getChunks().isEmpty()) {
+					// two empty paragraphs won't render as an empty line,
+					// so we have to add a newline to the existing paragraph instead
 					exportInProgress.getCurrentLine().add(chunk("\n"));
 				}
 				exportInProgress.getDocument().add(exportInProgress.getCurrentLine());
