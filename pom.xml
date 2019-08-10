@@ -33,7 +33,7 @@
 		<skipOwasp>false</skipOwasp>
 
 		<!-- dependency versions -->
-		<version.spring>5.1.8.RELEASE</version.spring>
+		<version.spring>5.1.9.RELEASE</version.spring>
 		<version.slf4j>1.8.0-beta4</version.slf4j>
 		<version.log4j>2.11.0</version.log4j><!-- there was a problem introduced in 2.11.1, don't update! -->
 		<version.args4j>2.33</version.args4j>
@@ -309,7 +309,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
-				<version>3.1.0</version>
 				<executions>
 					<execution>
 						<id>copy-dependencies</id>
@@ -368,7 +367,7 @@
 
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.8</version>
+				<version>1.8</version><!--$NO-MVN-MAN-VER$-->
 				<executions>
 					<execution>
 						<phase>prepare-package</phase>
@@ -390,7 +389,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-				<version>3.1.0</version>
 				<executions>
 					<execution>
 						<id>zip</id>
