@@ -952,7 +952,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			dispose();
 			controller.shutdown();
 		} else {
-			ErrorDialog.openDialog(this, PROBLEM_WHILE_SAVING + FileAndDirectoryLocations.getLogDir());
+			showErrorDialog(PROBLEM_WHILE_SAVING + FileAndDirectoryLocations.getLogDir());
 		}
 	}
 	
@@ -1140,7 +1140,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			saveSongWithoutChangingGUI();
 			boolean success = controller.saveAll();
 			if (!success) {
-				ErrorDialog.openDialog(MainWindow.this, PROBLEM_WHILE_SAVING
+				showErrorDialog(PROBLEM_WHILE_SAVING
 					+ FileAndDirectoryLocations.getLogDir());
 			}
 		}));

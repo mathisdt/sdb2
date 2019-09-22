@@ -24,6 +24,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
 /**
  * Startup class for SDBv2.
@@ -64,6 +65,10 @@ public final class Start {
 				new AnnotationConfigApplicationContext(SpringConfiguration.class);
 			} catch (Exception e) {
 				LOG.error("problem while starting up the application", e);
+				ErrorDialog.openDialogBlocking(null, "There was a problem while starting the Song Database:\n\n"
+					+ e.getMessage()
+					+ "\n\nThis is a fatal error, exiting.\n"
+					+ "Please see the log file for more details.");
 				System.exit(-1);
 			}
 		}

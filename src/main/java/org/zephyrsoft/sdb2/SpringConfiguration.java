@@ -30,6 +30,7 @@ import org.zephyrsoft.sdb2.gui.KeyboardShortcutManager;
 import org.zephyrsoft.sdb2.gui.MainWindow;
 import org.zephyrsoft.sdb2.service.ExportService;
 import org.zephyrsoft.sdb2.service.IndexerService;
+import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
 /**
  * Configures the DI context.
@@ -67,7 +68,15 @@ public class SpringConfiguration {
 	@Bean
 	public StatisticsController statisticsController() {
 		StatisticsController statisticsController = new StatisticsController(ioController());
-		statisticsController.loadStatistics();
+		try {
+			statisticsController.loadStatistics();
+		} catch (Exception e) {
+			ErrorDialog.openDialogBlocking(null, "Error while loading statistics! Please check the file:\n"
+				+ FileAndDirectoryLocations.getStatisticsFileName()
+				+ "\n\nIf you can't fix the file, please delete it, but be warned:\n"
+				+ "your statistics up to now will be gone!");
+			throw e;
+		}
 		return statisticsController;
 	}
 	
@@ -75,8 +84,33 @@ public class SpringConfiguration {
 	public MainController mainController() {
 		MainController mainController = new MainController(ioController(), statisticsController());
 		mainController.setupLookAndFeel();
-		mainController.loadSettings();
-		mainController.loadSongs(Options.getInstance().getSongsFile());
+		try {
+			mainController.loadSettings();
+		} catch (Exception e) {
+			ErrorDialog.openDialogBlocking(null, "Error while loading settings! Please check the file:\n"
+				+ FileAndDirectoryLocations.getSettingsFileName()
+				+ "\n\nIf you can't fix the file, please delete it, but be warned:\n"
+				+ "your settings (e.g. colors and fonts) will be set back\n"
+				+ "to default values!");
+			throw e;
+		}
+		try {
+			mainController.loadSongs(Options.getInstance().getSongsFile());
+		} catch (Exception e) {
+			String songsFile = FileAndDirectoryLocations.getSongsFileName(Options.getInstance().getSongsFile());
+			ErrorDialog.openDialogBlocking(null, "Error while loading songs! Please check the file:\n"
+				+ songsFile
+				+ "\n\nIf you can't fix the file:\n\n"
+				+ "1. check if a recent backup from the directory\n   "
+				+ FileAndDirectoryLocations.getSongsBackupDir()
+				+ "\n   can be used instead (copy the file over to\n   "
+				+ songsFile
+				+ "\n   and restart the Song Database)\n\n"
+				+ "2. as a last resource, delete \n   "
+				+ songsFile
+				+ "\n   But be warned: all your songs will be gone!");
+			throw e;
+		}
 		return mainController;
 	}
 	
