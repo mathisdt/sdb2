@@ -217,7 +217,7 @@
 			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.0.0-M1</version>
+                <version>3.0.0-M2</version>
                 <executions>
                     <execution>
                         <id>enforce-banned-dependencies</id>
@@ -226,6 +226,7 @@
                         </goals>
                         <configuration>
                             <rules>
+                                <requireMavenVersion><version>3.2.0</version></requireMavenVersion>
                                 <bannedDependencies>
                                   <excludes>
                                     <exclude>log4j:log4j</exclude>
@@ -247,7 +248,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>license-maven-plugin</artifactId>
-				<version>1.14</version>
+				<version>1.20</version>
 				<configuration>
 					<useMissingFile>true</useMissingFile>
 					<useRepositoryMissingFiles>false</useRepositoryMissingFiles>
@@ -300,7 +301,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.0</version>
+				<version>3.8.1</version>
 				<inherited>true</inherited>
 				<configuration>
 					<release>${version.java}</release>
@@ -327,7 +328,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
-				<version>3.1.0</version>
+				<version>3.1.2</version>
 				<configuration>
 					<outputDirectory>${project.build.directory}/distribution/bin</outputDirectory>
 					<finalName>${project.artifactId}</finalName>
@@ -350,7 +351,7 @@
 			<plugin>
 			    <groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
-				<version>3.0.1</version>
+				<version>3.1.0</version>
 				<executions>
 				    <execution>
 				        <id>attach-sources</id>
