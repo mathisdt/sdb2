@@ -76,7 +76,7 @@ public class PartButtonGroup extends JPanel {
 		// add buttons for every line
 		int lineIndex = 0;
 		for (AddressableLine line : part) {
-			addLineButton(lineIndex, line.getText());
+			addLineButton(lineIndex, line.getText(), line.getIndentation());
 			lineIndex++;
 		}
 		
@@ -106,7 +106,7 @@ public class PartButtonGroup extends JPanel {
 		addMouseListener(mouseClickListener);
 	}
 	
-	private void addLineButton(final Integer lineIndex, final String lineText) {
+	private void addLineButton(final Integer lineIndex, final String lineText, int lineIndentation) {
 		final JLabel lineElement = new JLabel();
 		lineElement.setBorder(createInactiveBorder());
 		lineElement.addMouseListener(new MouseAdapter() {
@@ -127,7 +127,16 @@ public class PartButtonGroup extends JPanel {
 			}
 		});
 		lineElement.setText(lineText);
-		lineButtons.add(lineElement);
+		if (lineIndentation > 0) {
+			JPanel indentPanel = new JPanel();
+			indentPanel.setLayout(new BoxLayout(indentPanel, BoxLayout.Y_AXIS));
+			indentPanel.add(lineElement);
+			int pixelsToIndent = lineIndentation * 8;
+			indentPanel.setBorder(BorderFactory.createEmptyBorder(0, pixelsToIndent, 0, 0));
+			lineButtons.add(indentPanel);
+		} else {
+			lineButtons.add(lineElement);
+		}
 	}
 	
 	private void setHighlighted(JComponent component, boolean highlighted) {

@@ -22,12 +22,16 @@ package org.zephyrsoft.sdb2.model;
 public class AddressableLine implements Addressable {
 	
 	private String text;
+	private int indentation;
 	private Integer position;
 	
 	public AddressableLine(SongElement element, Integer position) {
 		this.text = element == null || element.getContent() == null
 			? ""
 			: element.getContent();
+		indentation = element == null
+			? 0
+			: element.getIndentation();
 		this.position = position;
 	}
 	
@@ -40,9 +44,13 @@ public class AddressableLine implements Addressable {
 		return text;
 	}
 	
+	public int getIndentation() {
+		return indentation;
+	}
+	
 	@Override
 	public String toString() {
-		return "LINE[" + text + "]";
+		return "LINE[indent=" + indentation + "][" + text + "]";
 	}
 	
 }

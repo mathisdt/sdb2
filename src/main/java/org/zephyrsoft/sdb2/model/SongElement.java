@@ -25,10 +25,16 @@ public class SongElement {
 	
 	private final SongElementEnum type;
 	private String content;
+	private int indentation;
 	
 	public SongElement(SongElementEnum type, String content) {
+		this(type, content, 0);
+	}
+	
+	public SongElement(SongElementEnum type, String content, int indentation) {
 		this.type = type;
 		this.content = content;
+		this.indentation = indentation;
 	}
 	
 	public SongElementEnum getType() {
@@ -43,13 +49,23 @@ public class SongElement {
 		this.content = content;
 	}
 	
+	public int getIndentation() {
+		return indentation;
+	}
+	
+	public void setIndentation(int indentation) {
+		this.indentation = indentation;
+	}
+	
 	public boolean isEmpty() {
 		return StringTools.isEmpty(getContent());
 	}
 	
 	@Override
 	public String toString() {
-		return type + (isEmpty() ? "[" + content + "]" : "");
+		return type
+			+ (indentation != 0 ? "[indent=" + indentation + "]" : "")
+			+ (isEmpty() ? "[" + content + "]" : "");
 	}
 	
 	@Override

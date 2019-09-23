@@ -73,12 +73,15 @@ import com.google.common.base.Preconditions;
  */
 public class SongView extends JPanel implements Scroller {
 	
+	private static final String SONG_PARTS_NOT_INITIALIZED = "the song parts are not initialized";
+	
 	private static final long serialVersionUID = 4746652382939122421L;
 	
 	private static final Style DEFAULT_STYLE = StyleContext.getDefaultStyleContext().getStyle(
 		StyleContext.DEFAULT_STYLE);
 	private static final String TITLE_LYRICS_DISTANCE = "TITLE_LYRICS_DISTANCE";
 	private static final String LYRICS_COPYRIGHT_DISTANCE = "LYRICS_COPYRIGHT_DISTANCE";
+	private static final String INDENTATION_STYLE = "INDENTATION_STYLE";
 	private static final String NEWLINE_CHAR = "\n";
 	private static final String LYRICS_COPYRIGHT_DISTANCE_TEXT = " \n";
 	
@@ -267,9 +270,9 @@ public class SongView extends JPanel implements Scroller {
 			if (bothAreNewlines(previousElement, element)
 				|| (is(element, NEW_LINE) && previousElement != null && isEmpty(previousElement)
 					&& (beforePreviousElement == null || is(beforePreviousElement, NEW_LINE)))) {
-				appendText(element.getContent(), LYRICS);
+				appendText(element.getContent(), LYRICS, element.getIndentation());
 			} else {
-				appendText(element.getContent(), element.getType());
+				appendText(element.getContent(), element.getType(), element.getIndentation());
 			}
 			
 			handleTitleLine(element);
@@ -316,13 +319,15 @@ public class SongView extends JPanel implements Scroller {
 		addStyleFromFont(TRANSLATION.name(), translationFont);
 		addStyle(LYRICS_COPYRIGHT_DISTANCE, false, false, lyricsFont.getFamily(), lyricsCopyrightDistance);
 		addStyleFromFont(COPYRIGHT.name(), copyrightFont);
+		int indentationFontSize = Math.min(lyricsFont.getSize(), translationFont.getSize());
+		addStyle(INDENTATION_STYLE, false, false, lyricsFont.getFamily(), indentationFontSize);
 	}
 	
 	private void handleTitleLine(SongElement element) {
 		if (is(element, TITLE)) {
 			// append space
-			appendText(NEWLINE_CHAR, NEW_LINE);
-			appendText(LYRICS_COPYRIGHT_DISTANCE_TEXT, TITLE_LYRICS_DISTANCE);
+			appendText(NEWLINE_CHAR, NEW_LINE, 0);
+			appendText(LYRICS_COPYRIGHT_DISTANCE_TEXT, TITLE_LYRICS_DISTANCE, 0);
 		}
 	}
 	
@@ -348,11 +353,11 @@ public class SongView extends JPanel implements Scroller {
 	private void handleCopyrightLine(SongElement previousElement, SongElement element) {
 		if (isFirstCopyrightLine(previousElement, element)) {
 			// prepend space
-			appendText(NEWLINE_CHAR, NEW_LINE);
-			appendText(LYRICS_COPYRIGHT_DISTANCE_TEXT, LYRICS_COPYRIGHT_DISTANCE);
+			appendText(NEWLINE_CHAR, NEW_LINE, 0);
+			appendText(LYRICS_COPYRIGHT_DISTANCE_TEXT, LYRICS_COPYRIGHT_DISTANCE, 0);
 		} else if (isCopyrightLineButNotFirstOne(previousElement, element)) {
 			// prepend newline
-			appendText(NEWLINE_CHAR, NEW_LINE);
+			appendText(NEWLINE_CHAR, NEW_LINE, 0);
 		}
 	}
 	
@@ -364,16 +369,22 @@ public class SongView extends JPanel implements Scroller {
 		return !is(previousElement, COPYRIGHT) && is(element, COPYRIGHT);
 	}
 	
-	private void appendText(String string, SongElementEnum type) {
-		appendText(string, type.name());
+	private void appendText(String string, SongElementEnum type, int indentation) {
+		appendText(string, type.name(), indentation);
 	}
 	
-	private void appendText(String string, String type) {
+	private void appendText(String string, String type, int indentation) {
 		try {
+			if (indentation > 0) {
+				int offset = document.getLength();
+				AttributeSet style = document.getStyle(INDENTATION_STYLE);
+				document.insertString(offset, "   ".repeat(indentation), style);
+			}
+			
 			int offset = document.getLength();
 			// add style only if type is anything apart from NEW_LINE
 			AttributeSet style = SimpleAttributeSet.EMPTY;
-			if (type != null && type != NEW_LINE.name()) {
+			if (type != null && !type.equals(NEW_LINE.name())) {
 				style = document.getStyle(type);
 			}
 			document.insertString(offset, string, style);
@@ -397,13 +408,13 @@ public class SongView extends JPanel implements Scroller {
 	
 	@Override
 	public List<AddressablePart> getParts() {
-		Preconditions.checkArgument(parts != null, "the song parts are not initialized");
+		Preconditions.checkArgument(parts != null, SONG_PARTS_NOT_INITIALIZED);
 		return parts;
 	}
 	
 	@Override
 	public void moveToPart(Integer part) {
-		Preconditions.checkArgument(parts != null, "the song parts are not initialized");
+		Preconditions.checkArgument(parts != null, SONG_PARTS_NOT_INITIALIZED);
 		adjustHeightIfNecessary();
 		try {
 			AddressablePart addressablePart = parts.get(part);
@@ -417,7 +428,7 @@ public class SongView extends JPanel implements Scroller {
 	
 	@Override
 	public void moveToLine(Integer part, Integer line) {
-		Preconditions.checkArgument(parts != null, "the song parts are not initialized");
+		Preconditions.checkArgument(parts != null, SONG_PARTS_NOT_INITIALIZED);
 		adjustHeightIfNecessary();
 		try {
 			AddressablePart addressablePart = parts.get(part);

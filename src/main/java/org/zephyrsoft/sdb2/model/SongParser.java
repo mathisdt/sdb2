@@ -36,6 +36,7 @@ public class SongParser {
 	protected static final String LABEL_PUBLISHER = "Publisher: ";
 	
 	private static final Pattern TRANSLATION_PATTERN = Pattern.compile("^(.*)\\[(.*)\\](.*)$");
+	private static final Pattern LINE_WITH_INDENTATION_PATTERN = Pattern.compile("^([ \\t]+)([^ \\t].*)$");
 	private static final String NEWLINE_REGEX = "\r?+\n";
 	
 	private SongParser() {
@@ -75,13 +76,17 @@ public class SongParser {
 						String prefix = translationMatcher.group(1);
 						String translation = translationMatcher.group(2);
 						String suffix = translationMatcher.group(3);
-						if (!StringTools.isEmpty(prefix)) {
+						int indentation = 0;
+						if (!StringTools.isEmpty(prefix) && !StringTools.isBlank(prefix)) {
 							ret.add(new SongElement(SongElementEnum.LYRICS, prefix));
+						} else if (!StringTools.isEmpty(prefix) && StringTools.isBlank(prefix)) {
+							indentation = calculateIndentationLength(prefix);
 						}
 						if (!StringTools.isEmpty(translation)) {
-							ret.add(new SongElement(SongElementEnum.TRANSLATION, translation));
+							ret.add(new SongElement(SongElementEnum.TRANSLATION, translation, indentation));
 						}
-						if (!StringTools.isEmpty(suffix)) {
+						if (!StringTools.isEmpty(suffix) && !StringTools.isBlank(suffix)) {
+							// blank suffixes are omitted
 							ret.add(new SongElement(SongElementEnum.LYRICS, suffix));
 						}
 					}
@@ -93,7 +98,14 @@ public class SongParser {
 				} else {
 					isFirst = addNewlineIfNotFirstLine(ret, isFirst);
 					if (!line.isEmpty()) {
-						ret.add(new SongElement(SongElementEnum.LYRICS, line));
+						Matcher matcher = LINE_WITH_INDENTATION_PATTERN.matcher(line);
+						if (matcher.matches()) {
+							ret.add(new SongElement(SongElementEnum.LYRICS,
+								matcher.group(2),
+								calculateIndentationLength(matcher.group(1))));
+						} else {
+							ret.add(new SongElement(SongElementEnum.LYRICS, line));
+						}
 					}
 				}
 				
@@ -122,6 +134,11 @@ public class SongParser {
 		}
 		
 		return ret;
+	}
+	
+	private static int calculateIndentationLength(String prefix) {
+		// a tab character counts as 4 spaces
+		return prefix.replaceAll("\\t", "    ").length();
 	}
 	
 	private static boolean addNewlineIfNotFirstLine(List<SongElement> elementList, boolean isFirst) {

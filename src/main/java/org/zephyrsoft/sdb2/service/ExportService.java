@@ -34,8 +34,6 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.ExportFormat;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongElement;
@@ -66,8 +64,6 @@ import com.itextpdf.text.pdf.draw.DottedLineSeparator;
  * Exports songs as PDF in different variations.
  */
 public class ExportService {
-	
-	private static final Logger LOG = LoggerFactory.getLogger(ExportService.class);
 	
 	private class PageNumbers extends PdfPageEventHelper {
 		private final Font footerFont = new Font(Font.FontFamily.UNDEFINED, 10, Font.ITALIC);
@@ -196,6 +192,7 @@ public class ExportService {
 				chordsLine = chordSpaceCorrector.correctChordSpaces(queryResult.getMatchedElements().get(0).getContent(),
 					history.current().getContent()) + "\n";
 			}
+			// TODO honor the indentation if present!
 			exportInProgress.getOrCreateCurrentLine(() -> paragraph())
 				.add(chunk(chordsLine + history.current().getContent(), lyricsFont));
 		});
