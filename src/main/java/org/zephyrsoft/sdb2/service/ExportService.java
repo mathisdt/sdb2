@@ -28,7 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -166,8 +166,18 @@ public class ExportService {
 	}
 	
 	private Map<SongElementEnum, SongElementHandler> buildSongElementHandlerMap() {
-		Map<SongElementEnum, SongElementHandler> handlers = new HashMap<>();
-		handlers.put(TITLE, (exportInProgress, song, history) -> {
+		Map<SongElementEnum, SongElementHandler> handlers = new EnumMap<>(SongElementEnum.class);
+		handlers.put(TITLE, titleHandler());
+		handlers.put(LYRICS, lyricsHandler());
+		handlers.put(TRANSLATION, translationHandler());
+		handlers.put(NEW_LINE, newlineHandler());
+		handlers.put(COPYRIGHT, copyrightHandler());
+		// CHORDS don't have a handler, they are handled by the following LYRICS element
+		return handlers;
+	}
+	
+	private SongElementHandler titleHandler() {
+		return (exportInProgress, song, history) -> {
 			Chunk chunk = new Chunk(song.getTitle() + "\n");
 			chunk.setGenericTag(song.getTitle());
 			Paragraph paragraph = paragraph(titleFont);
@@ -180,8 +190,11 @@ public class ExportService {
 				chordSequence.setIndentationLeft(30);
 				exportInProgress.getDocument().add(chordSequence);
 			}
-		});
-		handlers.put(LYRICS, (exportInProgress, song, history) -> {
+		};
+	}
+	
+	private SongElementHandler lyricsHandler() {
+		return (exportInProgress, song, history) -> {
 			String chordsLine = "";
 			SongElementHistoryQueryResult queryResult = history.query()
 				.without(NEW_LINE)
@@ -192,19 +205,32 @@ public class ExportService {
 				chordsLine = chordSpaceCorrector.correctChordSpaces(queryResult.getMatchedElements().get(0).getContent(),
 					history.current().getContent()) + "\n";
 			}
-			// TODO honor the indentation if present!
-			exportInProgress.getOrCreateCurrentLine(() -> paragraph())
-				.add(chunk(chordsLine + history.current().getContent(), lyricsFont));
-		});
-		handlers.put(TRANSLATION, (exportInProgress, song, history) -> {
-			if (exportInProgress.getExportFormat().isTranslationShown()) {
-				exportInProgress.getOrCreateCurrentLine(() -> paragraph())
-					.add(chunk(history.current().getContent(), translationFont));
+			Paragraph currentLine = exportInProgress.getOrCreateCurrentLine(() -> paragraph());
+			if (history.current().getIndentation() > 0) {
+				currentLine.setIndentationLeft(calculateIndentation(history.current()));
 			}
-		});
-		handlers.put(NEW_LINE, (exportInProgress, song, history) -> {
+			currentLine.add(chunk(chordsLine + history.current().getContent(), lyricsFont));
+		};
+	}
+	
+	private SongElementHandler translationHandler() {
+		return (exportInProgress, song, history) -> {
+			if (exportInProgress.getExportFormat().isTranslationShown()) {
+				Paragraph currentLine = exportInProgress.getOrCreateCurrentLine(() -> paragraph());
+				if (history.current().getIndentation() > 0) {
+					currentLine.setIndentationLeft(calculateIndentation(history.current()));
+				}
+				currentLine.add(chunk(history.current().getContent(), translationFont));
+			}
+		};
+	}
+	
+	private SongElementHandler newlineHandler() {
+		return (exportInProgress, song, history) -> {
 			if (exportInProgress.getCurrentLine() != null) {
-				if (exportInProgress.getCurrentLine().getChunks() == null || exportInProgress.getCurrentLine().getChunks().isEmpty()) {
+				if (history.query()
+					.lastSeen(is(NEW_LINE))
+					.end().isMatched()) {
 					// two empty paragraphs won't render as an empty line (iText-specific behaviour),
 					// so we have to add a newline to the existing paragraph instead
 					exportInProgress.getCurrentLine().add(chunk("\n"));
@@ -212,8 +238,11 @@ public class ExportService {
 				exportInProgress.getDocument().add(exportInProgress.getCurrentLine());
 			}
 			exportInProgress.setCurrentLine(paragraph());
-		});
-		handlers.put(COPYRIGHT, (exportInProgress, song, history) -> {
+		};
+	}
+	
+	private SongElementHandler copyrightHandler() {
+		return (exportInProgress, song, history) -> {
 			Paragraph copyright = paragraph(history.current().getContent(), copyrightFont);
 			SongElementHistoryQueryResult queryResult = history.query()
 				.without(NEW_LINE)
@@ -223,9 +252,11 @@ public class ExportService {
 				copyright.setSpacingBefore(20);
 			}
 			exportInProgress.getDocument().add(copyright);
-		});
-		// CHORDS don't have a handler, they are handled by the following LYRICS element
-		return handlers;
+		};
+	}
+	
+	private int calculateIndentation(SongElement element) {
+		return element.getIndentation() * 12;
 	}
 	
 	public byte[] export(ExportFormat exportFormat, Collection<Song> songs) {
