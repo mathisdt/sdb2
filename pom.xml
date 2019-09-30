@@ -33,19 +33,19 @@
 		<skipOwasp>false</skipOwasp>
 
 		<!-- dependency versions -->
-		<version.spring>5.1.9.RELEASE</version.spring>
+		<version.spring>5.1.10.RELEASE</version.spring>
 		<version.slf4j>1.8.0-beta4</version.slf4j>
 		<version.log4j>2.11.0</version.log4j><!-- there was a problem introduced in 2.11.1, don't update! -->
 		<version.args4j>2.33</version.args4j>
 		<version.commons-lang3>3.9</version.commons-lang3>
-		<version.commons-text>1.6</version.commons-text>
+		<version.commons-text>1.8</version.commons-text>
 		<version.togglz>2.6.1.Final</version.togglz>
-		<version.itext>5.5.13</version.itext>
+		<version.itext>5.5.13.1</version.itext>
 		<version.poi>4.1.0</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
 		<version.lucene>8.0.0</version.lucene>
-		<version.guava>28.0-jre</version.guava>
+		<version.guava>28.1-jre</version.guava>
 		<version.gson>2.8.5</version.gson>
 		<version.junit>4.12</version.junit>
 		<version.mockito>2.27.0</version.mockito>
