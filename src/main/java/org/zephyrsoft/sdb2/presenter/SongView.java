@@ -213,63 +213,69 @@ public class SongView extends JPanel implements Scroller {
 		// handle the elements of the song
 		for (SongElement element : elements) {
 			// TODO use elements.query()...
-			SongElement previousElement = elements.previous();
-			SongElement beforePreviousElement = elements.beforePrevious();
+			SongElement back1 = elements.back(1);
+			SongElement back2 = elements.back(2);
 			
-			handleCopyrightLine(previousElement, element);
+			handleCopyrightLine(back1, element);
 			
 			handleTitlePosition(element);
 			
 			if ((is(element, NEW_LINE, COPYRIGHT))
-				&& (!isEmpty(previousElement))
-				&& (!is(previousElement, TRANSLATION)
+				&& (!isEmpty(back1))
+				&& (!is(back1, TRANSLATION)
 					|| currentPart.isEmpty()) // translation line is first line in part
 				&& position == null) {
-				position = createPosition(previousElement);
+				position = createPosition(back1);
+			} else if ((is(element, NEW_LINE, COPYRIGHT))
+				&& (!isEmpty(back1))
+				&& is(back1, TRANSLATION)
+				&& is(back2, LYRICS)
+				&& position == null) {
+				position = createPosition(back2);
 			} else if (is(element, NEW_LINE)
-				&& is(previousElement, NEW_LINE)
+				&& is(back1, NEW_LINE)
 				&& position == null) {
 				position = createPosition();
 			}
 			
 			if (isBodyElement(element)) {
-				if ((bothAreNewlines(previousElement, element)
+				if ((bothAreNewlines(back1, element)
 					|| (is(element, NEW_LINE)
-						&& isEmpty(previousElement)
-						&& (beforePreviousElement == null || is(beforePreviousElement, NEW_LINE))))
+						&& isEmpty(back1)
+						&& (back2 == null || is(back2, NEW_LINE))))
 					&& currentPart.size() > 0) {
 					// [ two consecutive newlines OR two newlines, only separated by a blank line ] AND current part is
 					// populated with at least one line => save current part and begin a new one
 					parts.add(currentPart);
 					currentPart = new AddressablePart();
 				} else if (is(element, NEW_LINE)
-					&& is(previousElement, LYRICS)) {
+					&& is(back1, LYRICS)) {
 					// save current line and begin a new one
-					AddressableLine currentLine = new AddressableLine(previousElement, position);
+					AddressableLine currentLine = new AddressableLine(back1, position);
 					currentPart.add(currentLine);
 					position = null;
 				} else if (is(element, NEW_LINE)
-					&& is(beforePreviousElement, LYRICS)
-					&& is(previousElement, TRANSLATION)) {
+					&& is(back2, LYRICS)
+					&& is(back1, TRANSLATION)) {
 					// save current line and begin a new one
-					AddressableLine currentLine = new AddressableLine(beforePreviousElement, position);
+					AddressableLine currentLine = new AddressableLine(back2, position);
 					currentPart.add(currentLine);
 					position = null;
 				}
 			} else if (is(element, COPYRIGHT)
-				&& isContentElement(previousElement)
-				&& !isEmpty(previousElement)
-				&& !is(previousElement, TRANSLATION)
-				&& (beforePreviousElement == null || is(beforePreviousElement, NEW_LINE))) {
+				&& isContentElement(back1)
+				&& !isEmpty(back1)
+				&& !is(back1, TRANSLATION)
+				&& (back2 == null || is(back2, NEW_LINE))) {
 				// save current line and begin a new one
-				AddressableLine currentLine = new AddressableLine(previousElement, position);
+				AddressableLine currentLine = new AddressableLine(back1, position);
 				currentPart.add(currentLine);
 				position = null;
 			}
 			
-			if (bothAreNewlines(previousElement, element)
-				|| (is(element, NEW_LINE) && previousElement != null && isEmpty(previousElement)
-					&& (beforePreviousElement == null || is(beforePreviousElement, NEW_LINE)))) {
+			if (bothAreNewlines(back1, element)
+				|| (is(element, NEW_LINE) && back1 != null && isEmpty(back1)
+					&& (back2 == null || is(back2, NEW_LINE)))) {
 				appendText(element.getContent(), LYRICS, element.getIndentation());
 			} else {
 				appendText(element.getContent(), element.getType(), element.getIndentation());
