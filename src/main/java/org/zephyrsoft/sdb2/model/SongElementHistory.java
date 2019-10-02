@@ -61,21 +61,13 @@ public class SongElementHistory implements Iterable<SongElement> {
 	}
 	
 	public SongElement current() {
-		return handedOut == null || handedOut.size() < 1
-			? null
-			: handedOut.get(handedOut.size() - 1);
+		return back(0);
 	}
 	
-	public SongElement previous() {
-		return handedOut == null || handedOut.size() < 2
+	public SongElement back(int howManyElementsBack) {
+		return handedOut == null || handedOut.size() < howManyElementsBack + 1
 			? null
-			: handedOut.get(handedOut.size() - 2);
-	}
-	
-	public SongElement beforePrevious() {
-		return handedOut == null || handedOut.size() < 3
-			? null
-			: handedOut.get(handedOut.size() - 3);
+			: handedOut.get(handedOut.size() - howManyElementsBack - 1);
 	}
 	
 	public SongElementHistoryQuery query() {
