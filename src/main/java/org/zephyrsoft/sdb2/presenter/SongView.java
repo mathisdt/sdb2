@@ -232,8 +232,9 @@ public class SongView extends JPanel implements Scroller {
 				&& is(back2, LYRICS)
 				&& position == null) {
 				position = createPosition(back2);
-			} else if (is(element, NEW_LINE)
+			} else if (is(back2, NEW_LINE)
 				&& is(back1, NEW_LINE)
+				&& !is(element, NEW_LINE)
 				&& position == null) {
 				position = createPosition();
 			}
