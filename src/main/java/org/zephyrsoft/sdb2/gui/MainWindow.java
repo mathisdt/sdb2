@@ -433,6 +433,11 @@ public class MainWindow extends JFrame implements UIScroller {
 		thread.start();
 	}
 	
+	public void reloadModels(SongsModel songs, SettingsModel settings) {
+		SwingUtilities.invokeLater(() -> setModels(songs, settings));
+		
+	}
+	
 	public void setModels(SongsModel songs, SettingsModel settings) {
 		this.songsModel = songs;
 		this.settingsModel = settings;
@@ -1198,6 +1203,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		this.keyboardShortcutManager = keyboardShortcutManager;
 		this.indexer = indexer;
 		this.exportService = exportService;
+		controller.setMainWindow(this);
 		setIconImages(getIconsFromResources(getClass()));
 		setTitle("Song Database");
 		defineShortcuts();

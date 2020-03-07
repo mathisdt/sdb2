@@ -96,6 +96,7 @@ public class SpringConfiguration {
 		}
 		try {
 			mainController.loadSongs(Options.getInstance().getSongsFile());
+			mainController.startWatchingSongsFile();
 		} catch (Exception e) {
 			String songsFile = FileAndDirectoryLocations.getSongsFileName(Options.getInstance().getSongsFile());
 			ErrorDialog.openDialogBlocking(null, "Error while loading songs! Please check the file:\n"

@@ -43,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -83,6 +84,8 @@ public class MainController implements Scroller {
 	
 	private static Logger LOG = LoggerFactory.getLogger(MainController.class);
 	
+	private MainWindow mainWindow;
+	
 	private final IOController ioController;
 	private final StatisticsController statisticsController;
 	
@@ -105,6 +108,11 @@ public class MainController implements Scroller {
 	public MainController(IOController ioController, StatisticsController statisticsController) {
 		this.ioController = ioController;
 		this.statisticsController = statisticsController;
+	}
+	
+	/** called from constructor of {@link MainWindow} */
+	public void setMainWindow(MainWindow mainWindow) {
+		this.mainWindow = mainWindow;
 	}
 	
 	public boolean present(Presentable presentable) {
@@ -273,17 +281,6 @@ public class MainController implements Scroller {
 		if (!StringTools.isBlank(fileName)) {
 			songsFileName = fileName;
 		}
-		try {
-			ioController.startWatching(songsFileName, () -> {
-				LOG.info("change in file {} detected", songsFileName);
-				
-				// TODO offer to reload the songs file (overwriting any changes the user made up to now)
-				// => make clear that songs already put into presentation list will remain there untouched
-				
-			});
-		} catch (Exception e) {
-			LOG.warn("could not start watching the songs file", e);
-		}
 		songs = populateSongsModel(songsFileName);
 		if (songs == null) {
 			// there was a problem while reading
@@ -307,6 +304,28 @@ public class MainController implements Scroller {
 			}
 		};
 		Runtime.getRuntime().addShutdownHook(shutdownHook);
+	}
+	
+	public void startWatchingSongsFile() {
+		try {
+			LOG.info("starting to watch for changes in {}", songsFileName);
+			ioController.startWatching(songsFileName, () -> {
+				LOG.info("change in file {} detected", songsFileName);
+				
+				int selected = JOptionPane.showConfirmDialog(mainWindow,
+					"The songs file on disk was changed by another process (maybe remote synchronisation). Should it be reloaded?\n\n"
+						+ "Songs already added to the 'Present Songs' tab will remain unchanged. Unsaved changes in the 'Edit Song' tab will be lost.",
+					"Songs file changed on disk", JOptionPane.YES_NO_OPTION);
+				if (selected == JOptionPane.YES_OPTION) {
+					LOG.info("reloading songs from {}", songsFileName);
+					loadSongs(null);
+					mainWindow.reloadModels(getSongs(), getSettings());
+				}
+				
+			});
+		} catch (Exception e) {
+			LOG.warn("could not start watching the songs file", e);
+		}
 	}
 	
 	public void exportStatisticsAll(File targetExcelFile) {
@@ -408,6 +427,7 @@ public class MainController implements Scroller {
 			return false;
 		}
 		try {
+			ioController.stopWatching();
 			Path source = songsBackupFile.toPath();
 			Path target = Paths.get(FileAndDirectoryLocations.getSongsFileName(songsFileName));
 			LOG.info("copying {} to {}", source, target);
@@ -416,6 +436,8 @@ public class MainController implements Scroller {
 			LOG.error("could not copy backup to real file while saving database");
 			ErrorDialog.openDialog(null, "Could not save songs!\n\n(Phase 2 - write file)");
 			return false;
+		} finally {
+			ioController.startWatchingAgain();
 		}
 		
 		manageOldBackups();
