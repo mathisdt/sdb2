@@ -21,6 +21,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -51,6 +53,8 @@ public class PartButtonGroup extends JPanel {
 	private Color defaultForeground;
 	private PartMarker partMarker;
 	private JPanel lineButtons;
+	/** the clickable element in each line */
+	private List<JLabel> lineElements;
 	
 	private boolean active = false;
 	private int activeLine = 0;
@@ -63,6 +67,7 @@ public class PartButtonGroup extends JPanel {
 		
 		setLayout(new BorderLayout());
 		
+		lineElements = new ArrayList<>(part.size());
 		lineButtons = new JPanel();
 		add(lineButtons, BorderLayout.CENTER);
 		lineButtons.setLayout(new BoxLayout(lineButtons, BoxLayout.Y_AXIS));
@@ -80,7 +85,7 @@ public class PartButtonGroup extends JPanel {
 			lineIndex++;
 		}
 		
-		setBorder(createInactiveBorder());
+		setBorder(createNonHighlightedBorder());
 		
 		MouseAdapter mouseClickListener = new MouseAdapter() {
 			@Override
@@ -108,7 +113,7 @@ public class PartButtonGroup extends JPanel {
 	
 	private void addLineButton(final Integer lineIndex, final String lineText, int lineIndentation) {
 		final JLabel lineElement = new JLabel();
-		lineElement.setBorder(createInactiveBorder());
+		lineElement.setBorder(createNonHighlightedBorder());
 		lineElement.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -127,6 +132,7 @@ public class PartButtonGroup extends JPanel {
 			}
 		});
 		lineElement.setText(lineText);
+		lineElements.add(lineElement);
 		if (lineIndentation > 0) {
 			JPanel indentPanel = new JPanel();
 			indentPanel.setLayout(new BoxLayout(indentPanel, BoxLayout.Y_AXIS));
@@ -141,17 +147,17 @@ public class PartButtonGroup extends JPanel {
 	
 	private void setHighlighted(JComponent component, boolean highlighted) {
 		if (highlighted) {
-			component.setBorder(createActiveBorder());
+			component.setBorder(createHighlightedBorder());
 		} else {
-			component.setBorder(createInactiveBorder());
+			component.setBorder(createNonHighlightedBorder());
 		}
 	}
 	
-	private Border createInactiveBorder() {
+	private Border createNonHighlightedBorder() {
 		return BorderFactory.createEmptyBorder(MARGIN_TOP_BOTTOM, MARGIN_LEFT_RIGHT, MARGIN_TOP_BOTTOM, MARGIN_LEFT_RIGHT);
 	}
 	
-	private Border createActiveBorder() {
+	private Border createHighlightedBorder() {
 		return BorderFactory.createCompoundBorder(
 			BorderFactory.createMatteBorder(MARGIN_TOP_BOTTOM / 2, MARGIN_LEFT_RIGHT / 2, MARGIN_TOP_BOTTOM / 2, MARGIN_LEFT_RIGHT / 2, Color.WHITE),
 			BorderFactory.createEmptyBorder(MARGIN_TOP_BOTTOM / 2, MARGIN_LEFT_RIGHT / 2, MARGIN_TOP_BOTTOM / 2, MARGIN_LEFT_RIGHT / 2));
@@ -163,18 +169,26 @@ public class PartButtonGroup extends JPanel {
 		}
 		active = true;
 		this.activeLine = lineIndex;
+		setActive(lineElements.get(lineIndex));
 		repaint();
 	}
 	
 	public void setInactive() {
 		if (active) {
 			active = false;
+			for (JLabel element : lineElements) {
+				setInactive(element);
+			}
 			repaint();
 		}
 	}
 	
-	protected int getActiveLine() {
-		return activeLine;
+	private void setInactive(JLabel l) {
+		l.setForeground(null);
+	}
+	
+	private void setActive(JLabel l) {
+		l.setForeground(Color.RED);
 	}
 	
 	protected boolean isActive() {
