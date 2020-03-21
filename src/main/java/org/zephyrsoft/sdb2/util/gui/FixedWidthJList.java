@@ -42,9 +42,11 @@ public class FixedWidthJList<T> extends JList<T> {
 		if (selectedIndex < 0 && size > 0) {
 			// no selection: select first element
 			setSelectedIndex(0);
-		} else if (selectedIndex > 0) {
+		} else if (selectedIndex > 0 && size >= selectedIndex) {
 			// selection is not the first element: select the previous element
 			setSelectedIndex(selectedIndex - 1);
+		} else if (selectedIndex > 0) {
+			setSelectedIndex(size - 1);
 		}
 	}
 	
@@ -60,6 +62,8 @@ public class FixedWidthJList<T> extends JList<T> {
 		} else if (selectedIndex < size - 1) {
 			// selection is not the last element: select the next element
 			setSelectedIndex(selectedIndex + 1);
+		} else {
+			setSelectedIndex(size - 1);
 		}
 	}
 }

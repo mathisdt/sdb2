@@ -780,6 +780,11 @@ public class MainWindow extends JFrame implements UIScroller {
 		songsListModel.refilter();
 		songsListSelected = songsList.getSelectedValue();
 		loadSong();
+		SwingUtilities.invokeLater(() -> {
+			// when filtering, the user usually wants to see the top of the list
+			songsList.clearSelection();
+			songsList.scrollRectToVisible(new Rectangle(0, 0, 1, 1));
+		});
 	}
 	
 	protected void handlePresentListSelectionChanged(ListSelectionEvent e) {
