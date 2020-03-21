@@ -20,7 +20,6 @@ import static java.util.stream.Collectors.toList;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Image;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -42,7 +41,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -559,31 +557,17 @@ public class MainController implements Scroller {
 		}
 	}
 	
-	public Image loadLogo() throws IOException {
+	public String loadLogo() {
 		String logoPath = settings.get(SettingKey.LOGO_FILE, String.class);
 		if (logoPath != null && !logoPath.equals("")) {
 			File logoFile = new File(logoPath);
-			return readImage(logoFile);
+			return logoFile.getAbsolutePath();
 		}
 		return null;
 	}
 	
-	public Image readImage(File imageFile) throws IOException {
-		if (imageFile.isFile() && imageFile.canRead()) {
-			return ImageIO.read(imageFile);
-		} else {
-			return null;
-		}
-	}
-	
 	private void showSlide(File imageFile) {
-		Image image = null;
-		try {
-			image = readImage(imageFile);
-		} catch (IOException ioe) {
-			LOG.warn("couldn't load image file {}", imageFile);
-		}
-		present(new Presentable(null, image));
+		present(new Presentable(null, imageFile.getAbsolutePath()));
 	}
 	
 	public void stopSlideShow() {

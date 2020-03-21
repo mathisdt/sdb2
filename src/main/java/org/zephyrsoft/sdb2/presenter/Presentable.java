@@ -16,8 +16,6 @@
  */
 package org.zephyrsoft.sdb2.presenter;
 
-import java.awt.Image;
-
 import org.togglz.core.util.Preconditions;
 import org.zephyrsoft.sdb2.model.Song;
 
@@ -27,9 +25,9 @@ import org.zephyrsoft.sdb2.model.Song;
 public class Presentable {
 	
 	final Song song;
-	final Image image;
+	final String image;
 	
-	public Presentable(Song song, Image image) {
+	public Presentable(Song song, String image) {
 		Preconditions.checkArgument(song == null || image == null, "you cant't display a song and a logo image simultaneously, it's either or!");
 		
 		this.song = song;
@@ -44,9 +42,9 @@ public class Presentable {
 	}
 	
 	/**
-	 * Get the logo image.
+	 * Get the image filename.
 	 */
-	public Image getImage() {
+	public String getImage() {
 		return image;
 	}
 	
@@ -55,7 +53,7 @@ public class Presentable {
 		return song != null
 			? song.getTitle()
 			: (image != null
-				? image.toString()
+				? image
 				: "blank");
 	}
 	

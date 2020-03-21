@@ -17,11 +17,9 @@
 package org.zephyrsoft.sdb2.util;
 
 import java.text.Collator;
-import java.util.Locale;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.WordUtils;
 
 /**
  * Methods which are missing in the {@link String} class.<br/>
@@ -39,56 +37,6 @@ public final class StringTools {
 	 */
 	public static String createUUID() {
 		return UUID.randomUUID().toString();
-	}
-	
-	/**
-	 * Convert a string to an easily comparable form, especially remove all punctuation and newline characters.
-	 *
-	 * @param in
-	 *            the input string
-	 * @return the easily comparable form
-	 */
-	public static String toEasilyComparable(String in) {
-		if (in == null) {
-			return null;
-		} else {
-			return in.replaceAll("[^\\wäöüÄÖÜß]", " ").replaceAll("  ", " ").toLowerCase();
-		}
-	}
-	
-	/**
-	 * Convert a string which is in camel case to all caps, separated with underscores. Example:
-	 * "camelCaseStringExample" => "CAMEL_CASE_STRING_EXAMPLE"
-	 *
-	 * @param camelCasedString
-	 *            the camel-cased string
-	 * @return the string with underscores in all caps
-	 */
-	public static String camelCaseToUnderscored(String camelCasedString) {
-		if (camelCasedString == null || camelCasedString.length() == 0) {
-			return "";
-		} else {
-			return camelCasedString.replaceAll("([A-Z]+)([A-Z][a-z])", "$1_$2")
-				.replaceAll("([a-z\\d])([A-Z])", "$1_$2").toUpperCase(Locale.ENGLISH);
-		}
-	}
-	
-	/**
-	 * Convert a string which is separated with underscores to camel case. Example: "UNDERSCORED_STRING_EXAMPLE" =>
-	 * "underscoredStringExample"
-	 *
-	 * @param underscoredString
-	 *            the underscore-separated string
-	 * @return the camel-cased string
-	 */
-	public static String underscoredToCamelCase(String underscoredString) {
-		if (underscoredString == null || underscoredString.length() == 0) {
-			return "";
-		} else {
-			String ret = WordUtils.capitalizeFully(underscoredString, new char[] { '_' }).replaceAll("_", "");
-			ret = ret.substring(0, 1).toLowerCase(Locale.ENGLISH) + ret.substring(1);
-			return ret;
-		}
 	}
 	
 	/**
@@ -142,84 +90,6 @@ public final class StringTools {
 			// to silence the Eclipse warning, will never be executed:
 			throw new IllegalStateException();
 		}
-	}
-	
-	/**
-	 * A sibling of {@link String#replaceAll(String, String)} but without regex interpretation.
-	 *
-	 * @param in
-	 *            the String in which the replacement shall take place
-	 * @param toreplace
-	 *            what is to be replaced
-	 * @param replacewith
-	 *            the replacement
-	 * @return the input in which every occurrence of {@code toreplace} was replaced with {@code replacewith}
-	 */
-	public static String replace(String in, String toreplace, String replacewith) {
-		String ret = in;
-		while (ret.indexOf(toreplace) >= 0) {
-			ret = ret.substring(0, ret.indexOf(toreplace)) + replacewith
-				+ ret.substring(ret.indexOf(toreplace) + toreplace.length());
-		}
-		return ret;
-	}
-	
-	/**
-	 * Makes sure that a {@link String} does have a specific number of characters at maximum.
-	 *
-	 * @param in
-	 *            the input
-	 * @param maxlength
-	 *            the maximum allowed length
-	 * @return the input, cut down to
-	 */
-	public static String cutdown(String in, int maxlength) {
-		if (in.length() <= maxlength) {
-			return in;
-		} else {
-			return in.substring(0, maxlength - 3) + "...";
-		}
-	}
-	
-	/**
-	 * Repeat a {@link String}.
-	 *
-	 * @param torepeat
-	 *            the String which is to be repeated
-	 * @param count
-	 *            how many times should it be repeated
-	 * @return concatenation
-	 */
-	public static String repeat(String torepeat, int count) {
-		StringBuilder ret = new StringBuilder();
-		for (int i = 0; i < count; i++) {
-			ret.append(torepeat);
-		}
-		return ret.toString();
-	}
-	
-	/**
-	 * Trim only the right side of a {@link String}.
-	 *
-	 * @param in
-	 *            the input
-	 * @return the input which was right-trimmed (any spaces to the left are still intact)
-	 */
-	public static String rightTrim(String in) {
-		return "X".concat(in).trim().substring(1);
-	}
-	
-	/**
-	 * A sibling of the {@link String#contains(CharSequence)} method, but ignorant of casing.
-	 *
-	 * @param haystack
-	 *            the String in which to search
-	 * @param needle
-	 *            the String which to find
-	 * @return {@code true} only if {@code haystack} contains {@code needle} (ignoring the casing of both)
-	 */
-	public static boolean containsIgnoreCase(String haystack, String needle) {
-		return haystack.toLowerCase().contains(needle.toLowerCase());
 	}
 	
 	/**

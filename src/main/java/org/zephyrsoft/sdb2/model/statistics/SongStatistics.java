@@ -78,10 +78,6 @@ public class SongStatistics implements Comparable<SongStatistics>, Iterable<Loca
 		return presentedOn.iterator();
 	}
 	
-	public int dateCount() {
-		return presentedOn.size();
-	}
-	
 	public boolean dateAdd(LocalDate date) {
 		return presentedOn.add(date);
 	}

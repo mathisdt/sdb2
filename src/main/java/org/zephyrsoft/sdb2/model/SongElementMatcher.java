@@ -28,13 +28,6 @@ public interface SongElementMatcher {
 	
 	boolean matches(SongElement songElement);
 	
-	static final SongElementMatcher IS_PRESENT_MATCHER = songElement -> songElement != null;
-	
-	/** Creates a matcher for non-null {@link SongElement}s. */
-	public static SongElementMatcher isPresent() {
-		return IS_PRESENT_MATCHER;
-	}
-	
 	// TODO cache all created matchers!
 	
 	/** Creates a matcher for {@link SongElement}s of the given type. */

@@ -161,10 +161,6 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		}
 	}
 	
-	public Song getSong(int index) {
-		return songs.get(index);
-	}
-	
 	public Song getByUUID(String uuid) {
 		for (Song song : songs) {
 			if (song.getUUID() != null && song.getUUID().equals(uuid)) {

@@ -22,24 +22,22 @@ import org.apache.commons.text.WordUtils;
  * Types of presentation screen contents.
  */
 public enum ScreenContentsEnum {
-	ONLY_LYRICS("only lyrics", true, false, false, false),
-	LYRICS_AND_CHORDS("lyrics and chords", true, false, true, false),
-	LYRICS_AND_CHORD_SEQUENCE("lyrics and chord sequence", true, false, false, true),
-	LYRICS_AND_CHORDS_AND_CHORD_SEQUENCE("lyrics, chords and chord sequence", true, false, true, true),
-	LYRICS_AND_TRANSLATION("lyrics and translation", true, true, false, false),
-	LYRICS_AND_TRANSLATION_AND_CHORDS("lyrics, translation and chords", true, true, true, false),
-	LYRICS_AND_TRANSLATION_AND_CHORD_SEQUENCE("lyrics, translation and chord sequence", true, true, false, true),
-	LYRICS_AND_TRANSLATION_AND_CHORDS_AND_CHORD_SEQUENCE("lyrics, translation, chords and chord sequence", true, true, true, true);
+	ONLY_LYRICS("only lyrics", false, false, false),
+	LYRICS_AND_CHORDS("lyrics and chords", false, true, false),
+	LYRICS_AND_CHORD_SEQUENCE("lyrics and chord sequence", false, false, true),
+	LYRICS_AND_CHORDS_AND_CHORD_SEQUENCE("lyrics, chords and chord sequence", false, true, true),
+	LYRICS_AND_TRANSLATION("lyrics and translation", true, false, false),
+	LYRICS_AND_TRANSLATION_AND_CHORDS("lyrics, translation and chords", true, true, false),
+	LYRICS_AND_TRANSLATION_AND_CHORD_SEQUENCE("lyrics, translation and chord sequence", true, false, true),
+	LYRICS_AND_TRANSLATION_AND_CHORDS_AND_CHORD_SEQUENCE("lyrics, translation, chords and chord sequence", true, true, true);
 	
 	private final String description;
-	private final boolean showLyrics;
 	private final boolean showTranslation;
 	private final boolean showChords;
 	private final boolean showChordSequence;
 	
-	private ScreenContentsEnum(String description, boolean showLyrics, boolean showTranslation, boolean showChords, boolean showChordSequence) {
+	private ScreenContentsEnum(String description, boolean showTranslation, boolean showChords, boolean showChordSequence) {
 		this.description = description;
-		this.showLyrics = showLyrics;
 		this.showTranslation = showTranslation;
 		this.showChords = showChords;
 		this.showChordSequence = showChordSequence;
@@ -47,10 +45,6 @@ public enum ScreenContentsEnum {
 	
 	public String getDescription() {
 		return description;
-	}
-	
-	public boolean shouldShowLyrics() {
-		return showLyrics;
 	}
 	
 	public boolean shouldShowTranslation() {

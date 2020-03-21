@@ -47,12 +47,4 @@ public class KeyboardShortcutManager implements KeyEventDispatcher {
 	public boolean add(KeyboardShortcut e) {
 		return shortcuts.add(e);
 	}
-	
-	public boolean remove(KeyboardShortcut o) {
-		return shortcuts.remove(o);
-	}
-	
-	public void clear() {
-		shortcuts.clear();
-	}
 }

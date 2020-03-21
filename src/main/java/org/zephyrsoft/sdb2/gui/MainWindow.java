@@ -1093,12 +1093,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	protected void handleLogoPresent() {
-		boolean success;
-		try {
-			success = controller.present(new Presentable(null, controller.loadLogo()));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		boolean success = controller.present(new Presentable(null, controller.loadLogo()));
 		controller.stopSlideShow();
 		if (success) {
 			clearSectionButtons();

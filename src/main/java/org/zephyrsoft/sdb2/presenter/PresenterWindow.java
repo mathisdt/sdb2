@@ -29,7 +29,9 @@ import java.awt.image.MemoryImageSource;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 
@@ -40,7 +42,6 @@ import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableScreen;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
-import org.zephyrsoft.sdb2.util.gui.ImagePanel;
 
 /**
  * The presentation display for the lyrics.
@@ -90,12 +91,13 @@ public class PresenterWindow extends JFrame implements Presenter {
 		setUndecorated(true);
 		getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 		// maximize window on indicated screen
-		setBounds(ScreenHelper.getConfiguration(screen).getBounds());
+		Rectangle screenSize = ScreenHelper.getConfiguration(screen).getBounds();
+		setBounds(screenSize);
 		
-		prepareContent();
+		prepareContent(screenSize);
 	}
 	
-	private void prepareContent() {
+	private void prepareContent(Rectangle screenSize) {
 		int topMargin = settings.get(SettingKey.TOP_MARGIN, Integer.class);
 		int leftMargin = settings.get(SettingKey.LEFT_MARGIN, Integer.class);
 		int rightMargin = settings.get(SettingKey.RIGHT_MARGIN, Integer.class);
@@ -131,10 +133,17 @@ public class PresenterWindow extends JFrame implements Presenter {
 			
 		} else if (presentable.getImage() != null) {
 			// display the image (fullscreen, but with margin)
-			Image image = presentable.getImage();
-			ImagePanel imagePanel = new ImagePanel(image);
-			imagePanel.setBorder(BorderFactory.createEmptyBorder(topMargin, leftMargin, bottomMargin, rightMargin));
-			contentPane.add(imagePanel, BorderLayout.CENTER);
+			String imageFile = presentable.getImage();
+			ImageIcon imageIcon = new ImageIcon(imageFile);
+			Image image = imageIcon.getImage();
+			int originalWidth = image.getWidth(null);
+			int originalHeight = image.getHeight(null);
+			double factor = Math.min((screenSize.getWidth() - leftMargin - rightMargin) / originalWidth,
+				(screenSize.getHeight() - topMargin - bottomMargin) / originalHeight);
+			image = image.getScaledInstance((int) (originalWidth * factor), (int) (originalHeight * factor), Image.SCALE_FAST);
+			JLabel imageComponent = new JLabel(new ImageIcon(image));
+			imageComponent.setBorder(BorderFactory.createEmptyBorder(topMargin, leftMargin, bottomMargin, rightMargin));
+			contentPane.add(imageComponent, BorderLayout.CENTER);
 		} else {
 			// display a blank screen: only set the background color (already done)
 		}
