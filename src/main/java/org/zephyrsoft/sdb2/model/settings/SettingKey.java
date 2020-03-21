@@ -28,14 +28,26 @@ import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 public enum SettingKey {
 	/** should the song title be shown in presentation */
 	SHOW_TITLE(Boolean.class),
-	/** font of song title */
+	/** font of song title - first presentation screen */
 	TITLE_FONT(Font.class),
-	/** font of song lyrics (also used for chords if they are shown) */
+	/** font of song lyrics (also used for chords if they are shown) - first presentation screen */
 	LYRICS_FONT(Font.class),
-	/** font of song lyrics translation */
+	/** font of song lyrics translation - first presentation screen */
 	TRANSLATION_FONT(Font.class),
-	/** font of song copyright */
+	/** font of song copyright - first presentation screen */
 	COPYRIGHT_FONT(Font.class),
+	/** font of chord sequence block - first presentation screen */
+	CHORD_SEQUENCE_FONT(Font.class),
+	/** font of song title - second presentation screen */
+	TITLE_FONT_2(Font.class),
+	/** font of song lyrics (also used for chords if they are shown) - second presentation screen */
+	LYRICS_FONT_2(Font.class),
+	/** font of song lyrics translation - second presentation screen */
+	TRANSLATION_FONT_2(Font.class),
+	/** font of song copyright - second presentation screen */
+	COPYRIGHT_FONT_2(Font.class),
+	/** font of chord sequence block - second presentation screen */
+	CHORD_SEQUENCE_FONT_2(Font.class),
 	/** color of presentation text */
 	TEXT_COLOR(Color.class),
 	/** color of presentation background */

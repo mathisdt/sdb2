@@ -48,7 +48,7 @@ public class ChordSequenceView extends JPanel {
 		StyleContext.DEFAULT_STYLE);
 	
 	private Song song;
-	private Font lyricsFont;
+	private Font chordSequenceFont;
 	private Color foregroundColor;
 	private Color backgroundColor;
 	
@@ -59,9 +59,9 @@ public class ChordSequenceView extends JPanel {
 	/**
 	 * Private constructor: only the builder may call it.
 	 */
-	public ChordSequenceView(Song song, Font lyricsFont, Color foregroundColor, Color backgroundColor) {
+	public ChordSequenceView(Song song, Font chordSequenceFont, Color foregroundColor, Color backgroundColor) {
 		this.song = song;
-		this.lyricsFont = lyricsFont;
+		this.chordSequenceFont = chordSequenceFont;
 		this.foregroundColor = foregroundColor;
 		this.backgroundColor = backgroundColor;
 		
@@ -107,7 +107,7 @@ public class ChordSequenceView extends JPanel {
 	}
 	
 	private void addStyles() {
-		addStyleFromFont(SongElementEnum.CHORDS.name(), lyricsFont);
+		addStyleFromFont(SongElementEnum.CHORDS.name(), chordSequenceFont);
 	}
 	
 	private void appendText(String string, String type) {

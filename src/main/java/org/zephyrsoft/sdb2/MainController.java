@@ -58,6 +58,7 @@ import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableScreen;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
+import org.zephyrsoft.sdb2.model.VirtualScreen;
 import org.zephyrsoft.sdb2.model.XMLConverter;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
@@ -124,14 +125,14 @@ public class MainController implements Scroller {
 		
 		SelectableScreen screen1 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class));
 		ScreenContentsEnum screen1Contents = settings.get(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.class);
-		Presenter presenter1 = createPresenter(screen1, presentable, screen1Contents);
+		Presenter presenter1 = createPresenter(screen1, presentable, screen1Contents, VirtualScreen.SCREEN_1);
 		if (presenter1 != null) {
 			presentationControl.addPresenter(presenter1);
 		}
 		
 		SelectableScreen screen2 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class));
 		ScreenContentsEnum screen2Contents = settings.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class);
-		Presenter presenter2 = createPresenter(screen2, presentable, screen2Contents);
+		Presenter presenter2 = createPresenter(screen2, presentable, screen2Contents, VirtualScreen.SCREEN_2);
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
 		}
@@ -210,12 +211,12 @@ public class MainController implements Scroller {
 	}
 	
 	private PresenterWindow createPresenter(SelectableScreen screen, Presentable presentable,
-		ScreenContentsEnum contents) {
+		ScreenContentsEnum contents, VirtualScreen virtualScreen) {
 		if (screen == null || !screen.isAvailable()) {
 			// nothing to be done
 			return null;
 		}
-		return new PresenterWindow(screen, presentable, contents, settings);
+		return new PresenterWindow(screen, presentable, contents, virtualScreen, settings);
 	}
 	
 	public List<SelectableScreen> getScreens() {
@@ -363,10 +364,16 @@ public class MainController implements Scroller {
 		putDefaultIfKeyIsUnset(SettingKey.SCREEN_2_DISPLAY, null);
 		
 		putDefaultIfKeyIsUnset(SettingKey.SHOW_TITLE, Boolean.TRUE);
-		putDefaultIfKeyIsUnset(SettingKey.TITLE_FONT, new Font(Font.SERIF, Font.BOLD, 10));
-		putDefaultIfKeyIsUnset(SettingKey.LYRICS_FONT, new Font(Font.SERIF, Font.PLAIN, 10));
-		putDefaultIfKeyIsUnset(SettingKey.TRANSLATION_FONT, new Font(Font.SERIF, Font.PLAIN, 10));
-		putDefaultIfKeyIsUnset(SettingKey.COPYRIGHT_FONT, new Font(Font.SERIF, Font.ITALIC, 10));
+		putDefaultIfKeyIsUnset(SettingKey.TITLE_FONT, new Font(Font.SERIF, Font.BOLD, 20));
+		putDefaultIfKeyIsUnset(SettingKey.LYRICS_FONT, new Font(Font.SERIF, Font.PLAIN, 20));
+		putDefaultIfKeyIsUnset(SettingKey.TRANSLATION_FONT, new Font(Font.SERIF, Font.PLAIN, 20));
+		putDefaultIfKeyIsUnset(SettingKey.COPYRIGHT_FONT, new Font(Font.SERIF, Font.ITALIC, 20));
+		putDefaultIfKeyIsUnset(SettingKey.CHORD_SEQUENCE_FONT, new Font(Font.SERIF, Font.ITALIC, 20));
+		putDefaultIfKeyIsUnset(SettingKey.TITLE_FONT_2, settings.get(SettingKey.TITLE_FONT, Font.class));
+		putDefaultIfKeyIsUnset(SettingKey.LYRICS_FONT_2, settings.get(SettingKey.LYRICS_FONT, Font.class));
+		putDefaultIfKeyIsUnset(SettingKey.TRANSLATION_FONT_2, settings.get(SettingKey.TRANSLATION_FONT, Font.class));
+		putDefaultIfKeyIsUnset(SettingKey.COPYRIGHT_FONT_2, settings.get(SettingKey.COPYRIGHT_FONT, Font.class));
+		putDefaultIfKeyIsUnset(SettingKey.CHORD_SEQUENCE_FONT_2, settings.get(SettingKey.CHORD_SEQUENCE_FONT, Font.class));
 		putDefaultIfKeyIsUnset(SettingKey.LOGO_FILE, "");
 		putDefaultIfKeyIsUnset(SettingKey.SECONDS_UNTIL_COUNTED, Integer.valueOf(60));
 		

@@ -209,10 +209,21 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JLabel lblProgramVersion;
 	
 	private JButton btnUnlock;
-	private JButton btnSelectTitleFont;
-	private JButton btnSelectLyricsFont;
-	private JButton btnSelectTranslationFont;
-	private JButton btnSelectCopyrightFont;
+	private JButton btnSelectTitleFont1;
+	private JButton btnSelectTitleFont2;
+	private JButton btnSelectTitleFontBoth;
+	private JButton btnSelectLyricsFont1;
+	private JButton btnSelectLyricsFont2;
+	private JButton btnSelectLyricsFontBoth;
+	private JButton btnSelectTranslationFont1;
+	private JButton btnSelectTranslationFont2;
+	private JButton btnSelectTranslationFontBoth;
+	private JButton btnSelectCopyrightFont1;
+	private JButton btnSelectCopyrightFont2;
+	private JButton btnSelectCopyrightFontBoth;
+	private JButton btnSelectChordSequenceFont1;
+	private JButton btnSelectChordSequenceFont2;
+	private JButton btnSelectChordSequenceFontBoth;
 	private JButton btnSelectTextColor;
 	private JButton btnSelectBackgroundColor;
 	private JButton btnSelectLogo;
@@ -555,16 +566,15 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	/**
-	 * Let the user select a font and save it into the {@link SettingsModel}.
+	 * Let the user select a font, save it into the {@link SettingsModel} (if changed) and re-enable the settings tab.
 	 *
 	 * @param target
 	 *            the target setting for the newly selected font
-	 * @return {@code true} if the font was changed, {@code false} else
 	 */
-	private boolean selectFont(SettingKey target) {
-		Font font = settingsModel.get(target, Font.class);
+	private void selectFont(SettingKey... targets) {
+		Font font = settingsModel.get(targets[0], Font.class);
 		Font initialFontForDialog = font != null
-			? settingsModel.get(target, Font.class)
+			? settingsModel.get(targets[0], Font.class)
 			: new Font("Dialog", Font.BOLD | Font.ITALIC, 56);
 		JFontChooser fontChooser = new JFontChooser();
 		fontChooser.setSelectedFont(initialFontForDialog);
@@ -572,33 +582,11 @@ public class MainWindow extends JFrame implements UIScroller {
 		if (result == JFontChooser.OK_OPTION) {
 			Font selectedFont = fontChooser.getSelectedFont();
 			if (selectedFont != null) {
-				settingsModel.put(target, selectedFont);
-				return true;
+				for (SettingKey target : targets) {
+					settingsModel.put(target, selectedFont);
+				}
 			}
 		}
-		return false;
-	}
-	
-	protected void handleSelectTitleFont() {
-		selectFont(SettingKey.TITLE_FONT);
-		// TODO perhaps apply the new settings?
-		setSettingsEnabled(true);
-	}
-	
-	protected void handleSelectLyricsFont() {
-		selectFont(SettingKey.LYRICS_FONT);
-		// TODO perhaps apply the new settings?
-		setSettingsEnabled(true);
-	}
-	
-	protected void handleSelectTranslationFont() {
-		selectFont(SettingKey.TRANSLATION_FONT);
-		// TODO perhaps apply the new settings?
-		setSettingsEnabled(true);
-	}
-	
-	protected void handleSelectCopyrightFont() {
-		selectFont(SettingKey.COPYRIGHT_FONT);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
@@ -703,10 +691,21 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	private void setSettingsEnabled(boolean enabled) {
-		setEnabledIfNotNull(btnSelectTitleFont, enabled);
-		setEnabledIfNotNull(btnSelectLyricsFont, enabled);
-		setEnabledIfNotNull(btnSelectTranslationFont, enabled);
-		setEnabledIfNotNull(btnSelectCopyrightFont, enabled);
+		setEnabledIfNotNull(btnSelectTitleFont1, enabled);
+		setEnabledIfNotNull(btnSelectTitleFont2, enabled);
+		setEnabledIfNotNull(btnSelectTitleFontBoth, enabled);
+		setEnabledIfNotNull(btnSelectLyricsFont1, enabled);
+		setEnabledIfNotNull(btnSelectLyricsFont2, enabled);
+		setEnabledIfNotNull(btnSelectLyricsFontBoth, enabled);
+		setEnabledIfNotNull(btnSelectTranslationFont1, enabled);
+		setEnabledIfNotNull(btnSelectTranslationFont2, enabled);
+		setEnabledIfNotNull(btnSelectTranslationFontBoth, enabled);
+		setEnabledIfNotNull(btnSelectCopyrightFont1, enabled);
+		setEnabledIfNotNull(btnSelectCopyrightFont2, enabled);
+		setEnabledIfNotNull(btnSelectCopyrightFontBoth, enabled);
+		setEnabledIfNotNull(btnSelectChordSequenceFont1, enabled);
+		setEnabledIfNotNull(btnSelectChordSequenceFont2, enabled);
+		setEnabledIfNotNull(btnSelectChordSequenceFontBoth, enabled);
 		setEnabledIfNotNull(btnSelectTextColor, enabled);
 		setEnabledIfNotNull(btnSelectBackgroundColor, enabled);
 		setEnabledIfNotNull(btnSelectLogo, enabled);
@@ -2055,10 +2054,10 @@ public class MainWindow extends JFrame implements UIScroller {
 		scrollPaneSettings.setViewportBorder(null);
 		scrollPaneSettings.setViewportView(panel);
 		GridBagLayout gblPanel = new GridBagLayout();
-		gblPanel.columnWidths = new int[] { 0, 0, 0, 0, 0 };
-		gblPanel.rowHeights = new int[] { 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 0 };
-		gblPanel.columnWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 0.0 };
-		gblPanel.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		gblPanel.columnWidths = new int[] { 0, 0, 0, 0, 0, 0, 0 };
+		gblPanel.rowHeights = new int[] { 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 0 };
+		gblPanel.columnWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0 };
+		gblPanel.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 			0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, Double.MIN_VALUE };
 		panel.setLayout(gblPanel);
 		
@@ -2066,7 +2065,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		btnUnlock.addActionListener(safeAction(e -> handleSettingsUnlock()));
 		GridBagConstraints gbcBtnUnlock = new GridBagConstraints();
 		gbcBtnUnlock.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnUnlock.gridwidth = 3;
+		gbcBtnUnlock.gridwidth = 5;
 		gbcBtnUnlock.insets = new Insets(0, 0, 5, 5);
 		gbcBtnUnlock.gridx = 1;
 		gbcBtnUnlock.gridy = 1;
@@ -2080,14 +2079,32 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblTitleFont.gridy = 2;
 		panel.add(lblTitleFont, gbcLblTitleFont);
 		
-		btnSelectTitleFont = new JButton("Select...");
-		btnSelectTitleFont.addActionListener(safeAction(e -> handleSelectTitleFont()));
-		GridBagConstraints gbcBtnSelectTitleFont = new GridBagConstraints();
-		gbcBtnSelectTitleFont.insets = new Insets(0, 0, 5, 5);
-		gbcBtnSelectTitleFont.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnSelectTitleFont.gridx = 3;
-		gbcBtnSelectTitleFont.gridy = 2;
-		panel.add(btnSelectTitleFont, gbcBtnSelectTitleFont);
+		btnSelectTitleFont1 = new JButton("Screen 1");
+		btnSelectTitleFont1.addActionListener(safeAction(e -> selectFont(SettingKey.TITLE_FONT)));
+		GridBagConstraints gbc_btnSelectTitleFont1 = new GridBagConstraints();
+		gbc_btnSelectTitleFont1.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectTitleFont1.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectTitleFont1.gridx = 3;
+		gbc_btnSelectTitleFont1.gridy = 2;
+		panel.add(btnSelectTitleFont1, gbc_btnSelectTitleFont1);
+		
+		btnSelectTitleFont2 = new JButton("Screen 2");
+		btnSelectTitleFont2.addActionListener(safeAction(e -> selectFont(SettingKey.TITLE_FONT_2)));
+		GridBagConstraints gbc_btnSelectTitleFont2 = new GridBagConstraints();
+		gbc_btnSelectTitleFont2.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectTitleFont2.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectTitleFont2.gridx = 4;
+		gbc_btnSelectTitleFont2.gridy = 2;
+		panel.add(btnSelectTitleFont2, gbc_btnSelectTitleFont2);
+		
+		btnSelectTitleFontBoth = new JButton("Both Screens");
+		btnSelectTitleFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.TITLE_FONT, SettingKey.TITLE_FONT_2)));
+		GridBagConstraints gbc_btnSelectTitleFontBoth = new GridBagConstraints();
+		gbc_btnSelectTitleFontBoth.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectTitleFontBoth.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectTitleFontBoth.gridx = 5;
+		gbc_btnSelectTitleFontBoth.gridy = 2;
+		panel.add(btnSelectTitleFontBoth, gbc_btnSelectTitleFontBoth);
 		
 		JLabel lblLyricsFont = new JLabel("Lyrics font");
 		GridBagConstraints gbcLblLyricsFont = new GridBagConstraints();
@@ -2097,64 +2114,155 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblLyricsFont.gridy = 3;
 		panel.add(lblLyricsFont, gbcLblLyricsFont);
 		
-		btnSelectLyricsFont = new JButton("Select...");
-		btnSelectLyricsFont.addActionListener(safeAction(e -> handleSelectLyricsFont()));
-		GridBagConstraints gbcBtnSelectLyricsFont = new GridBagConstraints();
-		gbcBtnSelectLyricsFont.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnSelectLyricsFont.insets = new Insets(0, 0, 5, 5);
-		gbcBtnSelectLyricsFont.gridx = 3;
-		gbcBtnSelectLyricsFont.gridy = 3;
-		panel.add(btnSelectLyricsFont, gbcBtnSelectLyricsFont);
+		btnSelectLyricsFont1 = new JButton("Screen 1");
+		btnSelectLyricsFont1.addActionListener(safeAction(e -> selectFont(SettingKey.LYRICS_FONT)));
+		GridBagConstraints gbc_btnSelectLyricsFont1 = new GridBagConstraints();
+		gbc_btnSelectLyricsFont1.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectLyricsFont1.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectLyricsFont1.gridx = 3;
+		gbc_btnSelectLyricsFont1.gridy = 3;
+		panel.add(btnSelectLyricsFont1, gbc_btnSelectLyricsFont1);
+		
+		btnSelectLyricsFont2 = new JButton("Screen 2");
+		btnSelectLyricsFont2.addActionListener(safeAction(e -> selectFont(SettingKey.LYRICS_FONT_2)));
+		GridBagConstraints gbc_btnSelectLyricsFont2 = new GridBagConstraints();
+		gbc_btnSelectLyricsFont2.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectLyricsFont2.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectLyricsFont2.gridx = 4;
+		gbc_btnSelectLyricsFont2.gridy = 3;
+		panel.add(btnSelectLyricsFont2, gbc_btnSelectLyricsFont2);
+		
+		btnSelectLyricsFontBoth = new JButton("Both Screens");
+		btnSelectLyricsFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.LYRICS_FONT, SettingKey.LYRICS_FONT_2)));
+		GridBagConstraints gbc_btnSelectLyricsFontBoth = new GridBagConstraints();
+		gbc_btnSelectLyricsFontBoth.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectLyricsFontBoth.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectLyricsFontBoth.gridx = 5;
+		gbc_btnSelectLyricsFontBoth.gridy = 3;
+		panel.add(btnSelectLyricsFontBoth, gbc_btnSelectLyricsFontBoth);
+		
+		JLabel lblChordSequenceFont = new JLabel("Chord sequence font");
+		GridBagConstraints gbc_lblChordSequenceFont = new GridBagConstraints();
+		gbc_lblChordSequenceFont.anchor = GridBagConstraints.EAST;
+		gbc_lblChordSequenceFont.insets = new Insets(0, 0, 5, 5);
+		gbc_lblChordSequenceFont.gridx = 1;
+		gbc_lblChordSequenceFont.gridy = 4;
+		panel.add(lblChordSequenceFont, gbc_lblChordSequenceFont);
+		
+		btnSelectChordSequenceFont1 = new JButton("Screen 1");
+		btnSelectChordSequenceFont1.addActionListener(safeAction(e -> selectFont(SettingKey.CHORD_SEQUENCE_FONT)));
+		GridBagConstraints gbc_btnChordSequenceFont1 = new GridBagConstraints();
+		gbc_btnChordSequenceFont1.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnChordSequenceFont1.insets = new Insets(0, 0, 5, 5);
+		gbc_btnChordSequenceFont1.gridx = 3;
+		gbc_btnChordSequenceFont1.gridy = 4;
+		panel.add(btnSelectChordSequenceFont1, gbc_btnChordSequenceFont1);
+		
+		btnSelectChordSequenceFont2 = new JButton("Screen 2");
+		btnSelectChordSequenceFont2.addActionListener(safeAction(e -> selectFont(SettingKey.CHORD_SEQUENCE_FONT_2)));
+		GridBagConstraints gbc_btnChordSequenceFont2 = new GridBagConstraints();
+		gbc_btnChordSequenceFont2.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnChordSequenceFont2.insets = new Insets(0, 0, 5, 5);
+		gbc_btnChordSequenceFont2.gridx = 4;
+		gbc_btnChordSequenceFont2.gridy = 4;
+		panel.add(btnSelectChordSequenceFont2, gbc_btnChordSequenceFont2);
+		
+		btnSelectChordSequenceFontBoth = new JButton("Both Screens");
+		btnSelectChordSequenceFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.CHORD_SEQUENCE_FONT,
+			SettingKey.CHORD_SEQUENCE_FONT_2)));
+		GridBagConstraints gbc_btnChordSequenceFontBoth = new GridBagConstraints();
+		gbc_btnChordSequenceFontBoth.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnChordSequenceFontBoth.insets = new Insets(0, 0, 5, 5);
+		gbc_btnChordSequenceFontBoth.gridx = 5;
+		gbc_btnChordSequenceFontBoth.gridy = 4;
+		panel.add(btnSelectChordSequenceFontBoth, gbc_btnChordSequenceFontBoth);
 		
 		JLabel lblTranslationFont = new JLabel("Translation font");
 		GridBagConstraints gbcLblTranslationFont = new GridBagConstraints();
 		gbcLblTranslationFont.anchor = GridBagConstraints.EAST;
 		gbcLblTranslationFont.insets = new Insets(0, 0, 5, 5);
 		gbcLblTranslationFont.gridx = 1;
-		gbcLblTranslationFont.gridy = 4;
+		gbcLblTranslationFont.gridy = 5;
 		panel.add(lblTranslationFont, gbcLblTranslationFont);
 		
-		btnSelectTranslationFont = new JButton("Select...");
-		btnSelectTranslationFont.addActionListener(safeAction(e -> handleSelectTranslationFont()));
-		GridBagConstraints gbcBtnSelectTranslationFont = new GridBagConstraints();
-		gbcBtnSelectTranslationFont.insets = new Insets(0, 0, 5, 5);
-		gbcBtnSelectTranslationFont.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnSelectTranslationFont.gridx = 3;
-		gbcBtnSelectTranslationFont.gridy = 4;
-		panel.add(btnSelectTranslationFont, gbcBtnSelectTranslationFont);
+		btnSelectTranslationFont1 = new JButton("Screen 1");
+		btnSelectTranslationFont1.addActionListener(safeAction(e -> selectFont(SettingKey.TRANSLATION_FONT)));
+		GridBagConstraints gbc_btnSelectTranslationFont1 = new GridBagConstraints();
+		gbc_btnSelectTranslationFont1.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectTranslationFont1.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectTranslationFont1.gridx = 3;
+		gbc_btnSelectTranslationFont1.gridy = 5;
+		panel.add(btnSelectTranslationFont1, gbc_btnSelectTranslationFont1);
+		
+		btnSelectTranslationFont2 = new JButton("Screen 2");
+		btnSelectTranslationFont2.addActionListener(safeAction(e -> selectFont(SettingKey.TRANSLATION_FONT_2)));
+		GridBagConstraints gbc_btnSelectTranslationFont2 = new GridBagConstraints();
+		gbc_btnSelectTranslationFont2.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectTranslationFont2.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectTranslationFont2.gridx = 4;
+		gbc_btnSelectTranslationFont2.gridy = 5;
+		panel.add(btnSelectTranslationFont2, gbc_btnSelectTranslationFont2);
+		
+		btnSelectTranslationFontBoth = new JButton("Both Screens");
+		btnSelectTranslationFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.TRANSLATION_FONT, SettingKey.TRANSLATION_FONT_2)));
+		GridBagConstraints gbc_btnSelectTranslationFontBoth = new GridBagConstraints();
+		gbc_btnSelectTranslationFontBoth.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectTranslationFontBoth.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectTranslationFontBoth.gridx = 5;
+		gbc_btnSelectTranslationFontBoth.gridy = 5;
+		panel.add(btnSelectTranslationFontBoth, gbc_btnSelectTranslationFontBoth);
 		
 		JLabel lblCopyrightFont = new JLabel("Copyright font");
 		GridBagConstraints gbcLblCopyrightFont = new GridBagConstraints();
 		gbcLblCopyrightFont.anchor = GridBagConstraints.EAST;
 		gbcLblCopyrightFont.insets = new Insets(0, 0, 5, 5);
 		gbcLblCopyrightFont.gridx = 1;
-		gbcLblCopyrightFont.gridy = 5;
+		gbcLblCopyrightFont.gridy = 6;
 		panel.add(lblCopyrightFont, gbcLblCopyrightFont);
 		
-		btnSelectCopyrightFont = new JButton("Select...");
-		btnSelectCopyrightFont.addActionListener(safeAction(e -> handleSelectCopyrightFont()));
-		GridBagConstraints gbcBtnSelectCopyrightFont = new GridBagConstraints();
-		gbcBtnSelectCopyrightFont.insets = new Insets(0, 0, 5, 5);
-		gbcBtnSelectCopyrightFont.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnSelectCopyrightFont.gridx = 3;
-		gbcBtnSelectCopyrightFont.gridy = 5;
-		panel.add(btnSelectCopyrightFont, gbcBtnSelectCopyrightFont);
+		btnSelectCopyrightFont1 = new JButton("Screen 1");
+		btnSelectCopyrightFont1.addActionListener(safeAction(e -> selectFont(SettingKey.COPYRIGHT_FONT)));
+		GridBagConstraints gbc_btnSelectCopyrightFont1 = new GridBagConstraints();
+		gbc_btnSelectCopyrightFont1.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectCopyrightFont1.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectCopyrightFont1.gridx = 3;
+		gbc_btnSelectCopyrightFont1.gridy = 6;
+		panel.add(btnSelectCopyrightFont1, gbc_btnSelectCopyrightFont1);
+		
+		btnSelectCopyrightFont2 = new JButton("Screen 2");
+		btnSelectCopyrightFont2.addActionListener(safeAction(e -> selectFont(SettingKey.COPYRIGHT_FONT_2)));
+		GridBagConstraints gbc_btnSelectCopyrightFont2 = new GridBagConstraints();
+		gbc_btnSelectCopyrightFont2.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectCopyrightFont2.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectCopyrightFont2.gridx = 4;
+		gbc_btnSelectCopyrightFont2.gridy = 6;
+		panel.add(btnSelectCopyrightFont2, gbc_btnSelectCopyrightFont2);
+		
+		btnSelectCopyrightFontBoth = new JButton("Both Screens");
+		btnSelectCopyrightFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.COPYRIGHT_FONT, SettingKey.COPYRIGHT_FONT_2)));
+		GridBagConstraints gbc_btnSelectCopyrightFontBoth = new GridBagConstraints();
+		gbc_btnSelectCopyrightFontBoth.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectCopyrightFontBoth.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectCopyrightFontBoth.gridx = 5;
+		gbc_btnSelectCopyrightFontBoth.gridy = 6;
+		panel.add(btnSelectCopyrightFontBoth, gbc_btnSelectCopyrightFontBoth);
 		
 		JLabel lblTextColor = new JLabel("Text color");
 		GridBagConstraints gbcLblTextColor = new GridBagConstraints();
 		gbcLblTextColor.anchor = GridBagConstraints.EAST;
 		gbcLblTextColor.insets = new Insets(0, 0, 5, 5);
 		gbcLblTextColor.gridx = 1;
-		gbcLblTextColor.gridy = 6;
+		gbcLblTextColor.gridy = 7;
 		panel.add(lblTextColor, gbcLblTextColor);
 		
 		btnSelectTextColor = new JButton("Select...");
 		btnSelectTextColor.addActionListener(safeAction(e -> handleSelectTextColor()));
 		GridBagConstraints gbcBtnSelectTextColor = new GridBagConstraints();
 		gbcBtnSelectTextColor.fill = GridBagConstraints.HORIZONTAL;
+		gbcBtnSelectTextColor.gridwidth = 3;
 		gbcBtnSelectTextColor.insets = new Insets(0, 0, 5, 5);
 		gbcBtnSelectTextColor.gridx = 3;
-		gbcBtnSelectTextColor.gridy = 6;
+		gbcBtnSelectTextColor.gridy = 7;
 		panel.add(btnSelectTextColor, gbcBtnSelectTextColor);
 		
 		JLabel lblBackgroundColor = new JLabel("Background color");
@@ -2162,16 +2270,17 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblBackgroundColor.anchor = GridBagConstraints.EAST;
 		gbcLblBackgroundColor.insets = new Insets(0, 0, 5, 5);
 		gbcLblBackgroundColor.gridx = 1;
-		gbcLblBackgroundColor.gridy = 7;
+		gbcLblBackgroundColor.gridy = 8;
 		panel.add(lblBackgroundColor, gbcLblBackgroundColor);
 		
 		btnSelectBackgroundColor = new JButton("Select...");
 		btnSelectBackgroundColor.addActionListener(safeAction(e -> handleSelectBackgroundColor()));
 		GridBagConstraints gbcBtnSelectBackgroundColor = new GridBagConstraints();
-		gbcBtnSelectBackgroundColor.insets = new Insets(0, 0, 5, 5);
 		gbcBtnSelectBackgroundColor.fill = GridBagConstraints.HORIZONTAL;
+		gbcBtnSelectBackgroundColor.gridwidth = 3;
+		gbcBtnSelectBackgroundColor.insets = new Insets(0, 0, 5, 5);
 		gbcBtnSelectBackgroundColor.gridx = 3;
-		gbcBtnSelectBackgroundColor.gridy = 7;
+		gbcBtnSelectBackgroundColor.gridy = 8;
 		panel.add(btnSelectBackgroundColor, gbcBtnSelectBackgroundColor);
 		
 		JLabel lblLogo = new JLabel("Logo");
@@ -2179,16 +2288,17 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblLogo.anchor = GridBagConstraints.EAST;
 		gbcLblLogo.insets = new Insets(0, 0, 5, 5);
 		gbcLblLogo.gridx = 1;
-		gbcLblLogo.gridy = 8;
+		gbcLblLogo.gridy = 9;
 		panel.add(lblLogo, gbcLblLogo);
 		
 		btnSelectLogo = new JButton("Select...");
 		btnSelectLogo.addActionListener(safeAction(e -> handleSelectLogo()));
 		GridBagConstraints gbcBtnSelectLogo = new GridBagConstraints();
-		gbcBtnSelectLogo.insets = new Insets(0, 0, 5, 5);
 		gbcBtnSelectLogo.fill = GridBagConstraints.HORIZONTAL;
+		gbcBtnSelectLogo.gridwidth = 3;
+		gbcBtnSelectLogo.insets = new Insets(0, 0, 5, 5);
 		gbcBtnSelectLogo.gridx = 3;
-		gbcBtnSelectLogo.gridy = 8;
+		gbcBtnSelectLogo.gridy = 9;
 		panel.add(btnSelectLogo, gbcBtnSelectLogo);
 		
 		JLabel lblTopMargin = new JLabel("Top margin");
@@ -2196,15 +2306,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblTopMargin.anchor = GridBagConstraints.EAST;
 		gbcLblTopMargin.insets = new Insets(0, 0, 5, 5);
 		gbcLblTopMargin.gridx = 1;
-		gbcLblTopMargin.gridy = 9;
+		gbcLblTopMargin.gridy = 10;
 		panel.add(lblTopMargin, gbcLblTopMargin);
 		
 		spinnerTopMargin = new JSpinner();
 		GridBagConstraints gbcSpinnerTopMargin = new GridBagConstraints();
 		gbcSpinnerTopMargin.fill = GridBagConstraints.HORIZONTAL;
+		gbcSpinnerTopMargin.gridwidth = 3;
 		gbcSpinnerTopMargin.insets = new Insets(0, 0, 5, 5);
 		gbcSpinnerTopMargin.gridx = 3;
-		gbcSpinnerTopMargin.gridy = 9;
+		gbcSpinnerTopMargin.gridy = 10;
 		panel.add(spinnerTopMargin, gbcSpinnerTopMargin);
 		
 		JLabel lblLeftMargin = new JLabel("Left margin");
@@ -2212,15 +2323,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblLeftMargin.anchor = GridBagConstraints.EAST;
 		gbcLblLeftMargin.insets = new Insets(0, 0, 5, 5);
 		gbcLblLeftMargin.gridx = 1;
-		gbcLblLeftMargin.gridy = 10;
+		gbcLblLeftMargin.gridy = 11;
 		panel.add(lblLeftMargin, gbcLblLeftMargin);
 		
 		spinnerLeftMargin = new JSpinner();
 		GridBagConstraints gbcSpinnerLeftMargin = new GridBagConstraints();
 		gbcSpinnerLeftMargin.fill = GridBagConstraints.HORIZONTAL;
+		gbcSpinnerLeftMargin.gridwidth = 3;
 		gbcSpinnerLeftMargin.insets = new Insets(0, 0, 5, 5);
 		gbcSpinnerLeftMargin.gridx = 3;
-		gbcSpinnerLeftMargin.gridy = 10;
+		gbcSpinnerLeftMargin.gridy = 11;
 		panel.add(spinnerLeftMargin, gbcSpinnerLeftMargin);
 		
 		JLabel lblRightMargin = new JLabel("Right margin");
@@ -2228,15 +2340,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblRightMargin.anchor = GridBagConstraints.EAST;
 		gbcLblRightMargin.insets = new Insets(0, 0, 5, 5);
 		gbcLblRightMargin.gridx = 1;
-		gbcLblRightMargin.gridy = 11;
+		gbcLblRightMargin.gridy = 12;
 		panel.add(lblRightMargin, gbcLblRightMargin);
 		
 		spinnerRightMargin = new JSpinner();
 		GridBagConstraints gbcSpinnerRightMargin = new GridBagConstraints();
 		gbcSpinnerRightMargin.fill = GridBagConstraints.HORIZONTAL;
+		gbcSpinnerRightMargin.gridwidth = 3;
 		gbcSpinnerRightMargin.insets = new Insets(0, 0, 5, 5);
 		gbcSpinnerRightMargin.gridx = 3;
-		gbcSpinnerRightMargin.gridy = 11;
+		gbcSpinnerRightMargin.gridy = 12;
 		panel.add(spinnerRightMargin, gbcSpinnerRightMargin);
 		
 		JLabel lblBottomMargin = new JLabel("Bottom margin");
@@ -2244,15 +2357,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblBottomMargin.anchor = GridBagConstraints.EAST;
 		gbcLblBottomMargin.insets = new Insets(0, 0, 5, 5);
 		gbcLblBottomMargin.gridx = 1;
-		gbcLblBottomMargin.gridy = 12;
+		gbcLblBottomMargin.gridy = 13;
 		panel.add(lblBottomMargin, gbcLblBottomMargin);
 		
 		spinnerBottomMargin = new JSpinner();
 		GridBagConstraints gbcSpinnerBottomMargin = new GridBagConstraints();
 		gbcSpinnerBottomMargin.fill = GridBagConstraints.HORIZONTAL;
+		gbcSpinnerBottomMargin.gridwidth = 3;
 		gbcSpinnerBottomMargin.insets = new Insets(0, 0, 5, 5);
 		gbcSpinnerBottomMargin.gridx = 3;
-		gbcSpinnerBottomMargin.gridy = 12;
+		gbcSpinnerBottomMargin.gridy = 13;
 		panel.add(spinnerBottomMargin, gbcSpinnerBottomMargin);
 		
 		JLabel lblShowTitle = new JLabel("Show title in presentation");
@@ -2261,14 +2375,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblShowTitle.anchor = GridBagConstraints.EAST;
 		gbcLblShowTitle.insets = new Insets(0, 0, 5, 5);
 		gbcLblShowTitle.gridx = 1;
-		gbcLblShowTitle.gridy = 13;
+		gbcLblShowTitle.gridy = 14;
 		panel.add(lblShowTitle, gbcLblShowTitle);
 		
 		checkboxShowTitle = new JCheckBox("");
 		GridBagConstraints gbcCheckboxShowTitle = new GridBagConstraints();
+		gbcCheckboxShowTitle.fill = GridBagConstraints.HORIZONTAL;
+		gbcCheckboxShowTitle.gridwidth = 3;
 		gbcCheckboxShowTitle.insets = new Insets(0, 0, 5, 5);
 		gbcCheckboxShowTitle.gridx = 3;
-		gbcCheckboxShowTitle.gridy = 13;
+		gbcCheckboxShowTitle.gridy = 14;
 		panel.add(checkboxShowTitle, gbcCheckboxShowTitle);
 		
 		JLabel lblDistanceBetweenTitle = new JLabel("Distance between title and text");
@@ -2276,15 +2392,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblDistanceBetweenTitle.anchor = GridBagConstraints.EAST;
 		gbcLblDistanceBetweenTitle.insets = new Insets(0, 0, 5, 5);
 		gbcLblDistanceBetweenTitle.gridx = 1;
-		gbcLblDistanceBetweenTitle.gridy = 14;
+		gbcLblDistanceBetweenTitle.gridy = 15;
 		panel.add(lblDistanceBetweenTitle, gbcLblDistanceBetweenTitle);
 		
 		spinnerDistanceTitleText = new JSpinner();
 		GridBagConstraints gbcSpinnerDistanceTitleText = new GridBagConstraints();
 		gbcSpinnerDistanceTitleText.fill = GridBagConstraints.HORIZONTAL;
+		gbcSpinnerDistanceTitleText.gridwidth = 3;
 		gbcSpinnerDistanceTitleText.insets = new Insets(0, 0, 5, 5);
 		gbcSpinnerDistanceTitleText.gridx = 3;
-		gbcSpinnerDistanceTitleText.gridy = 14;
+		gbcSpinnerDistanceTitleText.gridy = 15;
 		panel.add(spinnerDistanceTitleText, gbcSpinnerDistanceTitleText);
 		
 		JLabel lblDistanceBetweenText = new JLabel("Distance between text and copyright");
@@ -2292,15 +2409,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblDistanceBetweenText.anchor = GridBagConstraints.EAST;
 		gbcLblDistanceBetweenText.insets = new Insets(0, 0, 5, 5);
 		gbcLblDistanceBetweenText.gridx = 1;
-		gbcLblDistanceBetweenText.gridy = 15;
+		gbcLblDistanceBetweenText.gridy = 16;
 		panel.add(lblDistanceBetweenText, gbcLblDistanceBetweenText);
 		
 		spinnerDistanceTextCopyright = new JSpinner();
 		GridBagConstraints gbcSpinnerDistanceTextCopyright = new GridBagConstraints();
-		gbcSpinnerDistanceTextCopyright.insets = new Insets(0, 0, 5, 5);
 		gbcSpinnerDistanceTextCopyright.fill = GridBagConstraints.HORIZONTAL;
+		gbcSpinnerDistanceTextCopyright.gridwidth = 3;
+		gbcSpinnerDistanceTextCopyright.insets = new Insets(0, 0, 5, 5);
 		gbcSpinnerDistanceTextCopyright.gridx = 3;
-		gbcSpinnerDistanceTextCopyright.gridy = 15;
+		gbcSpinnerDistanceTextCopyright.gridy = 16;
 		panel.add(spinnerDistanceTextCopyright, gbcSpinnerDistanceTextCopyright);
 		
 		JLabel lblSongListFiltering = new JLabel("Song list filter");
@@ -2308,15 +2426,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblSongListFiltering.anchor = GridBagConstraints.EAST;
 		gbcLblSongListFiltering.insets = new Insets(0, 0, 5, 5);
 		gbcLblSongListFiltering.gridx = 1;
-		gbcLblSongListFiltering.gridy = 16;
+		gbcLblSongListFiltering.gridy = 17;
 		panel.add(lblSongListFiltering, gbcLblSongListFiltering);
 		
 		comboSongListFiltering = new JComboBox<>();
 		GridBagConstraints gbcComboSongListFiltering = new GridBagConstraints();
-		gbcComboSongListFiltering.insets = new Insets(0, 0, 5, 5);
 		gbcComboSongListFiltering.fill = GridBagConstraints.HORIZONTAL;
+		gbcComboSongListFiltering.gridwidth = 3;
+		gbcComboSongListFiltering.insets = new Insets(0, 0, 5, 5);
 		gbcComboSongListFiltering.gridx = 3;
-		gbcComboSongListFiltering.gridy = 16;
+		gbcComboSongListFiltering.gridy = 17;
 		panel.add(comboSongListFiltering, gbcComboSongListFiltering);
 		
 		JLabel lblPresentationScreen1Display = new JLabel("Presentation screen 1 display");
@@ -2324,15 +2443,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblPresentationScreen1Display.anchor = GridBagConstraints.EAST;
 		gbcLblPresentationScreen1Display.insets = new Insets(0, 0, 5, 5);
 		gbcLblPresentationScreen1Display.gridx = 1;
-		gbcLblPresentationScreen1Display.gridy = 17;
+		gbcLblPresentationScreen1Display.gridy = 18;
 		panel.add(lblPresentationScreen1Display, gbcLblPresentationScreen1Display);
 		
 		comboPresentationScreen1Display = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen1Display = new GridBagConstraints();
-		gbcComboPresentationScreen1Display.insets = new Insets(0, 0, 5, 5);
 		gbcComboPresentationScreen1Display.fill = GridBagConstraints.HORIZONTAL;
+		gbcComboPresentationScreen1Display.gridwidth = 3;
+		gbcComboPresentationScreen1Display.insets = new Insets(0, 0, 5, 5);
 		gbcComboPresentationScreen1Display.gridx = 3;
-		gbcComboPresentationScreen1Display.gridy = 17;
+		gbcComboPresentationScreen1Display.gridy = 18;
 		panel.add(comboPresentationScreen1Display, gbcComboPresentationScreen1Display);
 		
 		JLabel lblPresentationScreen1Contents = new JLabel("Presentation screen 1 contents");
@@ -2340,15 +2460,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblPresentationScreen1Contents.anchor = GridBagConstraints.EAST;
 		gbcLblPresentationScreen1Contents.insets = new Insets(0, 0, 5, 5);
 		gbcLblPresentationScreen1Contents.gridx = 1;
-		gbcLblPresentationScreen1Contents.gridy = 18;
+		gbcLblPresentationScreen1Contents.gridy = 19;
 		panel.add(lblPresentationScreen1Contents, gbcLblPresentationScreen1Contents);
 		
 		comboPresentationScreen1Contents = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen1Contents = new GridBagConstraints();
-		gbcComboPresentationScreen1Contents.insets = new Insets(0, 0, 5, 5);
 		gbcComboPresentationScreen1Contents.fill = GridBagConstraints.HORIZONTAL;
+		gbcComboPresentationScreen1Contents.gridwidth = 3;
+		gbcComboPresentationScreen1Contents.insets = new Insets(0, 0, 5, 5);
 		gbcComboPresentationScreen1Contents.gridx = 3;
-		gbcComboPresentationScreen1Contents.gridy = 18;
+		gbcComboPresentationScreen1Contents.gridy = 19;
 		panel.add(comboPresentationScreen1Contents, gbcComboPresentationScreen1Contents);
 		
 		JLabel lblPresentationScreen2Display = new JLabel("Presentation screen 2 display");
@@ -2356,15 +2477,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblPresentationScreen2Display.anchor = GridBagConstraints.EAST;
 		gbcLblPresentationScreen2Display.insets = new Insets(0, 0, 5, 5);
 		gbcLblPresentationScreen2Display.gridx = 1;
-		gbcLblPresentationScreen2Display.gridy = 19;
+		gbcLblPresentationScreen2Display.gridy = 20;
 		panel.add(lblPresentationScreen2Display, gbcLblPresentationScreen2Display);
 		
 		comboPresentationScreen2Display = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen2Display = new GridBagConstraints();
-		gbcComboPresentationScreen2Display.insets = new Insets(0, 0, 5, 5);
 		gbcComboPresentationScreen2Display.fill = GridBagConstraints.HORIZONTAL;
+		gbcComboPresentationScreen2Display.gridwidth = 3;
+		gbcComboPresentationScreen2Display.insets = new Insets(0, 0, 5, 5);
 		gbcComboPresentationScreen2Display.gridx = 3;
-		gbcComboPresentationScreen2Display.gridy = 19;
+		gbcComboPresentationScreen2Display.gridy = 20;
 		panel.add(comboPresentationScreen2Display, gbcComboPresentationScreen2Display);
 		
 		JLabel lblPresentationScreen2Contents = new JLabel("Presentation screen 2 contents");
@@ -2372,15 +2494,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblPresentationScreen2Contents.anchor = GridBagConstraints.EAST;
 		gbcLblPresentationScreen2Contents.insets = new Insets(0, 0, 5, 5);
 		gbcLblPresentationScreen2Contents.gridx = 1;
-		gbcLblPresentationScreen2Contents.gridy = 20;
+		gbcLblPresentationScreen2Contents.gridy = 21;
 		panel.add(lblPresentationScreen2Contents, gbcLblPresentationScreen2Contents);
 		
 		comboPresentationScreen2Contents = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen2Contents = new GridBagConstraints();
-		gbcComboPresentationScreen2Contents.insets = new Insets(0, 0, 5, 5);
 		gbcComboPresentationScreen2Contents.fill = GridBagConstraints.HORIZONTAL;
+		gbcComboPresentationScreen2Contents.gridwidth = 3;
+		gbcComboPresentationScreen2Contents.insets = new Insets(0, 0, 5, 5);
 		gbcComboPresentationScreen2Contents.gridx = 3;
-		gbcComboPresentationScreen2Contents.gridy = 20;
+		gbcComboPresentationScreen2Contents.gridy = 21;
 		panel.add(comboPresentationScreen2Contents, gbcComboPresentationScreen2Contents);
 		
 		JLabel lblSecondsToCount = new JLabel("Seconds to count a song as displayed after");
@@ -2388,15 +2511,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblSecondsToCount.anchor = GridBagConstraints.EAST;
 		gbcLblSecondsToCount.insets = new Insets(0, 0, 5, 5);
 		gbcLblSecondsToCount.gridx = 1;
-		gbcLblSecondsToCount.gridy = 21;
+		gbcLblSecondsToCount.gridy = 22;
 		panel.add(lblSecondsToCount, gbcLblSecondsToCount);
 		
 		spinnerCountAsDisplayedAfter = new JSpinner();
 		GridBagConstraints gbcSpinnerCountAsDisplayedAfter = new GridBagConstraints();
-		gbcSpinnerCountAsDisplayedAfter.insets = new Insets(0, 0, 5, 5);
 		gbcSpinnerCountAsDisplayedAfter.fill = GridBagConstraints.HORIZONTAL;
+		gbcSpinnerCountAsDisplayedAfter.gridwidth = 3;
+		gbcSpinnerCountAsDisplayedAfter.insets = new Insets(0, 0, 5, 5);
 		gbcSpinnerCountAsDisplayedAfter.gridx = 3;
-		gbcSpinnerCountAsDisplayedAfter.gridy = 21;
+		gbcSpinnerCountAsDisplayedAfter.gridy = 22;
 		panel.add(spinnerCountAsDisplayedAfter, gbcSpinnerCountAsDisplayedAfter);
 		
 		lblSlideShowDirectory = new JLabel("Directory for slide show");
@@ -2404,16 +2528,17 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_lblSlideShowDirectory.anchor = GridBagConstraints.EAST;
 		gbc_lblSlideShowDirectory.insets = new Insets(0, 0, 5, 5);
 		gbc_lblSlideShowDirectory.gridx = 1;
-		gbc_lblSlideShowDirectory.gridy = 22;
+		gbc_lblSlideShowDirectory.gridy = 23;
 		panel.add(lblSlideShowDirectory, gbc_lblSlideShowDirectory);
 		
 		btnSlideShowDirectory = new JButton("Select...");
 		btnSlideShowDirectory.addActionListener(safeAction(e -> handleSelectSlideShowDirectory()));
 		GridBagConstraints gbc_btnSlideShowDirectory = new GridBagConstraints();
 		gbc_btnSlideShowDirectory.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSlideShowDirectory.gridwidth = 3;
 		gbc_btnSlideShowDirectory.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSlideShowDirectory.gridx = 3;
-		gbc_btnSlideShowDirectory.gridy = 22;
+		gbc_btnSlideShowDirectory.gridy = 23;
 		panel.add(btnSlideShowDirectory, gbc_btnSlideShowDirectory);
 		
 		lblSlideShowSeconds = new JLabel("Seconds between slide show changes");
@@ -2421,7 +2546,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_lblSlideShowSeconds.anchor = GridBagConstraints.EAST;
 		gbc_lblSlideShowSeconds.insets = new Insets(0, 0, 5, 5);
 		gbc_lblSlideShowSeconds.gridx = 1;
-		gbc_lblSlideShowSeconds.gridy = 23;
+		gbc_lblSlideShowSeconds.gridy = 24;
 		panel.add(lblSlideShowSeconds, gbc_lblSlideShowSeconds);
 		
 		spinnerSlideShowSeconds = new JSpinner();
@@ -2429,7 +2554,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_spinnerSlideShowSeconds.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerSlideShowSeconds.insets = new Insets(0, 0, 5, 5);
 		gbc_spinnerSlideShowSeconds.gridx = 3;
-		gbc_spinnerSlideShowSeconds.gridy = 23;
+		gbc_spinnerSlideShowSeconds.gridy = 24;
 		panel.add(spinnerSlideShowSeconds, gbc_spinnerSlideShowSeconds);
 		
 		glassPane = (Container) getGlassPane();
