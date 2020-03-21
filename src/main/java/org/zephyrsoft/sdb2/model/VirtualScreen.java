@@ -27,7 +27,17 @@ import org.zephyrsoft.sdb2.model.settings.SettingsModel;
  * Has an impact on the fonts to use for presentation.
  */
 public enum VirtualScreen {
-	SCREEN_1, SCREEN_2;
+	SCREEN_1(1), SCREEN_2(2);
+	
+	private final int number;
+	
+	private VirtualScreen(int number) {
+		this.number = number;
+	}
+	
+	public int getNumber() {
+		return number;
+	}
 	
 	public Font getTitleFont(SettingsModel settings) {
 		return this == SCREEN_1

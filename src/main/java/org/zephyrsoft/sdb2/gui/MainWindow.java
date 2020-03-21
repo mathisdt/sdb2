@@ -16,6 +16,9 @@
  */
 package org.zephyrsoft.sdb2.gui;
 
+import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_1;
+import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_2;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
@@ -96,6 +99,7 @@ import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableScreen;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
+import org.zephyrsoft.sdb2.model.VirtualScreen;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
@@ -493,6 +497,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		comboPresentationScreen2Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
 		
 		// load values for instantly displayed settings
+		updateFontButtons();
 		Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
 		checkboxShowTitle.setSelected(showTitle == null ? false : showTitle.booleanValue());
 		setSpinnerValue(spinnerTopMargin, settingsModel.get(SettingKey.TOP_MARGIN, Integer.class));
@@ -589,6 +594,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		}
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
+		updateFontButtons();
 	}
 	
 	private boolean selectColor(SettingKey target, Color defaultColor, String title) {
@@ -2102,7 +2108,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_btnSelectTitleFont2.gridy = 2;
 		panel.add(btnSelectTitleFont2, gbc_btnSelectTitleFont2);
 		
-		btnSelectTitleFontBoth = new JButton("Both Screens");
+		btnSelectTitleFontBoth = new JButton("Change for both Screens");
 		btnSelectTitleFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.TITLE_FONT, SettingKey.TITLE_FONT_2)));
 		GridBagConstraints gbc_btnSelectTitleFontBoth = new GridBagConstraints();
 		gbc_btnSelectTitleFontBoth.fill = GridBagConstraints.HORIZONTAL;
@@ -2137,7 +2143,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_btnSelectLyricsFont2.gridy = 3;
 		panel.add(btnSelectLyricsFont2, gbc_btnSelectLyricsFont2);
 		
-		btnSelectLyricsFontBoth = new JButton("Both Screens");
+		btnSelectLyricsFontBoth = new JButton("Change for both Screens");
 		btnSelectLyricsFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.LYRICS_FONT, SettingKey.LYRICS_FONT_2)));
 		GridBagConstraints gbc_btnSelectLyricsFontBoth = new GridBagConstraints();
 		gbc_btnSelectLyricsFontBoth.fill = GridBagConstraints.HORIZONTAL;
@@ -2172,7 +2178,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_btnChordSequenceFont2.gridy = 4;
 		panel.add(btnSelectChordSequenceFont2, gbc_btnChordSequenceFont2);
 		
-		btnSelectChordSequenceFontBoth = new JButton("Both Screens");
+		btnSelectChordSequenceFontBoth = new JButton("Change for both Screens");
 		btnSelectChordSequenceFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.CHORD_SEQUENCE_FONT,
 			SettingKey.CHORD_SEQUENCE_FONT_2)));
 		GridBagConstraints gbc_btnChordSequenceFontBoth = new GridBagConstraints();
@@ -2208,7 +2214,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_btnSelectTranslationFont2.gridy = 5;
 		panel.add(btnSelectTranslationFont2, gbc_btnSelectTranslationFont2);
 		
-		btnSelectTranslationFontBoth = new JButton("Both Screens");
+		btnSelectTranslationFontBoth = new JButton("Change for both Screens");
 		btnSelectTranslationFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.TRANSLATION_FONT, SettingKey.TRANSLATION_FONT_2)));
 		GridBagConstraints gbc_btnSelectTranslationFontBoth = new GridBagConstraints();
 		gbc_btnSelectTranslationFontBoth.fill = GridBagConstraints.HORIZONTAL;
@@ -2243,7 +2249,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_btnSelectCopyrightFont2.gridy = 6;
 		panel.add(btnSelectCopyrightFont2, gbc_btnSelectCopyrightFont2);
 		
-		btnSelectCopyrightFontBoth = new JButton("Both Screens");
+		btnSelectCopyrightFontBoth = new JButton("Change for both Screens");
 		btnSelectCopyrightFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.COPYRIGHT_FONT, SettingKey.COPYRIGHT_FONT_2)));
 		GridBagConstraints gbc_btnSelectCopyrightFontBoth = new GridBagConstraints();
 		gbc_btnSelectCopyrightFontBoth.fill = GridBagConstraints.HORIZONTAL;
@@ -2584,6 +2590,25 @@ public class MainWindow extends JFrame implements UIScroller {
 		glassPane.add(buttonPanel, gbc);
 		
 		afterConstruction();
+	}
+	
+	private void updateFontButtons() {
+		int size = btnSelectTitleFont1.getFont().getSize();
+		updateFontButton(SCREEN_1, btnSelectTitleFont1, SCREEN_1.getTitleFont(settingsModel), size);
+		updateFontButton(SCREEN_2, btnSelectTitleFont2, SCREEN_2.getTitleFont(settingsModel), size);
+		updateFontButton(SCREEN_1, btnSelectLyricsFont1, SCREEN_1.getLyricsFont(settingsModel), size);
+		updateFontButton(SCREEN_2, btnSelectLyricsFont2, SCREEN_2.getLyricsFont(settingsModel), size);
+		updateFontButton(SCREEN_1, btnSelectChordSequenceFont1, SCREEN_1.getChordSequenceFont(settingsModel), size);
+		updateFontButton(SCREEN_2, btnSelectChordSequenceFont2, SCREEN_2.getChordSequenceFont(settingsModel), size);
+		updateFontButton(SCREEN_1, btnSelectTranslationFont1, SCREEN_1.getTranslationFont(settingsModel), size);
+		updateFontButton(SCREEN_2, btnSelectTranslationFont2, SCREEN_2.getTranslationFont(settingsModel), size);
+		updateFontButton(SCREEN_1, btnSelectCopyrightFont1, SCREEN_1.getCopyrightFont(settingsModel), size);
+		updateFontButton(SCREEN_2, btnSelectCopyrightFont2, SCREEN_2.getCopyrightFont(settingsModel), size);
+	}
+	
+	private void updateFontButton(VirtualScreen screen, JButton fontButton, Font font, int size) {
+		fontButton.setFont(font.deriveFont((float) size));
+		fontButton.setText("Screen " + screen.getNumber() + " (font size: " + font.getSize() + ")");
 	}
 	
 	private void handleExport(Collection<Song> songs) {
