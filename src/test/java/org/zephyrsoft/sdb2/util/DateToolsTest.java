@@ -20,7 +20,6 @@ import java.time.LocalDateTime;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.zephyrsoft.sdb2.util.DateTools;
 
 public class DateToolsTest {
 	

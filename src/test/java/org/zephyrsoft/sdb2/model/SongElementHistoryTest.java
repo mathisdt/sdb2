@@ -24,9 +24,6 @@ import static org.zephyrsoft.sdb2.model.SongElementMatcher.isOneOf;
 import java.util.Iterator;
 
 import org.junit.Test;
-import org.zephyrsoft.sdb2.model.SongElement;
-import org.zephyrsoft.sdb2.model.SongElementEnum;
-import org.zephyrsoft.sdb2.model.SongElementHistory;
 
 import com.google.common.collect.Lists;
 

@@ -18,7 +18,7 @@ open module org.zephyrsoft.sdb2 {
 	requires java.desktop;
 	requires java.sql;
 	requires java.net.http;
-	requires gson;
+	requires com.google.gson;
 	requires JFontChooser;
 	requires timingframework.core;
 	requires timingframework.swing;

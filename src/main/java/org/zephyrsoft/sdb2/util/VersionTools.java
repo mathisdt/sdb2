@@ -35,6 +35,10 @@ public class VersionTools {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(VersionTools.class);
 	
+	private VersionTools() {
+		// only static use
+	}
+	
 	public static String getCurrent() {
 		String version = getImplementationVersion();
 		LocalDateTime timestamp = getTimestampAsLocalDateTime();
@@ -74,7 +78,7 @@ public class VersionTools {
 				return null;
 			}
 			
-			JsonObject latestRelease = new JsonParser().parse(latestReleaseResponse.body()).getAsJsonObject();
+			JsonObject latestRelease = JsonParser.parseString(latestReleaseResponse.body()).getAsJsonObject();
 			
 			LocalDateTime latestReleaseTimestamp = DateTools.parseDateTime(latestRelease.get("published_at").getAsString());
 			LocalDateTime ownTimestamp = getTimestampAsLocalDateTime();
