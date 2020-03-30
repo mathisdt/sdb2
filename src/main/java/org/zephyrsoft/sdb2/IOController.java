@@ -34,6 +34,7 @@ import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zephyrsoft.sdb2.model.SongsModel;
 
 /**
  * Controller for input/output operations.
@@ -109,11 +110,17 @@ public class IOController {
 		ignoreCompletely = Boolean.TRUE;
 	}
 	
-	public <T> T readSongs(String fileName, Function<InputStream, T> handler) {
+	public SongsModel readSongs(String fileName, Function<InputStream, SongsModel> handler) {
 		String fileNameToUse = FileAndDirectoryLocations.getSongsFileName(fileName);
 		File file = new File(fileNameToUse);
+		
+		if (!file.exists()) {
+			LOG.debug("not reading songs from {} (file does not exist) but using empty model", file.getAbsolutePath());
+			return new SongsModel();
+		}
+		
 		LOG.debug("reading songs from {}", file.getAbsolutePath());
-		T result = null;
+		SongsModel result = null;
 		try (InputStream xmlInputStream = new FileInputStream(file)) {
 			result = handler.apply(xmlInputStream);
 		} catch (IOException e) {
