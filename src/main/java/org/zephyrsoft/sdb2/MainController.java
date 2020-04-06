@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -116,10 +117,7 @@ public class MainController implements Scroller {
 	
 	public boolean present(Presentable presentable) {
 		// make it possible to end the old presentation (if any)
-		PresenterBundle oldPresentationControl = null;
-		if (presentationControl != null) {
-			oldPresentationControl = presentationControl;
-		}
+		PresenterBundle oldPresentationControl = presentationControl;
 		
 		presentationControl = new PresenterBundle();
 		
@@ -152,14 +150,16 @@ public class MainController implements Scroller {
 				stopCountDown();
 			}
 			
-			// start presentation
-			presentationControl.showPresenter();
-			
-			// now stop old presentation (if any)
-			if (oldPresentationControl != null) {
-				oldPresentationControl.hidePresenter();
-				oldPresentationControl.disposePresenter();
-			}
+			SwingUtilities.invokeLater(() -> {
+				// start presentation
+				presentationControl.showPresenter();
+				
+				// now stop old presentation (if any)
+				if (oldPresentationControl != null) {
+					oldPresentationControl.hidePresenter();
+					oldPresentationControl.disposePresenter();
+				}
+			});
 			
 			return true;
 		}
