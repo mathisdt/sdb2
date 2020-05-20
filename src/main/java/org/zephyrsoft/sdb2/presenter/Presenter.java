@@ -22,6 +22,11 @@ package org.zephyrsoft.sdb2.presenter;
 public interface Presenter extends Scroller {
 	
 	/**
+	 * Set the content. For re-using an existing presenter.
+	 */
+	void setContent(Presentable presentable);
+	
+	/**
 	 * Show the presenter.
 	 */
 	void showPresenter();

@@ -17,6 +17,7 @@
 package org.zephyrsoft.sdb2.presenter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.zephyrsoft.sdb2.model.AddressablePart;
@@ -30,6 +31,17 @@ public class PresenterBundle implements Presenter {
 	
 	public void addPresenter(Presenter presenter) {
 		presenters.add(presenter);
+	}
+	
+	public List<Presenter> getPresenters() {
+		return Collections.unmodifiableList(presenters);
+	}
+	
+	@Override
+	public void setContent(Presentable presentable) {
+		for (Presenter presenter : presenters) {
+			presenter.setContent(presentable);
+		}
 	}
 	
 	@Override

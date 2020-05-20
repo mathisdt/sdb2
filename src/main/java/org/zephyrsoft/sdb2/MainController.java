@@ -116,21 +116,38 @@ public class MainController implements Scroller {
 	}
 	
 	public boolean present(Presentable presentable) {
-		// make it possible to end the old presentation (if any)
-		PresenterBundle oldPresentationControl = presentationControl;
+		SelectableScreen screen1 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class));
+		SelectableScreen screen2 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class));
 		
+		int presentersConfigured = (settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class) != null ? 1 : 0)
+			+ (settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class) != null ? 1 : 0);
+		if (presentationControl != null
+			&& presentationControl.getPresenters().size() == presentersConfigured
+			&& (presentationControl.getPresenters().isEmpty() ||
+				(presentationControl.getPresenters().get(0) instanceof PresenterWindow
+					&& ((PresenterWindow) presentationControl.getPresenters().get(0)).metadataMatches(screen1, VirtualScreen.SCREEN_1)))
+			&& (presentationControl.getPresenters().size() <= 2 ||
+				(presentationControl.getPresenters().get(1) instanceof PresenterWindow
+					&& ((PresenterWindow) presentationControl.getPresenters().get(1)).metadataMatches(screen2, VirtualScreen.SCREEN_2)))) {
+			LOG.debug("re-using the existing presenters");
+			presentationControl.setContent(presentable);
+			return true;
+		} else {
+			LOG.debug("using newly created presenters");
+			return presentInNewPresenters(presentable, screen1, screen2);
+		}
+	}
+	
+	private boolean presentInNewPresenters(Presentable presentable, SelectableScreen screen1, SelectableScreen screen2) {
+		PresenterBundle oldPresentationControl = presentationControl;
 		presentationControl = new PresenterBundle();
 		
-		SelectableScreen screen1 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class));
-		ScreenContentsEnum screen1Contents = settings.get(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.class);
-		Presenter presenter1 = createPresenter(screen1, presentable, screen1Contents, VirtualScreen.SCREEN_1);
+		Presenter presenter1 = createPresenter(screen1, presentable, VirtualScreen.SCREEN_1);
 		if (presenter1 != null) {
 			presentationControl.addPresenter(presenter1);
 		}
 		
-		SelectableScreen screen2 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class));
-		ScreenContentsEnum screen2Contents = settings.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class);
-		Presenter presenter2 = createPresenter(screen2, presentable, screen2Contents, VirtualScreen.SCREEN_2);
+		Presenter presenter2 = createPresenter(screen2, presentable, VirtualScreen.SCREEN_2);
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
 		}
@@ -210,13 +227,12 @@ public class MainController implements Scroller {
 		presentationControl.moveToLine(part, line);
 	}
 	
-	private PresenterWindow createPresenter(SelectableScreen screen, Presentable presentable,
-		ScreenContentsEnum contents, VirtualScreen virtualScreen) {
+	private PresenterWindow createPresenter(SelectableScreen screen, Presentable presentable, VirtualScreen virtualScreen) {
 		if (screen == null || !screen.isAvailable()) {
 			// nothing to be done
 			return null;
 		}
-		return new PresenterWindow(screen, presentable, contents, virtualScreen, settings);
+		return new PresenterWindow(screen, presentable, virtualScreen, settings);
 	}
 	
 	public List<SelectableScreen> getScreens() {

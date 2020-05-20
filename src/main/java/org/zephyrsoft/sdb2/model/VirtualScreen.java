@@ -39,6 +39,12 @@ public enum VirtualScreen {
 		return number;
 	}
 	
+	public ScreenContentsEnum getScreenContents(SettingsModel settings) {
+		return this == SCREEN_1
+			? settings.get(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.class)
+			: settings.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class);
+	}
+	
 	public Font getTitleFont(SettingsModel settings) {
 		return this == SCREEN_1
 			? settings.get(SettingKey.TITLE_FONT, Font.class)
