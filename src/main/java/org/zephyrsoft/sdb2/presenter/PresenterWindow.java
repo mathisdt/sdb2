@@ -89,7 +89,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 		
 		contentPane = new JPanel();
 		contentPane.setLayout(new BorderLayout(0, 0));
-		Color backgroundColor = settings.get(SettingKey.BACKGROUND_COLOR, Color.class);
+		Color backgroundColor = virtualScreen.getBackgroundColor(settings);
 		setBackground(backgroundColor);
 		contentPane.setBackground(backgroundColor);
 		// hide cursor above presentation display
@@ -129,8 +129,8 @@ public class PresenterWindow extends JFrame implements Presenter {
 			Font copyrightFont = virtualScreen.getCopyrightFont(settings);
 			int titleLyricsDistance = settings.get(SettingKey.DISTANCE_TITLE_TEXT, Integer.class);
 			int lyricsCopyrightDistance = settings.get(SettingKey.DISTANCE_TEXT_COPYRIGHT, Integer.class);
-			Color foregroundColor = settings.get(SettingKey.TEXT_COLOR, Color.class);
-			Color backgroundColor = settings.get(SettingKey.BACKGROUND_COLOR, Color.class);
+			Color foregroundColor = virtualScreen.getTextColor(settings);
+			Color backgroundColor = virtualScreen.getBackgroundColor(settings);
 			
 			// create a SongView to render the song
 			songView = new SongView.Builder(presentable.getSong())

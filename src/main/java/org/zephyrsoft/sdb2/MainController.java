@@ -360,6 +360,8 @@ public class MainController implements Scroller {
 	private void loadDefaultSettingsForUnsetSettings() {
 		putDefaultIfKeyIsUnset(SettingKey.BACKGROUND_COLOR, Color.BLACK);
 		putDefaultIfKeyIsUnset(SettingKey.TEXT_COLOR, Color.WHITE);
+		putDefaultIfKeyIsUnset(SettingKey.BACKGROUND_COLOR_2, settings.get(SettingKey.BACKGROUND_COLOR, Color.class));
+		putDefaultIfKeyIsUnset(SettingKey.TEXT_COLOR_2, settings.get(SettingKey.TEXT_COLOR, Color.class));
 		
 		putDefaultIfKeyIsUnset(SettingKey.TOP_MARGIN, Integer.valueOf(10));
 		putDefaultIfKeyIsUnset(SettingKey.LEFT_MARGIN, Integer.valueOf(0));

@@ -228,8 +228,8 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JButton btnSelectChordSequenceFont1;
 	private JButton btnSelectChordSequenceFont2;
 	private JButton btnSelectChordSequenceFontBoth;
-	private JButton btnSelectTextColor;
-	private JButton btnSelectBackgroundColor;
+	private JButton btnSelectTextColor1;
+	private JButton btnSelectBackgroundColor1;
 	private JButton btnSelectLogo;
 	private JSpinner spinnerTopMargin;
 	private JSpinner spinnerLeftMargin;
@@ -257,6 +257,10 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JCheckBox chckbxWithChords;
 	private JCheckBox chckbxOnlyExportSongs;
 	private JLabel labelExportStatisctics;
+	private JButton btnSelectTextColor2;
+	private JButton btnSelectBackgroundColor2;
+	private JButton btnSelectTextColorBoth;
+	private JButton btnSelectBackgroundColorBoth;
 	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
@@ -597,28 +601,54 @@ public class MainWindow extends JFrame implements UIScroller {
 		updateFontButtons();
 	}
 	
-	private boolean selectColor(SettingKey target, Color defaultColor, String title) {
-		Color color = settingsModel.get(target, Color.class);
+	private boolean selectColor(Color defaultColor, String title, SettingKey... targets) {
+		Color color = settingsModel.get(targets[0], Color.class);
 		if (color == null) {
 			color = defaultColor;
 		}
 		Color result = JColorChooser.showDialog(this, title, color);
 		if (result != null) {
-			settingsModel.put(target, result);
+			for (SettingKey target : targets) {
+				settingsModel.put(target, result);
+			}
 			return true;
 		} else {
 			return false;
 		}
 	}
 	
-	protected void handleSelectTextColor() {
-		selectColor(SettingKey.TEXT_COLOR, Color.WHITE, "Select Text Color");
+	protected void handleSelectTextColor1() {
+		selectColor(Color.WHITE, "Select Text Color (Screen 1)", SettingKey.TEXT_COLOR);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
 	
-	protected void handleSelectBackgroundColor() {
-		selectColor(SettingKey.BACKGROUND_COLOR, Color.BLACK, "Select Background Color");
+	protected void handleSelectTextColor2() {
+		selectColor(Color.WHITE, "Select Text Color (Screen 2)", SettingKey.TEXT_COLOR_2);
+		// TODO perhaps apply the new settings?
+		setSettingsEnabled(true);
+	}
+	
+	protected void handleSelectTextColorBoth() {
+		selectColor(Color.WHITE, "Select Text Color (Both Screens)", SettingKey.TEXT_COLOR, SettingKey.TEXT_COLOR_2);
+		// TODO perhaps apply the new settings?
+		setSettingsEnabled(true);
+	}
+	
+	protected void handleSelectBackgroundColor1() {
+		selectColor(Color.BLACK, "Select Background Color (Screen 1)", SettingKey.BACKGROUND_COLOR);
+		// TODO perhaps apply the new settings?
+		setSettingsEnabled(true);
+	}
+	
+	protected void handleSelectBackgroundColor2() {
+		selectColor(Color.BLACK, "Select Background Color (Screen 2)", SettingKey.BACKGROUND_COLOR_2);
+		// TODO perhaps apply the new settings?
+		setSettingsEnabled(true);
+	}
+	
+	protected void handleSelectBackgroundColorBoth() {
+		selectColor(Color.BLACK, "Select Background Color (Both Screens)", SettingKey.BACKGROUND_COLOR, SettingKey.BACKGROUND_COLOR_2);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
@@ -712,8 +742,12 @@ public class MainWindow extends JFrame implements UIScroller {
 		setEnabledIfNotNull(btnSelectChordSequenceFont1, enabled);
 		setEnabledIfNotNull(btnSelectChordSequenceFont2, enabled);
 		setEnabledIfNotNull(btnSelectChordSequenceFontBoth, enabled);
-		setEnabledIfNotNull(btnSelectTextColor, enabled);
-		setEnabledIfNotNull(btnSelectBackgroundColor, enabled);
+		setEnabledIfNotNull(btnSelectTextColor1, enabled);
+		setEnabledIfNotNull(btnSelectTextColor2, enabled);
+		setEnabledIfNotNull(btnSelectTextColorBoth, enabled);
+		setEnabledIfNotNull(btnSelectBackgroundColor1, enabled);
+		setEnabledIfNotNull(btnSelectBackgroundColor2, enabled);
+		setEnabledIfNotNull(btnSelectBackgroundColorBoth, enabled);
 		setEnabledIfNotNull(btnSelectLogo, enabled);
 		setEnabledIfNotNull(checkboxShowTitle, enabled);
 		setEnabledIfNotNull(spinnerTopMargin, enabled);
@@ -2266,15 +2300,32 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblTextColor.gridy = 7;
 		panel.add(lblTextColor, gbcLblTextColor);
 		
-		btnSelectTextColor = new JButton("Select...");
-		btnSelectTextColor.addActionListener(safeAction(e -> handleSelectTextColor()));
-		GridBagConstraints gbcBtnSelectTextColor = new GridBagConstraints();
-		gbcBtnSelectTextColor.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnSelectTextColor.gridwidth = 3;
-		gbcBtnSelectTextColor.insets = new Insets(0, 0, 5, 5);
-		gbcBtnSelectTextColor.gridx = 3;
-		gbcBtnSelectTextColor.gridy = 7;
-		panel.add(btnSelectTextColor, gbcBtnSelectTextColor);
+		btnSelectTextColor1 = new JButton("Screen 1");
+		btnSelectTextColor1.addActionListener(safeAction(e -> handleSelectTextColor1()));
+		GridBagConstraints gbc_btnSelectTextColor1 = new GridBagConstraints();
+		gbc_btnSelectTextColor1.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectTextColor1.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectTextColor1.gridx = 3;
+		gbc_btnSelectTextColor1.gridy = 7;
+		panel.add(btnSelectTextColor1, gbc_btnSelectTextColor1);
+		
+		btnSelectTextColor2 = new JButton("Screen 2");
+		btnSelectTextColor2.addActionListener(safeAction(e -> handleSelectTextColor2()));
+		GridBagConstraints gbc_btnSelectTextColor2 = new GridBagConstraints();
+		gbc_btnSelectTextColor2.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectTextColor2.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectTextColor2.gridx = 4;
+		gbc_btnSelectTextColor2.gridy = 7;
+		panel.add(btnSelectTextColor2, gbc_btnSelectTextColor2);
+		
+		btnSelectTextColorBoth = new JButton("Change for both Screens");
+		btnSelectTextColorBoth.addActionListener(safeAction(e -> handleSelectTextColorBoth()));
+		GridBagConstraints gbc_btnSelectTextColorBoth = new GridBagConstraints();
+		gbc_btnSelectTextColorBoth.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectTextColorBoth.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectTextColorBoth.gridx = 5;
+		gbc_btnSelectTextColorBoth.gridy = 7;
+		panel.add(btnSelectTextColorBoth, gbc_btnSelectTextColorBoth);
 		
 		JLabel lblBackgroundColor = new JLabel("Background color");
 		GridBagConstraints gbcLblBackgroundColor = new GridBagConstraints();
@@ -2284,15 +2335,32 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblBackgroundColor.gridy = 8;
 		panel.add(lblBackgroundColor, gbcLblBackgroundColor);
 		
-		btnSelectBackgroundColor = new JButton("Select...");
-		btnSelectBackgroundColor.addActionListener(safeAction(e -> handleSelectBackgroundColor()));
-		GridBagConstraints gbcBtnSelectBackgroundColor = new GridBagConstraints();
-		gbcBtnSelectBackgroundColor.fill = GridBagConstraints.HORIZONTAL;
-		gbcBtnSelectBackgroundColor.gridwidth = 3;
-		gbcBtnSelectBackgroundColor.insets = new Insets(0, 0, 5, 5);
-		gbcBtnSelectBackgroundColor.gridx = 3;
-		gbcBtnSelectBackgroundColor.gridy = 8;
-		panel.add(btnSelectBackgroundColor, gbcBtnSelectBackgroundColor);
+		btnSelectBackgroundColor1 = new JButton("Screen 1");
+		btnSelectBackgroundColor1.addActionListener(safeAction(e -> handleSelectBackgroundColor1()));
+		GridBagConstraints gbc_btnSelectBackgroundColor1 = new GridBagConstraints();
+		gbc_btnSelectBackgroundColor1.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectBackgroundColor1.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectBackgroundColor1.gridx = 3;
+		gbc_btnSelectBackgroundColor1.gridy = 8;
+		panel.add(btnSelectBackgroundColor1, gbc_btnSelectBackgroundColor1);
+		
+		btnSelectBackgroundColor2 = new JButton("Screen 2");
+		btnSelectBackgroundColor2.addActionListener(safeAction(e -> handleSelectBackgroundColor2()));
+		GridBagConstraints gbc_btnSelectBackgroundColor2 = new GridBagConstraints();
+		gbc_btnSelectBackgroundColor2.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectBackgroundColor2.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectBackgroundColor2.gridx = 4;
+		gbc_btnSelectBackgroundColor2.gridy = 8;
+		panel.add(btnSelectBackgroundColor2, gbc_btnSelectBackgroundColor2);
+		
+		btnSelectBackgroundColorBoth = new JButton("Change for both Screens");
+		btnSelectBackgroundColorBoth.addActionListener(safeAction(e -> handleSelectBackgroundColorBoth()));
+		GridBagConstraints gbc_btnSelectBackgroundColorBoth = new GridBagConstraints();
+		gbc_btnSelectBackgroundColorBoth.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnSelectBackgroundColorBoth.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSelectBackgroundColorBoth.gridx = 5;
+		gbc_btnSelectBackgroundColorBoth.gridy = 8;
+		panel.add(btnSelectBackgroundColorBoth, gbc_btnSelectBackgroundColorBoth);
 		
 		JLabel lblLogo = new JLabel("Logo");
 		GridBagConstraints gbcLblLogo = new GridBagConstraints();
