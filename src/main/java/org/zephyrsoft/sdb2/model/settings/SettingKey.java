@@ -80,6 +80,10 @@ public enum SettingKey {
 	SCREEN_2_DISPLAY(String.class),
 	/** content of second configured presentation screen */
 	SCREEN_2_CONTENTS(ScreenContentsEnum.class),
+	/** should the scrolling be minimized - first presentation screen */
+	MINIMAL_SCROLLING(Boolean.class),
+	/** should the scrolling be minimized - second presentation screen */
+	MINIMAL_SCROLLING_2(Boolean.class),
 	/** how long the song has to be shown until it counts as presented (for statistics) */
 	SECONDS_UNTIL_COUNTED(Integer.class),
 	/** directory to use for slide show */

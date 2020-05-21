@@ -129,11 +129,11 @@ public class MainController implements Scroller {
 			&& (presentationControl.getPresenters().size() <= 2 ||
 				(presentationControl.getPresenters().get(1) instanceof PresenterWindow
 					&& ((PresenterWindow) presentationControl.getPresenters().get(1)).metadataMatches(screen2, VirtualScreen.SCREEN_2)))) {
-			LOG.debug("re-using the existing presenters");
+			LOG.trace("re-using the existing presenters");
 			presentationControl.setContent(presentable);
 			return true;
 		} else {
-			LOG.debug("using newly created presenters");
+			LOG.trace("using newly created presenters");
 			return presentInNewPresenters(presentable, screen1, screen2);
 		}
 	}
@@ -380,6 +380,8 @@ public class MainController implements Scroller {
 			putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_DISPLAY, null);
 		}
 		putDefaultIfKeyIsUnset(SettingKey.SCREEN_2_DISPLAY, null);
+		putDefaultIfKeyIsUnset(SettingKey.MINIMAL_SCROLLING, Boolean.FALSE);
+		putDefaultIfKeyIsUnset(SettingKey.MINIMAL_SCROLLING_2, Boolean.FALSE);
 		
 		putDefaultIfKeyIsUnset(SettingKey.SHOW_TITLE, Boolean.TRUE);
 		putDefaultIfKeyIsUnset(SettingKey.TITLE_FONT, new Font(Font.SERIF, Font.BOLD, 20));

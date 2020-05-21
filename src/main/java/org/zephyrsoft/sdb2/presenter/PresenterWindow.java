@@ -131,6 +131,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 			int lyricsCopyrightDistance = settings.get(SettingKey.DISTANCE_TEXT_COPYRIGHT, Integer.class);
 			Color foregroundColor = virtualScreen.getTextColor(settings);
 			Color backgroundColor = virtualScreen.getBackgroundColor(settings);
+			boolean minimalScrolling = virtualScreen.getMinimalScrolling(settings);
 			
 			// create a SongView to render the song
 			songView = new SongView.Builder(presentable.getSong())
@@ -139,7 +140,8 @@ public class PresenterWindow extends JFrame implements Presenter {
 				.translationFont(translationFont).copyrightFont(copyrightFont).topMargin(topMargin)
 				.leftMargin(leftMargin).rightMargin(rightMargin).bottomMargin(bottomMargin)
 				.titleLyricsDistance(titleLyricsDistance).lyricsCopyrightDistance(lyricsCopyrightDistance)
-				.foregroundColor(foregroundColor).backgroundColor(backgroundColor).build();
+				.foregroundColor(foregroundColor).backgroundColor(backgroundColor)
+				.minimalScrolling(minimalScrolling).build();
 			contentPane.add(songView, BorderLayout.CENTER);
 			
 			if (contents.shouldShowChordSequence()) {

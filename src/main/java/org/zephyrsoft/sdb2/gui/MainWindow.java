@@ -261,6 +261,9 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JButton btnSelectBackgroundColor2;
 	private JButton btnSelectTextColorBoth;
 	private JButton btnSelectBackgroundColorBoth;
+	private JLabel lblMinimizeScrolling;
+	private JCheckBox checkboxMinimizeScrolling1;
+	private JCheckBox checkboxMinimizeScrolling2;
 	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
@@ -503,7 +506,11 @@ public class MainWindow extends JFrame implements UIScroller {
 		// load values for instantly displayed settings
 		updateFontButtons();
 		Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
-		checkboxShowTitle.setSelected(showTitle == null ? false : showTitle.booleanValue());
+		checkboxShowTitle.setSelected(showTitle != null && showTitle.booleanValue());
+		Boolean minimalScrolling1 = settingsModel.get(SettingKey.MINIMAL_SCROLLING, Boolean.class);
+		checkboxMinimizeScrolling1.setSelected(minimalScrolling1 != null && minimalScrolling1.booleanValue());
+		Boolean minimalScrolling2 = settingsModel.get(SettingKey.MINIMAL_SCROLLING_2, Boolean.class);
+		checkboxMinimizeScrolling2.setSelected(minimalScrolling2 != null && minimalScrolling2.booleanValue());
 		setSpinnerValue(spinnerTopMargin, settingsModel.get(SettingKey.TOP_MARGIN, Integer.class));
 		setSpinnerValue(spinnerLeftMargin, settingsModel.get(SettingKey.LEFT_MARGIN, Integer.class));
 		setSpinnerValue(spinnerRightMargin, settingsModel.get(SettingKey.RIGHT_MARGIN, Integer.class));
@@ -541,6 +548,8 @@ public class MainWindow extends JFrame implements UIScroller {
 				spinnerDistanceTitleText, spinnerDistanceTextCopyright, spinnerCountAsDisplayedAfter, spinnerSlideShowSeconds);
 			// disable controls
 			// copy changed settings to the model
+			settingsModel.put(SettingKey.MINIMAL_SCROLLING, checkboxMinimizeScrolling1.getModel().isSelected());
+			settingsModel.put(SettingKey.MINIMAL_SCROLLING_2, checkboxMinimizeScrolling2.getModel().isSelected());
 			settingsModel.put(SettingKey.SHOW_TITLE, checkboxShowTitle.getModel().isSelected());
 			settingsModel.put(SettingKey.TOP_MARGIN, spinnerTopMargin.getValue());
 			settingsModel.put(SettingKey.LEFT_MARGIN, spinnerLeftMargin.getValue());
@@ -750,6 +759,8 @@ public class MainWindow extends JFrame implements UIScroller {
 		setEnabledIfNotNull(btnSelectBackgroundColorBoth, enabled);
 		setEnabledIfNotNull(btnSelectLogo, enabled);
 		setEnabledIfNotNull(checkboxShowTitle, enabled);
+		setEnabledIfNotNull(checkboxMinimizeScrolling1, enabled);
+		setEnabledIfNotNull(checkboxMinimizeScrolling2, enabled);
 		setEnabledIfNotNull(spinnerTopMargin, enabled);
 		setEnabledIfNotNull(spinnerLeftMargin, enabled);
 		setEnabledIfNotNull(spinnerRightMargin, enabled);
@@ -2576,6 +2587,9 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblPresentationScreen2Contents.gridy = 21;
 		panel.add(lblPresentationScreen2Contents, gbcLblPresentationScreen2Contents);
 		
+		btnSlideShowDirectory = new JButton("Select...");
+		btnSlideShowDirectory.addActionListener(safeAction(e -> handleSelectSlideShowDirectory()));
+		
 		comboPresentationScreen2Contents = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen2Contents = new GridBagConstraints();
 		gbcComboPresentationScreen2Contents.fill = GridBagConstraints.HORIZONTAL;
@@ -2585,12 +2599,36 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcComboPresentationScreen2Contents.gridy = 21;
 		panel.add(comboPresentationScreen2Contents, gbcComboPresentationScreen2Contents);
 		
+		lblMinimizeScrolling = new JLabel("Minimize Scrolling");
+		GridBagConstraints gbc_lblMinimizeScrolling = new GridBagConstraints();
+		gbc_lblMinimizeScrolling.anchor = GridBagConstraints.EAST;
+		gbc_lblMinimizeScrolling.insets = new Insets(0, 0, 5, 5);
+		gbc_lblMinimizeScrolling.gridx = 1;
+		gbc_lblMinimizeScrolling.gridy = 22;
+		panel.add(lblMinimizeScrolling, gbc_lblMinimizeScrolling);
+		
+		checkboxMinimizeScrolling1 = new JCheckBox("Screen 1");
+		GridBagConstraints gbc_checkboxMinimizeScrolling1 = new GridBagConstraints();
+		gbc_checkboxMinimizeScrolling1.anchor = GridBagConstraints.WEST;
+		gbc_checkboxMinimizeScrolling1.insets = new Insets(0, 0, 5, 5);
+		gbc_checkboxMinimizeScrolling1.gridx = 3;
+		gbc_checkboxMinimizeScrolling1.gridy = 22;
+		panel.add(checkboxMinimizeScrolling1, gbc_checkboxMinimizeScrolling1);
+		
+		checkboxMinimizeScrolling2 = new JCheckBox("Screen 2");
+		GridBagConstraints gbc_checkboxMinimizeScrolling2 = new GridBagConstraints();
+		gbc_checkboxMinimizeScrolling2.anchor = GridBagConstraints.WEST;
+		gbc_checkboxMinimizeScrolling2.insets = new Insets(0, 0, 5, 5);
+		gbc_checkboxMinimizeScrolling2.gridx = 4;
+		gbc_checkboxMinimizeScrolling2.gridy = 22;
+		panel.add(checkboxMinimizeScrolling2, gbc_checkboxMinimizeScrolling2);
+		
 		JLabel lblSecondsToCount = new JLabel("Seconds to count a song as displayed after");
 		GridBagConstraints gbcLblSecondsToCount = new GridBagConstraints();
 		gbcLblSecondsToCount.anchor = GridBagConstraints.EAST;
 		gbcLblSecondsToCount.insets = new Insets(0, 0, 5, 5);
 		gbcLblSecondsToCount.gridx = 1;
-		gbcLblSecondsToCount.gridy = 22;
+		gbcLblSecondsToCount.gridy = 23;
 		panel.add(lblSecondsToCount, gbcLblSecondsToCount);
 		
 		spinnerCountAsDisplayedAfter = new JSpinner();
@@ -2599,7 +2637,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcSpinnerCountAsDisplayedAfter.gridwidth = 3;
 		gbcSpinnerCountAsDisplayedAfter.insets = new Insets(0, 0, 5, 5);
 		gbcSpinnerCountAsDisplayedAfter.gridx = 3;
-		gbcSpinnerCountAsDisplayedAfter.gridy = 22;
+		gbcSpinnerCountAsDisplayedAfter.gridy = 23;
 		panel.add(spinnerCountAsDisplayedAfter, gbcSpinnerCountAsDisplayedAfter);
 		
 		lblSlideShowDirectory = new JLabel("Directory for slide show");
@@ -2607,17 +2645,14 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_lblSlideShowDirectory.anchor = GridBagConstraints.EAST;
 		gbc_lblSlideShowDirectory.insets = new Insets(0, 0, 5, 5);
 		gbc_lblSlideShowDirectory.gridx = 1;
-		gbc_lblSlideShowDirectory.gridy = 23;
+		gbc_lblSlideShowDirectory.gridy = 24;
 		panel.add(lblSlideShowDirectory, gbc_lblSlideShowDirectory);
-		
-		btnSlideShowDirectory = new JButton("Select...");
-		btnSlideShowDirectory.addActionListener(safeAction(e -> handleSelectSlideShowDirectory()));
 		GridBagConstraints gbc_btnSlideShowDirectory = new GridBagConstraints();
 		gbc_btnSlideShowDirectory.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnSlideShowDirectory.gridwidth = 3;
 		gbc_btnSlideShowDirectory.insets = new Insets(0, 0, 5, 5);
 		gbc_btnSlideShowDirectory.gridx = 3;
-		gbc_btnSlideShowDirectory.gridy = 23;
+		gbc_btnSlideShowDirectory.gridy = 24;
 		panel.add(btnSlideShowDirectory, gbc_btnSlideShowDirectory);
 		
 		lblSlideShowSeconds = new JLabel("Seconds between slide show changes");
@@ -2625,7 +2660,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_lblSlideShowSeconds.anchor = GridBagConstraints.EAST;
 		gbc_lblSlideShowSeconds.insets = new Insets(0, 0, 5, 5);
 		gbc_lblSlideShowSeconds.gridx = 1;
-		gbc_lblSlideShowSeconds.gridy = 24;
+		gbc_lblSlideShowSeconds.gridy = 25;
 		panel.add(lblSlideShowSeconds, gbc_lblSlideShowSeconds);
 		
 		spinnerSlideShowSeconds = new JSpinner();
@@ -2633,7 +2668,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_spinnerSlideShowSeconds.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerSlideShowSeconds.insets = new Insets(0, 0, 5, 5);
 		gbc_spinnerSlideShowSeconds.gridx = 3;
-		gbc_spinnerSlideShowSeconds.gridy = 24;
+		gbc_spinnerSlideShowSeconds.gridy = 25;
 		panel.add(spinnerSlideShowSeconds, gbc_spinnerSlideShowSeconds);
 		
 		glassPane = (Container) getGlassPane();
