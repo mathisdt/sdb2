@@ -49,6 +49,37 @@ public class Presentable {
 	}
 	
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((image == null) ? 0 : image.hashCode());
+		result = prime * result + ((song == null) ? 0 : song.hashCode());
+		return result;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Presentable other = (Presentable) obj;
+		if (image == null) {
+			if (other.image != null)
+				return false;
+		} else if (!image.equals(other.image))
+			return false;
+		if (song == null) {
+			if (other.song != null)
+				return false;
+		} else if (!song.equals(other.song))
+			return false;
+		return true;
+	}
+	
+	@Override
 	public String toString() {
 		return song != null
 			? song.getTitle()

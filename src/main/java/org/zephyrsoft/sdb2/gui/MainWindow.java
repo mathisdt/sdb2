@@ -1111,31 +1111,33 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	protected void handleSongPresent() {
 		boolean success = controller.present(new Presentable(presentListSelected, null));
-		controller.stopSlideShow();
-		if (success) {
-			clearSectionButtons();
-			List<AddressablePart> parts = controller.getParts();
-			int partIndex = 0;
-			for (AddressablePart part : parts) {
-				PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller, this);
-				panelSectionButtons.add(buttonGroup, panelSectionButtonsHints);
-				listSectionButtons.add(buttonGroup);
-				partIndex++;
+		controller.contentChange(() -> controller.stopSlideShow());
+		controller.contentChange(() -> {
+			if (success) {
+				clearSectionButtons();
+				List<AddressablePart> parts = controller.getParts();
+				int partIndex = 0;
+				for (AddressablePart part : parts) {
+					PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller, this);
+					panelSectionButtons.add(buttonGroup, panelSectionButtonsHints);
+					listSectionButtons.add(buttonGroup);
+					partIndex++;
+				}
+				
+				// mark first line as active
+				if (!listSectionButtons.isEmpty()) {
+					listSectionButtons.get(0).setActiveLine(0);
+				}
+				
+				// add empty component to consume any space that is left (so the parts appear at the top of the
+				// scrollpane view)
+				panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
+				
+				panelSectionButtons.revalidate();
+				panelSectionButtons.repaint();
+				btnJumpToPresented.setEnabled(true);
 			}
-			
-			// mark first line as active
-			if (!listSectionButtons.isEmpty()) {
-				listSectionButtons.get(0).setActiveLine(0);
-			}
-			
-			// add empty component to consume any space that is left (so the parts appear at the top of the
-			// scrollpane view)
-			panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
-			
-			panelSectionButtons.revalidate();
-			panelSectionButtons.repaint();
-			btnJumpToPresented.setEnabled(true);
-		}
+		});
 	}
 	
 	protected void handleBlankScreen() {

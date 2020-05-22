@@ -108,8 +108,8 @@ public class SongView extends JPanel implements Scroller {
 	
 	private StyledDocument document;
 	
-	protected Animator animator;
-	protected Point animatorTarget;
+	private Animator animator;
+	private Point animatorTarget;
 	
 	/**
 	 * Private constructor: only the builder may call it.

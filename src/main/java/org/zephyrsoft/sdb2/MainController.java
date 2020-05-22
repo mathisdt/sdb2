@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -82,7 +83,9 @@ import com.google.common.collect.Ordering;
  */
 public class MainController implements Scroller {
 	
-	private static Logger LOG = LoggerFactory.getLogger(MainController.class);
+	private static final Logger LOG = LoggerFactory.getLogger(MainController.class);
+	
+	private Executor contentChanger = Executors.newSingleThreadExecutor();
 	
 	private MainWindow mainWindow;
 	
@@ -113,6 +116,10 @@ public class MainController implements Scroller {
 	/** called from constructor of {@link MainWindow} */
 	public void setMainWindow(MainWindow mainWindow) {
 		this.mainWindow = mainWindow;
+	}
+	
+	public void contentChange(Runnable command) {
+		contentChanger.execute(command);
 	}
 	
 	public boolean present(Presentable presentable) {
@@ -232,7 +239,7 @@ public class MainController implements Scroller {
 			// nothing to be done
 			return null;
 		}
-		return new PresenterWindow(screen, presentable, virtualScreen, settings);
+		return new PresenterWindow(screen, presentable, virtualScreen, settings, this);
 	}
 	
 	public List<SelectableScreen> getScreens() {
