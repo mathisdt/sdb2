@@ -246,6 +246,14 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JSpinner spinnerCountAsDisplayedAfter;
 	private JButton btnSlideShowDirectory;
 	private JSpinner spinnerSlideShowSeconds;
+	private JCheckBox checkboxRemoteEnabled;
+	private JTextField textFieldRemoteServer;
+	private JTextField textFieldRemoteUsername;
+	private JTextField textFieldRemotePassword;
+	private JLabel lblRemoteUsername;
+	private JLabel lblRemotePassword;
+	private JLabel lblRemoteServer;
+	private JLabel lblRemoteEnabled;
 	
 	private JButton saveButton;
 	
@@ -527,6 +535,11 @@ public class MainWindow extends JFrame implements UIScroller {
 		comboPresentationScreen2Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class));
 		setSpinnerValue(spinnerCountAsDisplayedAfter, settingsModel.get(SettingKey.SECONDS_UNTIL_COUNTED, Integer.class));
 		setSpinnerValue(spinnerSlideShowSeconds, settingsModel.get(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, Integer.class));
+		
+		checkboxRemoteEnabled.setSelected(settingsModel.get(SettingKey.REMOTE_ENABLED, Boolean.class));
+		textFieldRemoteServer.setText(settingsModel.get(SettingKey.REMOTE_SERVER, String.class));
+		textFieldRemoteUsername.setText(settingsModel.get(SettingKey.REMOTE_USERNAME, String.class));
+		textFieldRemotePassword.setText(settingsModel.get(SettingKey.REMOTE_PASSWORD, String.class));
 	}
 	
 	private static void setSpinnerValue(JSpinner spinner, Object value) {
@@ -570,11 +583,17 @@ public class MainWindow extends JFrame implements UIScroller {
 			settingsModel.put(SettingKey.SCREEN_2_CONTENTS, comboPresentationScreen2Contents.getSelectedItem());
 			settingsModel.put(SettingKey.SECONDS_UNTIL_COUNTED, spinnerCountAsDisplayedAfter.getValue());
 			settingsModel.put(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, spinnerSlideShowSeconds.getValue());
+			
+			settingsModel.put(SettingKey.REMOTE_ENABLED, checkboxRemoteEnabled.getModel().isSelected());
+			settingsModel.put(SettingKey.REMOTE_SERVER, textFieldRemoteServer.getText());
+			settingsModel.put(SettingKey.REMOTE_PASSWORD, textFieldRemotePassword.getText());
+			settingsModel.put(SettingKey.REMOTE_USERNAME, textFieldRemoteUsername.getText());
 			// copying is not necessary for fonts, colors, the logo file and the slide show directory
 			// because those settings are only stored directly in the model
 			
 			// apply settings
 			// TODO
+			controller.initRemoteControl();
 		}
 		setSettingsEnabled(false);
 	}
@@ -775,6 +794,10 @@ public class MainWindow extends JFrame implements UIScroller {
 		setEnabledIfNotNull(spinnerCountAsDisplayedAfter, enabled);
 		setEnabledIfNotNull(btnSlideShowDirectory, enabled);
 		setEnabledIfNotNull(spinnerSlideShowSeconds, enabled);
+		setEnabledIfNotNull(checkboxRemoteEnabled, enabled);
+		setEnabledIfNotNull(textFieldRemoteServer, enabled);
+		setEnabledIfNotNull(textFieldRemoteUsername, enabled);
+		setEnabledIfNotNull(textFieldRemotePassword, enabled);
 		// disable the "unlock" button when enabling the other controls
 		// (and the other way around)
 		setEnabledIfNotNull(btnUnlock, !enabled);
@@ -2672,6 +2695,70 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_spinnerSlideShowSeconds.gridx = 3;
 		gbc_spinnerSlideShowSeconds.gridy = 25;
 		panel.add(spinnerSlideShowSeconds, gbc_spinnerSlideShowSeconds);
+		
+		lblRemoteEnabled = new JLabel("Remote enabled");
+		GridBagConstraints gbc_lblRemoteEnabled = new GridBagConstraints();
+		gbc_lblRemoteEnabled.anchor = GridBagConstraints.EAST;
+		gbc_lblRemoteEnabled.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRemoteEnabled.gridx = 1;
+		gbc_lblRemoteEnabled.gridy = 25;
+		panel.add(lblRemoteEnabled, gbc_lblRemoteEnabled);
+		
+		checkboxRemoteEnabled = new JCheckBox();
+		GridBagConstraints gbc_checkboxRemoteEnabled = new GridBagConstraints();
+		gbc_checkboxRemoteEnabled.fill = GridBagConstraints.HORIZONTAL;
+		gbc_checkboxRemoteEnabled.insets = new Insets(0, 0, 5, 5);
+		gbc_checkboxRemoteEnabled.gridx = 3;
+		gbc_checkboxRemoteEnabled.gridy = 25;
+		panel.add(checkboxRemoteEnabled, gbc_checkboxRemoteEnabled);
+		
+		lblRemoteServer = new JLabel("Remote server");
+		GridBagConstraints gbc_lblRemoteServer = new GridBagConstraints();
+		gbc_lblRemoteServer.anchor = GridBagConstraints.EAST;
+		gbc_lblRemoteServer.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRemoteServer.gridx = 1;
+		gbc_lblRemoteServer.gridy = 26;
+		panel.add(lblRemoteServer, gbc_lblRemoteServer);
+		
+		textFieldRemoteServer = new JTextField();
+		GridBagConstraints gbc_textFieldRemoteServer = new GridBagConstraints();
+		gbc_textFieldRemoteServer.fill = GridBagConstraints.HORIZONTAL;
+		gbc_textFieldRemoteServer.insets = new Insets(0, 0, 5, 5);
+		gbc_textFieldRemoteServer.gridx = 3;
+		gbc_textFieldRemoteServer.gridy = 26;
+		panel.add(textFieldRemoteServer, gbc_textFieldRemoteServer);
+		
+		lblRemoteUsername = new JLabel("Remote username");
+		GridBagConstraints gbc_lblRemoteUsername = new GridBagConstraints();
+		gbc_lblRemoteUsername.anchor = GridBagConstraints.EAST;
+		gbc_lblRemoteUsername.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRemoteUsername.gridx = 1;
+		gbc_lblRemoteUsername.gridy = 27;
+		panel.add(lblRemoteUsername, gbc_lblRemoteUsername);
+		
+		textFieldRemoteUsername = new JTextField();
+		GridBagConstraints gbc_textFieldRemoteUsername = new GridBagConstraints();
+		gbc_textFieldRemoteUsername.fill = GridBagConstraints.HORIZONTAL;
+		gbc_textFieldRemoteUsername.insets = new Insets(0, 0, 5, 5);
+		gbc_textFieldRemoteUsername.gridx = 3;
+		gbc_textFieldRemoteUsername.gridy = 27;
+		panel.add(textFieldRemoteUsername, gbc_textFieldRemoteUsername);
+		
+		lblRemotePassword = new JLabel("Remote password");
+		GridBagConstraints gbc_lblRemotePassword = new GridBagConstraints();
+		gbc_lblRemotePassword.anchor = GridBagConstraints.EAST;
+		gbc_lblRemotePassword.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRemotePassword.gridx = 1;
+		gbc_lblRemotePassword.gridy = 28;
+		panel.add(lblRemotePassword, gbc_lblRemotePassword);
+		
+		textFieldRemotePassword = new JTextField();
+		GridBagConstraints gbc_textFieldRemotePassword = new GridBagConstraints();
+		gbc_textFieldRemotePassword.fill = GridBagConstraints.HORIZONTAL;
+		gbc_textFieldRemotePassword.insets = new Insets(0, 0, 5, 5);
+		gbc_textFieldRemotePassword.gridx = 3;
+		gbc_textFieldRemotePassword.gridy = 28;
+		panel.add(textFieldRemotePassword, gbc_textFieldRemotePassword);
 		
 		glassPane = (Container) getGlassPane();
 		glassPane.setVisible(true);

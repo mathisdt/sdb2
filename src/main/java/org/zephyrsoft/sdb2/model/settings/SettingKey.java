@@ -89,7 +89,15 @@ public enum SettingKey {
 	/** directory to use for slide show */
 	SLIDE_SHOW_DIRECTORY(String.class),
 	/** how long each picture should be displayed in slide show */
-	SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE(Integer.class);
+	SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE(Integer.class),
+	/** if remote connection should be used */
+	REMOTE_ENABLED(Boolean.class),
+	/** server uri for remote connection */
+	REMOTE_SERVER(String.class),
+	/** user-name for remote connection */
+	REMOTE_USERNAME(String.class),
+	/** password for remote connection */
+	REMOTE_PASSWORD(String.class);
 	
 	private Class<?> type;
 	

@@ -70,6 +70,9 @@ import org.zephyrsoft.sdb2.presenter.PresenterBundle;
 import org.zephyrsoft.sdb2.presenter.PresenterWindow;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.Scroller;
+import org.zephyrsoft.sdb2.remote.RemoteController;
+import org.zephyrsoft.sdb2.remote.RemotePresenter;
+import org.zephyrsoft.sdb2.remote.SongPosition;
 import org.zephyrsoft.sdb2.util.StringTools;
 import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
@@ -91,6 +94,7 @@ public class MainController implements Scroller {
 	
 	private final IOController ioController;
 	private final StatisticsController statisticsController;
+	private RemoteController remoteController;
 	
 	private String songsFileName = FileAndDirectoryLocations.getDefaultSongsFileName();
 	private SongsModel songs = null;
@@ -111,6 +115,41 @@ public class MainController implements Scroller {
 	public MainController(IOController ioController, StatisticsController statisticsController) {
 		this.ioController = ioController;
 		this.statisticsController = statisticsController;
+	}
+	
+	public void initRemoteControl() {
+		assert settings != null : "Settings must be load before calling initRemoteControl";
+		
+		Boolean enabled = settings.get(SettingKey.REMOTE_ENABLED, Boolean.class);
+		if (enabled) {
+			String server = settings.get(SettingKey.REMOTE_SERVER, String.class);
+			String userName = settings.get(SettingKey.REMOTE_USERNAME, String.class);
+			String password = settings.get(SettingKey.REMOTE_PASSWORD, String.class);
+			
+			if (remoteController == null) {
+				remoteController = new RemoteController(server, userName, password);
+				
+				remoteController.getSong().addObserver((o, song) -> MainController.this.present(new Presentable((Song) song, null)));
+				remoteController.getSongPosition().addObserver((o, pos) -> {
+					if (MainController.this.presentationControl != null)
+						MainController.this.moveToLine(((SongPosition) pos).getPart(), ((SongPosition) pos).getLine());
+				});
+				remoteController.getVisible().addObserver((o, visible) -> {
+					if (MainController.this.presentationControl != null) {
+						if ((boolean) visible)
+							MainController.this.presentationControl.showPresenter();
+						else
+							MainController.this.presentationControl.hidePresenter();
+					}
+				});
+			} else {
+				remoteController.updateServerConfig(server, userName, password);
+			}
+		} else {
+			if (remoteController != null)
+				remoteController.close();
+			remoteController = null;
+		}
 	}
 	
 	/** called from constructor of {@link MainWindow} */
@@ -159,6 +198,8 @@ public class MainController implements Scroller {
 			presentationControl.addPresenter(presenter2);
 		}
 		
+		// TODO REMOTE Add RemotePresenter here, if remotePresenter does implement getParts.
+		
 		if (presentationControl.isEmpty()) {
 			ErrorDialog
 				.openDialog(
@@ -166,6 +207,12 @@ public class MainController implements Scroller {
 					"Could not start presentation!\n\nPlease specify at least one existing presentation display:\nCheck your system configuration\nand/or adjust this program's configuration\n(see tab \"Global Settings\")!");
 			return false;
 		} else {
+			// TODO Move UP if getParts is implemented.
+			Presenter presenter3 = createRemotePresenter(presentable);
+			if (presenter3 != null) {
+				presentationControl.addPresenter(presenter3);
+			}
+			
 			currentlyPresentedSong = presentable.getSong();
 			
 			if (currentlyPresentedSong != null) {
@@ -242,6 +289,12 @@ public class MainController implements Scroller {
 		return new PresenterWindow(screen, presentable, virtualScreen, settings, this);
 	}
 	
+	private Presenter createRemotePresenter(Presentable presentable) {
+		if (remoteController == null)
+			return null;
+		return new RemotePresenter(presentable, settings, remoteController);
+	}
+	
 	public List<SelectableScreen> getScreens() {
 		return Collections.unmodifiableList(screens);
 	}
@@ -277,9 +330,16 @@ public class MainController implements Scroller {
 		return true;
 	}
 	
+	private boolean disconnectRemote() {
+		if (remoteController != null) {
+			remoteController.close();
+		}
+		return true;
+	}
+	
 	public boolean prepareClose() {
 		LOG.debug("preparing to close application");
-		return saveAll() && disposePresenter();
+		return saveAll() && disposePresenter() && disconnectRemote();
 	}
 	
 	public boolean saveAll() {
@@ -406,6 +466,11 @@ public class MainController implements Scroller {
 		
 		putDefaultIfKeyIsUnset(SettingKey.SLIDE_SHOW_DIRECTORY, null);
 		putDefaultIfKeyIsUnset(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, Integer.valueOf(20));
+		
+		putDefaultIfKeyIsUnset(SettingKey.REMOTE_ENABLED, false);
+		putDefaultIfKeyIsUnset(SettingKey.REMOTE_PASSWORD, "");
+		putDefaultIfKeyIsUnset(SettingKey.REMOTE_SERVER, "tcp://localhost:1883");
+		putDefaultIfKeyIsUnset(SettingKey.REMOTE_USERNAME, "");
 		
 		// check that really all settings are set
 		for (SettingKey key : SettingKey.values()) {
