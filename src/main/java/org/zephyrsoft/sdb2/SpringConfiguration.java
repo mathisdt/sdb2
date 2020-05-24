@@ -112,6 +112,12 @@ public class SpringConfiguration {
 				+ "\n   But be warned: all your songs will be gone!");
 			throw e;
 		}
+		try {
+			mainController.initRemoteControl();
+		} catch (Exception e) {
+			ErrorDialog.openDialogBlocking(null, "Error while initially connecting to remote server.");
+			throw e;
+		}
 		return mainController;
 	}
 	

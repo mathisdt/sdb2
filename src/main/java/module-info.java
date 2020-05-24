@@ -24,5 +24,6 @@ open module org.zephyrsoft.sdb2 {
 	requires timingframework.swing;
 	// for togglz:
 	requires java.scripting;
+	requires org.eclipse.paho.client.mqttv3;
 	
 }
