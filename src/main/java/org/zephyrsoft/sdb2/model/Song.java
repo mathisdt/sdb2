@@ -205,6 +205,43 @@ public class Song implements Serializable, Comparable<Song> {
 	}
 	
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((chordSequence == null) ? 0 : chordSequence.hashCode());
+		result = prime * result + ((lyrics == null) ? 0 : lyrics.hashCode());
+		result = prime * result + ((title == null) ? 0 : title.hashCode());
+		return result;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Song other = (Song) obj;
+		if (chordSequence == null) {
+			if (other.chordSequence != null)
+				return false;
+		} else if (!chordSequence.equals(other.chordSequence))
+			return false;
+		if (lyrics == null) {
+			if (other.lyrics != null)
+				return false;
+		} else if (!lyrics.equals(other.lyrics))
+			return false;
+		if (title == null) {
+			if (other.title != null)
+				return false;
+		} else if (!title.equals(other.title))
+			return false;
+		return true;
+	}
+	
+	@Override
 	public String toString() {
 		return "SONG[" + title + "|" + uuid + "]";
 	}

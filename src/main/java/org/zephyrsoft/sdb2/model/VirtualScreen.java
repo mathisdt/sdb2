@@ -16,6 +16,7 @@
  */
 package org.zephyrsoft.sdb2.model;
 
+import java.awt.Color;
 import java.awt.Font;
 
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
@@ -37,6 +38,30 @@ public enum VirtualScreen {
 	
 	public int getNumber() {
 		return number;
+	}
+	
+	public Color getTextColor(SettingsModel settings) {
+		return this == SCREEN_1
+			? settings.get(SettingKey.TEXT_COLOR, Color.class)
+			: settings.get(SettingKey.TEXT_COLOR_2, Color.class);
+	}
+	
+	public Color getBackgroundColor(SettingsModel settings) {
+		return this == SCREEN_1
+			? settings.get(SettingKey.BACKGROUND_COLOR, Color.class)
+			: settings.get(SettingKey.BACKGROUND_COLOR_2, Color.class);
+	}
+	
+	public ScreenContentsEnum getScreenContents(SettingsModel settings) {
+		return this == SCREEN_1
+			? settings.get(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.class)
+			: settings.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class);
+	}
+	
+	public Boolean getMinimalScrolling(SettingsModel settings) {
+		return this == SCREEN_1
+			? settings.get(SettingKey.MINIMAL_SCROLLING, Boolean.class)
+			: settings.get(SettingKey.MINIMAL_SCROLLING_2, Boolean.class);
 	}
 	
 	public Font getTitleFont(SettingsModel settings) {

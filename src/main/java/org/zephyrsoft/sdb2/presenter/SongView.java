@@ -101,14 +101,15 @@ public class SongView extends JPanel implements Scroller {
 	private int lyricsCopyrightDistance;
 	private Color foregroundColor;
 	private Color backgroundColor;
+	private boolean minimalScrolling;
 	
 	private JTextPane text;
 	private List<AddressablePart> parts;
 	
 	private StyledDocument document;
 	
-	protected Animator animator;
-	protected Point animatorTarget;
+	private Animator animator;
+	private Point animatorTarget;
 	
 	/**
 	 * Private constructor: only the builder may call it.
@@ -130,6 +131,7 @@ public class SongView extends JPanel implements Scroller {
 		lyricsCopyrightDistance = builder.lyricsCopyrightDistance;
 		foregroundColor = builder.foregroundColor;
 		backgroundColor = builder.backgroundColor;
+		minimalScrolling = builder.minimalScrolling;
 		
 		text = new JTextPane();
 		((DefaultCaret) text.getCaret()).setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
@@ -427,7 +429,11 @@ public class SongView extends JPanel implements Scroller {
 			AddressablePart addressablePart = parts.get(part);
 			Preconditions.checkArgument(addressablePart != null, "part index does not correspond to a part of the song");
 			Rectangle2D target = text.modelToView2D(addressablePart.getPosition());
-			animatedMoveTo(new Point((int) text.getLocation().getX(), (int) (topMargin - target.getY())));
+			double targetY = target.getY();
+			if (minimalScrolling && targetY > text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight()) {
+				targetY = text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight();
+			}
+			animatedMoveTo(new Point((int) text.getLocation().getX(), (int) Math.min(0, (topMargin - targetY))));
 		} catch (BadLocationException e) {
 			throw new IllegalStateException("could not identify position in text", e);
 		}
@@ -443,7 +449,11 @@ public class SongView extends JPanel implements Scroller {
 			AddressableLine addressableLine = addressablePart.get(line);
 			Preconditions.checkArgument(addressableLine != null, "line index does not correspond to a line of the addressed part");
 			Rectangle2D target = text.modelToView2D(addressableLine.getPosition());
-			animatedMoveTo(new Point((int) text.getLocation().getX(), (int) (topMargin - target.getY())));
+			double targetY = target.getY();
+			if (minimalScrolling && targetY > text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight()) {
+				targetY = text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight();
+			}
+			animatedMoveTo(new Point((int) text.getLocation().getX(), (int) Math.min(0, (topMargin - targetY))));
 		} catch (BadLocationException e) {
 			throw new IllegalStateException("could not identify position in text", e);
 		}
@@ -496,6 +506,7 @@ public class SongView extends JPanel implements Scroller {
 		private Integer lyricsCopyrightDistance;
 		private Color foregroundColor;
 		private Color backgroundColor;
+		private Boolean minimalScrolling;
 		
 		public Builder(Song song) {
 			this.song = song;
@@ -576,13 +587,18 @@ public class SongView extends JPanel implements Scroller {
 			return this;
 		}
 		
+		public Builder minimalScrolling(Boolean bool) {
+			this.minimalScrolling = bool;
+			return this;
+		}
+		
 		public SongView build() {
 			// make sure every variable was initialized
 			if (song == null || showTitle == null || showTranslation == null || showChords == null
 				|| titleFont == null || lyricsFont == null || translationFont == null || copyrightFont == null
 				|| topMargin == null || leftMargin == null || rightMargin == null || bottomMargin == null
 				|| titleLyricsDistance == null || lyricsCopyrightDistance == null
-				|| foregroundColor == null || backgroundColor == null) {
+				|| foregroundColor == null || backgroundColor == null || minimalScrolling == null) {
 				throw new IllegalStateException("not every builder method was called with a non-null value");
 			}
 			

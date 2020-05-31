@@ -48,10 +48,14 @@ public enum SettingKey {
 	COPYRIGHT_FONT_2(Font.class),
 	/** font of chord sequence block - second presentation screen */
 	CHORD_SEQUENCE_FONT_2(Font.class),
-	/** color of presentation text */
+	/** color of presentation text - first presentation screen */
 	TEXT_COLOR(Color.class),
-	/** color of presentation background */
+	/** color of presentation text - second presentation screen */
+	TEXT_COLOR_2(Color.class),
+	/** color of presentation background - first presentation screen */
 	BACKGROUND_COLOR(Color.class),
+	/** color of presentation background - second presentation screen */
+	BACKGROUND_COLOR_2(Color.class),
 	/** file to use as logo */
 	LOGO_FILE(String.class),
 	/** top margin for presentation */
@@ -76,6 +80,10 @@ public enum SettingKey {
 	SCREEN_2_DISPLAY(String.class),
 	/** content of second configured presentation screen */
 	SCREEN_2_CONTENTS(ScreenContentsEnum.class),
+	/** should the scrolling be minimized - first presentation screen */
+	MINIMAL_SCROLLING(Boolean.class),
+	/** should the scrolling be minimized - second presentation screen */
+	MINIMAL_SCROLLING_2(Boolean.class),
 	/** how long the song has to be shown until it counts as presented (for statistics) */
 	SECONDS_UNTIL_COUNTED(Integer.class),
 	/** directory to use for slide show */

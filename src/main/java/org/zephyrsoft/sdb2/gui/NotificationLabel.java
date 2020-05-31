@@ -42,9 +42,9 @@ public class NotificationLabel extends JLabel implements TimingTarget {
 	private static final long serialVersionUID = 7755120521341005608L;
 	private static final Logger LOG = LoggerFactory.getLogger(NotificationLabel.class);
 	
-	float f_alpha = 0.0f; // current opacity
-	Animator f_animator;
-	BufferedImage f_image = null;
+	private float alpha = 0.0f; // current opacity
+	private Animator animator;
+	private BufferedImage image = null;
 	
 	private Container container;
 	
@@ -57,7 +57,7 @@ public class NotificationLabel extends JLabel implements TimingTarget {
 		setFont(new Font("Default", Font.BOLD, 16));
 		setBorder(BorderFactory.createLineBorder(Color.WHITE, 15));
 		
-		f_animator = new Animator.Builder()
+		animator = new Animator.Builder()
 			.addTarget(this)
 			.setInterpolator(new AccelerationInterpolator(0.5, 0.5))
 			.setDuration(millis, TimeUnit.MILLISECONDS)
@@ -67,10 +67,10 @@ public class NotificationLabel extends JLabel implements TimingTarget {
 	@Override
 	public void paint(Graphics g) {
 		// Create an image for the button graphics if necessary
-		if (f_image == null || f_image.getWidth() != getWidth() || f_image.getHeight() != getHeight()) {
-			f_image = getGraphicsConfiguration().createCompatibleImage(getWidth(), getHeight());
+		if (image == null || image.getWidth() != getWidth() || image.getHeight() != getHeight()) {
+			image = getGraphicsConfiguration().createCompatibleImage(getWidth(), getHeight());
 		}
-		Graphics gButton = f_image.getGraphics();
+		Graphics gButton = image.getGraphics();
 		gButton.setClip(g.getClip());
 		
 		// Have the superclass render the button for us
@@ -79,14 +79,14 @@ public class NotificationLabel extends JLabel implements TimingTarget {
 		// Make the graphics object sent to this paint() method translucent
 		Graphics2D g2d = (Graphics2D) g;
 		try {
-			AlphaComposite newComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, f_alpha);
+			AlphaComposite newComposite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha);
 			g2d.setComposite(newComposite);
 		} catch (IllegalArgumentException iae) {
-			LOG.debug("illegal alpha value {}", f_alpha);
+			LOG.debug("illegal alpha value {}", alpha);
 		}
 		
 		// Copy the button's image to the destination graphics, translucently
-		g2d.drawImage(f_image, 0, 0, null);
+		g2d.drawImage(image, 0, 0, null);
 	}
 	
 	@Override
@@ -119,11 +119,11 @@ public class NotificationLabel extends JLabel implements TimingTarget {
 		double fadeOut = 0.3;
 		
 		if (fraction <= fadeIn) {
-			f_alpha = (float) (fraction / fadeIn);
+			alpha = (float) (fraction / fadeIn);
 			repaint();
 			container.repaint();
 		} else if (fraction >= (1 - fadeOut)) {
-			f_alpha = (float) ((1 - fraction) / fadeOut);
+			alpha = (float) ((1 - fraction) / fadeOut);
 			repaint();
 			container.repaint();
 		}
@@ -133,7 +133,7 @@ public class NotificationLabel extends JLabel implements TimingTarget {
 	public void setVisible(boolean visible) {
 		super.setVisible(visible);
 		if (visible) {
-			f_animator.start();
+			animator.start();
 		}
 	}
 	
