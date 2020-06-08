@@ -97,7 +97,11 @@ public enum SettingKey {
 	/** user-name for remote connection */
 	REMOTE_USERNAME(String.class),
 	/** password for remote connection */
-	REMOTE_PASSWORD(String.class);
+	REMOTE_PASSWORD(String.class),
+	/** prefix for remote connection */
+	REMOTE_PREFIX(String.class),
+	/** namespace for remote connection */
+	REMOTE_NAMESPACE(String.class);
 	
 	private Class<?> type;
 	

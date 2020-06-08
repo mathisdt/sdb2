@@ -21,18 +21,18 @@ import java.util.function.Function;
 public class PubObject<T> extends MqttObject<T> {
 	
 	public PubObject(MQTT mqtt, T object, String publishTopic, Function<T, String> toString) {
-		super(mqtt, object, null, null, null, publishTopic, toString);
+		super(mqtt, object, null, null, null, publishTopic, toString, 0, false, null);
 	}
 	
 	public PubObject(MQTT mqtt, T object, String publishTopic) {
-		super(mqtt, object, null, null, null, publishTopic, null);
+		super(mqtt, object, null, null, null, publishTopic, null, 0, false, null);
 	}
 	
 	public PubObject(MQTT mqtt, String publishTopic, Function<T, String> toString) {
-		super(mqtt, null, null, null, null, publishTopic, toString);
+		super(mqtt, null, null, null, null, publishTopic, toString, 0, false, null);
 	}
 	
 	public PubObject(MQTT mqtt, String publishTopic) {
-		super(mqtt, null, null, null, null, publishTopic, null);
+		super(mqtt, null, null, null, null, publishTopic, null, 0, false, null);
 	}
 }

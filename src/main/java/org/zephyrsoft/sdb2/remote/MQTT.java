@@ -16,8 +16,8 @@
  */
 package org.zephyrsoft.sdb2.remote;
 
-import java.util.Observable;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
@@ -26,14 +26,16 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class MQTT extends Observable implements MqttCallback {
+public class MQTT implements MqttCallback {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(MQTT.class);
 	
 	private MqttClient client;
-	private String serverUri;
 	private String clientID;
-	private String userName;
-	private String password;
+	private CopyOnWriteArrayList<OnMessageListener> onMessageListeners = new CopyOnWriteArrayList<>();
 	
 	public MQTT(String serverUri) {
 		this(serverUri, UUID.randomUUID().toString(), null, null);
@@ -43,11 +45,15 @@ public class MQTT extends Observable implements MqttCallback {
 		this(serverUri, UUID.randomUUID().toString(), userName, password);
 	}
 	
+	/**
+	 * A simple MQTTClient wrapper which establishes the connection on object creation,
+	 * implements the observable pattern to let multiple Observers receive messages and
+	 * handles some exceptions.
+	 * 
+	 * It currently only supports String messages.
+	 */
 	public MQTT(String serverUri, String clientID, String userName, String password) {
-		this.serverUri = serverUri;
 		this.clientID = clientID;
-		this.userName = userName;
-		this.password = password;
 		
 		MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
 		if (!userName.isEmpty()) {
@@ -72,9 +78,8 @@ public class MQTT extends Observable implements MqttCallback {
 	
 	@Override
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
-		System.out.println("Got message: " + topic);
-		setChanged();
-		notifyObservers(new MQTTMessage(topic, message.toString()));
+		LOG.debug("Got message: " + topic);
+		onMessageListeners.forEach((oml) -> oml.onMessage(topic, message.toString()));
 	}
 	
 	@Override
@@ -82,27 +87,9 @@ public class MQTT extends Observable implements MqttCallback {
 		// Nothing to do here
 	}
 	
-	class MQTTMessage {
-		private String topic;
-		private String message;
-		
-		public MQTTMessage(String topic, String message) {
-			this.topic = topic;
-			this.message = message;
-		}
-		
-		public String getTopic() {
-			return topic;
-		}
-		
-		public String getMessage() {
-			return message;
-		}
-	}
-	
 	public void subscribe(String topic, int qos) {
 		try {
-			System.out.println("Subscribing: " + topic);
+			LOG.debug("Subscribing: " + topic);
 			client.subscribe(topic, qos);
 		} catch (MqttException e) {
 			// TODO Auto-generated catch block
@@ -112,6 +99,7 @@ public class MQTT extends Observable implements MqttCallback {
 	
 	public void publish(String topic, String payload, int qos, boolean retained) {
 		if (client.isConnected()) {
+			LOG.debug("Publishing message: " + topic);
 			try {
 				client.publish(topic, payload.getBytes(), qos, retained);
 			} catch (MqttPersistenceException e) {
@@ -139,19 +127,15 @@ public class MQTT extends Observable implements MqttCallback {
 		}
 	}
 	
-	public String getServerUri() {
-		return serverUri;
-	}
-	
 	public String getClientID() {
 		return clientID;
 	}
 	
-	public String getUserName() {
-		return userName;
+	public void onMessage(OnMessageListener onMessageListener) {
+		onMessageListeners.add(onMessageListener);
 	}
 	
-	public String getPassword() {
-		return password;
+	public interface OnMessageListener {
+		public abstract void onMessage(String topic, String message);
 	}
 }

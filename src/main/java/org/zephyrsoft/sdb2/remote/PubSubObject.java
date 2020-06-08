@@ -21,54 +21,16 @@ import java.util.function.Function;
 
 public class PubSubObject<T> extends MqttObject<T> {
 	
-	public PubSubObject(MQTT mqtt, T object, String subTopic, Function<String, T> toObject, BiPredicate<T, T> takeObject, String pubTopic,
-		Function<T, String> toString) {
-		super(mqtt, object, subTopic, toObject, takeObject, pubTopic, toString);
+	public PubSubObject(MQTT mqtt, String topic, Function<String, T> toObject, boolean retained) {
+		super(mqtt, null, topic, toObject, null, topic, null, 0, retained, null);
 	}
 	
-	public PubSubObject(MQTT mqtt, T object, String subTopic, Function<String, T> toObject, BiPredicate<T, T> takeObject, String pubTopic) {
-		super(mqtt, object, subTopic, toObject, takeObject, pubTopic, null);
+	public PubSubObject(MQTT mqtt, String topic, Function<String, T> toObject, Function<T, String> toString, boolean retained) {
+		super(mqtt, null, topic, toObject, null, topic, toString, 0, retained, null);
 	}
 	
-	public PubSubObject(MQTT mqtt, T object, String subTopic, Function<String, T> toObject, String pubTopic, Function<T, String> toString) {
-		super(mqtt, object, subTopic, toObject, null, pubTopic, toString);
+	public PubSubObject(MQTT mqtt, String topic, Function<String, T> toObject, Function<T, String> toString, boolean retained,
+		BiPredicate<T, T> objectEquals) {
+		super(mqtt, null, topic, toObject, null, topic, toString, 0, retained, objectEquals);
 	}
-	
-	public PubSubObject(MQTT mqtt, T object, String subTopic, Function<String, T> toObject, String pubTopic) {
-		super(mqtt, object, subTopic, toObject, null, pubTopic, null);
-	}
-	
-	public PubSubObject(MQTT mqtt, T object, String topic, Function<String, T> toObject, Function<T, String> toString) {
-		super(mqtt, object, topic, toObject, null, topic, toString);
-	}
-	
-	public PubSubObject(MQTT mqtt, T object, String topic, Function<String, T> toObject) {
-		super(mqtt, object, topic, toObject, null, topic, null);
-	}
-	
-	public PubSubObject(MQTT mqtt, String subTopic, Function<String, T> toObject, BiPredicate<T, T> takeObject, String pubTopic,
-		Function<T, String> toString) {
-		super(mqtt, null, subTopic, toObject, takeObject, pubTopic, toString);
-	}
-	
-	public PubSubObject(MQTT mqtt, String subTopic, Function<String, T> toObject, BiPredicate<T, T> takeObject, String pubTopic) {
-		super(mqtt, null, subTopic, toObject, takeObject, pubTopic, null);
-	}
-	
-	public PubSubObject(MQTT mqtt, String subTopic, Function<String, T> toObject, String pubTopic, Function<T, String> toString) {
-		super(mqtt, null, subTopic, toObject, null, pubTopic, toString);
-	}
-	
-	public PubSubObject(MQTT mqtt, String subTopic, Function<String, T> toObject, String pubTopic) {
-		super(mqtt, null, subTopic, toObject, null, pubTopic, null);
-	}
-	
-	public PubSubObject(MQTT mqtt, String topic, Function<String, T> toObject, Function<T, String> toString) {
-		super(mqtt, null, topic, toObject, null, topic, toString);
-	}
-	
-	public PubSubObject(MQTT mqtt, String topic, Function<String, T> toObject) {
-		super(mqtt, null, topic, toObject, null, topic, null);
-	}
-	
 }

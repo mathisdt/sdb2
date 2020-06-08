@@ -17,13 +17,11 @@
 package org.zephyrsoft.sdb2.remote;
 
 import java.util.List;
-import java.util.Timer;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.AddressablePart;
-import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.Presenter;
 
@@ -35,55 +33,23 @@ public class RemotePresenter implements Presenter {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(RemotePresenter.class);
 	
-	private final SettingsModel settings;
-	private final Presentable presentable;
+	private Presentable presentable;
 	private final RemoteController remoteController;
-	
-	// If multiple Instances are used, only the last one can hide content.
-	private static RemotePresenter activePresenter;
 	
 	// private ArrayList parts;
 	
-	public RemotePresenter(Presentable presentable, SettingsModel settings, RemoteController remoteController) {
-		this.presentable = presentable;
-		this.settings = settings;
+	public RemotePresenter(RemoteController remoteController) {
 		this.remoteController = remoteController;
-		
-		activePresenter = this;
-		prepareContent();
-	}
-	
-	private void prepareContent() {
-		if (presentable.getSong() != null) {
-			this.remoteController.getSong().set(presentable.getSong());
-			// TODO FAILS if directly called and presenter views does not exist. we should remove the observers
-			// temporary instead.
-			new Timer().schedule(
-				new java.util.TimerTask() {
-					@Override
-					public void run() {
-						RemotePresenter.this.remoteController.getSongPosition().set(new SongPosition(0, 0));
-					}
-				}, 100);
-		} else if (presentable.getImage() != null) {
-			// Not supported jet
-		} else {
-			// display a blank screen: only set the background color (already done)
-		}
-		// TODO if necessary: hide cursor above every child of the content pane
-		
 	}
 	
 	@Override
 	public void showPresenter() {
-		this.remoteController.getVisible().set(Boolean.TRUE);
+		// call setContent with a song instead
 	}
 	
 	@Override
 	public void hidePresenter() {
-		if (this == activePresenter) {
-			this.remoteController.getVisible().set(Boolean.FALSE);
-		}
+		// call setContent with null song instead
 	}
 	
 	@Override
@@ -93,13 +59,12 @@ public class RemotePresenter implements Presenter {
 	
 	@Override
 	public void moveToPart(Integer part) {
-		this.moveToLine(part, 0);
+		moveToLine(part, 0);
 	}
 	
 	@Override
 	public void moveToLine(Integer part, Integer line) {
-		// TODO Select song first: RemoteController.getInstance().getSong().set(presentable.getSong());
-		this.remoteController.getSongPosition().set(new SongPosition(part, line));
+		remoteController.getSongPosition().set(new SongPosition(part, line));
 	}
 	
 	@Override
@@ -110,5 +75,30 @@ public class RemotePresenter implements Presenter {
 		// } else {
 		// throw new IllegalStateException("it seems there is no song to display");
 		// }
+	}
+	
+	/**
+	 * @see org.zephyrsoft.sdb2.presenter.Presenter#setContent(org.zephyrsoft.sdb2.presenter.Presentable)
+	 */
+	@Override
+	public void setContent(Presentable presentable) {
+		this.presentable = presentable;
+		
+		if (presentable.getSong() != null) {
+			remoteController.getSong().set(presentable.getSong());
+			remoteController.getSongPosition().set(new SongPosition(0, 0));
+		} else if (presentable.getImage() != null) {
+			LOG.warn("Images are not presented over remote");
+		} else {
+			// display a blank screen: // hidePresenter();
+			remoteController.getSong().set(null);
+		}
+	}
+	
+	/**
+	 * @return
+	 */
+	public RemoteController getRemoteController() {
+		return this.remoteController;
 	}
 }

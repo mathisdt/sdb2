@@ -19,6 +19,7 @@ package org.zephyrsoft.sdb2.presenter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.zephyrsoft.sdb2.model.AddressablePart;
 
@@ -89,5 +90,9 @@ public class PresenterBundle implements Presenter {
 	
 	public boolean isEmpty() {
 		return presenters.isEmpty();
+	}
+	
+	public void removeIf(Predicate<Presenter> filter) {
+		presenters.removeIf(filter);
 	}
 }

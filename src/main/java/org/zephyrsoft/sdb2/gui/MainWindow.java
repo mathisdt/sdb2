@@ -66,6 +66,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
@@ -249,7 +250,9 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JCheckBox checkboxRemoteEnabled;
 	private JTextField textFieldRemoteServer;
 	private JTextField textFieldRemoteUsername;
-	private JTextField textFieldRemotePassword;
+	private JTextField textFieldRemotePrefix;
+	private JTextField textFieldRemoteNamespace;
+	private JPasswordField passwordFieldRemotePassword;
 	private JLabel lblRemoteUsername;
 	private JLabel lblRemotePassword;
 	private JLabel lblRemoteServer;
@@ -272,6 +275,10 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JLabel lblMinimizeScrolling;
 	private JCheckBox checkboxMinimizeScrolling1;
 	private JCheckBox checkboxMinimizeScrolling2;
+	
+	private JLabel lblRemotePrefix;
+	
+	private JLabel lblRemoteNamespace;
 	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
@@ -539,7 +546,9 @@ public class MainWindow extends JFrame implements UIScroller {
 		checkboxRemoteEnabled.setSelected(settingsModel.get(SettingKey.REMOTE_ENABLED, Boolean.class));
 		textFieldRemoteServer.setText(settingsModel.get(SettingKey.REMOTE_SERVER, String.class));
 		textFieldRemoteUsername.setText(settingsModel.get(SettingKey.REMOTE_USERNAME, String.class));
-		textFieldRemotePassword.setText(settingsModel.get(SettingKey.REMOTE_PASSWORD, String.class));
+		passwordFieldRemotePassword.setText(settingsModel.get(SettingKey.REMOTE_PASSWORD, String.class));
+		textFieldRemotePrefix.setText(settingsModel.get(SettingKey.REMOTE_PREFIX, String.class));
+		textFieldRemoteNamespace.setText(settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class));
 	}
 	
 	private static void setSpinnerValue(JSpinner spinner, Object value) {
@@ -586,14 +595,15 @@ public class MainWindow extends JFrame implements UIScroller {
 			
 			settingsModel.put(SettingKey.REMOTE_ENABLED, checkboxRemoteEnabled.getModel().isSelected());
 			settingsModel.put(SettingKey.REMOTE_SERVER, textFieldRemoteServer.getText());
-			settingsModel.put(SettingKey.REMOTE_PASSWORD, textFieldRemotePassword.getText());
+			settingsModel.put(SettingKey.REMOTE_PASSWORD, passwordFieldRemotePassword.getText());
 			settingsModel.put(SettingKey.REMOTE_USERNAME, textFieldRemoteUsername.getText());
+			settingsModel.put(SettingKey.REMOTE_NAMESPACE, textFieldRemoteNamespace.getText());
+			settingsModel.put(SettingKey.REMOTE_PREFIX, textFieldRemotePrefix.getText());
 			// copying is not necessary for fonts, colors, the logo file and the slide show directory
 			// because those settings are only stored directly in the model
 			
 			// apply settings
-			// TODO
-			controller.initRemoteControl();
+			controller.settingsChanged();
 		}
 		setSettingsEnabled(false);
 	}
@@ -797,7 +807,9 @@ public class MainWindow extends JFrame implements UIScroller {
 		setEnabledIfNotNull(checkboxRemoteEnabled, enabled);
 		setEnabledIfNotNull(textFieldRemoteServer, enabled);
 		setEnabledIfNotNull(textFieldRemoteUsername, enabled);
-		setEnabledIfNotNull(textFieldRemotePassword, enabled);
+		setEnabledIfNotNull(passwordFieldRemotePassword, enabled);
+		setEnabledIfNotNull(textFieldRemotePrefix, enabled);
+		setEnabledIfNotNull(textFieldRemoteNamespace, enabled);
 		// disable the "unlock" button when enabling the other controls
 		// (and the other way around)
 		setEnabledIfNotNull(btnUnlock, !enabled);
@@ -1096,8 +1108,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			if (newIndex < 0) {
 				throw new IllegalStateException("song is already first in list");
 			}
-			Song song = presentModel.removeSong(presentList.getSelectedIndex());
-			presentModel.insertSong(newIndex, song);
+			presentModel.moveSong(presentList.getSelectedIndex(), newIndex);
 			presentList.setSelectedIndex(newIndex);
 		}
 	}
@@ -1109,8 +1120,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			if (newIndex >= presentModel.getSize()) {
 				throw new IllegalStateException("song is already last in list");
 			}
-			Song song = presentModel.removeSong(presentList.getSelectedIndex());
-			presentModel.insertSong(newIndex, song);
+			presentModel.moveSong(presentList.getSelectedIndex(), newIndex);
 			presentList.setSelectedIndex(newIndex);
 		}
 	}
@@ -1130,6 +1140,16 @@ public class MainWindow extends JFrame implements UIScroller {
 			presentList.setSelectedValue(currentlyPresentedSong, true);
 			handleJumpToSelectedSong();
 		}
+	}
+	
+	/**
+	 * A present function, which can be called by a remote controller.
+	 * 
+	 * @param song
+	 */
+	public void present(Song song) {
+		presentListSelected = song;
+		handleSongPresent();
 	}
 	
 	protected void handleSongPresent() {
@@ -2701,7 +2721,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_lblRemoteEnabled.anchor = GridBagConstraints.EAST;
 		gbc_lblRemoteEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemoteEnabled.gridx = 1;
-		gbc_lblRemoteEnabled.gridy = 25;
+		gbc_lblRemoteEnabled.gridy = 26;
 		panel.add(lblRemoteEnabled, gbc_lblRemoteEnabled);
 		
 		checkboxRemoteEnabled = new JCheckBox();
@@ -2709,7 +2729,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_checkboxRemoteEnabled.fill = GridBagConstraints.HORIZONTAL;
 		gbc_checkboxRemoteEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_checkboxRemoteEnabled.gridx = 3;
-		gbc_checkboxRemoteEnabled.gridy = 25;
+		gbc_checkboxRemoteEnabled.gridy = 26;
 		panel.add(checkboxRemoteEnabled, gbc_checkboxRemoteEnabled);
 		
 		lblRemoteServer = new JLabel("Remote server");
@@ -2717,7 +2737,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_lblRemoteServer.anchor = GridBagConstraints.EAST;
 		gbc_lblRemoteServer.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemoteServer.gridx = 1;
-		gbc_lblRemoteServer.gridy = 26;
+		gbc_lblRemoteServer.gridy = 27;
 		panel.add(lblRemoteServer, gbc_lblRemoteServer);
 		
 		textFieldRemoteServer = new JTextField();
@@ -2725,7 +2745,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_textFieldRemoteServer.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemoteServer.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemoteServer.gridx = 3;
-		gbc_textFieldRemoteServer.gridy = 26;
+		gbc_textFieldRemoteServer.gridy = 27;
 		panel.add(textFieldRemoteServer, gbc_textFieldRemoteServer);
 		
 		lblRemoteUsername = new JLabel("Remote username");
@@ -2733,7 +2753,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_lblRemoteUsername.anchor = GridBagConstraints.EAST;
 		gbc_lblRemoteUsername.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemoteUsername.gridx = 1;
-		gbc_lblRemoteUsername.gridy = 27;
+		gbc_lblRemoteUsername.gridy = 28;
 		panel.add(lblRemoteUsername, gbc_lblRemoteUsername);
 		
 		textFieldRemoteUsername = new JTextField();
@@ -2741,7 +2761,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_textFieldRemoteUsername.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemoteUsername.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemoteUsername.gridx = 3;
-		gbc_textFieldRemoteUsername.gridy = 27;
+		gbc_textFieldRemoteUsername.gridy = 28;
 		panel.add(textFieldRemoteUsername, gbc_textFieldRemoteUsername);
 		
 		lblRemotePassword = new JLabel("Remote password");
@@ -2749,16 +2769,48 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_lblRemotePassword.anchor = GridBagConstraints.EAST;
 		gbc_lblRemotePassword.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemotePassword.gridx = 1;
-		gbc_lblRemotePassword.gridy = 28;
+		gbc_lblRemotePassword.gridy = 29;
 		panel.add(lblRemotePassword, gbc_lblRemotePassword);
 		
-		textFieldRemotePassword = new JTextField();
+		passwordFieldRemotePassword = new JPasswordField();
 		GridBagConstraints gbc_textFieldRemotePassword = new GridBagConstraints();
 		gbc_textFieldRemotePassword.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemotePassword.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemotePassword.gridx = 3;
-		gbc_textFieldRemotePassword.gridy = 28;
-		panel.add(textFieldRemotePassword, gbc_textFieldRemotePassword);
+		gbc_textFieldRemotePassword.gridy = 29;
+		panel.add(passwordFieldRemotePassword, gbc_textFieldRemotePassword);
+		
+		lblRemotePrefix = new JLabel("Remote prefix");
+		GridBagConstraints gbc_lblRemotePrefix = new GridBagConstraints();
+		gbc_lblRemotePrefix.anchor = GridBagConstraints.EAST;
+		gbc_lblRemotePrefix.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRemotePrefix.gridx = 1;
+		gbc_lblRemotePrefix.gridy = 30;
+		panel.add(lblRemotePrefix, gbc_lblRemotePrefix);
+		
+		textFieldRemotePrefix = new JTextField();
+		GridBagConstraints gbc_textFieldRemotePrefix = new GridBagConstraints();
+		gbc_textFieldRemotePrefix.fill = GridBagConstraints.HORIZONTAL;
+		gbc_textFieldRemotePrefix.insets = new Insets(0, 0, 5, 5);
+		gbc_textFieldRemotePrefix.gridx = 3;
+		gbc_textFieldRemotePrefix.gridy = 30;
+		panel.add(textFieldRemotePrefix, gbc_textFieldRemotePrefix);
+		
+		lblRemoteNamespace = new JLabel("Remote namespace");
+		GridBagConstraints gbc_lblRemoteNamespace = new GridBagConstraints();
+		gbc_lblRemoteNamespace.anchor = GridBagConstraints.EAST;
+		gbc_lblRemoteNamespace.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRemoteNamespace.gridx = 1;
+		gbc_lblRemoteNamespace.gridy = 31;
+		panel.add(lblRemoteNamespace, gbc_lblRemoteNamespace);
+		
+		textFieldRemoteNamespace = new JTextField();
+		GridBagConstraints gbc_textFieldRemoteNamespace = new GridBagConstraints();
+		gbc_textFieldRemoteNamespace.fill = GridBagConstraints.HORIZONTAL;
+		gbc_textFieldRemoteNamespace.insets = new Insets(0, 0, 5, 5);
+		gbc_textFieldRemoteNamespace.gridx = 3;
+		gbc_textFieldRemoteNamespace.gridy = 31;
+		panel.add(textFieldRemoteNamespace, gbc_textFieldRemoteNamespace);
 		
 		glassPane = (Container) getGlassPane();
 		glassPane.setVisible(true);
@@ -2929,5 +2981,9 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	public JPanel getPanelSectionButtons() {
 		return panelSectionButtons;
+	}
+	
+	public SongsModel getPresentModel() {
+		return presentModel;
 	}
 }
