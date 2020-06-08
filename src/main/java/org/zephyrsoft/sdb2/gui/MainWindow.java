@@ -280,6 +280,8 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	private JLabel lblRemoteNamespace;
 	
+	private JLabel lblStatus;
+	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
 		return listSectionButtons;
@@ -1257,6 +1259,11 @@ public class MainWindow extends JFrame implements UIScroller {
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_B, Modifiers.CTRL, () -> {
 			LOG.debug("ctrl-b action");
 			handleBlankScreen();
+		}));
+		
+		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_R, Modifiers.CTRL, () -> {
+			LOG.debug("ctrl-r action");
+			controller.initRemoteController();
 		}));
 	}
 	
@@ -2830,10 +2837,16 @@ public class MainWindow extends JFrame implements UIScroller {
 			displayNotification("SAVED", 3500);
 		}));
 		saveButton.setFont(new Font(null, Font.PLAIN, 10));
+		lblStatus = new JLabel("status");
+		buttonPanel.add(lblStatus);
 		buttonPanel.add(saveButton);
 		glassPane.add(buttonPanel, gbc);
 		
 		afterConstruction();
+	}
+	
+	public void setStatus(String status) {
+		lblStatus.setText(status);
 	}
 	
 	private void updateFontButtons() {

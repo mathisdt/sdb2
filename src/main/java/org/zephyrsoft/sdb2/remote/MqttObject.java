@@ -20,6 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,10 +53,12 @@ public class MqttObject<T> {
 	 * can be null, if not set. toString must create a empty String to unset it. Attention: subcribers may not get the
 	 * empty string.
 	 * 
+	 * @throws MqttException
+	 * 
 	 * 
 	 */
 	public MqttObject(MQTT mqtt, T object, String subscriptionTopic, Function<String, T> toObject, BiPredicate<T, T> takeObject, String publishTopic,
-		Function<T, String> toString, int qos, boolean retained, BiPredicate<T, T> objectEquals) {
+		Function<T, String> toString, int qos, boolean retained, BiPredicate<T, T> objectEquals) throws MqttException {
 		LOG.debug("New MqttObject: S: " + subscriptionTopic + " P: " + publishTopic);
 		this.subscriptionTopic = subscriptionTopic;
 		this.toObject = toObject;
@@ -85,7 +88,7 @@ public class MqttObject<T> {
 		connectTo(mqtt);
 	}
 	
-	public void connectTo(MQTT pMqtt) {
+	public void connectTo(MQTT pMqtt) throws MqttException {
 		mqtt = pMqtt;
 		if (object != null)
 			publish();
@@ -122,7 +125,7 @@ public class MqttObject<T> {
 		}
 	}
 	
-	private void subscribe() {
+	private void subscribe() throws MqttException {
 		if (subscriptionTopic != null) {
 			mqtt.subscribe(subscriptionTopic, qos);
 		}

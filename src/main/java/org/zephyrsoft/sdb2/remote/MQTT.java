@@ -37,11 +37,11 @@ public class MQTT implements MqttCallback {
 	private String clientID;
 	private CopyOnWriteArrayList<OnMessageListener> onMessageListeners = new CopyOnWriteArrayList<>();
 	
-	public MQTT(String serverUri) {
+	public MQTT(String serverUri) throws MqttException {
 		this(serverUri, UUID.randomUUID().toString(), null, null);
 	}
 	
-	public MQTT(String serverUri, String userName, String password) {
+	public MQTT(String serverUri, String userName, String password) throws MqttException {
 		this(serverUri, UUID.randomUUID().toString(), userName, password);
 	}
 	
@@ -51,8 +51,10 @@ public class MQTT implements MqttCallback {
 	 * handles some exceptions.
 	 * 
 	 * It currently only supports String messages.
+	 * 
+	 * @throws MqttException
 	 */
-	public MQTT(String serverUri, String clientID, String userName, String password) {
+	public MQTT(String serverUri, String clientID, String userName, String password) throws MqttException {
 		this.clientID = clientID;
 		
 		MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
@@ -62,13 +64,13 @@ public class MQTT implements MqttCallback {
 		if (!password.isEmpty()) {
 			mqttConnectOptions.setPassword(password.toCharArray());
 		}
-		try {
-			client = new MqttClient(serverUri, clientID);
-			client.connectWithResult(mqttConnectOptions);
-			client.setCallback(this);
-		} catch (MqttException e) {
-			e.printStackTrace();
-		}
+		// try {
+		client = new MqttClient(serverUri, clientID);
+		client.connectWithResult(mqttConnectOptions);
+		client.setCallback(this);
+		// } catch (MqttException e) {
+		// e.printStackTrace();
+		// }
 	}
 	
 	@Override
@@ -87,14 +89,9 @@ public class MQTT implements MqttCallback {
 		// Nothing to do here
 	}
 	
-	public void subscribe(String topic, int qos) {
-		try {
-			LOG.debug("Subscribing: " + topic);
-			client.subscribe(topic, qos);
-		} catch (MqttException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void subscribe(String topic, int qos) throws MqttException {
+		LOG.debug("Subscribing: " + topic);
+		client.subscribe(topic, qos);
 	}
 	
 	public void publish(String topic, String payload, int qos, boolean retained) {

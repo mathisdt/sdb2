@@ -48,6 +48,7 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.jdesktop.core.animation.timing.Animator;
 import org.jdesktop.core.animation.timing.TimingSource;
 import org.jdesktop.swing.animation.timing.sources.SwingTimerTimingSource;
@@ -120,15 +121,20 @@ public class MainController implements Scroller {
 	 * Will initialize a remote-controller instance or create a new one, if it is already initialized.
 	 */
 	public void initRemoteController() {
-		assert settings != null : "Settings must be load before calling updateRemoteController";
+		assert settings != null : "Settings must be load before calling initRemoteController";
 		
 		closeRemoteController();
 		
 		if (settings.get(SettingKey.REMOTE_ENABLED, Boolean.class)) {
+			setStatus("Connecting to remote server...");
 			try {
 				remoteController = new RemoteController(settings, this, mainWindow);
-			} catch (Exception e) {
-				ErrorDialog.openDialogBlocking(null, "Error while connecting to remote server. See settings.");
+				setStatus("Connected.");
+			} catch (MqttException e) {
+				setStatus("Not connected!");
+				ErrorDialog.openDialog(null, "Error while connecting to remote server.\n"
+					+ "Please checks settings or your network connection.\n"
+					+ "To reconnect, type Strg+R.");
 			}
 		}
 	}
@@ -138,6 +144,8 @@ public class MainController implements Scroller {
 	 * Will recreate a remote-controller instance if remote settings changed.
 	 */
 	public void settingsChanged() {
+		assert settings != null : "Settings must be load before calling settingsChanged";
+		
 		boolean enableChanged = settings.get(SettingKey.REMOTE_ENABLED, Boolean.class) != (remoteController != null);
 		if (enableChanged || (remoteController != null && remoteController.checkSettingsChanged(settings)))
 			initRemoteController();
@@ -146,6 +154,11 @@ public class MainController implements Scroller {
 	/** called from constructor of {@link MainWindow} */
 	public void setMainWindow(MainWindow mainWindow) {
 		this.mainWindow = mainWindow;
+	}
+	
+	public void setStatus(String status) {
+		if (mainWindow != null)
+			mainWindow.setStatus(status);
 	}
 	
 	public void contentChange(Runnable command) {
