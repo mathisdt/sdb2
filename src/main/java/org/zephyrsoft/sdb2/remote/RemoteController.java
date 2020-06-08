@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.gui.MainWindow;
 import org.zephyrsoft.sdb2.model.Song;
@@ -63,8 +64,9 @@ public class RemoteController {
 	 * @param mainController
 	 * @param mainWindow
 	 *            can be null, if headless
+	 * @throws MqttException
 	 */
-	public RemoteController(SettingsModel settingsModel, MainController mainController, MainWindow mainWindow) {
+	public RemoteController(SettingsModel settingsModel, MainController mainController, MainWindow mainWindow) throws MqttException {
 		prefix = settingsModel.get(SettingKey.REMOTE_PREFIX, String.class);
 		namespace = settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class);
 		server = settingsModel.get(SettingKey.REMOTE_SERVER, String.class);

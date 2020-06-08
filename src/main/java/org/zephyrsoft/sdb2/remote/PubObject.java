@@ -18,21 +18,23 @@ package org.zephyrsoft.sdb2.remote;
 
 import java.util.function.Function;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
+
 public class PubObject<T> extends MqttObject<T> {
 	
-	public PubObject(MQTT mqtt, T object, String publishTopic, Function<T, String> toString) {
+	public PubObject(MQTT mqtt, T object, String publishTopic, Function<T, String> toString) throws MqttException {
 		super(mqtt, object, null, null, null, publishTopic, toString, 0, false, null);
 	}
 	
-	public PubObject(MQTT mqtt, T object, String publishTopic) {
+	public PubObject(MQTT mqtt, T object, String publishTopic) throws MqttException {
 		super(mqtt, object, null, null, null, publishTopic, null, 0, false, null);
 	}
 	
-	public PubObject(MQTT mqtt, String publishTopic, Function<T, String> toString) {
+	public PubObject(MQTT mqtt, String publishTopic, Function<T, String> toString) throws MqttException {
 		super(mqtt, null, null, null, null, publishTopic, toString, 0, false, null);
 	}
 	
-	public PubObject(MQTT mqtt, String publishTopic) {
+	public PubObject(MQTT mqtt, String publishTopic) throws MqttException {
 		super(mqtt, null, null, null, null, publishTopic, null, 0, false, null);
 	}
 }

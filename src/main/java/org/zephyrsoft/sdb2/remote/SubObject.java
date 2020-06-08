@@ -18,13 +18,15 @@ package org.zephyrsoft.sdb2.remote;
 
 import java.util.function.Function;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
+
 public class SubObject<T> extends MqttObject<T> {
 	
-	public SubObject(MQTT mqtt, T object, String subscriptionTopic, Function<String, T> toObject) {
+	public SubObject(MQTT mqtt, T object, String subscriptionTopic, Function<String, T> toObject) throws MqttException {
 		super(mqtt, object, subscriptionTopic, toObject, null, null, null, 0, false, null);
 	}
 	
-	public SubObject(MQTT mqtt, String subscriptionTopic, Function<String, T> toObject) {
+	public SubObject(MQTT mqtt, String subscriptionTopic, Function<String, T> toObject) throws MqttException {
 		super(mqtt, null, subscriptionTopic, toObject, null, null, null, 0, false, null);
 	}
 }
