@@ -72,7 +72,6 @@ import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.Scroller;
 import org.zephyrsoft.sdb2.remote.RemoteController;
 import org.zephyrsoft.sdb2.remote.RemotePresenter;
-import org.zephyrsoft.sdb2.remote.SongPosition;
 import org.zephyrsoft.sdb2.util.StringTools;
 import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
@@ -117,39 +116,31 @@ public class MainController implements Scroller {
 		this.statisticsController = statisticsController;
 	}
 	
-	public void initRemoteControl() {
-		assert settings != null : "Settings must be load before calling initRemoteControl";
+	/**
+	 * Will initialize a remote-controller instance or create a new one, if it is already initialized.
+	 */
+	public void initRemoteController() {
+		assert settings != null : "Settings must be load before calling updateRemoteController";
 		
-		Boolean enabled = settings.get(SettingKey.REMOTE_ENABLED, Boolean.class);
-		if (enabled) {
-			String server = settings.get(SettingKey.REMOTE_SERVER, String.class);
-			String userName = settings.get(SettingKey.REMOTE_USERNAME, String.class);
-			String password = settings.get(SettingKey.REMOTE_PASSWORD, String.class);
-			
-			if (remoteController == null) {
-				remoteController = new RemoteController(server, userName, password);
-				
-				remoteController.getSong().addObserver((o, song) -> MainController.this.present(new Presentable((Song) song, null)));
-				remoteController.getSongPosition().addObserver((o, pos) -> {
-					if (MainController.this.presentationControl != null)
-						MainController.this.moveToLine(((SongPosition) pos).getPart(), ((SongPosition) pos).getLine());
-				});
-				remoteController.getVisible().addObserver((o, visible) -> {
-					if (MainController.this.presentationControl != null) {
-						if ((boolean) visible)
-							MainController.this.presentationControl.showPresenter();
-						else
-							MainController.this.presentationControl.hidePresenter();
-					}
-				});
-			} else {
-				remoteController.updateServerConfig(server, userName, password);
+		closeRemoteController();
+		
+		if (settings.get(SettingKey.REMOTE_ENABLED, Boolean.class)) {
+			try {
+				remoteController = new RemoteController(settings, this, mainWindow);
+			} catch (Exception e) {
+				ErrorDialog.openDialogBlocking(null, "Error while connecting to remote server. See settings.");
 			}
-		} else {
-			if (remoteController != null)
-				remoteController.close();
-			remoteController = null;
 		}
+	}
+	
+	/**
+	 * Called if settings changed out of mainwindow.
+	 * Will recreate a remote-controller instance if remote settings changed.
+	 */
+	public void settingsChanged() {
+		boolean enableChanged = settings.get(SettingKey.REMOTE_ENABLED, Boolean.class) != (remoteController != null);
+		if (enableChanged || (remoteController != null && remoteController.checkSettingsChanged(settings)))
+			initRemoteController();
 	}
 	
 	/** called from constructor of {@link MainWindow} */
@@ -166,7 +157,8 @@ public class MainController implements Scroller {
 		SelectableScreen screen2 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class));
 		
 		int presentersConfigured = (settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class) != null ? 1 : 0)
-			+ (settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class) != null ? 1 : 0);
+			+ (settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class) != null ? 1 : 0)
+			+ (remoteController != null ? 1 : 0);
 		if (presentationControl != null
 			&& presentationControl.getPresenters().size() == presentersConfigured
 			&& (presentationControl.getPresenters().isEmpty() ||
@@ -176,6 +168,7 @@ public class MainController implements Scroller {
 				(presentationControl.getPresenters().get(1) instanceof PresenterWindow
 					&& ((PresenterWindow) presentationControl.getPresenters().get(1)).metadataMatches(screen2, VirtualScreen.SCREEN_2)))) {
 			LOG.trace("re-using the existing presenters");
+			currentlyPresentedSong = presentable.getSong();
 			presentationControl.setContent(presentable);
 			return true;
 		} else {
@@ -198,7 +191,7 @@ public class MainController implements Scroller {
 			presentationControl.addPresenter(presenter2);
 		}
 		
-		// TODO REMOTE Add RemotePresenter here, if remotePresenter does implement getParts.
+		// TODO REMOTE Add RemotePresenter and currentlyPresentedSong here, if remotePresenter does implement getParts.
 		
 		if (presentationControl.isEmpty()) {
 			ErrorDialog
@@ -207,11 +200,8 @@ public class MainController implements Scroller {
 					"Could not start presentation!\n\nPlease specify at least one existing presentation display:\nCheck your system configuration\nand/or adjust this program's configuration\n(see tab \"Global Settings\")!");
 			return false;
 		} else {
-			// TODO Move UP if getParts is implemented.
-			Presenter presenter3 = createRemotePresenter(presentable);
-			if (presenter3 != null) {
-				presentationControl.addPresenter(presenter3);
-			}
+			if (remoteController != null)
+				presentationControl.addPresenter(remoteController.getRemotePresenter(presentable));
 			
 			currentlyPresentedSong = presentable.getSong();
 			
@@ -225,8 +215,9 @@ public class MainController implements Scroller {
 				// start presentation
 				presentationControl.showPresenter();
 				
-				// now stop old presentation (if any)
+				// now stop old presentation (if any), do not stop remote presenters
 				if (oldPresentationControl != null) {
+					oldPresentationControl.removeIf((p) -> p instanceof RemotePresenter);
 					oldPresentationControl.hidePresenter();
 					oldPresentationControl.disposePresenter();
 				}
@@ -273,12 +264,24 @@ public class MainController implements Scroller {
 	
 	@Override
 	public void moveToPart(Integer part) {
-		presentationControl.moveToPart(part);
+		if (MainController.this.presentationControl != null) {
+			try {
+				presentationControl.moveToPart(part);
+			} catch (IllegalStateException e) {
+				// if song is not displayed yet
+			}
+		}
 	}
 	
 	@Override
 	public void moveToLine(Integer part, Integer line) {
-		presentationControl.moveToLine(part, line);
+		if (MainController.this.presentationControl != null) {
+			try {
+				presentationControl.moveToLine(part, line);
+			} catch (IllegalStateException e) {
+				// if song is not displayed yet
+			}
+		}
 	}
 	
 	private PresenterWindow createPresenter(SelectableScreen screen, Presentable presentable, VirtualScreen virtualScreen) {
@@ -287,12 +290,6 @@ public class MainController implements Scroller {
 			return null;
 		}
 		return new PresenterWindow(screen, presentable, virtualScreen, settings, this);
-	}
-	
-	private Presenter createRemotePresenter(Presentable presentable) {
-		if (remoteController == null)
-			return null;
-		return new RemotePresenter(presentable, settings, remoteController);
 	}
 	
 	public List<SelectableScreen> getScreens() {
@@ -330,16 +327,19 @@ public class MainController implements Scroller {
 		return true;
 	}
 	
-	private boolean disconnectRemote() {
+	public boolean closeRemoteController() {
 		if (remoteController != null) {
+			if (presentationControl != null)
+				presentationControl.removeIf((p) -> p instanceof RemotePresenter);
 			remoteController.close();
+			remoteController = null;
 		}
 		return true;
 	}
 	
 	public boolean prepareClose() {
 		LOG.debug("preparing to close application");
-		return saveAll() && disposePresenter() && disconnectRemote();
+		return saveAll() && disposePresenter() && closeRemoteController();
 	}
 	
 	public boolean saveAll() {
@@ -471,6 +471,8 @@ public class MainController implements Scroller {
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_PASSWORD, "");
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_SERVER, "tcp://localhost:1883");
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_USERNAME, "");
+		putDefaultIfKeyIsUnset(SettingKey.REMOTE_PREFIX, "");
+		putDefaultIfKeyIsUnset(SettingKey.REMOTE_NAMESPACE, "default");
 		
 		// check that really all settings are set
 		for (SettingKey key : SettingKey.values()) {
@@ -717,6 +719,10 @@ public class MainController implements Scroller {
 		} catch (IOException e) {
 			return null;
 		}
+	}
+	
+	public RemoteController getRemoteController() {
+		return remoteController;
 	}
 	
 }

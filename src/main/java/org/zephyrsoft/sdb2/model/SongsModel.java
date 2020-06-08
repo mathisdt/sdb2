@@ -62,6 +62,12 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		initIfNecessary();
 	}
 	
+	public SongsModel(SongsModel songsModel) {
+		this();
+		setAutoSort(songsModel.isAutoSort());
+		update(songsModel);
+	}
+	
 	/**
 	 * Should this model instance sort the songs automatically? Default: {@code true}
 	 *
@@ -148,6 +154,15 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		return ret;
 	}
 	
+	public void update(SongsModel newModel) {
+		songs.clear();
+		songs.addAll(newModel.getSongs());
+		if (autoSort) {
+			sortSongs();
+		}
+		notifyListModelListeners();
+	}
+	
 	private void notifyListModelListeners() {
 		LOG.debug("notifyListModelListeners");
 		for (TransparentListModel<Song> model : createdListModels) {
@@ -194,4 +209,22 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		songsModelListeners.add(songsModelListener);
 	}
 	
+	@Override
+	public boolean equals(Object model2) {
+		return model2 != null && model2 instanceof SongsModel && getSongs().equals(((SongsModel) model2).getSongs());
+	}
+	
+	/**
+	 * @param selectedIndex
+	 * @param newIndex
+	 */
+	public void moveSong(int selectedIndex, int newIndex) {
+		if (autoSort) {
+			throw new IllegalStateException("should move song at a specific position, but auto-sorting is enabled");
+		} else {
+			Song ret = songs.remove(selectedIndex);
+			songs.add(newIndex, ret);
+			notifyListModelListeners();
+		}
+	}
 }

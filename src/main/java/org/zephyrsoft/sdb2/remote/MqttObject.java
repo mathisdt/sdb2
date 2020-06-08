@@ -16,17 +16,17 @@
  */
 package org.zephyrsoft.sdb2.remote;
 
-import java.util.Observable;
-import java.util.Observer;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
-import org.zephyrsoft.sdb2.remote.MQTT.MQTTMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class MqttObject<T> extends Observable implements Observer {
-	private T t;
-	private String subscriptionTopic = null;
-	private String publishTopic = null;
+public class MqttObject<T> {
+	private T object;
+	private String subscriptionTopic;
+	private String publishTopic;
 	private boolean pubEqSub;
 	private int qos;
 	private boolean retained;
@@ -35,10 +35,28 @@ public class MqttObject<T> extends Observable implements Observer {
 	private Function<T, String> toString;
 	private BiPredicate<T, T> takeObject;
 	private BiPredicate<T, T> objectEquals;
+	private CopyOnWriteArrayList<OnChangeListener<T>> onChangeListeners = new CopyOnWriteArrayList<>();
+	private CopyOnWriteArrayList<OnChangeListener<T>> onRemoteChangeListeners = new CopyOnWriteArrayList<>();
 	
+	private static final Logger LOG = LoggerFactory.getLogger(MqttObject.class);
+	
+	/**
+	 * A simple MQTT based property for synchronizing java objects.
+	 * 
+	 * It can be used for Publish or Subscribe only, Publish&Subscribe on the same topic, or Publish&Subscribe on
+	 * separate topics.
+	 * 
+	 * A initially set object which is not null will be published before subscribe is called. Null objects are
+	 * supported,
+	 * if toObject, takeObject, toString and objectEquals are supporting it. Use case might be a retained message which
+	 * can be null, if not set. toString must create a empty String to unset it. Attention: subcribers may not get the
+	 * empty string.
+	 * 
+	 * 
+	 */
 	public MqttObject(MQTT mqtt, T object, String subscriptionTopic, Function<String, T> toObject, BiPredicate<T, T> takeObject, String publishTopic,
 		Function<T, String> toString, int qos, boolean retained, BiPredicate<T, T> objectEquals) {
-		System.out.println("New MqttObject: S: " + subscriptionTopic + " P: " + publishTopic);
+		LOG.debug("New MqttObject: S: " + subscriptionTopic + " P: " + publishTopic);
 		this.subscriptionTopic = subscriptionTopic;
 		this.toObject = toObject;
 		this.publishTopic = publishTopic;
@@ -51,42 +69,46 @@ public class MqttObject<T> extends Observable implements Observer {
 			this.toString = (t) -> t.toString();
 		this.qos = qos;
 		this.retained = retained;
-		this.t = object;
 		this.objectEquals = objectEquals;
 		if (this.objectEquals == null)
-			this.objectEquals = (a, b) -> a.equals(b);
+			this.objectEquals = (a, b) -> a == null ? b == null : a.equals(b);
+		this.object = object;
 		
+		mqtt.onMessage((topic, message) -> {
+			if (topic.equals(subscriptionTopic)) {
+				T newObject = toObject.apply(message);
+				if (!pubEqSub && !takeObject.test(object, newObject))
+					return;
+				set(newObject, true);
+			}
+		});
 		connectTo(mqtt);
 	}
 	
-	public MqttObject(MQTT mqtt, T object, String subscriptionTopic, Function<String, T> toObject, BiPredicate<T, T> takeObject, String publishTopic,
-		Function<T, String> toString) {
-		this(mqtt, object, subscriptionTopic, toObject, takeObject, publishTopic, toString, 1, false, null);
-	}
-	
-	public void connectTo(MQTT mqtt) {
-		this.mqtt = mqtt;
-		if (this.t != null)
-			set(this.t);
+	public void connectTo(MQTT pMqtt) {
+		mqtt = pMqtt;
+		if (object != null)
+			publish();
 		subscribe();
 	}
 	
-	public void set(T t) {
-		set(t, true);
+	public void set(T pObject) {
+		set(pObject, false);
 	}
 	
-	private void set(T t, boolean publish) {
-		if (t != this.t && !this.objectEquals.test(t, this.t)) {
-			this.t = t;
-			setChanged();
-			notifyObservers(t);
-			if (publish)
-				publish();
-		}
+	private void set(T pObject, boolean fromRemote) {
+		if (pObject == object || objectEquals.test(pObject, object))
+			return;
+		object = pObject;
+		onChangeListeners.forEach((ocl) -> ocl.onChange(pObject));
+		if (fromRemote)
+			onRemoteChangeListeners.forEach((ocl) -> ocl.onChange(pObject));
+		else
+			publish();
 	}
 	
 	public T get() {
-		return t;
+		return object;
 	}
 	
 	private void publish() {
@@ -94,7 +116,7 @@ public class MqttObject<T> extends Observable implements Observer {
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
-					mqtt.publish(publishTopic, toString.apply(t), qos, retained);
+					mqtt.publish(publishTopic, toString.apply(object), qos, retained);
 				}
 			}).start();
 		}
@@ -103,24 +125,19 @@ public class MqttObject<T> extends Observable implements Observer {
 	private void subscribe() {
 		if (subscriptionTopic != null) {
 			mqtt.subscribe(subscriptionTopic, qos);
-			mqtt.addObserver(this);
 		}
 	}
 	
-	@Override
-	public void update(Observable o, Object arg) {
-		MQTTMessage m = ((MQTTMessage) arg);
-		if (m.getTopic().equals(subscriptionTopic)) {
-			T t = toObject.apply(m.getMessage());
-			if (!pubEqSub) {
-				if (takeObject.test(this.t, t)) {
-					set(t, true);
-				}
-			} else {
-				// Don't republish:
-				set(t, false);
-			}
-		}
+	public void onChange(OnChangeListener<T> onChangeListener) {
+		onChangeListeners.add(onChangeListener);
+	}
+	
+	public void onRemoteChange(OnChangeListener<T> onChangeListener) {
+		onRemoteChangeListeners.add(onChangeListener);
+	}
+	
+	public interface OnChangeListener<T> {
+		public abstract void onChange(T object);
 	}
 	
 }

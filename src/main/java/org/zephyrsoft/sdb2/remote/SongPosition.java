@@ -45,7 +45,7 @@ public class SongPosition {
 		return new StringBuilder().append(part).append(',').append(line).toString();
 	}
 	
-	public static SongPosition fromString(String s) {
+	public static SongPosition parseSongPosition(String s) {
 		String[] parts = s.split(",");
 		return new SongPosition(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
 	}

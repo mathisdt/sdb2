@@ -112,12 +112,8 @@ public class SpringConfiguration {
 				+ "\n   But be warned: all your songs will be gone!");
 			throw e;
 		}
-		try {
-			mainController.initRemoteControl();
-		} catch (Exception e) {
-			ErrorDialog.openDialogBlocking(null, "Error while initially connecting to remote server.");
-			throw e;
-		}
+		// Run this in headless mode:
+		// mainController.initRemoteController();
 		return mainController;
 	}
 	
@@ -142,7 +138,11 @@ public class SpringConfiguration {
 	
 	@Bean
 	public MainWindow mainWindow() {
-		return new MainWindow(mainController(), keyboardShortcutManager(), indexerService(), exportService());
+		MainController mainController = mainController();
+		MainWindow mainWindow = new MainWindow(mainController, keyboardShortcutManager(), indexerService(), exportService());
+		// Init remote control after mainwindow is ready:
+		mainController.initRemoteController();
+		return mainWindow;
 	}
 	
 }

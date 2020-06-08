@@ -20,11 +20,11 @@ import java.util.function.Function;
 
 public class SubObject<T> extends MqttObject<T> {
 	
-	public SubObject(MQTT mqtt, T t, String subscriptionTopic, Function<String, T> toObject) {
-		super(mqtt, t, subscriptionTopic, toObject, null, null, null);
+	public SubObject(MQTT mqtt, T object, String subscriptionTopic, Function<String, T> toObject) {
+		super(mqtt, object, subscriptionTopic, toObject, null, null, null, 0, false, null);
 	}
 	
 	public SubObject(MQTT mqtt, String subscriptionTopic, Function<String, T> toObject) {
-		super(mqtt, null, subscriptionTopic, toObject, null, null, null);
+		super(mqtt, null, subscriptionTopic, toObject, null, null, null, 0, false, null);
 	}
 }
