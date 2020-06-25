@@ -368,7 +368,7 @@
 
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
-				<version>1.8</version><!--$NO-MVN-MAN-VER$-->
+				<version>3.0.0</version><!--$NO-MVN-MAN-VER$-->
 				<executions>
 					<execution>
 						<phase>prepare-package</phase>
