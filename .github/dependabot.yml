@@ -4,5 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    ignore:
+      # there was a problem introduced in 2.11.1, so don't update log4j
+      - dependency-name: "org.apache.logging.log4j:log4j*"
     allow:
       - dependency-type: "direct"
