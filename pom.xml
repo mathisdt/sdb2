@@ -51,7 +51,7 @@
 		<version.mockito>2.27.0</version.mockito>
 		<version.javax-activation-api>1.2.0</version.javax-activation-api>
 		<version.javax.activation>1.1.1</version.javax.activation>
-		<version.jaxb-runtime>2.4.0-b180830.0438</version.jaxb-runtime>
+		<version.jaxb-runtime>3.0.0-M4</version.jaxb-runtime>
 		<version.jaxb-api>2.4.0-b180830.0359</version.jaxb-api>
 	</properties>
 
