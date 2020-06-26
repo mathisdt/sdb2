@@ -48,7 +48,7 @@
 		<version.guava>29.0-jre</version.guava>
 		<version.gson>2.8.6</version.gson>
 		<version.junit>4.12</version.junit>
-		<version.mockito>2.27.0</version.mockito>
+		<version.mockito>3.3.3</version.mockito>
 		<version.javax-activation-api>1.2.0</version.javax-activation-api>
 		<version.javax.activation>1.1.1</version.javax.activation>
 		<version.jaxb-runtime>2.4.0-b180830.0438</version.jaxb-runtime>
