@@ -5,6 +5,9 @@ updates:
     schedule:
       interval: "monthly"
     ignore:
+      # the releases are inconsistent - the latest jaxb-api does not work with the latest jaxb-runtime 
+      - dependency-name: "javax.xml.bind:jaxb-api"
+      - dependency-name: "org.glassfish.jaxb:jaxb-runtime"
       # there was a problem introduced in 2.11.1, so don't update log4j
       - dependency-name: "org.apache.logging.log4j:log4j*"
     allow:
