@@ -10,5 +10,7 @@ updates:
       - dependency-name: "org.glassfish.jaxb:jaxb-runtime"
       # there was a problem introduced in 2.11.1, so don't update log4j
       - dependency-name: "org.apache.logging.log4j:log4j*"
+      # don't update jcl-over-slf4j when slf4j is not updated with it
+      - dependency-name: "org.slf4j:jcl-over-slf4j"
     allow:
       - dependency-type: "direct"
