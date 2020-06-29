@@ -36,6 +36,7 @@ public class MQTT implements MqttCallback {
 	private MqttClient client;
 	private String clientID;
 	private CopyOnWriteArrayList<OnMessageListener> onMessageListeners = new CopyOnWriteArrayList<>();
+	private CopyOnWriteArrayList<OnConnectionLostListener> onConnectionLostListeners = new CopyOnWriteArrayList<>();
 	
 	public MQTT(String serverUri) throws MqttException {
 		this(serverUri, UUID.randomUUID().toString(), null, null);
@@ -75,7 +76,7 @@ public class MQTT implements MqttCallback {
 	
 	@Override
 	public void connectionLost(Throwable cause) {
-		cause.printStackTrace();
+		onConnectionLostListeners.forEach((ocll) -> ocll.onConnectionLost(cause));
 	}
 	
 	@Override
@@ -134,5 +135,13 @@ public class MQTT implements MqttCallback {
 	
 	public interface OnMessageListener {
 		public abstract void onMessage(String topic, String message);
+	}
+	
+	public void onConnectionLost(OnConnectionLostListener onConnectionLostListener) {
+		onConnectionLostListeners.add(onConnectionLostListener);
+	}
+	
+	public interface OnConnectionLostListener {
+		public abstract void onConnectionLost(Throwable cause);
 	}
 }

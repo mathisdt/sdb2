@@ -73,6 +73,7 @@ import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.Scroller;
 import org.zephyrsoft.sdb2.remote.RemoteController;
 import org.zephyrsoft.sdb2.remote.RemotePresenter;
+import org.zephyrsoft.sdb2.remote.RemoteStatus;
 import org.zephyrsoft.sdb2.util.StringTools;
 import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
@@ -119,6 +120,7 @@ public class MainController implements Scroller {
 	
 	/**
 	 * Will initialize a remote-controller instance or create a new one, if it is already initialized.
+	 * Run this function in a separate Thread to not block the UI and to see status changes.
 	 */
 	public void initRemoteController() {
 		assert settings != null : "Settings must be load before calling initRemoteController";
@@ -126,14 +128,15 @@ public class MainController implements Scroller {
 		closeRemoteController();
 		
 		if (settings.get(SettingKey.REMOTE_ENABLED, Boolean.class)) {
-			setStatus("Connecting to remote server...");
+			setRemoteStatus(RemoteStatus.CONNECTING);
 			try {
 				remoteController = new RemoteController(settings, this, mainWindow);
-				setStatus("Connected.");
+				setRemoteStatus(RemoteStatus.CONNECTED);
 			} catch (MqttException e) {
-				setStatus("Not connected!");
+				setRemoteStatus(RemoteStatus.FAILURE);
 				ErrorDialog.openDialog(null, "Error while connecting to remote server.\n"
-					+ "Please checks settings or your network connection.\n"
+					+ "Please check settings or your network connection.\n"
+					+ "Otherwise ask your system or network administrator.\n"
 					+ "To reconnect, type Strg+R.");
 			}
 		}
@@ -148,7 +151,7 @@ public class MainController implements Scroller {
 		
 		boolean enableChanged = settings.get(SettingKey.REMOTE_ENABLED, Boolean.class) != (remoteController != null);
 		if (enableChanged || (remoteController != null && remoteController.checkSettingsChanged(settings)))
-			initRemoteController();
+			new Thread(() -> initRemoteController()).start();
 	}
 	
 	/** called from constructor of {@link MainWindow} */
@@ -156,9 +159,9 @@ public class MainController implements Scroller {
 		this.mainWindow = mainWindow;
 	}
 	
-	public void setStatus(String status) {
+	public void setRemoteStatus(RemoteStatus status) {
 		if (mainWindow != null)
-			mainWindow.setStatus(status);
+			mainWindow.setRemoteStatus(status);
 	}
 	
 	public void contentChange(Runnable command) {
@@ -342,10 +345,12 @@ public class MainController implements Scroller {
 	
 	public boolean closeRemoteController() {
 		if (remoteController != null) {
+			setRemoteStatus(RemoteStatus.DISCONNECTING);
 			if (presentationControl != null)
 				presentationControl.removeIf((p) -> p instanceof RemotePresenter);
 			remoteController.close();
 			remoteController = null;
+			setRemoteStatus(RemoteStatus.OFF);
 		}
 		return true;
 	}

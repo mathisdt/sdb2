@@ -115,14 +115,8 @@ public class MqttObject<T> {
 	}
 	
 	private void publish() {
-		if (publishTopic != null) {
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					mqtt.publish(publishTopic, toString.apply(object), qos, retained);
-				}
-			}).start();
-		}
+		if (publishTopic != null)
+			new Thread(() -> mqtt.publish(publishTopic, toString.apply(object), qos, retained)).start();
 	}
 	
 	private void subscribe() throws MqttException {
