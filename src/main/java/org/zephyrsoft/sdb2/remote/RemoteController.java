@@ -75,6 +75,11 @@ public class RemoteController {
 		
 		mqtt = new MQTT(server, username, password);
 		
+		mqtt.onConnectionLost(cause -> {
+			mainController.setRemoteStatus(RemoteStatus.FAILURE);
+			cause.printStackTrace();
+		});
+		
 		song = new PubSubObject<>(mqtt, fTopic(RemoteTopic.SONG), RemoteController::parseSong, RemoteController::songToString, true);
 		if (mainWindow != null)
 			song.onRemoteChange(s -> mainWindow.present(s));

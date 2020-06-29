@@ -106,6 +106,7 @@ import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.UIScroller;
+import org.zephyrsoft.sdb2.remote.RemoteStatus;
 import org.zephyrsoft.sdb2.service.ExportService;
 import org.zephyrsoft.sdb2.service.FieldName;
 import org.zephyrsoft.sdb2.service.IndexType;
@@ -1263,7 +1264,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_R, Modifiers.CTRL, () -> {
 			LOG.debug("ctrl-r action");
-			controller.initRemoteController();
+			new Thread(() -> controller.initRemoteController()).start();
 		}));
 	}
 	
@@ -2837,16 +2838,42 @@ public class MainWindow extends JFrame implements UIScroller {
 			displayNotification("SAVED", 3500);
 		}));
 		saveButton.setFont(new Font(null, Font.PLAIN, 10));
-		lblStatus = new JLabel("status");
+		lblStatus = new JLabel();
 		buttonPanel.add(lblStatus);
 		buttonPanel.add(saveButton);
 		glassPane.add(buttonPanel, gbc);
+		setRemoteStatus(RemoteStatus.OFF);
 		
 		afterConstruction();
 	}
 	
-	public void setStatus(String status) {
-		lblStatus.setText(status);
+	public void setRemoteStatus(RemoteStatus status) {
+		String path = null;
+		String tooltip = null;
+		switch (status) {
+			case OFF:
+				path = "/org/zephyrsoft/sdb2/remote-off.png";
+				tooltip = "Remote disabled.";
+				break;
+			case CONNECTING:
+				path = "/org/zephyrsoft/sdb2/remote-orange.png";
+				tooltip = "Remote connecting...";
+				break;
+			case CONNECTED:
+				path = "/org/zephyrsoft/sdb2/remote-green.png";
+				tooltip = "Remote connected. Type Strg+R to reconnect.";
+				break;
+			case DISCONNECTING:
+				path = "/org/zephyrsoft/sdb2/remote-orange.png";
+				tooltip = "Remote disconnecting...";
+				break;
+			case FAILURE:
+				path = "/org/zephyrsoft/sdb2/remote-red.png";
+				tooltip = "Remote connection failure! Type Strg+R to reconnect.";
+				break;
+		}
+		lblStatus.setIcon(ResourceTools.getIcon(getClass(), path));
+		lblStatus.setToolTipText(tooltip);
 	}
 	
 	private void updateFontButtons() {
