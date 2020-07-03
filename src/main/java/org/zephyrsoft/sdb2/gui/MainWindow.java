@@ -598,7 +598,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			
 			settingsModel.put(SettingKey.REMOTE_ENABLED, checkboxRemoteEnabled.getModel().isSelected());
 			settingsModel.put(SettingKey.REMOTE_SERVER, textFieldRemoteServer.getText());
-			settingsModel.put(SettingKey.REMOTE_PASSWORD, passwordFieldRemotePassword.getText());
+			settingsModel.put(SettingKey.REMOTE_PASSWORD, passwordFieldRemotePassword.getPassword());
 			settingsModel.put(SettingKey.REMOTE_USERNAME, textFieldRemoteUsername.getText());
 			settingsModel.put(SettingKey.REMOTE_NAMESPACE, textFieldRemoteNamespace.getText());
 			settingsModel.put(SettingKey.REMOTE_PREFIX, textFieldRemotePrefix.getText());
@@ -1147,7 +1147,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	/**
 	 * A present function, which can be called by a remote controller.
-	 * 
+	 *
 	 * @param song
 	 */
 	public void present(Song song) {

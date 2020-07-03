@@ -30,9 +30,6 @@ import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 
-/**
- * 
- */
 public class RemoteController {
 	
 	private MQTT mqtt;
@@ -48,23 +45,20 @@ public class RemoteController {
 	
 	/**
 	 * Creates a RemoteController instance by connecting to a broker and setting up properties.
-	 * 
+	 *
 	 * You may set a prefix if you want to share a broker with multiple instance groups.
 	 * The prefix may be a code, where only selected users have access too. It must be set if you want to set up or use
 	 * a global mqtt server for multiple organizations.
 	 * A Organization may have different namespaces, to split up presentation instances into.
 	 * Users may have only access to some namespaces.
-	 * 
+	 *
 	 * A namespace contains one shared presentation, and multiple playlists.
-	 * 
+	 *
 	 * All properties are by default without local notify. They can't be used for in program synchronization.
 	 * Furthermore they are retained.
-	 * 
-	 * @param presentModel
-	 * @param mainController
+	 *
 	 * @param mainWindow
 	 *            can be null, if headless
-	 * @throws MqttException
 	 */
 	public RemoteController(SettingsModel settingsModel, MainController mainController, MainWindow mainWindow) throws MqttException {
 		prefix = settingsModel.get(SettingKey.REMOTE_PREFIX, String.class);
@@ -80,18 +74,18 @@ public class RemoteController {
 			cause.printStackTrace();
 		});
 		
-		song = new PubSubObject<>(mqtt, fTopic(RemoteTopic.SONG), RemoteController::parseSong, RemoteController::songToString, true);
+		song = new PubSubObject<>(mqtt, formatTopic(RemoteTopic.SONG), RemoteController::parseSong, RemoteController::songToString, true);
 		if (mainWindow != null)
 			song.onRemoteChange(s -> mainWindow.present(s));
 		else
 			song.onRemoteChange(s -> mainController.present(new Presentable(s, null)));
 		
-		songPosition = new PubSubObject<>(mqtt, fTopic(RemoteTopic.SONG_POSITION), SongPosition::parseSongPosition, true);
+		songPosition = new PubSubObject<>(mqtt, formatTopic(RemoteTopic.SONG_POSITION), SongPosition::parseSongPosition, true);
 		songPosition.onRemoteChange(p -> mainController.moveToLine(p.getPart(), p.getLine()));
 		// TODO: add mainwindow caller
 		
 		if (mainWindow != null) {
-			playlist = new PubSubObject<>(mqtt, fTopic(RemoteTopic.PLAYLIST), RemoteController::parseSongsModel,
+			playlist = new PubSubObject<>(mqtt, formatTopic(RemoteTopic.PLAYLIST), RemoteController::parseSongsModel,
 				RemoteController::songsModelToString,
 				true);
 			playlist.onRemoteChange(p -> mainWindow.getPresentModel().update(p));
@@ -120,7 +114,7 @@ public class RemoteController {
 	
 	/**
 	 * Converts a song object to string.
-	 * 
+	 *
 	 * @return song as string
 	 */
 	private static String songToString(Song song) {
@@ -132,7 +126,7 @@ public class RemoteController {
 	
 	/**
 	 * Parses a song string to a song object.
-	 * 
+	 *
 	 * @return song as string
 	 */
 	private static Song parseSong(String xml) {
@@ -142,7 +136,7 @@ public class RemoteController {
 	
 	/**
 	 * Converts a SongsModel object to string.
-	 * 
+	 *
 	 * @return SongsModel as string
 	 */
 	private static String songsModelToString(SongsModel songsModel) {
@@ -153,7 +147,7 @@ public class RemoteController {
 	
 	/**
 	 * Parses a SongsModel string to a SongsModel object.
-	 * 
+	 *
 	 * @return SongsModel instance
 	 */
 	private static SongsModel parseSongsModel(String xml) {
@@ -167,7 +161,7 @@ public class RemoteController {
 		mqtt.close();
 	}
 	
-	private String fTopic(String topic) {
+	private String formatTopic(String topic) {
 		return String.format(topic, prefix.isBlank() ? "" : prefix + "/", namespace);
 	}
 	

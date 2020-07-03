@@ -16,9 +16,6 @@
  */
 package org.zephyrsoft.sdb2.remote;
 
-/**
- * 
- */
 public class SongPosition {
 	private int part;
 	private int line;

@@ -16,9 +16,6 @@
  */
 package org.zephyrsoft.sdb2.remote;
 
-/**
- * 
- */
 class RemoteTopic {
 	final static String SONG = "%ssdb2/v1/%s/song";
 	final static String SONG_POSITION = "%ssdb2/v1/%s/songposition";

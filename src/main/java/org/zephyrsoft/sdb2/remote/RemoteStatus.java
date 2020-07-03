@@ -16,9 +16,6 @@
  */
 package org.zephyrsoft.sdb2.remote;
 
-/**
- * 
- */
 public enum RemoteStatus {
 	OFF,
 	CONNECTING,
