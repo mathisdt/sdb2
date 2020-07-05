@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
@@ -11,11 +12,11 @@
 	<url>https://zephyrsoft.org/sdb</url>
 
 	<licenses>
-	    <license>
-	        <name>GNU General Public License (GPL), Version 2.0</name>
-	        <url>http://www.gnu.org/licenses/gpl-2.0.html</url>
-	        <distribution>repo</distribution>
-	    </license>
+		<license>
+			<name>GNU General Public License (GPL), Version 2.0</name>
+			<url>http://www.gnu.org/licenses/gpl-2.0.html</url>
+			<distribution>repo</distribution>
+		</license>
 	</licenses>
 
 	<scm>
@@ -34,8 +35,8 @@
 
 		<!-- dependency versions -->
 		<version.spring>5.2.7.RELEASE</version.spring>
-		<version.slf4j>1.8.0-beta4</version.slf4j>
-		<version.log4j>2.11.0</version.log4j><!-- there was a problem introduced in 2.11.1, don't update! -->
+		<version.slf4j>2.0.0-alpha1</version.slf4j>
+		<version.logback>1.3.0-alpha5</version.logback>
 		<version.args4j>2.33</version.args4j>
 		<version.commons-lang3>3.10</version.commons-lang3>
 		<version.commons-text>1.8</version.commons-text>
@@ -108,13 +109,13 @@
 			<version>${version.lucene}</version>
 		</dependency>
 		<!-- this is commented out (and partly repackaged in org.zephyrsoft.sdb2.util.repackaged.lucene.analyzers.common)
-			because Java 9+ modules are not supported by Lucene yet
-			- there are split package issues when using lucene-core AND lucene-analyzers-common -->
-<!-- 		<dependency> -->
-<!-- 			<groupId>org.apache.lucene</groupId> -->
-<!-- 			<artifactId>lucene-analyzers-common</artifactId> -->
-<!-- 			<version>${version.lucene}</version> -->
-<!-- 		</dependency> -->
+			because Java 9+ modules are not supported by Lucene yet - there are split
+			package issues when using lucene-core AND lucene-analyzers-common -->
+		<!-- <dependency> -->
+		<!-- <groupId>org.apache.lucene</groupId> -->
+		<!-- <artifactId>lucene-analyzers-common</artifactId> -->
+		<!-- <version>${version.lucene}</version> -->
+		<!-- </dependency> -->
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
@@ -127,9 +128,9 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-		    <groupId>com.google.code.gson</groupId>
-		    <artifactId>gson</artifactId>
-		    <version>${version.gson}</version>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>${version.gson}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -146,43 +147,47 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		
-		<!--  REMOTE -->
+
+		<!-- REMOTE -->
 		<dependency>
-		    <groupId>org.eclipse.paho</groupId>
-		    <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
-		    <version>1.2.1</version>
+			<groupId>org.eclipse.paho</groupId>
+			<artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+			<version>1.2.4</version>
 		</dependency>
 
 		<!-- logging -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>jcl-over-slf4j</artifactId>
+			<artifactId>slf4j-api</artifactId>
 			<version>${version.slf4j}</version>
-			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-slf4j-impl</artifactId>
-			<version>${version.log4j}</version>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>${version.slf4j}</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${version.logback}</version>
 		</dependency>
 
 		<!-- XML -->
 		<dependency>
-		    <groupId>javax.xml.bind</groupId>
-		    <artifactId>jaxb-api</artifactId>
-		    <version>${version.jaxb-api}</version>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+			<version>${version.jaxb-api}</version>
 		</dependency>
 		<dependency>
-		    <groupId>org.glassfish.jaxb</groupId>
-		    <artifactId>jaxb-runtime</artifactId>
-		    <version>${version.jaxb-runtime}</version>
-		    <scope>runtime</scope>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+			<version>${version.jaxb-runtime}</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-		    <groupId>javax.activation</groupId>
-		    <artifactId>javax.activation-api</artifactId>
-		    <version>${version.javax-activation-api}</version>
+			<groupId>javax.activation</groupId>
+			<artifactId>javax.activation-api</artifactId>
+			<version>${version.javax-activation-api}</version>
 		</dependency>
 
 		<!-- test -->
@@ -206,11 +211,11 @@
 	</organization>
 
 	<developers>
-	    <developer>
-	        <id>mathis</id>
-	        <name>Mathis Dirksen-Thedens</name>
-	        <email>dev@zephyrsoft.org</email>
-	    </developer>
+		<developer>
+			<id>mathis</id>
+			<name>Mathis Dirksen-Thedens</name>
+			<email>dev@zephyrsoft.org</email>
+		</developer>
 	</developers>
 
 	<build>
@@ -222,35 +227,35 @@
 			</plugin>
 
 			<plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.0.0-M3</version>
-                <executions>
-                    <execution>
-                        <id>enforce-banned-dependencies</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <requireMavenVersion><version>3.2.0</version></requireMavenVersion>
-                                <bannedDependencies>
-                                  <excludes>
-                                    <exclude>log4j:log4j</exclude>
-                                    <exclude>org.slf4j:slf4j-log4j12</exclude>
-                                    <exclude>org.slf4j:slf4j-jdk14</exclude>
-                                    <exclude>ch.qos.logback:logback-core</exclude>
-                                    <exclude>ch.qos.logback:logback-classic</exclude>
-                                    <exclude>ch.qos.logback:logback-access</exclude>
-                                    <exclude>commons-logging:commons-logging</exclude>
-                                  </excludes>
-                                </bannedDependencies>
-                            </rules>
-                            <fail>true</fail>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.0.0-M3</version>
+				<executions>
+					<execution>
+						<id>enforce-banned-dependencies</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireMavenVersion>
+									<version>3.2.0</version>
+								</requireMavenVersion>
+								<bannedDependencies>
+									<excludes>
+										<exclude>log4j:log4j</exclude>
+										<exclude>org.slf4j:slf4j-log4j12</exclude>
+										<exclude>org.slf4j:slf4j-jdk14</exclude>
+										<exclude>org.apache.logging.log4j:log4j-slf4j-impl</exclude>
+										<exclude>commons-logging:commons-logging</exclude>
+									</excludes>
+								</bannedDependencies>
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -262,7 +267,9 @@
 					<deployMissingFile>false</deployMissingFile>
 					<licenseMerges>
 						<licenseMerge>
-							Apache 2.0|The Apache Software License, Version 2.0|Apache License Version 2.0|Apache License, Version 2.0|Apache 2
+							Apache 2.0|The Apache Software License, Version
+							2.0|Apache License Version 2.0|Apache License, Version 2.0|Apache
+							2
 						</licenseMerge>
 						<licenseMerge>
 							LGPL|Lesser General Public License (LGPL)
@@ -356,16 +363,16 @@
 			</plugin>
 
 			<plugin>
-			    <groupId>org.apache.maven.plugins</groupId>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
 				<version>3.2.1</version>
 				<executions>
-				    <execution>
-				        <id>attach-sources</id>
-				        <goals>
-				            <goal>jar</goal>
-				        </goals>
-				    </execution>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
 				</executions>
 				<configuration>
 					<outputDirectory>${project.build.directory}/distribution/bin</outputDirectory>
@@ -375,7 +382,7 @@
 
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
-				<version>3.0.0</version><!--$NO-MVN-MAN-VER$-->
+				<version>3.0.0</version><!--$NO-MVN-MAN-VER$ -->
 				<executions>
 					<execution>
 						<phase>prepare-package</phase>
@@ -386,7 +393,8 @@
 							<target>
 								<copy todir="${project.build.directory}/distribution"
 									overwrite="true" verbose="true">
-									<fileset dir="${project.basedir}/src/dist" includes="**" />
+									<fileset dir="${project.basedir}/src/dist"
+										includes="**" />
 								</copy>
 							</target>
 						</configuration>
