@@ -90,7 +90,7 @@ public class SpringConfiguration {
 			ErrorDialog.openDialogBlocking(null, "Error while loading settings! Please check the file:\n"
 				+ FileAndDirectoryLocations.getSettingsFileName()
 				+ "\n\nIf you can't fix the file, please delete it, but be warned:\n"
-				+ "your settings (e.g. colors and fonts) will be set back\n"
+				+ "your settings (e.g. colors and fonts) will be reset\n"
 				+ "to default values!");
 			throw e;
 		}
