@@ -34,15 +34,14 @@ The Song Database is a program to show lyrics on a digital projector for worship
 - the song texts are displayed continually, not on individual slides, so everyone sees how the song continues
   after the current part
   - animated transition when displaying another part of a song
+  - short fade effect when displaying another song
 
 ## Getting started
 
-- if you don't have it yet: download and install
-  [Java 11 or later](https://adoptopenjdk.net/?variant=openjdk12&jvmVariant=hotspot)
-  (use the "Install JRE" button if you're using Windows)
-- download the lastest [SDB2 release](https://github.com/mathisdt/sdb2/releases/latest) and unpack it
-  (use the file named `sdb2-...`)
-- use the starter contained in the "bin" subdirectory which corresponds to your system
+- download the latest [SDB2 release](https://github.com/mathisdt/sdb2/releases/latest)
+  (use the file named `sdb2-...` which corresponds to your system), unpack it
+  and look for an executable in the `bin` subdirectory
+  - if you're on MacOS you have to install Java 11 or later by yourself and use `sdb2-without-jre.zip`
 
 ## Contributing
 
