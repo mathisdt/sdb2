@@ -579,7 +579,7 @@ public class MainController implements Scroller {
 	}
 	
 	/**
-	 * delete backup files older than 15 days, but retain 20 backups at least
+	 * delete backup files older than 21 days, but retain 30 backups at least
 	 */
 	private void manageOldBackups() {
 		// TODO move to IOController !?
@@ -590,8 +590,8 @@ public class MainController implements Scroller {
 					.compare(lastModified(p1), lastModified(p2), Ordering.natural().reversed())
 					.compare(p1, p2, Ordering.natural().reversed())
 					.result())
-				.skip(20)
-				.filter(p -> lastModified(p).isBefore(LocalDateTime.now().minusDays(15)))
+				.skip(30)
+				.filter(p -> lastModified(p).isBefore(LocalDateTime.now().minusDays(21)))
 				.forEach(p -> {
 					LOG.info("deleting old backup {}", p);
 					delete(p);
