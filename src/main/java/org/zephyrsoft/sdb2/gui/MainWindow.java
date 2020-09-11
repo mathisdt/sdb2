@@ -66,7 +66,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
@@ -253,7 +252,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JTextField textFieldRemoteUsername;
 	private JTextField textFieldRemotePrefix;
 	private JTextField textFieldRemoteNamespace;
-	private JPasswordField passwordFieldRemotePassword;
+	private JTextField textFieldRemotePassword;
 	private JLabel lblRemoteUsername;
 	private JLabel lblRemotePassword;
 	private JLabel lblRemoteServer;
@@ -549,7 +548,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		checkboxRemoteEnabled.setSelected(settingsModel.get(SettingKey.REMOTE_ENABLED, Boolean.class));
 		textFieldRemoteServer.setText(settingsModel.get(SettingKey.REMOTE_SERVER, String.class));
 		textFieldRemoteUsername.setText(settingsModel.get(SettingKey.REMOTE_USERNAME, String.class));
-		passwordFieldRemotePassword.setText(settingsModel.get(SettingKey.REMOTE_PASSWORD, String.class));
+		textFieldRemotePassword.setText(settingsModel.get(SettingKey.REMOTE_PASSWORD, String.class));
 		textFieldRemotePrefix.setText(settingsModel.get(SettingKey.REMOTE_PREFIX, String.class));
 		textFieldRemoteNamespace.setText(settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class));
 	}
@@ -598,7 +597,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			
 			settingsModel.put(SettingKey.REMOTE_ENABLED, checkboxRemoteEnabled.getModel().isSelected());
 			settingsModel.put(SettingKey.REMOTE_SERVER, textFieldRemoteServer.getText());
-			settingsModel.put(SettingKey.REMOTE_PASSWORD, passwordFieldRemotePassword.getPassword());
+			settingsModel.put(SettingKey.REMOTE_PASSWORD, textFieldRemotePassword.getText());
 			settingsModel.put(SettingKey.REMOTE_USERNAME, textFieldRemoteUsername.getText());
 			settingsModel.put(SettingKey.REMOTE_NAMESPACE, textFieldRemoteNamespace.getText());
 			settingsModel.put(SettingKey.REMOTE_PREFIX, textFieldRemotePrefix.getText());
@@ -810,7 +809,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		setEnabledIfNotNull(checkboxRemoteEnabled, enabled);
 		setEnabledIfNotNull(textFieldRemoteServer, enabled);
 		setEnabledIfNotNull(textFieldRemoteUsername, enabled);
-		setEnabledIfNotNull(passwordFieldRemotePassword, enabled);
+		setEnabledIfNotNull(textFieldRemotePassword, enabled);
 		setEnabledIfNotNull(textFieldRemotePrefix, enabled);
 		setEnabledIfNotNull(textFieldRemoteNamespace, enabled);
 		// disable the "unlock" button when enabling the other controls
@@ -2780,13 +2779,13 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_lblRemotePassword.gridy = 29;
 		panel.add(lblRemotePassword, gbc_lblRemotePassword);
 		
-		passwordFieldRemotePassword = new JPasswordField();
+		textFieldRemotePassword = new JTextField();
 		GridBagConstraints gbc_textFieldRemotePassword = new GridBagConstraints();
 		gbc_textFieldRemotePassword.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemotePassword.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemotePassword.gridx = 3;
 		gbc_textFieldRemotePassword.gridy = 29;
-		panel.add(passwordFieldRemotePassword, gbc_textFieldRemotePassword);
+		panel.add(textFieldRemotePassword, gbc_textFieldRemotePassword);
 		
 		lblRemotePrefix = new JLabel("Remote prefix");
 		GridBagConstraints gbc_lblRemotePrefix = new GridBagConstraints();
