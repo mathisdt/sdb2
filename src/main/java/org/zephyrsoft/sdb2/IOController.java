@@ -30,6 +30,10 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.Function;
 
 import org.slf4j.Logger;
@@ -42,6 +46,8 @@ import org.zephyrsoft.sdb2.model.SongsModel;
 public class IOController {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(IOController.class);
+	
+	private static final Comparator<File> SONGS_BACKUP_FILE_COMPARATOR = Comparator.comparing((File f) -> f.getName()).reversed();
 	
 	private Instant ignoreUntil;
 	private Boolean ignoreCompletely;
@@ -114,7 +120,7 @@ public class IOController {
 		String fileNameToUse = FileAndDirectoryLocations.getSongsFileName(fileName);
 		File file = new File(fileNameToUse);
 		
-		if (!file.exists()) {
+		if (!file.exists() && !isSongsBackupAvailable()) {
 			LOG.debug("not reading songs from {} (file does not exist) but using empty model", file.getAbsolutePath());
 			return new SongsModel();
 		}
@@ -123,10 +129,38 @@ public class IOController {
 		SongsModel result = null;
 		try (InputStream xmlInputStream = new FileInputStream(file)) {
 			result = handler.apply(xmlInputStream);
-		} catch (IOException e) {
-			LOG.error("could not read songs from \"" + file.getAbsolutePath() + "\"", e);
+		} catch (Exception e) {
+			LOG.warn("could not read songs from \"" + file.getAbsolutePath() + "\", trying backups", e);
+			for (File backupFile : getSongsBackups()) {
+				try (InputStream backupXmlInputStream = new FileInputStream(backupFile)) {
+					result = handler.apply(backupXmlInputStream);
+					LOG.info("read songs from backup \"" + backupFile.getAbsolutePath() + "\"");
+				} catch (Exception e1) {
+					LOG.warn("could not read songs from backup \"" + backupFile.getAbsolutePath() + "\"", e1);
+				}
+				if (result != null) {
+					break;
+				}
+			}
+			if (result == null) {
+				LOG.error("could read songs neither from \"" + file.getAbsolutePath() + "\" nor from any backup");
+			}
 		}
 		return result;
+	}
+	
+	private boolean isSongsBackupAvailable() {
+		return !getSongsBackups().isEmpty();
+	}
+	
+	private List<File> getSongsBackups() {
+		File[] filesArray = new File(FileAndDirectoryLocations.getSongsBackupDir()).listFiles();
+		if (filesArray == null) {
+			return Collections.emptyList();
+		}
+		List<File> files = Arrays.asList(filesArray);
+		files.sort(SONGS_BACKUP_FILE_COMPARATOR);
+		return files;
 	}
 	
 	public <T> T readSettings(Function<InputStream, T> handler) {
