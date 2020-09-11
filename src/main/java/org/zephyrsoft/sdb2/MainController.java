@@ -437,6 +437,9 @@ public class MainController implements Scroller {
 		settings = ioController.readSettings(is -> XMLConverter.fromXMLToPersistable(is));
 		if (settings == null) {
 			// there was a problem while reading
+			SwingUtilities.invokeLater(() -> ErrorDialog.openDialogBlocking(mainWindow, "Could not read saved settings!\n\n"
+				+ "Started with default values,\nyou might have to adjust some settings\n"
+				+ "(see tab \"Global Settings\")."));
 			settings = new SettingsModel();
 		}
 		loadDefaultSettingsForUnsetSettings();

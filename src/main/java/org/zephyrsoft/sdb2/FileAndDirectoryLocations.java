@@ -33,6 +33,7 @@ public class FileAndDirectoryLocations {
 	public static final String SONGS_BACKUP_FILE_STRING = "songs-%s.xml";
 	public static final String SETTINGS_SUBDIR_STRING = "settings";
 	public static final String SETTINGS_FILE_STRING = "settings.xml";
+	public static final String SETTINGS_FALLBACK_FILE_STRING = "settings-fallback.xml";
 	public static final String STATISTICS_SUBDIR_STRING = "statistics";
 	public static final String STATISTICS_FILE_STRING = "statistics.xml";
 	public static final String LOG_SUBDIR_STRING = "log";
@@ -54,6 +55,10 @@ public class FileAndDirectoryLocations {
 	
 	public static String getSettingsFileName() {
 		return getSettingsDir() + File.separator + SETTINGS_FILE_STRING;
+	}
+	
+	public static String getSettingsFallbackFileName() {
+		return getSettingsDir() + File.separator + SETTINGS_FALLBACK_FILE_STRING;
 	}
 	
 	public static String getStatisticsFileName() {

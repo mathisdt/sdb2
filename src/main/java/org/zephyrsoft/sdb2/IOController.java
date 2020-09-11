@@ -135,8 +135,16 @@ public class IOController {
 		T result = null;
 		try (InputStream xmlInputStream = new FileInputStream(file)) {
 			result = handler.apply(xmlInputStream);
-		} catch (IOException e) {
-			LOG.error("could not read settings from \"" + file.getAbsolutePath() + "\"", e);
+		} catch (Exception e) {
+			File fallbackFile = new File(FileAndDirectoryLocations.getSettingsFallbackFileName());
+			LOG.warn("could not read settings from \"" + file.getAbsolutePath() + "\", trying \""
+				+ fallbackFile.getAbsolutePath() + "\"", e);
+			try (InputStream fallbackXmlInputStream = new FileInputStream(fallbackFile)) {
+				result = handler.apply(fallbackXmlInputStream);
+			} catch (Exception e1) {
+				LOG.error("could read settings neither from \"" + file.getAbsolutePath() + "\" nor from \""
+					+ fallbackFile.getAbsolutePath() + "\"", e);
+			}
 		}
 		return result;
 	}
