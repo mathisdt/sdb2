@@ -148,7 +148,7 @@ public class IndexerService {
 			BooleanQuery outerBooleanQuery = outerBooleanQueryBuilder.build();
 			TopDocs hits = indexSearcher.search(outerBooleanQuery, Integer.MAX_VALUE);
 			
-			LOG.debug("{} hits for filter \"{}\"", hits.totalHits, outerBooleanQueryBuilder);
+			LOG.trace("{} hits for filter \"{}\"", hits.totalHits, outerBooleanQueryBuilder);
 			
 			List<Song> ret = new LinkedList<>();
 			for (ScoreDoc scoreDocument : hits.scoreDocs) {
