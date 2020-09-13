@@ -134,11 +134,11 @@ public class IOController {
 			for (File backupFile : getSongsBackups()) {
 				try (InputStream backupXmlInputStream = new FileInputStream(backupFile)) {
 					result = handler.apply(backupXmlInputStream);
-					LOG.info("read songs from backup \"" + backupFile.getAbsolutePath() + "\"");
+					LOG.info("read songs from backup \"{}\" -> {} songs", backupFile.getAbsolutePath(), result.getSize());
 				} catch (Exception e1) {
 					LOG.warn("could not read songs from backup \"" + backupFile.getAbsolutePath() + "\"", e1);
 				}
-				if (result != null) {
+				if (result != null && !result.isEmpty()) {
 					break;
 				}
 			}
