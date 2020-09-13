@@ -510,7 +510,7 @@ public class MainController implements Scroller {
 	}
 	
 	public synchronized boolean saveSettings() {
-		// TODO move to IOController !?
+		// TODO move method to IOController !?
 		File file = new File(FileAndDirectoryLocations.getSettingsFileName());
 		try {
 			OutputStream xmlOutputStream = new FileOutputStream(file);
@@ -539,7 +539,13 @@ public class MainController implements Scroller {
 	}
 	
 	public synchronized boolean saveSongs() {
-		// TODO move to IOController !?
+		// TODO move method to IOController !?
+		if (songs.isEmpty()) {
+			LOG.warn("didn't save songs because there were none");
+			// this is OK, program may close
+			return true;
+		}
+		
 		File songsBackupFile = saveSongsToBackupFile();
 		if (songsBackupFile == null) {
 			LOG.error("could not write backup file while saving database");
@@ -566,7 +572,7 @@ public class MainController implements Scroller {
 	}
 	
 	private File saveSongsToBackupFile() {
-		// TODO move to IOController !?
+		// TODO move method to IOController !?
 		File file = new File(FileAndDirectoryLocations.getSongsBackupFile());
 		try (OutputStream xmlOutputStream = new FileOutputStream(file)) {
 			LOG.debug("writing songs to backup file \"{}\"", file.getAbsolutePath());
@@ -582,7 +588,7 @@ public class MainController implements Scroller {
 	 * delete backup files older than 21 days, but retain 30 backups at least
 	 */
 	private void manageOldBackups() {
-		// TODO move to IOController !?
+		// TODO move method to IOController !?
 		try {
 			Files.list(Paths.get(FileAndDirectoryLocations.getSongsBackupDir()))
 				// ordering: firstly by modification date DESC, secondly by file name DESC
