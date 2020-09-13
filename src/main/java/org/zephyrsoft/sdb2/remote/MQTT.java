@@ -25,7 +25,6 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +49,9 @@ public class MQTT implements MqttCallback {
 	 * A simple MQTTClient wrapper which establishes the connection on object creation,
 	 * implements the observable pattern to let multiple Observers receive messages and
 	 * handles some exceptions.
-	 * 
+	 *
 	 * It currently only supports String messages.
-	 * 
+	 *
 	 * @throws MqttException
 	 */
 	public MQTT(String serverUri, String clientID, String userName, String password) throws MqttException {
@@ -65,24 +64,20 @@ public class MQTT implements MqttCallback {
 		if (!password.isEmpty()) {
 			mqttConnectOptions.setPassword(password.toCharArray());
 		}
-		// try {
 		client = new MqttClient(serverUri, clientID);
 		client.connectWithResult(mqttConnectOptions);
 		client.setCallback(this);
-		// } catch (MqttException e) {
-		// e.printStackTrace();
-		// }
 	}
 	
 	@Override
 	public void connectionLost(Throwable cause) {
-		onConnectionLostListeners.forEach((ocll) -> ocll.onConnectionLost(cause));
+		onConnectionLostListeners.forEach(ocll -> ocll.onConnectionLost(cause));
 	}
 	
 	@Override
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
-		LOG.debug("Got message: " + topic);
-		onMessageListeners.forEach((oml) -> oml.onMessage(topic, message.toString()));
+		LOG.debug("Got message: {}", topic);
+		onMessageListeners.forEach(oml -> oml.onMessage(topic, message.toString()));
 	}
 	
 	@Override
@@ -91,21 +86,18 @@ public class MQTT implements MqttCallback {
 	}
 	
 	public void subscribe(String topic, int qos) throws MqttException {
-		LOG.debug("Subscribing: " + topic);
+		LOG.debug("Subscribing: {}", topic);
 		client.subscribe(topic, qos);
 	}
 	
 	public void publish(String topic, String payload, int qos, boolean retained) {
 		if (client.isConnected()) {
-			LOG.debug("Publishing message: " + topic);
+			LOG.debug("Publishing message: {}", topic);
 			try {
 				client.publish(topic, payload.getBytes(), qos, retained);
-			} catch (MqttPersistenceException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (MqttException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (Exception e) {
+				// only log the exception
+				LOG.warn("could not publish message", e);
 			}
 		}
 	}
@@ -115,13 +107,13 @@ public class MQTT implements MqttCallback {
 			try {
 				client.disconnect();
 			} catch (MqttException e) {
-				// e.printStackTrace();
+				// do nothing
 			}
 		}
 		try {
 			client.close();
 		} catch (MqttException e) {
-			// e.printStackTrace();
+			// do nothing
 		}
 	}
 	

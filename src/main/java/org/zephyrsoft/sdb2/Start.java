@@ -57,11 +57,10 @@ public final class Start {
 			parser.printUsage(System.err);
 		} else {
 			try {
-				LOG.info("default file encoding is {}", Charset.defaultCharset().displayName());
-				LOG.info("default time zone is {}", ZoneId.systemDefault().getId());
+				LOG.debug("default file encoding is {}", Charset.defaultCharset().displayName());
+				LOG.debug("default time zone is {}", ZoneId.systemDefault().getId());
 				
-				LOG.info("loading application context");
-				
+				LOG.debug("loading application context");
 				new AnnotationConfigApplicationContext(SpringConfiguration.class);
 			} catch (Exception e) {
 				LOG.error("problem while starting up the application", e);

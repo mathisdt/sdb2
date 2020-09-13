@@ -83,37 +83,34 @@ public class IndexerService {
 	}
 	
 	public void index(final IndexType indexType, final Collection<Song> songs) {
-		executor.execute(new Runnable() {
-			@Override
-			public void run() {
-				Stopwatch stopwatch = Stopwatch.createStarted();
+		executor.execute(() -> {
+			Stopwatch stopwatch = Stopwatch.createStarted();
+			
+			@SuppressWarnings("deprecation")
+			Directory directory = new org.apache.lucene.store.RAMDirectory();
+			try {
+				Analyzer analyzer = CustomAnalyzer.builder()
+					.withTokenizer(StandardTokenizerFactory.class)
+					.addTokenFilter(LowerCaseFilterFactory.class)
+					.addTokenFilter(NGramFilterFactory.class, "minGramSize", "1", "maxGramSize", "25")
+					.build();
 				
-				@SuppressWarnings("deprecation")
-				Directory directory = new org.apache.lucene.store.RAMDirectory();
-				try {
-					Analyzer analyzer = CustomAnalyzer.builder()
-						.withTokenizer(StandardTokenizerFactory.class)
-						.addTokenFilter(LowerCaseFilterFactory.class)
-						.addTokenFilter(NGramFilterFactory.class, "minGramSize", "1", "maxGramSize", "25")
-						.build();
-					
-					IndexWriterConfig config = new IndexWriterConfig(analyzer);
-					try (IndexWriter writer = new IndexWriter(directory, config)) {
-						for (Song song : songs) {
-							Document document = createDocument(song);
-							writer.addDocument(document);
-							songByUuid.put(song.getUUID(), song);
-						}
-					} catch (IOException e) {
-						LOG.warn("couldn't index songs", e);
+				IndexWriterConfig config = new IndexWriterConfig(analyzer);
+				try (IndexWriter writer = new IndexWriter(directory, config)) {
+					for (Song song : songs) {
+						Document document = createDocument(song);
+						writer.addDocument(document);
+						songByUuid.put(song.getUUID(), song);
 					}
-				} catch (IOException e1) {
-					LOG.warn("couldn't create analyzer", e1);
-				} finally {
-					putIndex(indexType, directory);
-					stopwatch.stop();
-					LOG.info("indexing songs in background thread took {}", stopwatch.toString());
+				} catch (IOException e) {
+					LOG.warn("couldn't index songs", e);
 				}
+			} catch (IOException e1) {
+				LOG.warn("couldn't create analyzer", e1);
+			} finally {
+				putIndex(indexType, directory);
+				stopwatch.stop();
+				LOG.info("indexing songs in background thread took {}", stopwatch.toString());
 			}
 		});
 	}

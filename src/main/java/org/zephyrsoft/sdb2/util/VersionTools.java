@@ -93,7 +93,7 @@ public class VersionTools {
 					latestRelease.get("html_url").getAsString());
 			}
 		} catch (Exception e) {
-			LOG.error("error communicating with GitHub", e);
+			LOG.warn("error communicating with GitHub", e);
 			return null;
 		}
 	}

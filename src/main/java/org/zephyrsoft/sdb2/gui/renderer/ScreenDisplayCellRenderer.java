@@ -24,16 +24,12 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.SelectableScreen;
 
 /**
  * A {@link ListCellRenderer} for {@link GraphicsDevice} values.
  */
 public class ScreenDisplayCellRenderer implements ListCellRenderer<SelectableScreen> {
-	
-	private static final Logger LOG = LoggerFactory.getLogger(ScreenDisplayCellRenderer.class);
 	
 	protected DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
 	

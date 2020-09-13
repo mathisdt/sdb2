@@ -245,13 +245,13 @@ public class MainController implements Scroller {
 	
 	public void startCountDown(final int seconds, final Song song) {
 		Runnable countDownRunnable = () -> {
-			LOG.debug("start sleeping for {} seconds (count-down)", seconds);
+			LOG.trace("start sleeping for {} seconds (count-down)", seconds);
 			try {
 				Thread.sleep(seconds * 1000);
 				statisticsController.countSongAsPresentedToday(song);
 			} catch (InterruptedException e) {
 				// if interrupted, do nothing (the countdown was stopped)
-				LOG.debug("interrupted (count-down)");
+				LOG.trace("interrupted (count-down)");
 			}
 		};
 		stopCountDown();
@@ -264,7 +264,7 @@ public class MainController implements Scroller {
 	
 	public void stopCountDown() {
 		if (countDownFuture != null) {
-			LOG.debug("stopping countdown");
+			LOG.trace("stopping countdown");
 			countDownFuture.cancel(true);
 			countDownFuture = null;
 		} else {
@@ -675,7 +675,7 @@ public class MainController implements Scroller {
 				startSlideShowCycle(seconds);
 			} catch (InterruptedException e) {
 				// if interrupted, do nothing (the slide show was stopped)
-				LOG.debug("interrupted (slide show)");
+				LOG.trace("interrupted (slide show)");
 			}
 		};
 		if (executor.isShutdown()) {

@@ -43,23 +43,23 @@ public class MqttObject<T> {
 	
 	/**
 	 * A simple MQTT based property for synchronizing java objects.
-	 * 
+	 *
 	 * It can be used for Publish or Subscribe only, Publish&Subscribe on the same topic, or Publish&Subscribe on
 	 * separate topics.
-	 * 
+	 *
 	 * A initially set object which is not null will be published before subscribe is called. Null objects are
 	 * supported,
 	 * if toObject, takeObject, toString and objectEquals are supporting it. Use case might be a retained message which
 	 * can be null, if not set. toString must create a empty String to unset it. Attention: subcribers may not get the
 	 * empty string.
-	 * 
+	 *
 	 * @throws MqttException
-	 * 
-	 * 
+	 *
+	 *
 	 */
 	public MqttObject(MQTT mqtt, T object, String subscriptionTopic, Function<String, T> toObject, BiPredicate<T, T> takeObject, String publishTopic,
 		Function<T, String> toString, int qos, boolean retained, BiPredicate<T, T> objectEquals) throws MqttException {
-		LOG.debug("New MqttObject: S: " + subscriptionTopic + " P: " + publishTopic);
+		LOG.trace("new MqttObject: S: {} P: {}", subscriptionTopic, publishTopic);
 		this.subscriptionTopic = subscriptionTopic;
 		this.toObject = toObject;
 		this.publishTopic = publishTopic;

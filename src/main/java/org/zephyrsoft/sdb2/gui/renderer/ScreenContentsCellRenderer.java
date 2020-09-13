@@ -23,16 +23,12 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 
 /**
  * A {@link ListCellRenderer} for {@link ScreenContentsEnum} values.
  */
 public class ScreenContentsCellRenderer implements ListCellRenderer<ScreenContentsEnum> {
-	
-	private static final Logger LOG = LoggerFactory.getLogger(ScreenContentsCellRenderer.class);
 	
 	protected DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
 	

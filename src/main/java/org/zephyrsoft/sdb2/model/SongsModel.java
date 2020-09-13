@@ -164,7 +164,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 	}
 	
 	private void notifyListModelListeners() {
-		LOG.debug("notifyListModelListeners");
+		LOG.trace("notifyListModelListeners");
 		for (TransparentListModel<Song> model : createdListModels) {
 			ListDataListener[] listeners = model.getListDataListeners();
 			for (ListDataListener listener : listeners) {

@@ -55,7 +55,7 @@ public class SpringConfiguration {
 		featureManager.setFeatureState(new FeatureState(Feature.HIGHLIGHT_FILTER_MATCHES, enabled));
 		
 		StaticFeatureManagerProvider.setFeatureManager(featureManager);
-		LOG.debug("feature manager built");
+		LOG.trace("feature manager built");
 		
 		return featureManager;
 	}

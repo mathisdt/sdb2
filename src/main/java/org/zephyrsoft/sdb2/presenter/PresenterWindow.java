@@ -260,7 +260,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 		Rectangle targetCoordinates = ScreenHelper.getConfiguration(screen).getBounds();
 		Point currentLocation = getLocation();
 		Dimension currentSize = getSize();
-		LOG.trace("presenter window for {} is at {}/{} with size {}x{}", screen.getDescription(),
+		LOG.debug("presenter window for {} is at {}/{} with size {}x{}", screen.getDescription(),
 			currentLocation.getX(), currentLocation.getY(), currentSize.getWidth(), currentSize.getHeight());
 		
 		if (!sameInt(targetCoordinates.getX(), currentLocation.getX())
