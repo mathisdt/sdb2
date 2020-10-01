@@ -45,7 +45,7 @@
 		<version.poi>4.1.2</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
-		<version.lucene>8.6.0</version.lucene>
+		<version.lucene>8.6.2</version.lucene>
 		<version.guava>29.0-jre</version.guava>
 		<version.gson>2.8.6</version.gson>
 		<version.junit>4.13</version.junit>
