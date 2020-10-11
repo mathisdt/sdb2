@@ -58,7 +58,7 @@ import org.zephyrsoft.sdb2.gui.MainWindow;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
-import org.zephyrsoft.sdb2.model.SelectableScreen;
+import org.zephyrsoft.sdb2.model.SelectableDisplay;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.VirtualScreen;
@@ -101,7 +101,7 @@ public class MainController implements Scroller {
 	private SongsModel songs = null;
 	private SettingsModel settings = null;
 	
-	private List<SelectableScreen> screens;
+	private List<SelectableDisplay> screens;
 	private PresenterBundle presentationControl;
 	private Song currentlyPresentedSong = null;
 	
@@ -169,8 +169,8 @@ public class MainController implements Scroller {
 	}
 	
 	public boolean present(Presentable presentable) {
-		SelectableScreen screen1 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class));
-		SelectableScreen screen2 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class));
+		SelectableDisplay screen1 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class));
+		SelectableDisplay screen2 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class));
 		
 		int presentersConfigured = (settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class) != null ? 1 : 0)
 			+ (settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class) != null ? 1 : 0)
@@ -179,10 +179,10 @@ public class MainController implements Scroller {
 			&& presentationControl.getPresenters().size() == presentersConfigured
 			&& (presentationControl.getPresenters().isEmpty() ||
 				(presentationControl.getPresenters().get(0) instanceof PresenterWindow
-					&& ((PresenterWindow) presentationControl.getPresenters().get(0)).metadataMatches(screen1, VirtualScreen.SCREEN_1)))
+					&& ((PresenterWindow) presentationControl.getPresenters().get(0)).metadataMatches(screen1, VirtualScreen.SCREEN_A)))
 			&& (presentationControl.getPresenters().size() <= 2 ||
 				(presentationControl.getPresenters().get(1) instanceof PresenterWindow
-					&& ((PresenterWindow) presentationControl.getPresenters().get(1)).metadataMatches(screen2, VirtualScreen.SCREEN_2)))) {
+					&& ((PresenterWindow) presentationControl.getPresenters().get(1)).metadataMatches(screen2, VirtualScreen.SCREEN_B)))) {
 			LOG.trace("re-using the existing presenters");
 			currentlyPresentedSong = presentable.getSong();
 			presentationControl.setContent(presentable);
@@ -193,16 +193,16 @@ public class MainController implements Scroller {
 		}
 	}
 	
-	private boolean presentInNewPresenters(Presentable presentable, SelectableScreen screen1, SelectableScreen screen2) {
+	private boolean presentInNewPresenters(Presentable presentable, SelectableDisplay screen1, SelectableDisplay screen2) {
 		PresenterBundle oldPresentationControl = presentationControl;
 		presentationControl = new PresenterBundle();
 		
-		Presenter presenter1 = createPresenter(screen1, presentable, VirtualScreen.SCREEN_1);
+		Presenter presenter1 = createPresenter(screen1, presentable, VirtualScreen.SCREEN_A);
 		if (presenter1 != null) {
 			presentationControl.addPresenter(presenter1);
 		}
 		
-		Presenter presenter2 = createPresenter(screen2, presentable, VirtualScreen.SCREEN_2);
+		Presenter presenter2 = createPresenter(screen2, presentable, VirtualScreen.SCREEN_B);
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
 		}
@@ -300,7 +300,7 @@ public class MainController implements Scroller {
 		}
 	}
 	
-	private PresenterWindow createPresenter(SelectableScreen screen, Presentable presentable, VirtualScreen virtualScreen) {
+	private PresenterWindow createPresenter(SelectableDisplay screen, Presentable presentable, VirtualScreen virtualScreen) {
 		if (screen == null || !screen.isAvailable()) {
 			// nothing to be done
 			return null;
@@ -308,7 +308,7 @@ public class MainController implements Scroller {
 		return new PresenterWindow(screen, presentable, virtualScreen, settings, this);
 	}
 	
-	public List<SelectableScreen> getScreens() {
+	public List<SelectableDisplay> getScreens() {
 		return Collections.unmodifiableList(screens);
 	}
 	
@@ -322,7 +322,7 @@ public class MainController implements Scroller {
 		// for the setting "don't show at all"
 		screens.add(null);
 		
-		List<SelectableScreen> availableScreens = ScreenHelper.getScreens();
+		List<SelectableDisplay> availableScreens = ScreenHelper.getScreens();
 		screens.addAll(availableScreens);
 		
 		// if applicable: add currently unavailable screens if they are mentioned in settings
@@ -331,7 +331,7 @@ public class MainController implements Scroller {
 		int maxScreenIndex = Math.max(screen1Index == null ? 0 : screen1Index, screen2Index == null ? 0 : screen2Index);
 		for (int i = availableScreens.size(); i <= maxScreenIndex; i++) {
 			LOG.debug("adding screen with index {} as unavailable", i);
-			screens.add(new SelectableScreen(i, false));
+			screens.add(new SelectableDisplay(i, false));
 		}
 	}
 	
@@ -461,7 +461,7 @@ public class MainController implements Scroller {
 		putDefaultIfKeyIsUnset(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.TITLE_AND_LYRICS);
 		putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.ONLY_LYRICS);
 		putDefaultIfKeyIsUnset(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.LYRICS_AND_CHORDS_AND_CHORD_SEQUENCE);
-		List<SelectableScreen> availableScreens = ScreenHelper.getScreens();
+		List<SelectableDisplay> availableScreens = ScreenHelper.getScreens();
 		if (availableScreens.size() > 1) {
 			putDefaultIfKeyIsUnset(SettingKey.SCREEN_1_DISPLAY, Integer.valueOf(availableScreens.get(1).getIndex()));
 		} else {
