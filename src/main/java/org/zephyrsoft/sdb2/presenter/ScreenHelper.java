@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.zephyrsoft.sdb2.model.SelectableScreen;
+import org.zephyrsoft.sdb2.model.SelectableDisplay;
 
 /**
  * Helper class for dealing with multiple screens.
@@ -38,10 +38,10 @@ public final class ScreenHelper {
 	/**
 	 * Get the comprehensive list of all screens attached to the system.
 	 */
-	public static List<SelectableScreen> getScreens() {
-		List<SelectableScreen> result = new LinkedList<>();
+	public static List<SelectableDisplay> getScreens() {
+		List<SelectableDisplay> result = new LinkedList<>();
 		for (int i = 0; i < getGraphicsDevices().size(); i++) {
-			result.add(new SelectableScreen(i));
+			result.add(new SelectableDisplay(i));
 		}
 		return result;
 	}
@@ -59,7 +59,7 @@ public final class ScreenHelper {
 	 * @param screenIndex
 	 *            the index of the screen to find
 	 */
-	public static SelectableScreen getScreen(List<SelectableScreen> screens, Integer screenIndex) {
+	public static SelectableDisplay getScreen(List<SelectableDisplay> screens, Integer screenIndex) {
 		if (screenIndex == null) {
 			return null;
 		}
@@ -74,14 +74,14 @@ public final class ScreenHelper {
 	 * @param screenIndex
 	 *            the index of the screen to find
 	 */
-	public static SelectableScreen getScreen(List<SelectableScreen> screens, int screenIndex) {
+	public static SelectableDisplay getScreen(List<SelectableDisplay> screens, int screenIndex) {
 		return screens.stream()
 			.filter(scr -> scr != null && scr.getIndex() == screenIndex)
 			.findFirst()
 			.orElse(null);
 	}
 	
-	public static GraphicsConfiguration getConfiguration(SelectableScreen screen) {
+	public static GraphicsConfiguration getConfiguration(SelectableDisplay screen) {
 		List<GraphicsDevice> graphicsDevices = getGraphicsDevices();
 		return screen.getIndex() >= graphicsDevices.size()
 			? null

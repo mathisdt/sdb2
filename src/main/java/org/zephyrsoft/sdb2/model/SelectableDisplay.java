@@ -19,28 +19,28 @@ package org.zephyrsoft.sdb2.model;
 import com.google.common.base.Preconditions;
 
 /**
- * Represents a screen connected to the computer.
+ * Represents a display connected to the computer.
  */
-public class SelectableScreen {
+public class SelectableDisplay {
 	
 	private final int index;
 	private boolean available;
 	
 	/**
 	 * @param index
-	 *            0-based (screen 0 is the main display)
+	 *            0-based (display 0 is the main display)
 	 */
-	public SelectableScreen(int index) {
+	public SelectableDisplay(int index) {
 		this(index, true);
 	}
 	
 	/**
 	 * @param index
-	 *            0-based (screen 0 is the main display)
+	 *            0-based (display 0 is the main display)
 	 * @param available
-	 *            is this screen available at present?
+	 *            is this display available at present?
 	 */
-	public SelectableScreen(int index, boolean available) {
+	public SelectableDisplay(int index, boolean available) {
 		Preconditions.checkArgument(index >= 0);
 		this.index = index;
 		this.available = available;
@@ -59,11 +59,11 @@ public class SelectableScreen {
 	}
 	
 	/**
-	 * @return description including a screen number - attention: this number is 1-based and not 0-based as the
-	 *         {@link #index}, so the screen with index 1 will have a description like "screen 2"!
+	 * @return description including a display number - attention: this number is 1-based and not 0-based as the
+	 *         {@link #index}, so the display with index 1 will have a description like "display 2"!
 	 */
 	public String getDescription() {
-		return "Screen " + (index + 1) + (index == 0 ? " (main screen)" : "") + (available ? "" : " - currently unavailable");
+		return "Display " + (index + 1) + (index == 0 ? " (main display)" : "") + (available ? "" : " - currently unavailable");
 	}
 	
 	@Override
@@ -87,7 +87,7 @@ public class SelectableScreen {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		SelectableScreen other = (SelectableScreen) obj;
+		SelectableDisplay other = (SelectableDisplay) obj;
 		if (index != other.index)
 			return false;
 		return true;

@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
-import org.zephyrsoft.sdb2.model.SelectableScreen;
+import org.zephyrsoft.sdb2.model.SelectableDisplay;
 import org.zephyrsoft.sdb2.model.VirtualScreen;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
@@ -67,7 +67,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 	
 	private final VirtualScreen virtualScreen;
 	private final SettingsModel settings;
-	private final SelectableScreen screen;
+	private final SelectableDisplay screen;
 	private Presentable presentable;
 	private MainController controller;
 	
@@ -75,7 +75,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 	
 	private Rectangle screenSize;
 	
-	public PresenterWindow(SelectableScreen screen, Presentable presentable,
+	public PresenterWindow(SelectableDisplay screen, Presentable presentable,
 		VirtualScreen virtualScreen, SettingsModel settings, MainController controller) {
 		super(ScreenHelper.getConfiguration(screen));
 		this.controller = controller;
@@ -125,7 +125,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 		return backgroundColor;
 	}
 	
-	public boolean metadataMatches(SelectableScreen otherScreen, VirtualScreen otherVirtualScreen) {
+	public boolean metadataMatches(SelectableDisplay otherScreen, VirtualScreen otherVirtualScreen) {
 		return screen.equals(otherScreen) && virtualScreen.equals(otherVirtualScreen);
 	}
 	

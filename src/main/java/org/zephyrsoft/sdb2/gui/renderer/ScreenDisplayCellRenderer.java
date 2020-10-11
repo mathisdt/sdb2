@@ -24,17 +24,17 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
-import org.zephyrsoft.sdb2.model.SelectableScreen;
+import org.zephyrsoft.sdb2.model.SelectableDisplay;
 
 /**
  * A {@link ListCellRenderer} for {@link GraphicsDevice} values.
  */
-public class ScreenDisplayCellRenderer implements ListCellRenderer<SelectableScreen> {
+public class ScreenDisplayCellRenderer implements ListCellRenderer<SelectableDisplay> {
 	
 	protected DefaultListCellRenderer defaultRenderer = new DefaultListCellRenderer();
 	
 	@Override
-	public Component getListCellRendererComponent(JList<? extends SelectableScreen> list, SelectableScreen value,
+	public Component getListCellRendererComponent(JList<? extends SelectableDisplay> list, SelectableDisplay value,
 		int index, boolean isSelected, boolean cellHasFocus) {
 		JLabel ret = (JLabel) defaultRenderer.getListCellRendererComponent(list, value, index, isSelected,
 			cellHasFocus);
