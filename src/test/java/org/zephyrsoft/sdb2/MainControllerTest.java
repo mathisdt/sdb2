@@ -33,10 +33,11 @@ public class MainControllerTest {
 	@Mock
 	private StatisticsController statisticsController;
 	private MainController mainController;
+	private AutoCloseable mocks;
 	
 	@Before
 	public void setup() {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		mainController = new MainController(ioController, statisticsController);
 	}
 	

@@ -54,7 +54,7 @@ public class SongParserTest {
 	
 	@Before
 	public void setUp() {
-		MockitoAnnotations.initMocks(this);
+		MockitoAnnotations.openMocks(this);
 		
 		when(song.getTitle()).thenReturn(TITLE); // index 0
 		when(song.getLyrics()).thenReturn(CHORDS_1 // index 1
