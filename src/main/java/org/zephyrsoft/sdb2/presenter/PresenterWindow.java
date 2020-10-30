@@ -21,6 +21,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GraphicsConfiguration;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -92,10 +93,15 @@ public class PresenterWindow extends JFrame implements Presenter {
 		transparentCursor = getTransparentCursor();
 		setCursor(transparentCursor);
 		
+		GraphicsConfiguration graphicsConfiguration = ScreenHelper.getConfiguration(screen);
+		if (graphicsConfiguration == null) {
+			throw new IllegalStateException("please check cables and configuration - could not use " + screen.getDescription());
+		}
+		
 		// remove window decorations
 		setUndecorated(true);
 		getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-		screenSize = ScreenHelper.getConfiguration(screen).getBounds();
+		screenSize = graphicsConfiguration.getBounds();
 		setBounds(screenSize);
 		
 		contentPane = new JPanel();
@@ -256,8 +262,12 @@ public class PresenterWindow extends JFrame implements Presenter {
 	
 	@Override
 	public void showPresenter() {
+		GraphicsConfiguration graphicsConfiguration = ScreenHelper.getConfiguration(screen);
+		if (graphicsConfiguration == null) {
+			throw new IllegalStateException("please check cables and configuration - could not use " + screen.getDescription());
+		}
 		// ensure that the window is on the configured screen
-		Rectangle targetCoordinates = ScreenHelper.getConfiguration(screen).getBounds();
+		Rectangle targetCoordinates = graphicsConfiguration.getBounds();
 		Point currentLocation = getLocation();
 		Dimension currentSize = getSize();
 		LOG.debug("presenter window for {} is at {}/{} with size {}x{}", screen.getDescription(),

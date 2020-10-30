@@ -229,7 +229,15 @@ public class MainController implements Scroller {
 			
 			SwingUtilities.invokeLater(() -> {
 				// start presentation
-				presentationControl.showPresenter();
+				try {
+					presentationControl.showPresenter();
+				} catch (IllegalStateException ise) {
+					LOG.warn("could not show presenter window", ise);
+					ErrorDialog
+						.openDialog(
+							null,
+							"Could not start presentation!\n\nPlease specify at least one existing presentation display:\nCheck your system configuration\nand/or adjust this program's configuration\n(see tab \"Global Settings\")!");
+				}
 				
 				// now stop old presentation (if any), do not stop remote presenters
 				if (oldPresentationControl != null) {
@@ -303,9 +311,18 @@ public class MainController implements Scroller {
 	private PresenterWindow createPresenter(SelectableDisplay screen, Presentable presentable, VirtualScreen virtualScreen) {
 		if (screen == null || !screen.isAvailable()) {
 			// nothing to be done
+			LOG.debug("could not create presenter window - display is {}", screen == null ? "null" : "unavailable");
 			return null;
 		}
-		return new PresenterWindow(screen, presentable, virtualScreen, settings, this);
+		PresenterWindow presenterWindow = null;
+		try {
+			presenterWindow = new PresenterWindow(screen, presentable, virtualScreen, settings, this);
+		} catch (IllegalStateException ise) {
+			LOG.warn("could not create presenter window", ise);
+			return null;
+		}
+		
+		return presenterWindow;
 	}
 	
 	public List<SelectableDisplay> getScreens() {
