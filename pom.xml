@@ -40,7 +40,7 @@
 		<version.args4j>2.33</version.args4j>
 		<version.commons-lang3>3.11</version.commons-lang3>
 		<version.commons-text>1.9</version.commons-text>
-		<version.togglz>2.9.2</version.togglz>
+		<version.togglz>2.9.4</version.togglz>
 		<version.itext>5.5.13.2</version.itext>
 		<version.poi>4.1.2</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
