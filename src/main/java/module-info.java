@@ -13,7 +13,7 @@ open module org.zephyrsoft.sdb2 {
 	
 	requires args4j;
 	requires lucene.core;
-	requires poi;
+	requires org.apache.poi.poi;
 	requires itextpdf;
 	
 	requires java.xml.bind;
