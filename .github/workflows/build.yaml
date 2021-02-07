@@ -38,8 +38,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.after }}
-          release_name: ${{ github.event.after }}
+          tag_name: release-${{ github.event.after }}
+          release_name: Release ${{ github.event.after }}
           draft: false
           prerelease: false
       - name: Upload release artifacts
