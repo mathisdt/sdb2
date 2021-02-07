@@ -24,7 +24,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: Run Maven
-        run: TZ=Europe/Berlin mvn clean verify
+        run: TZ=Europe/Berlin xvfb-run mvn clean verify
       - name: Build distributions
         run: ./build-jre-distributions.sh
       - name: Upload artifacts
