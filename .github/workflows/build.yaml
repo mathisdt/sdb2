@@ -32,10 +32,11 @@ jobs:
         with:
           name: artifacts
           path: target/*.zip
-      - name: Identify release artifact
-        id: identify_apk
+      - name: Collect release metadata
+        id: collect_release_metadata
         run: |
           echo "release_timestamp=$(date '+%Y-%m-%d @ %H:%M')" >> $GITHUB_ENV
+          echo "release_timestamp_terse=$(date '+%Y-%m-%d-%H-%M')" >> $GITHUB_ENV
           echo "release_hash=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Create release
         id: create_release
@@ -43,7 +44,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: release-${{ github.event.after }}
+          tag_name: release-${{ env.release_timestamp_terse }}-${{ env.release_hash }}
           release_name: Release ${{ env.release_timestamp }}
           body: built from commit ${{ env.release_hash }}
       - name: Upload release artifact 1 (just the application)
