@@ -42,11 +42,33 @@ jobs:
           release_name: Release ${{ github.event.after }}
           draft: false
           prerelease: false
-      - name: Upload release artifacts
-        id: upload-release-asset
+      - name: Upload release artifact 1 (just the application)
+        id: upload-release-asset-1
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/*.zip
+          asset_path: target/sdb2-without-jre.zip
+          asset_name: sdb2-without-jre.zip
+          asset_content_type: application/zip
+      - name: Upload release artifact 2 (Linux bundle)
+        id: upload-release-asset-2
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: target/sdb2-bundle-linux.zip
+          asset_name: sdb2-bundle-linux.zip
+          asset_content_type: application/zip
+      - name: Upload release artifact 3 (Windows bundle)
+        id: upload-release-asset-3
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: target/sdb2-bundle-windows.zip
+          asset_name: sdb2-bundle-windows.zip
+          asset_content_type: application/zip
