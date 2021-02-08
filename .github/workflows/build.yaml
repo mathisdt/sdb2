@@ -32,6 +32,11 @@ jobs:
         with:
           name: artifacts
           path: target/*.zip
+      - name: Identify release artifact
+        id: identify_apk
+        run: |
+          echo "release_timestamp=$(date '+%Y-%m-%d @ %H:%M')" >> $GITHUB_ENV
+          echo "release_hash=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
@@ -39,9 +44,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: release-${{ github.event.after }}
-          release_name: Release ${{ github.event.after }}
-          draft: false
-          prerelease: false
+          release_name: Release ${{ env.release_timestamp }}
+          body: built from commit ${{ env.release_hash }}
       - name: Upload release artifact 1 (just the application)
         id: upload-release-asset-1
         uses: actions/upload-release-asset@v1
