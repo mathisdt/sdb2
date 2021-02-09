@@ -13,7 +13,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v2
       - name: Current branch name
-        run: echo "current branch: $GITHUB_REF"
+        run: |
+          echo "current branch: $GITHUB_REF"
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
