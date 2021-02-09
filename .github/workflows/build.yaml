@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v2
+      - name: Current branch name
+        run: echo "current branch: ${{ github.ref }}"
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
@@ -33,14 +35,14 @@ jobs:
           name: artifacts
           path: target/*.zip
       - name: Collect release metadata
-        if: github.event.base_ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master'
         id: collect_release_metadata
         run: |
           echo "release_timestamp=$(date '+%Y-%m-%d @ %H:%M')" >> $GITHUB_ENV
           echo "release_timestamp_terse=$(date '+%Y-%m-%d-%H-%M')" >> $GITHUB_ENV
           echo "release_hash=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Create release
-        if: github.event.base_ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master'
         id: create_release
         uses: actions/create-release@v1
         env:
@@ -50,7 +52,7 @@ jobs:
           release_name: Release ${{ env.release_timestamp }}
           body: built from commit ${{ env.release_hash }}
       - name: Upload release artifact 1 (just the application)
-        if: github.event.base_ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master'
         id: upload-release-asset-1
         uses: actions/upload-release-asset@v1
         env:
@@ -61,7 +63,7 @@ jobs:
           asset_name: sdb2-without-jre.zip
           asset_content_type: application/zip
       - name: Upload release artifact 2 (Linux bundle)
-        if: github.event.base_ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master'
         id: upload-release-asset-2
         uses: actions/upload-release-asset@v1
         env:
@@ -72,7 +74,7 @@ jobs:
           asset_name: sdb2-bundle-linux.zip
           asset_content_type: application/zip
       - name: Upload release artifact 3 (Windows bundle)
-        if: github.event.base_ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master'
         id: upload-release-asset-3
         uses: actions/upload-release-asset@v1
         env:
