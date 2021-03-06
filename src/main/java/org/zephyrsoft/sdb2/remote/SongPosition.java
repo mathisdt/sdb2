@@ -17,6 +17,8 @@
 package org.zephyrsoft.sdb2.remote;
 
 public class SongPosition {
+	
+	// Part: 0 = Title, 1-N Parts
 	private int part;
 	private int line;
 	
@@ -29,8 +31,17 @@ public class SongPosition {
 		this.line = line;
 	}
 	
+	public SongPosition(int part, int line, boolean partWithTitle) {
+		this.part = partWithTitle ? part : part + 1;
+		this.line = line;
+	}
+	
 	public int getPart() {
 		return part;
+	}
+	
+	public int getPart(boolean withTitle) {
+		return withTitle ? part : part - 1;
 	}
 	
 	public int getLine() {

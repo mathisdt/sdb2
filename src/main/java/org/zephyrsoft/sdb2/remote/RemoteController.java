@@ -21,6 +21,8 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.gui.MainWindow;
 import org.zephyrsoft.sdb2.model.Song;
@@ -32,6 +34,8 @@ import org.zephyrsoft.sdb2.presenter.Presentable;
 
 public class RemoteController {
 	
+	private static final Logger LOG = LoggerFactory.getLogger(RemoteController.class);
+	
 	private MQTT mqtt;
 	private MqttObject<Song> song;
 	private MqttObject<SongPosition> songPosition;
@@ -42,6 +46,7 @@ public class RemoteController {
 	private String server;
 	private String username;
 	private String password;
+	private boolean showTitle;
 	
 	/**
 	 * Creates a RemoteController instance by connecting to a broker and setting up properties.
@@ -66,6 +71,7 @@ public class RemoteController {
 		server = settingsModel.get(SettingKey.REMOTE_SERVER, String.class);
 		username = settingsModel.get(SettingKey.REMOTE_USERNAME, String.class);
 		password = settingsModel.get(SettingKey.REMOTE_PASSWORD, String.class);
+		showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class).booleanValue();
 		
 		mqtt = new MQTT(server, username, password);
 		
@@ -81,7 +87,14 @@ public class RemoteController {
 			song.onRemoteChange(s -> mainController.present(new Presentable(s, null)));
 		
 		songPosition = new PubSubObject<>(mqtt, formatTopic(RemoteTopic.SONG_POSITION), SongPosition::parseSongPosition, true);
-		songPosition.onRemoteChange(p -> mainController.moveToLine(p.getPart(), p.getLine()));
+		songPosition.onRemoteChange(p -> {
+			try {
+				mainController.moveToLine(p.getPart(isShowTitle()), p.getLine());
+			} catch (IndexOutOfBoundsException e) {
+				LOG.warn("Part or line out of bounds!");
+			}
+			
+		});
 		// TODO: add mainwindow caller
 		
 		if (mainWindow != null) {
@@ -174,5 +187,9 @@ public class RemoteController {
 		
 		return !sPrefix.equals(prefix) || !sNamespace.equals(namespace) || !sServer.equals(server) || !sUsername.equals(sUsername) || !sPassword
 			.equals(password);
+	}
+	
+	public boolean isShowTitle() {
+		return showTitle;
 	}
 }

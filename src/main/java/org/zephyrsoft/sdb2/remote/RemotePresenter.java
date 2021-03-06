@@ -64,7 +64,7 @@ public class RemotePresenter implements Presenter {
 	
 	@Override
 	public void moveToLine(Integer part, Integer line) {
-		remoteController.getSongPosition().set(new SongPosition(part, line));
+		remoteController.getSongPosition().set(new SongPosition(part, line, remoteController.isShowTitle()));
 	}
 	
 	@Override

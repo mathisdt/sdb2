@@ -62,6 +62,10 @@ public class Song implements Serializable, Comparable<Song> {
 	private String uuid;
 	@XmlElement(name = "chordSequence")
 	private String chordSequence;
+	@XmlElement(name = "drumNotes")
+	private String drumNotes;
+	@XmlElement(name = "tempo")
+	private String tempo;
 	@XmlElement(name = "lyrics")
 	private String lyrics;
 	
@@ -124,8 +128,16 @@ public class Song implements Serializable, Comparable<Song> {
 		return tonality;
 	}
 	
+	public String getTempo() {
+		return tempo;
+	}
+	
 	public String getChordSequence() {
 		return chordSequence;
+	}
+	
+	public String getDrumNotes() {
+		return drumNotes;
 	}
 	
 	public String getCleanChordSequence() {
@@ -228,6 +240,11 @@ public class Song implements Serializable, Comparable<Song> {
 				return false;
 		} else if (!chordSequence.equals(other.chordSequence))
 			return false;
+		if (getDrumNotes() == null) {
+			if (other.getDrumNotes() != null)
+				return false;
+		} else if (!getDrumNotes().equals(other.getDrumNotes()))
+			return false;
 		if (lyrics == null) {
 			if (other.lyrics != null)
 				return false;
@@ -244,6 +261,14 @@ public class Song implements Serializable, Comparable<Song> {
 	@Override
 	public String toString() {
 		return "SONG[" + title + "|" + uuid + "]";
+	}
+
+	public void setTempo(String tempo) {
+		this.tempo = tempo;
+	}
+
+	public void setDrumNotes(String drumNotes) {
+		this.drumNotes = drumNotes;
 	}
 	
 }
