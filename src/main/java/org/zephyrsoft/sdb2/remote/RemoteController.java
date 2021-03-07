@@ -36,17 +36,17 @@ public class RemoteController {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(RemoteController.class);
 	
-	private MQTT mqtt;
-	private MqttObject<Song> song;
-	private MqttObject<SongPosition> songPosition;
-	private MqttObject<SongsModel> playlist;
-	private RemotePresenter remotePresenter;
-	private String prefix;
-	private String namespace;
-	private String server;
-	private String username;
-	private String password;
-	private boolean showTitle;
+	private final MQTT mqtt;
+	private final MqttObject<Song> song;
+	private final MqttObject<SongPosition> songPosition;
+	private final MqttObject<SongsModel> playlist;
+	private final RemotePresenter remotePresenter;
+	private final String prefix;
+	private final String namespace;
+	private final String server;
+	private final String username;
+	private final String password;
+	private final boolean showTitle;
 	
 	/**
 	 * Creates a RemoteController instance by connecting to a broker and setting up properties.
@@ -89,7 +89,7 @@ public class RemoteController {
 		songPosition = new PubSubObject<>(mqtt, formatTopic(RemoteTopic.SONG_POSITION), SongPosition::parseSongPosition, true);
 		songPosition.onRemoteChange(p -> {
 			try {
-				mainController.moveToLine(p.getPart(isShowTitle()), p.getLine());
+				mainController.moveToLine(p.getPart(showTitle), p.getLine());
 			} catch (IndexOutOfBoundsException e) {
 				LOG.warn("Part or line out of bounds!");
 			}
@@ -103,9 +103,11 @@ public class RemoteController {
 				true);
 			playlist.onRemoteChange(p -> mainWindow.getPresentModel().update(p));
 			mainWindow.getPresentModel().addSongsModelListener(() -> playlist.set(new SongsModel(mainWindow.getPresentModel())));
+		} else {
+			this.playlist = null;
 		}
 		
-		remotePresenter = new RemotePresenter(this);
+		remotePresenter = new RemotePresenter(this, showTitle);
 	}
 	
 	public MqttObject<Song> getSong() {
@@ -189,7 +191,4 @@ public class RemoteController {
 			.equals(password);
 	}
 	
-	public boolean isShowTitle() {
-		return showTitle;
-	}
 }

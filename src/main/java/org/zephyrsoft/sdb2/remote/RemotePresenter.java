@@ -35,11 +35,13 @@ public class RemotePresenter implements Presenter {
 	
 	private Presentable presentable;
 	private final RemoteController remoteController;
+	private final boolean showTitle;
 	
 	// private ArrayList parts;
 	
-	public RemotePresenter(RemoteController remoteController) {
+	public RemotePresenter(RemoteController remoteController, boolean showTitle) {
 		this.remoteController = remoteController;
+		this.showTitle = showTitle;
 	}
 	
 	@Override
@@ -64,7 +66,7 @@ public class RemotePresenter implements Presenter {
 	
 	@Override
 	public void moveToLine(Integer part, Integer line) {
-		remoteController.getSongPosition().set(new SongPosition(part, line, remoteController.isShowTitle()));
+		remoteController.getSongPosition().set(new SongPosition(part, line, showTitle));
 	}
 	
 	@Override
