@@ -40,7 +40,14 @@ public class RemoteController {
 	private final MqttObject<Song> song;
 	private final MqttObject<SongPosition> songPosition;
 	private final MqttObject<SongsModel> playlist;
+	private MqttObject<PatchVersion> latestVersion;
+	private MqttObject<String> latestPatch;
+	private MqttObject<String> latestReject;
+	private MqttObject<Long> requestGet;
+	private MqttObject<PatchVersion> requestVersion;
+	private MqttObject<String> requestPatch;
 	private final RemotePresenter remotePresenter;
+	private PatchController patchController;
 	private final String prefix;
 	private final String namespace;
 	private final String server;
@@ -80,13 +87,17 @@ public class RemoteController {
 			cause.printStackTrace();
 		});
 		
-		song = new PubSubObject<>(mqtt, formatTopic(RemoteTopic.SONG), RemoteController::parseSong, RemoteController::songToString, true);
+		song = new MqttObject<>(mqtt, formatTopic(RemoteTopic.SONG),
+			RemoteController::parseSong, RemoteController::songToString, RemoteTopic.SONG_QOS, RemoteTopic.SONG_RETAINED,
+			null);
 		if (mainWindow != null)
 			song.onRemoteChange(s -> mainWindow.present(s));
 		else
 			song.onRemoteChange(s -> mainController.present(new Presentable(s, null)));
 		
-		songPosition = new PubSubObject<>(mqtt, formatTopic(RemoteTopic.SONG_POSITION), SongPosition::parseSongPosition, true);
+		songPosition = new MqttObject<>(mqtt, formatTopic(RemoteTopic.SONG_POSITION), SongPosition::parseSongPosition,
+			null, RemoteTopic.SONG_POSITION_QOS, RemoteTopic.SONG_POSITION_RETAINED,
+			null);
 		songPosition.onRemoteChange(p -> {
 			try {
 				mainController.moveToLine(p.getPart(showTitle), p.getLine());
@@ -98,11 +109,44 @@ public class RemoteController {
 		// TODO: add mainwindow caller
 		
 		if (mainWindow != null) {
-			playlist = new PubSubObject<>(mqtt, formatTopic(RemoteTopic.PLAYLIST), RemoteController::parseSongsModel,
-				RemoteController::songsModelToString,
-				true);
+			playlist = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PLAYLIST),
+				RemoteController::parseSongsModel,
+				RemoteController::songsModelToString, RemoteTopic.PLAYLIST_QOS, RemoteTopic.PLAYLIST_RETAINED,
+				null);
 			playlist.onRemoteChange(p -> mainWindow.getPresentModel().update(p));
 			mainWindow.getPresentModel().addSongsModelListener(() -> playlist.set(new SongsModel(mainWindow.getPresentModel())));
+			
+			latestVersion = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PATCHES_LATEST_VERSION),
+				PatchVersion::parsePatchVersion,
+				null, RemoteTopic.PATCHES_LATEST_VERSION_QOS, RemoteTopic.PATCHES_LATEST_VERSION_RETAINED,
+				(a, b) -> false);
+			
+			latestPatch = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PATCHES_LATEST_PATCH),
+				null,
+				null, RemoteTopic.PATCHES_LATEST_PATCH_QOS, RemoteTopic.PATCHES_LATEST_PATCH_RETAINED,
+				(a, b) -> false);
+			
+			latestReject = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PATCHES_LATEST_REJECT),
+				null,
+				null, RemoteTopic.PATCHES_LATEST_REJECT_QOS, RemoteTopic.PATCHES_LATEST_REJECT_RETAINED,
+				(a, b) -> false);
+			
+			requestGet = new MqttObject<>(mqtt, null, null,
+				null, null, formatClientIDTopic(RemoteTopic.PATCHES_REQUEST_GET),
+				null, RemoteTopic.PATCHES_REQUEST_GET_QOS, RemoteTopic.PATCHES_REQUEST_GET_RETAINED,
+				(a, b) -> false);
+			
+			requestVersion = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.PATCHES_REQUEST_VERSION),
+				PatchVersion::parsePatchVersion,
+				null, RemoteTopic.PATCHES_REQUEST_VERSION_QOS, RemoteTopic.PATCHES_REQUEST_VERSION_RETAINED,
+				(a, b) -> false);
+			
+			requestPatch = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.PATCHES_REQUEST_PATCH),
+				null,
+				null, RemoteTopic.PATCHES_REQUEST_PATCH_QOS, RemoteTopic.PATCHES_REQUEST_PATCH_RETAINED,
+				(a, b) -> false);
+			
+			patchController = new PatchController(this, mainController);
 		} else {
 			this.playlist = null;
 		}
@@ -128,12 +172,28 @@ public class RemoteController {
 	}
 	
 	/**
+	 * Instead of using the publish function of the mqttobject we define a custom one to fill placeholders in the topic.
+	 * 
+	 * @param patchSongs
+	 * @param newVersionId
+	 */
+	void publishPatches(SongsModel patchSongs, long newVersionId) {
+		new Thread(() -> mqtt.publish(formatTopic(RemoteTopic.PATCHES_LATEST_PATCH).replaceFirst("\\+",
+			username).replaceFirst("\\+", "" + newVersionId),
+			songsModelToString(patchSongs),
+			RemoteTopic.PATCHES_LATEST_PATCH_QOS,
+			RemoteTopic.PATCHES_LATEST_PATCH_RETAINED)).start();
+		
+	}
+	
+	/**
 	 * Converts a song object to string.
 	 *
 	 * @return song as string
 	 */
 	private static String songToString(Song song) {
 		SongsModel model = new SongsModel();
+		model.setAutoSort(false);
 		if (song != null)
 			model.addSong(song);
 		return songsModelToString(model);
@@ -165,7 +225,7 @@ public class RemoteController {
 	 *
 	 * @return SongsModel instance
 	 */
-	private static SongsModel parseSongsModel(String xml) {
+	static SongsModel parseSongsModel(String xml) {
 		return XMLConverter.fromXMLToPersistable(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
 	}
 	
@@ -174,10 +234,15 @@ public class RemoteController {
 	 */
 	public void close() {
 		mqtt.close();
+		patchController.close();
 	}
 	
 	private String formatTopic(String topic) {
 		return String.format(topic, prefix.isBlank() ? "" : prefix + "/", namespace);
+	}
+	
+	private String formatClientIDTopic(String topic) {
+		return String.format(topic, prefix.isBlank() ? "" : prefix + "/", namespace, mqtt.getClientID());
 	}
 	
 	public boolean checkSettingsChanged(SettingsModel settings) {
@@ -189,6 +254,37 @@ public class RemoteController {
 		
 		return !sPrefix.equals(prefix) || !sNamespace.equals(namespace) || !sServer.equals(server) || !sUsername.equals(sUsername) || !sPassword
 			.equals(password);
+	}
+	
+	public MqttObject<String> getLatestPatch() {
+		return latestPatch;
+	}
+	
+	public MqttObject<PatchVersion> getLatestVersion() {
+		return latestVersion;
+	}
+	
+	public MqttObject<String> getLatestReject() {
+		return latestReject;
+	}
+	
+	public MqttObject<Long> getRequestGet() {
+		return requestGet;
+	}
+	
+	public MqttObject<PatchVersion> getRequestVersion() {
+		return requestVersion;
+	}
+	
+	public MqttObject<String> getRequestPatch() {
+		return requestPatch;
+	}
+	
+	/**
+	 * @return
+	 */
+	public String getPrefix() {
+		return prefix;
 	}
 	
 }

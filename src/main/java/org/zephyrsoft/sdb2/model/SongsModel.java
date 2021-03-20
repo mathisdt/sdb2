@@ -68,6 +68,12 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		update(songsModel);
 	}
 	
+	public SongsModel(Collection<Song> songs, boolean autosort) {
+		this();
+		this.songs.addAll(songs);
+		this.autoSort = autosort;
+	}
+	
 	/**
 	 * Should this model instance sort the songs automatically? Default: {@code true}
 	 *
@@ -185,6 +191,19 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		return null;
 	}
 	
+	public void updateSongByUUID(Song song) {
+		Song found = getByUUID(song.getUUID());
+		if (found != null)
+			songs.remove(found);
+		if (song.isEmpty()) {
+			songs.add(song);
+			if (autoSort) {
+				sortSongs();
+			}
+		}
+		notifyListModelListeners();
+	}
+	
 	@Override
 	public Iterator<Song> iterator() {
 		return songs.iterator();
@@ -226,5 +245,9 @@ public class SongsModel implements Iterable<Song>, Persistable {
 			songs.add(newIndex, ret);
 			notifyListModelListeners();
 		}
+	}
+	
+	public void removeSongsModelListener(SongsModelListener songsModelListener) {
+		songsModelListeners.remove(songsModelListener);
 	}
 }

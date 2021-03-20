@@ -17,6 +17,8 @@
 package org.zephyrsoft.sdb2.model;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessOrder;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -194,6 +196,18 @@ public class Song implements Serializable, Comparable<Song> {
 		return uuid;
 	}
 	
+	public void setTempo(String tempo) {
+		this.tempo = tempo;
+	}
+	
+	public void setDrumNotes(String drumNotes) {
+		this.drumNotes = drumNotes;
+	}
+	
+	private void setUUID(String uuid) {
+		this.uuid = uuid;
+	}
+	
 	@Override
 	public int compareTo(Song o) {
 		int ret = 0;
@@ -262,13 +276,102 @@ public class Song implements Serializable, Comparable<Song> {
 	public String toString() {
 		return "SONG[" + title + "|" + uuid + "]";
 	}
-
-	public void setTempo(String tempo) {
-		this.tempo = tempo;
+	
+	private static boolean isEmpty(String str) {
+		return str == null || str.isEmpty();
 	}
-
-	public void setDrumNotes(String drumNotes) {
-		this.drumNotes = drumNotes;
+	
+	public boolean isEmpty() {
+		return isEmpty(getTitle())
+			&& isEmpty(getComposer())
+			&& isEmpty(getAuthorText())
+			&& isEmpty(getAuthorTranslation())
+			&& isEmpty(getPublisher())
+			&& isEmpty(getAdditionalCopyrightNotes())
+			&& isEmpty(getLanguage().getInternalName())
+			&& isEmpty(getSongNotes())
+			&& isEmpty(getLyrics())
+			&& isEmpty(getTonality())
+			&& isEmpty(getTempo())
+			&& isEmpty(getDrumNotes())
+			&& isEmpty(getChordSequence());
+	}
+	
+	public Map<String, String> toMap() {
+		return new HashMap<>() {
+			private static final long serialVersionUID = -4450093906395824130L;
+			{
+				put("uuid", getUUID());
+				put("title", getTitle());
+				put("composer", getComposer());
+				put("authorText", getAuthorText());
+				put("authorTranslation", getAuthorTranslation());
+				put("publisher", getPublisher());
+				put("additionalCopyrightNotes", getAdditionalCopyrightNotes());
+				put("language", getLanguage().getInternalName());
+				put("songNotes", getSongNotes());
+				put("lyrics", getLyrics());
+				put("tonality", getTonality());
+				put("tempo", getTempo());
+				put("drumNotes", getDrumNotes());
+				put("chordSequence", getChordSequence());
+			}
+		};
+	}
+	
+	public void fromMap(Map<String, String> map) {
+		for (Map.Entry<String, String> entry : map.entrySet()) {
+			String value = entry.getValue();
+			switch (entry.getKey()) {
+				case "uuid":
+					setUUID(value);
+					break;
+				case "title":
+					setTitle(value);
+					break;
+				case "composer":
+					setComposer(value);
+					break;
+				case "authorText":
+					setAuthorText(value);
+					break;
+				case "authorTranslation":
+					setAuthorTranslation(value);
+					break;
+				case "publisher":
+					setPublisher(value);
+					break;
+				case "additionalCopyrightNotes":
+					setAdditionalCopyrightNotes(value);
+					break;
+				case "language":
+					try {
+						setLanguage(new LanguageEnumAdapter().unmarshal(value));
+					} catch (Exception e) {
+						// TODO: Allow more/different languages.
+						setLanguage(LanguageEnum.ENGLISH);
+					}
+					break;
+				case "songNotes":
+					setSongNotes(value);
+					break;
+				case "lyrics":
+					setLyrics(value);
+					break;
+				case "tonality":
+					setTonality(value);
+					break;
+				case "tempo":
+					setTempo(value);
+					break;
+				case "drumNotes":
+					setDrumNotes(value);
+					break;
+				case "chordSequence":
+					setChordSequence(value);
+					break;
+			}
+		}
 	}
 	
 }
