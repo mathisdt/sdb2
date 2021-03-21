@@ -48,9 +48,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -198,7 +198,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JButton btnUnselect;
 	private JButton btnDown;
 	private JPanel panelSectionButtons;
-	private List<PartButtonGroup> listSectionButtons = new LinkedList<>();
+	private List<PartButtonGroup> listSectionButtons = new ArrayList<>();
 	private GridBagConstraints panelSectionButtonsHints;
 	private GridBagConstraints panelSectionButtonsLastRowHints;
 	private JButton btnJumpToSelected;

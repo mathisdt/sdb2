@@ -19,9 +19,9 @@ package org.zephyrsoft.sdb2.presenter;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.zephyrsoft.sdb2.model.SelectableDisplay;
@@ -39,7 +39,7 @@ public final class ScreenHelper {
 	 * Get the comprehensive list of all screens attached to the system.
 	 */
 	public static List<SelectableDisplay> getScreens() {
-		List<SelectableDisplay> result = new LinkedList<>();
+		List<SelectableDisplay> result = new ArrayList<>();
 		for (int i = 0; i < getGraphicsDevices().size(); i++) {
 			result.add(new SelectableDisplay(i));
 		}

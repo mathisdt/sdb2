@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -147,7 +146,7 @@ public class IndexerService {
 			
 			LOG.trace("{} hits for filter \"{}\"", hits.totalHits, outerBooleanQueryBuilder);
 			
-			List<Song> ret = new LinkedList<>();
+			List<Song> ret = new ArrayList<>();
 			for (ScoreDoc scoreDocument : hits.scoreDocs) {
 				Document document;
 				document = indexSearcher.doc(scoreDocument.doc);
