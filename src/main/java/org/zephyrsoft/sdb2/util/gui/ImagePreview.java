@@ -21,13 +21,14 @@ import java.awt.Image;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 
 /**
  * Preview accessory for images in {@link JFileChooser}
- * 
+ *
  * @author Oracle and/or its affiliates
  */
 public class ImagePreview extends JComponent implements PropertyChangeListener {
