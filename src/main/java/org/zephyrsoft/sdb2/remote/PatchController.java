@@ -2,98 +2,115 @@ package org.zephyrsoft.sdb2.remote;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import javax.xml.bind.DatatypeConverter;
+import java.util.UUID;
 
 import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch.Patch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.FileAndDirectoryLocations;
-import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
+import org.zephyrsoft.sdb2.model.SongsModelController;
 import org.zephyrsoft.sdb2.model.XMLConverter;
-import org.zephyrsoft.sdb2.util.SongsModelListener;
-import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
-public class PatchController implements SongsModelListener {
+public class PatchController extends SongsModelController {
 	
-	private static final Logger LOG = LoggerFactory.getLogger(RemoteController.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PatchController.class);
 	
 	private static final String PREF_COMMENT = "RemoteController DB Properties";
-	private static final String PREF_DB_PREFIX = "PREF_DB_PREFIX";
+	private static final String PREF_DB_PREFIX = "DB_PREFIX";
+	private static final String PREF_DB_SERVER = "DB_SERVER";
 	private static final String PREF_SONGS_VERSION_ID = "PREF_SONGS_VERSION_ID";
-	private final HashMap<String, String> patchMap = new HashMap<>();
+	private final HashMap<String, Collection<Song>> patchMap = new HashMap<>();
 	private final HashMap<Long, PatchVersion> patchVersions = new HashMap<>();
 	private final HashSet<String> rejects = new HashSet<>();
 	private long currentVersionId;
-	private RemoteController remoteController;
+	private final RemoteController remoteController;
 	private boolean initialRequestMissingPatches;
-	private Properties properties = new Properties();
-	private MainController mainController;
 	private SongsModel db;
+	private List<Song> offlineChanges;
 	
-	public PatchController(RemoteController remoteController, MainController mainController) {
-		this.mainController = mainController;
+	// Contains overwritten local changes: TODO: Add all rejected too
+	// We could create a mergetool to
+	private LinkedList<Song> conflicts = new LinkedList<>();
+	
+	public PatchController(SongsModel songs, RemoteController remoteController) {
+		super(songs);
 		this.remoteController = remoteController;
 		
-		initDB();
+		load();
 		
-		remoteController.getLatestPatch().onChange(this::addPatch);
-		remoteController.getRequestPatch().onChange(this::addPatch);
-		remoteController.getLatestVersion().onChange(this::addPatchVersion);
-		remoteController.getRequestVersion().onChange(this::addPatchVersion);
-		remoteController.getLatestReject().onChange(this::rejectPatch);
+		remoteController.getLatestPatch().onChange((patch, args) -> addPatch(patch, (String) args[RemoteTopic.PATCHES_LATEST_PATCH_ARG_UUID]));
+		remoteController.getRequestPatch().onChange((patch, args) -> addPatch(patch, (String) args[RemoteTopic.PATCHES_REQUEST_PATCH_ARG_UUID]));
+		remoteController.getLatestVersion().onChange((version, args) -> addPatchVersion(version));
+		remoteController.getRequestVersion().onChange((version, args) -> addPatchVersion(version));
+		remoteController.getLatestReject().onChange((uuid, args) -> rejectPatch(uuid));
 		
 		addPatchVersion(remoteController.getLatestVersion().get());
-		
-		// Listen for songs-model changes/get initial changes:
-		mainController.getSongs().addSongsModelListener(this);
-		songsModelChanged();
-	}
-	
-	private String getDBPrefix() {
-		return properties.getProperty(PREF_DB_PREFIX, null);
 	}
 	
 	/**
 	 * Resets the database if prefix has changed, reads the current database version resets the
 	 * requestMissingPatch boolean.
 	 */
-	private void initDB() {
-		loadDB();
-		loadDBProperties();
+	private boolean load() {
+		File dbFile = new File(FileAndDirectoryLocations.getDefaultDBFileName());
+		File dbPropertiesFile = new File(FileAndDirectoryLocations.getDefaultDBPropertiesFileName());
+		if (dbFile.exists() && !dbPropertiesFile.exists())
+			dbFile.delete();
+		if (!dbFile.exists() && dbPropertiesFile.exists())
+			dbPropertiesFile.delete();
 		
-		if (!remoteController.getPrefix().equals(properties.getProperty(PREF_DB_PREFIX, ""))) {
-			patchVersions.clear();
-			rejects.clear();
-			patchMap.clear();
-			resetDB();
-			properties.setProperty(PREF_DB_PREFIX, remoteController.getPrefix());
-			saveDBProperties();
+		// Load db & db properties:
+		Properties properties = new Properties();
+		if (!dbFile.exists()) {
+			LOG.debug("not reading db from {} (file does not exist) but using empty model", dbFile.getAbsolutePath());
+			db = new SongsModel();
+		} else {
+			LOG.debug("loading db from file {} and properties from file {}", dbFile.getAbsolutePath(), dbPropertiesFile.getAbsolutePath());
+			try {
+				db = XMLConverter.fromXMLToPersistable(new FileInputStream(dbFile));
+				if (db == null)
+					throw new IOException();
+				properties.loadFromXML(new FileInputStream(dbPropertiesFile));
+			} catch (IOException e) {
+				e.printStackTrace();
+				LOG.error("Could not read db from file {} and properties from file {}", dbFile.getAbsolutePath(), dbPropertiesFile.getAbsolutePath());
+				db = new SongsModel();
+				properties.clear();
+			}
 		}
-		currentVersionId = Long.parseLong(properties.getProperty(PREF_SONGS_VERSION_ID, "0"));
-		LOG.debug("db at prefix \"" + remoteController.getPrefix() + "\" and version: " + currentVersionId);
 		
-		initialRequestMissingPatches = false;
+		// Check if prefix has changed:
+		currentVersionId = Long.parseLong(properties.getProperty(PREF_SONGS_VERSION_ID, "0"));
+		if (!remoteController.getPrefix().equals(properties.getProperty(PREF_DB_PREFIX, remoteController.getPrefix())) ||
+			!remoteController.getServer().equals(properties.getProperty(PREF_DB_SERVER, remoteController.getServer())))
+			resetDB();
+		LOG.debug("Loaded db at prefix \"" + remoteController.getPrefix() + "\" and version: " + currentVersionId);
+		
+		offlineChanges = collectChanges(songs);
+		
+		return true;
 	}
 	
 	/**
 	 * To reject patches.
+	 * 
+	 * TODO: There is currently no reject handling for published patches by this client.
+	 * As the server may allows fast forward merges. The user has to handle everything else.
 	 * 
 	 * @param hash
 	 */
@@ -110,20 +127,24 @@ public class PatchController implements SongsModelListener {
 	 * @param patchVersion
 	 */
 	private void addPatchVersion(PatchVersion patchVersion) {
-		if (patchVersion == null || patchVersion.getId() == currentVersionId)
+		if (patchVersion == null)
 			return;
+		
+		if (patchVersion.getId() == currentVersionId) {
+			publishOfflineChanges();
+			return;
+		}
 		
 		if (patchVersion.getId() > currentVersionId) {
 			patchVersions.put(patchVersion.getId(), patchVersion);
 			applyPatches();
-			if (!initialRequestMissingPatches) {
-				requestMissingPatches();
+			if (!initialRequestMissingPatches && remoteController.getHealthDB().get() == Health.online) {
 				initialRequestMissingPatches = true;
+				requestMissingPatches();
 			}
 		} else if (patchVersion.getId() < currentVersionId) {
 			// Currently the only way is to reset the whole database and load all patches again.
 			resetDB();
-			addPatchVersion(patchVersion);
 			requestMissingPatches();
 		}
 	}
@@ -133,19 +154,16 @@ public class PatchController implements SongsModelListener {
 	 * You have to request missing patches again to reset to the latest version.
 	 */
 	private void resetDB() {
+		patchVersions.clear();
+		rejects.clear();
+		patchMap.clear();
+		conflicts.clear();
+		
 		db.update(new SongsModel());
-		mainController.getSongs().removeSongsModelListener(this);
-		mainController.getSongs().update(new SongsModel());
-		mainController.getSongs().addSongsModelListener(this);
-		// TODO: allow saving empty songmodels:
-		if (saveDB()) {
-			currentVersionId = 0;
-			properties.setProperty(PREF_SONGS_VERSION_ID, String.valueOf(currentVersionId));
-			saveDBProperties();
-			LOG.debug("Resetted db to version " + currentVersionId);
-		} else {
-			LOG.error("Could not save songs");
-		}
+		// mainController.getSongs().removeSongsModelListener(this);
+		super.update(new SongsModel());
+		// mainController.getSongs().addSongsModelListener(this);
+		currentVersionId = 0;
 	}
 	
 	/**
@@ -153,68 +171,107 @@ public class PatchController implements SongsModelListener {
 	 *
 	 * @param patch
 	 */
-	private void addPatch(String patch) {
-		MessageDigest md;
-		try {
-			md = MessageDigest.getInstance("MD5");
-			md.update(patch.getBytes());
-			byte[] digest = md.digest();
-			String hash = DatatypeConverter
-				.printHexBinary(digest); // .toUpperCase()
-			
-			// String hash = SecurityUtils.md5(patch);
-			if (rejects.contains(hash))
-				rejects.remove(hash);
-			else
-				patchMap.put(hash, patch);
-			applyPatches();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO
-			e.printStackTrace();
-		}
+	private void addPatch(SongsModel patch, String uuid) {
+		if (rejects.contains(uuid))
+			rejects.remove(uuid);
+		else
+			patchMap.put(uuid, patch.getSongs());
+		applyPatches();
 	}
 	
 	/**
-	 * This will apply all recently received patches.
+	 * This will apply all recently received patches by updating the db and the main song list.
+	 * It will run only if we got all patches up to the last one to not update the local database to frequently.
 	 */
 	private void applyPatches() {
+		for (Long i = currentVersionId + 1; i <= remoteController.getLatestVersion().get().getId(); i++) {
+			if (!patchVersions.containsKey(i) || !patchMap.containsKey(patchVersions.get(i).getUUID()))
+				return;
+		}
+		
+		ArrayList<Song> changedSongs = new ArrayList<>();
+		long versionAfterChangingSongs = currentVersionId;
 		final DiffMatchPatch dmp = new DiffMatchPatch();
-		while (patchVersions.containsKey(currentVersionId + 1) && patchMap.containsKey(patchVersions.get(currentVersionId + 1).getHash())) {
-			PatchVersion nextVersion = patchVersions.get(currentVersionId + 1);
-			String nextPatch = patchMap.get(nextVersion.getHash());
-			Collection<Song> patch = RemoteController.parseSongsModel(nextPatch).getSongs();
+		while (patchVersions.containsKey(versionAfterChangingSongs + 1) && patchMap.containsKey(patchVersions.get(versionAfterChangingSongs + 1)
+			.getUUID())) {
+			PatchVersion nextVersion = patchVersions.get(versionAfterChangingSongs + 1);
+			Collection<Song> patch = patchMap.get(nextVersion.getUUID());
 			for (Song patchSong : patch) {
 				Song song = db.getByUUID(patchSong.getUUID());
-				if (song == null)
-					song = new Song(patchSong.getUUID());
-				Map<String, String> songFromDBMap = song.toMap();
+				Map<String, String> songEntries = song == null ? new Song(patchSong.getUUID()).toMap() : song.toMap();
 				for (Map.Entry<String, String> patchEntry : patchSong.toMap().entrySet()) {
 					if (patchEntry.getKey().equals("uuid") || patchEntry.getValue() == null || patchEntry.getValue().isEmpty())
 						continue;
 					
-					String previous = songFromDBMap.containsKey(patchEntry.getKey()) && songFromDBMap.get(patchEntry.getKey()) != null ? songFromDBMap
+					String previous = songEntries.containsKey(patchEntry.getKey()) && songEntries.get(patchEntry.getKey()) != null ? songEntries
 						.get(patchEntry.getKey()) : "";
 					LinkedList<Patch> patchesForEntry = (LinkedList<Patch>) dmp.patchFromText(patchEntry.getValue());
 					Object[] result = dmp.patchApply(patchesForEntry, previous);
 					// TODO: Check if all patches could be applied.
-					songFromDBMap.put(patchEntry.getKey(), (String) result[0]);
+					if (((String) result[0]).isEmpty())
+						songEntries.remove(patchEntry.getKey());
+					else
+						songEntries.put(patchEntry.getKey(), (String) result[0]);
 				}
-				song.fromMap(songFromDBMap);
-				db.updateSongByUUID(song);
-				mainController.getSongs().removeSongsModelListener(this);
-				mainController.getSongs().updateSongByUUID(song);
-				mainController.getSongs().addSongsModelListener(this);
+				changedSongs.add(new Song(songEntries));
+			}
+			versionAfterChangingSongs = nextVersion.getId();
+		}
+		if (!changedSongs.isEmpty()) {
+			db.updateSongsByUUID(changedSongs);
+			currentVersionId = versionAfterChangingSongs;
+			
+			// Identify conflicts, remove them from offline changes
+			if (offlineChanges != null && !offlineChanges.isEmpty()) {
+				LinkedList<Song> conflictChanges = new LinkedList<>();
+				for (Song remoteChange : changedSongs) {
+					for (Song offlineChange : offlineChanges) {
+						if (remoteChange.getUUID().equals(offlineChange.getUUID())) {
+							conflictChanges.add(offlineChange);
+						}
+					}
+				}
+				offlineChanges.removeAll(conflictChanges);
+				conflicts.addAll(conflictChanges);
 			}
 			
-			if (saveDB()) {
-				currentVersionId = nextVersion.getId();
-				properties.setProperty(PREF_SONGS_VERSION_ID, String.valueOf(currentVersionId));
-				saveDBProperties();
-				LOG.debug("Changed db to version " + currentVersionId);
-			} else {
-				LOG.error("Could not save songs!");
-			}
+			super.updateSongs(changedSongs);
 		}
+		publishOfflineChanges();
+	}
+	
+	/**
+	 * Call this: To collect and send local changes.
+	 * This may take some time and as it compares the whole offline list with the current db.
+	 * It will be only done once, and if the db is up to date, to avoid server side rejects.
+	 * 
+	 * TODO: Currently, online changes are preferred, as it runs after all online changes are applied.
+	 * So offline changes may be overridden.
+	 */
+	private void publishOfflineChanges() {
+		if (offlineChanges != null && !offlineChanges.isEmpty() &&
+			remoteController.getLatestVersion().get().getId() == currentVersionId
+			&& remoteController.getHealthDB().get() == Health.online) {
+			changeSongs(offlineChanges);
+			offlineChanges = null;
+		}
+	}
+	
+	private List<Song> collectChanges(SongsModel songs) {
+		List<Song> changes = new LinkedList<>();
+		Map<String, Song> dbMap = db.toMap();
+		Map<String, Song> songsMap = songs.toMap();
+		// If song is has been changed in songs:
+		for (Map.Entry<String, Song> entry : songsMap.entrySet()) {
+			if (!entry.getValue().equals(dbMap.get(entry.getKey())))
+				changes.add(entry.getValue());
+		}
+		// If song has been removed in songs, add an empty one:
+		for (String key : dbMap.keySet()) {
+			if (!songsMap.containsKey(key))
+				changes.add(new Song(key));
+		}
+		return changes;
 	}
 	
 	/**
@@ -222,7 +279,7 @@ public class PatchController implements SongsModelListener {
 	 *
 	 * @param newSongs
 	 */
-	public void changeSongs(SongsModel newSongs) {
+	private void changeSongs(Iterable<Song> newSongs) {
 		final DiffMatchPatch dmp = new DiffMatchPatch();
 		
 		LinkedList<Song> patchSongs = new LinkedList<>();
@@ -230,19 +287,20 @@ public class PatchController implements SongsModelListener {
 			Song songFromDB = db.getByUUID(newSong.getUUID());
 			if (songFromDB == null)
 				songFromDB = new Song(newSong.getUUID());
-			Map<String, String> songFromDBMap = songFromDB.toMap();
+			Map<String, String> songEntries = songFromDB.toMap();
 			HashMap<String, String> patchSongMap = new HashMap<>();
 			for (Map.Entry<String, String> newSongEntry : newSong.toMap().entrySet()) {
 				if (newSongEntry.getKey().equals("uuid"))
 					continue;
 				String textNew = newSongEntry.getValue();
-				String textOld = songFromDBMap.get(newSongEntry.getKey());
+				String textOld = songEntries.get(newSongEntry.getKey());
 				if (textNew == null)
 					textNew = "";
 				if (textOld == null)
 					textOld = "";
 				String patchesText = dmp.patchToText(dmp.patchMake(textOld, textNew));
-				patchSongMap.put(newSongEntry.getKey(), patchesText);
+				if (!patchesText.isEmpty())
+					patchSongMap.put(newSongEntry.getKey(), patchesText);
 			}
 			Song patchSong = new Song(newSong.getUUID());
 			patchSong.fromMap(patchSongMap);
@@ -252,7 +310,9 @@ public class PatchController implements SongsModelListener {
 		
 		if (patchSongs.size() > 0) {
 			long newVersionId = currentVersionId + 1;
-			remoteController.publishPatches(new SongsModel(patchSongs, false), newVersionId);
+			String uuid = UUID.randomUUID().toString();
+			remoteController.getLatestPatch().set(new SongsModel(patchSongs, false), remoteController.getUsername(), String.valueOf(newVersionId),
+				uuid);
 			// TODO: wait for reject or version change.
 		}
 	}
@@ -261,8 +321,6 @@ public class PatchController implements SongsModelListener {
 	 * To request missing patches if, there are patches missing.
 	 */
 	private void requestMissingPatches() {
-		if (remoteController == null)
-			return;
 		MqttObject<PatchVersion> latestVersion = remoteController.getLatestVersion();
 		if (latestVersion.get() != null && latestVersion.get().getId() > currentVersionId) {
 			for (long i = currentVersionId + 1; i <= latestVersion.get().getId(); i += 1)
@@ -270,92 +328,62 @@ public class PatchController implements SongsModelListener {
 		}
 	}
 	
-	private void loadDBProperties() {
-		File f = dbPropertiesFile();
-		if (!f.exists() || f.isDirectory())
-			return;
+	/**
+	 * Save the synchronized database at the current version.
+	 */
+	@Override
+	public boolean save() {
+		super.save();
 		
-		try {
-			properties.loadFromXML(new FileInputStream(f));
-		} catch (InvalidPropertiesFormatException e) {
-			// TODO
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// TODO
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO
-			e.printStackTrace();
-		}
-	}
-	
-	private File dbPropertiesFile() {
-		return new File(FileAndDirectoryLocations.getSongsFileName("db.properties.xml"));
-	}
-	
-	private void saveDBProperties() {
-		try {
-			properties.storeToXML(new FileOutputStream(dbPropertiesFile()), PREF_COMMENT);
-		} catch (IOException e) {
-			// TODO
-			e.printStackTrace();
-		}
-	}
-	
-	private File dbFile() {
-		return new File(FileAndDirectoryLocations.getSongsFileName("db.xml"));
-	}
-	
-	private boolean saveDB() {
-		File file = dbFile();
-		try (OutputStream xmlOutputStream = new FileOutputStream(file)) {
-			LOG.debug("writing db to file \"{}\"", file.getAbsolutePath());
+		File dbPropertiesFile = new File(FileAndDirectoryLocations.getDefaultDBPropertiesFileName());
+		File dbFile = new File(FileAndDirectoryLocations.getDefaultDBFileName());
+		
+		try (OutputStream xmlOutputStream = new FileOutputStream(dbFile)) {
+			LOG.debug("writing db to file \"{}\" and db properties to file \"{}\"", dbFile.getAbsolutePath(), dbPropertiesFile.getAbsolutePath());
 			XMLConverter.fromPersistableToXML(db, xmlOutputStream);
+			
+			Properties properties = new Properties();
+			properties.setProperty(PREF_DB_PREFIX, remoteController.getPrefix());
+			properties.setProperty(PREF_DB_SERVER, remoteController.getServer());
+			properties.setProperty(PREF_SONGS_VERSION_ID, String.valueOf(currentVersionId));
+			properties.storeToXML(new FileOutputStream(dbPropertiesFile), PREF_COMMENT);
+			
+			LOG.debug("Saved db to with version " + currentVersionId);
 			return true;
 		} catch (IOException e) {
-			LOG.error("could not write songs to backup file \"" + file.getAbsolutePath() + "\"", e);
+			LOG.error("could not write db", e);
 			return false;
 		}
 	}
 	
-	private boolean loadDB() {
-		File file = dbFile();
-		if (!file.exists()) {
-			LOG.debug("not reading songs from {} (file does not exist) but using empty model", file.getAbsolutePath());
-			db = new SongsModel();
-			return true;
-		}
-		LOG.debug("loading db from file {}", file.getAbsolutePath());
-		try {
-			db = XMLConverter.fromXMLToPersistable(new FileInputStream(file));
-			if (db != null) {
-				return true;
-			} else {
-				LOG.error("could not load songs from {}", file.getAbsolutePath());
-				ErrorDialog.openDialogBlocking(null, "Could not load songs from file:\n" + file.getAbsolutePath()
-					+ "\n\nThis is a fatal error, exiting.\nSee log file for more details.");
-				mainController.shutdown(-1);
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			mainController.shutdown(-1);
-		}
-		return false;
+	@Override
+	public void update(SongsModel songs) {
+		changeSongs(collectChanges(songs));
 	}
 	
-	/**
-	 * 
-	 */
-	public void close() {
-		mainController.getSongs().removeSongsModelListener(this);
+	@Override
+	public boolean updateSongs(Iterable<Song> changedSongs) {
+		changeSongs(changedSongs);
+		// TODO: Wait for reject/version or timeout.
+		return true;
+	}
+	
+	@Override
+	public boolean removeSong(Song songToDelete) {
+		changeSongs(Collections.singletonList(new Song(songToDelete.getUUID())));
+		// TODO: Wait for reject/version or timeout.
+		return true;
 	}
 	
 	/**
 	 * @see org.zephyrsoft.sdb2.util.SongsModelListener#songsModelChanged()
 	 */
-	@Override
-	public void songsModelChanged() {
-		// TODO: Add changed Songs to songsModelChanged.
-		changeSongs(mainController.getSongs());
-	}
+	/*
+	 * @Override
+	 * public void songsModelChanged(Iterable<Song> changedSongs) {
+	 * if (changedSongs == null)
+	 * return;
+	 * changeSongs(changedSongs);
+	 * }
+	 */
 }

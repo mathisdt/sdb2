@@ -322,7 +322,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		btnExportPdfSelected.setEnabled(false);
 		// create empty songsModel for the "selected songs" list
 		presentModel = new SongsModel();
-		presentModel.setAutoSort(false);
 		presentListModel = presentModel.getListModel();
 		presentList.setModel(presentListModel);
 		
@@ -483,7 +482,22 @@ public class MainWindow extends JFrame implements UIScroller {
 		songsListModel = songs.getFilterableListModel();
 		songsList.setModel(songsListModel);
 		
-		songsModel.addSongsModelListener(() -> indexAllSongs());
+		// If some song changes, index changes, update the list and load the current song again
+		// TODO: If this is a remote change, we throw away the current edits!
+		// We should think about not editing directly on the songlists object and instead work on a copy.
+		// Then we can implement some merging strategy, by comparing changes with the current opened song.
+		// This will then also work in cases were song objects change under the hood. (Eg. Delete + Add with same uuid)
+		songsModel.addSongsModelListener((changedSongs) -> {
+			indexAllSongs();
+			
+			FieldName[] fieldsToSearch = settingsModel.get(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.class).getFields();
+			songsListFiltered = indexer.search(IndexType.ALL_SONGS, textFieldFilter.getText(), fieldsToSearch);
+			songsListModel.refilter();
+			// See notes above.
+			// saveSong();
+			songsListSelected = songsList.getSelectedValue();
+			loadSong();
+		});
 		// start indexing once after initialization
 		indexAllSongs();
 		
@@ -617,7 +631,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	/**
 	 * Let the user select a font, save it into the {@link SettingsModel} (if changed) and re-enable the settings tab.
 	 *
-	 * @param target
+	 * @param targets
 	 *            the target setting for the newly selected font
 	 */
 	private void selectFont(SettingKey... targets) {
@@ -906,13 +920,14 @@ public class MainWindow extends JFrame implements UIScroller {
 	/**
 	 * Stores all data contained in the GUI elements.
 	 *
-	 * @param song
+	 * @param readableSong
 	 *            the songsModel object to which the data should be written
 	 */
-	private synchronized void saveSongData(Song song) {
-		LOG.debug("saveSongData: {}", song.getTitle());
+	private synchronized void saveSongData(Song readableSong) {
+		LOG.debug("saveSongData: {}", readableSong.getTitle());
 		
 		boolean dataChanged = false;
+		Song song = new Song(readableSong);
 		
 		if (!StringTools.equalsWithNullAsEmpty(song.getLyrics(), editorLyrics.getText())) {
 			song.setLyrics(editorLyrics.getText());
@@ -924,8 +939,8 @@ public class MainWindow extends JFrame implements UIScroller {
 			LOG.debug("changed song attribute: Title");
 			dataChanged = true;
 		}
-		if (song.getLanguage() != (LanguageEnum) comboBoxLanguage.getSelectedItem()) {
-			song.setLanguage((LanguageEnum) comboBoxLanguage.getSelectedItem());
+		if (!StringTools.equalsWithNullAsEmpty(song.getLanguage(), (String) comboBoxLanguage.getEditor().getItem())) {
+			song.setLanguage((String) comboBoxLanguage.getEditor().getItem());
 			LOG.debug("changed song attribute: Language");
 			dataChanged = true;
 		}
@@ -973,7 +988,8 @@ public class MainWindow extends JFrame implements UIScroller {
 		
 		if (dataChanged) {
 			// put the songs in the right order again
-			songsModel.sortAndUpdateView();
+			controller.getSongsController().updateSong(song);
+			// songsModel.songsChanged(Arrays.asList(song));
 		}
 	}
 	
@@ -1060,17 +1076,17 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	protected void handleSongNew() {
-		Song song = new Song(StringTools.createUUID());
-		songsModel.addSong(song);
 		applyFilter();
-		songsList.setSelectedValue(song, true);
+		songsList.clearSelection();
+		songsListSelected = new Song(StringTools.createUUID());
+		loadSong();
 	}
 	
 	protected void handleSongDelete() {
 		if (songsListSelected != null) {
 			Song songToDelete = songsListSelected;
 			songsList.removeSelectionInterval(0, songsModel.getSize() - 1);
-			songsModel.removeSong(songToDelete);
+			controller.getSongsController().removeSong(songToDelete);
 			applyFilter();
 		}
 	}
@@ -1139,8 +1155,18 @@ public class MainWindow extends JFrame implements UIScroller {
 	protected void handleJumpToPresentedSong() {
 		Song currentlyPresentedSong = controller.getCurrentlyPresentedSong();
 		if (currentlyPresentedSong != null) {
-			presentList.setSelectedValue(currentlyPresentedSong, true);
-			handleJumpToSelectedSong();
+			List<Song> songs = presentListModel.getAllElements();
+			
+			// Search for new equal songs starting with last used song position:
+			int startIndex = Math.max(0, presentList.getSelectedIndex());
+			for (int i = 0; i < songs.size(); i++) {
+				int p = (i + startIndex) % songs.size();
+				if (songs.get(p).equals(currentlyPresentedSong)) {
+					presentList.setSelectedValue(songs.get(p), true);
+					handleJumpToSelectedSong();
+					break;
+				}
+			}
 		}
 	}
 	
@@ -1150,8 +1176,13 @@ public class MainWindow extends JFrame implements UIScroller {
 	 * @param song
 	 */
 	public void present(Song song) {
-		presentListSelected = song;
-		handleSongPresent();
+		Song currentlyPresentedSong = controller.getCurrentlyPresentedSong();
+		if (currentlyPresentedSong != null && !currentlyPresentedSong.equals(song)
+			|| currentlyPresentedSong == null && song != null) {
+			presentListSelected = song;
+			handleSongPresent();
+			handleJumpToPresentedSong();
+		}
 	}
 	
 	protected void handleSongPresent() {
@@ -1607,6 +1638,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelEdit.add(lblAdditionalCopyrightNotes, gbcLblAdditionalCopyrightNotes);
 		
 		comboBoxLanguage = new JComboBox<>();
+		comboBoxLanguage.setEditable(true);
 		comboBoxLanguage.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {

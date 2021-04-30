@@ -26,13 +26,13 @@ public class PatchVersion {
 	private final long id;
 	private final long timestamp;
 	private final String username;
-	private final String hash;
+    private final String uuid;
 	
-	public PatchVersion(long id, long timestamp, String username, String hash) {
+    public PatchVersion(long id, long timestamp, String username, String uuid) {
 		this.id = id;
 		this.timestamp = timestamp;
 		this.username = username;
-		this.hash = hash;
+        this.uuid = uuid;
 	}
 	
 	public long getId() {
@@ -43,8 +43,8 @@ public class PatchVersion {
 		return timestamp;
 	}
 	
-	public String getHash() {
-		return hash;
+    public String getUUID() {
+        return uuid;
 	}
 	
 	public String getUsername() {
@@ -53,7 +53,7 @@ public class PatchVersion {
 	
 	@Override
 	public String toString() {
-		return new StringBuilder().append(id).append(',').append(timestamp).append(',').append(username).append(',').append(hash).toString();
+        return new StringBuilder().append(id).append(',').append(timestamp).append(',').append(username).append(',').append(uuid).toString();
 	}
 	
 	public static PatchVersion parsePatchVersion(String s) {
@@ -71,7 +71,7 @@ public class PatchVersion {
 	public boolean equals(Object obj) {
 		if (obj instanceof PatchVersion) {
 			PatchVersion cmp = ((PatchVersion) obj);
-			return this.id == cmp.getID() && this.hash.equals(cmp.getHash()) && username.equals(cmp.getUsername())
+            return this.id == cmp.getID() && this.uuid.equals(cmp.getUUID()) && username.equals(cmp.getUsername())
 				&& this.timestamp == cmp.getTimestamp();
 		} else {
 			return false;

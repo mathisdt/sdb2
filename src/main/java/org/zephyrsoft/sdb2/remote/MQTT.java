@@ -72,6 +72,8 @@ public class MQTT implements MqttCallback {
 	@Override
 	public void connectionLost(Throwable cause) {
 		onConnectionLostListeners.forEach(ocll -> ocll.onConnectionLost(cause));
+		// TODO: implement auto reconnect
+		// client.reconnect();
 	}
 	
 	@Override

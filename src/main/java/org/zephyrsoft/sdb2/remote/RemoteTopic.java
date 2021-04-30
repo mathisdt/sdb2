@@ -16,7 +16,15 @@
  */
 package org.zephyrsoft.sdb2.remote;
 
-class RemoteTopic {
+/**
+ * ACL v1/connect/+
+ * v1/namespaces/%s/song
+ */
+public class RemoteTopic {
+	
+	final static String HEALTH_DB = "%shealth/v1/db";
+	final static int HEALTH_DB_QOS = 1;
+	final static boolean HEALTH_DB_RETAINED = true;
 	
 	final static String SONG = "%snamespaces/v1/%s/song";
 	final static int SONG_QOS = 0;
@@ -30,10 +38,13 @@ class RemoteTopic {
 	final static int PLAYLIST_QOS = 0;
 	final static boolean PLAYLIST_RETAINED = true;
 	
-	// Clients publish and subscribe patches (list of songs) to [username/version_id]:
-	final static String PATCHES_LATEST_PATCH = "%sdb/v1/patches/latest/patch/+/+";
+	// Clients publish and subscribe patches (list of songs) to [username/version_id/uuid]:
+	final static String PATCHES_LATEST_PATCH = "%sdb/v1/patches/latest/patch/+/+/+";
 	final static int PATCHES_LATEST_PATCH_QOS = 1;
 	final static boolean PATCHES_LATEST_PATCH_RETAINED = false;
+	public final static int PATCHES_LATEST_PATCH_ARG_USERNAME = 0;
+	public final static int PATCHES_LATEST_PATCH_ARG_VERSION_ID = 1;
+	public final static int PATCHES_LATEST_PATCH_ARG_UUID = 2;
 	
 	// Clients subscribe for approving (version_id, timestamp, username, checksum) to: [RETAINED]
 	final static String PATCHES_LATEST_VERSION = "%sdb/v1/patches/latest/version";
@@ -50,10 +61,11 @@ class RemoteTopic {
 	final static int PATCHES_REQUEST_GET_QOS = 1;
 	final static boolean PATCHES_REQUEST_GET_RETAINED = false;
 	
-	// And it will recieve the requested patch at:
-	final static String PATCHES_REQUEST_PATCH = "%sdb/v1/patches/request/%s/patch";
+	// And it will recieve the requested patch to clientid / [username/version_id/uuid]:
+	final static String PATCHES_REQUEST_PATCH = "%sdb/v1/patches/request/%s/patch/+";
 	final static int PATCHES_REQUEST_PATCH_QOS = 1;
 	final static boolean PATCHES_REQUEST_PATCH_RETAINED = false;
+	public final static int PATCHES_REQUEST_PATCH_ARG_UUID = 0;
 	
 	// And it will recieve the requested version (version_id, timestamp, username, checksum) at:
 	final static String PATCHES_REQUEST_VERSION = "%sdb/v1/patches/request/%s/version";

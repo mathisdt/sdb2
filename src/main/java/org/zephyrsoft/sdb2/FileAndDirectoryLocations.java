@@ -37,6 +37,9 @@ public class FileAndDirectoryLocations {
 	public static final String STATISTICS_SUBDIR_STRING = "statistics";
 	public static final String STATISTICS_FILE_STRING = "statistics.xml";
 	public static final String LOG_SUBDIR_STRING = "log";
+	public static final String DB_SUBDIR_STRING = "db";
+	public static final String DB_FILE_STRING = "db.xml";
+	public static final String DB_PROPERTIES_FILE_STRING = "db.properties.xml";
 	
 	public static String getDefaultSongsFileName() {
 		return getSongsDir() + File.separator + SONGS_FILE_STRING;
@@ -53,6 +56,14 @@ public class FileAndDirectoryLocations {
 		}
 	}
 	
+	public static String getDefaultDBFileName() {
+		return getDBDir() + File.separator + DB_FILE_STRING;
+	}
+	
+	public static String getDefaultDBPropertiesFileName() {
+		return getDBDir() + File.separator + DB_PROPERTIES_FILE_STRING;
+	}
+	
 	public static String getSettingsFileName() {
 		return getSettingsDir() + File.separator + SETTINGS_FILE_STRING;
 	}
@@ -63,6 +74,10 @@ public class FileAndDirectoryLocations {
 	
 	public static String getStatisticsFileName() {
 		return getStatisticsDir() + File.separator + STATISTICS_FILE_STRING;
+	}
+	
+	private static String getDBDir() {
+		return getDir(DB_SUBDIR_STRING);
 	}
 	
 	private static String getSongsDir() {

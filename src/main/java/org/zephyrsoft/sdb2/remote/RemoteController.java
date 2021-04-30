@@ -32,6 +32,9 @@ import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 
+/**
+ *
+ */
 public class RemoteController {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(RemoteController.class);
@@ -40,14 +43,14 @@ public class RemoteController {
 	private final MqttObject<Song> song;
 	private final MqttObject<SongPosition> songPosition;
 	private final MqttObject<SongsModel> playlist;
-	private MqttObject<PatchVersion> latestVersion;
-	private MqttObject<String> latestPatch;
-	private MqttObject<String> latestReject;
-	private MqttObject<Long> requestGet;
-	private MqttObject<PatchVersion> requestVersion;
-	private MqttObject<String> requestPatch;
+	private final MqttObject<PatchVersion> latestVersion;
+	private final MqttObject<PatchVersion> requestVersion;
+	private final MqttObject<SongsModel> latestPatch;
+	private final MqttObject<SongsModel> requestPatch;
+	private final MqttObject<Long> requestGet;
+	private final MqttObject<String> latestReject;
+	private final MqttObject<Health> healthDB;
 	private final RemotePresenter remotePresenter;
-	private PatchController patchController;
 	private final String prefix;
 	private final String namespace;
 	private final String server;
@@ -57,15 +60,15 @@ public class RemoteController {
 	
 	/**
 	 * Creates a RemoteController instance by connecting to a broker and setting up properties.
-	 *
+	 * <p>
 	 * You may set a prefix if you want to share a broker with multiple instance groups.
 	 * The prefix may be a code, where only selected users have access too. It must be set if you want to set up or use
 	 * a global mqtt server for multiple organizations.
 	 * A Organization may have different namespaces, to split up presentation instances into.
 	 * Users may have only access to some namespaces.
-	 *
+	 * <p>
 	 * A namespace contains one shared presentation, and multiple playlists.
-	 *
+	 * <p>
 	 * All properties are by default without local notify. They can't be used for in program synchronization.
 	 * Furthermore they are retained.
 	 *
@@ -78,7 +81,7 @@ public class RemoteController {
 		server = settingsModel.get(SettingKey.REMOTE_SERVER, String.class);
 		username = settingsModel.get(SettingKey.REMOTE_USERNAME, String.class);
 		password = settingsModel.get(SettingKey.REMOTE_PASSWORD, String.class);
-		showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class).booleanValue();
+		showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
 		
 		mqtt = new MQTT(server, username, password);
 		
@@ -91,14 +94,14 @@ public class RemoteController {
 			RemoteController::parseSong, RemoteController::songToString, RemoteTopic.SONG_QOS, RemoteTopic.SONG_RETAINED,
 			null);
 		if (mainWindow != null)
-			song.onRemoteChange(s -> mainWindow.present(s));
+			song.onRemoteChange((s, a) -> mainWindow.present(s));
 		else
-			song.onRemoteChange(s -> mainController.present(new Presentable(s, null)));
+			song.onRemoteChange((s, a) -> mainController.present(new Presentable(s, null)));
 		
 		songPosition = new MqttObject<>(mqtt, formatTopic(RemoteTopic.SONG_POSITION), SongPosition::parseSongPosition,
 			null, RemoteTopic.SONG_POSITION_QOS, RemoteTopic.SONG_POSITION_RETAINED,
 			null);
-		songPosition.onRemoteChange(p -> {
+		songPosition.onRemoteChange((p, a) -> {
 			try {
 				mainController.moveToLine(p.getPart(showTitle), p.getLine());
 			} catch (IndexOutOfBoundsException e) {
@@ -113,8 +116,8 @@ public class RemoteController {
 				RemoteController::parseSongsModel,
 				RemoteController::songsModelToString, RemoteTopic.PLAYLIST_QOS, RemoteTopic.PLAYLIST_RETAINED,
 				null);
-			playlist.onRemoteChange(p -> mainWindow.getPresentModel().update(p));
-			mainWindow.getPresentModel().addSongsModelListener(() -> playlist.set(new SongsModel(mainWindow.getPresentModel())));
+			playlist.onRemoteChange((p, a) -> mainWindow.getPresentModel().update(p));
+			mainWindow.getPresentModel().addSongsModelListener((songs) -> playlist.set(new SongsModel(mainWindow.getPresentModel())));
 			
 			latestVersion = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PATCHES_LATEST_VERSION),
 				PatchVersion::parsePatchVersion,
@@ -122,8 +125,8 @@ public class RemoteController {
 				(a, b) -> false);
 			
 			latestPatch = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PATCHES_LATEST_PATCH),
-				null,
-				null, RemoteTopic.PATCHES_LATEST_PATCH_QOS, RemoteTopic.PATCHES_LATEST_PATCH_RETAINED,
+				RemoteController::parseSongsModel,
+				RemoteController::songsModelToString, RemoteTopic.PATCHES_LATEST_PATCH_QOS, RemoteTopic.PATCHES_LATEST_PATCH_RETAINED,
 				(a, b) -> false);
 			
 			latestReject = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PATCHES_LATEST_REJECT),
@@ -131,10 +134,8 @@ public class RemoteController {
 				null, RemoteTopic.PATCHES_LATEST_REJECT_QOS, RemoteTopic.PATCHES_LATEST_REJECT_RETAINED,
 				(a, b) -> false);
 			
-			requestGet = new MqttObject<>(mqtt, null, null,
-				null, null, formatClientIDTopic(RemoteTopic.PATCHES_REQUEST_GET),
-				null, RemoteTopic.PATCHES_REQUEST_GET_QOS, RemoteTopic.PATCHES_REQUEST_GET_RETAINED,
-				(a, b) -> false);
+			requestGet = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.PATCHES_REQUEST_GET),
+				String::valueOf, RemoteTopic.PATCHES_REQUEST_GET_QOS, RemoteTopic.PATCHES_REQUEST_GET_RETAINED);
 			
 			requestVersion = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.PATCHES_REQUEST_VERSION),
 				PatchVersion::parsePatchVersion,
@@ -142,13 +143,21 @@ public class RemoteController {
 				(a, b) -> false);
 			
 			requestPatch = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.PATCHES_REQUEST_PATCH),
-				null,
-				null, RemoteTopic.PATCHES_REQUEST_PATCH_QOS, RemoteTopic.PATCHES_REQUEST_PATCH_RETAINED,
+				RemoteController::parseSongsModel,
+				RemoteController::songsModelToString, RemoteTopic.PATCHES_REQUEST_PATCH_QOS, RemoteTopic.PATCHES_REQUEST_PATCH_RETAINED,
 				(a, b) -> false);
 			
-			patchController = new PatchController(this, mainController);
+			healthDB = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.HEALTH_DB),
+				Health::valueOf, null, RemoteTopic.PATCHES_REQUEST_PATCH_QOS, RemoteTopic.PATCHES_REQUEST_PATCH_RETAINED, null);
 		} else {
 			this.playlist = null;
+			this.requestVersion = null;
+			this.requestPatch = null;
+			this.requestGet = null;
+			this.latestVersion = null;
+			this.latestReject = null;
+			this.latestPatch = null;
+			this.healthDB = null;
 		}
 		
 		remotePresenter = new RemotePresenter(this, showTitle);
@@ -172,28 +181,12 @@ public class RemoteController {
 	}
 	
 	/**
-	 * Instead of using the publish function of the mqttobject we define a custom one to fill placeholders in the topic.
-	 * 
-	 * @param patchSongs
-	 * @param newVersionId
-	 */
-	void publishPatches(SongsModel patchSongs, long newVersionId) {
-		new Thread(() -> mqtt.publish(formatTopic(RemoteTopic.PATCHES_LATEST_PATCH).replaceFirst("\\+",
-			username).replaceFirst("\\+", "" + newVersionId),
-			songsModelToString(patchSongs),
-			RemoteTopic.PATCHES_LATEST_PATCH_QOS,
-			RemoteTopic.PATCHES_LATEST_PATCH_RETAINED)).start();
-		
-	}
-	
-	/**
 	 * Converts a song object to string.
 	 *
 	 * @return song as string
 	 */
 	private static String songToString(Song song) {
 		SongsModel model = new SongsModel();
-		model.setAutoSort(false);
 		if (song != null)
 			model.addSong(song);
 		return songsModelToString(model);
@@ -216,7 +209,7 @@ public class RemoteController {
 	 */
 	private static String songsModelToString(SongsModel songsModel) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		XMLConverter.fromPersistableToXML(songsModel, baos);
+		XMLConverter.fromPersistableToXML(songsModel, baos, false);
 		return baos.toString(StandardCharsets.UTF_8);
 	}
 	
@@ -234,7 +227,6 @@ public class RemoteController {
 	 */
 	public void close() {
 		mqtt.close();
-		patchController.close();
 	}
 	
 	private String formatTopic(String topic) {
@@ -242,7 +234,7 @@ public class RemoteController {
 	}
 	
 	private String formatClientIDTopic(String topic) {
-		return String.format(topic, prefix.isBlank() ? "" : prefix + "/", namespace, mqtt.getClientID());
+		return String.format(topic, prefix.isBlank() ? "" : prefix + "/", mqtt.getClientID());
 	}
 	
 	public boolean checkSettingsChanged(SettingsModel settings) {
@@ -256,35 +248,44 @@ public class RemoteController {
 			.equals(password);
 	}
 	
-	public MqttObject<String> getLatestPatch() {
-		return latestPatch;
-	}
-	
 	public MqttObject<PatchVersion> getLatestVersion() {
 		return latestVersion;
-	}
-	
-	public MqttObject<String> getLatestReject() {
-		return latestReject;
-	}
-	
-	public MqttObject<Long> getRequestGet() {
-		return requestGet;
 	}
 	
 	public MqttObject<PatchVersion> getRequestVersion() {
 		return requestVersion;
 	}
 	
-	public MqttObject<String> getRequestPatch() {
+	public MqttObject<SongsModel> getLatestPatch() {
+		return latestPatch;
+	}
+	
+	public MqttObject<SongsModel> getRequestPatch() {
 		return requestPatch;
 	}
 	
-	/**
-	 * @return
-	 */
+	public MqttObject<Long> getRequestGet() {
+		return requestGet;
+	}
+	
+	public MqttObject<String> getLatestReject() {
+		return latestReject;
+	}
+	
+	public MqttObject<Health> getHealthDB() {
+		return healthDB;
+	}
+	
 	public String getPrefix() {
 		return prefix;
+	}
+	
+	public String getUsername() {
+		return username;
+	}
+	
+	public String getServer() {
+		return server;
 	}
 	
 }

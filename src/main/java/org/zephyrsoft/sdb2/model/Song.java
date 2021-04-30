@@ -26,10 +26,8 @@ import javax.xml.bind.annotation.XmlAccessorOrder;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.zephyrsoft.sdb2.util.StringTools;
-import org.zephyrsoft.sdb2.util.converter.LanguageEnumAdapter;
 
 /**
  * Representation of a song.
@@ -54,8 +52,8 @@ public class Song implements Serializable, Comparable<Song> {
 	@XmlElement(name = "additionalCopyrightNotes")
 	private String additionalCopyrightNotes;
 	@XmlElement(name = "language")
-	@XmlJavaTypeAdapter(LanguageEnumAdapter.class)
-	private LanguageEnum language;
+	// @XmlJavaTypeAdapter(LanguageEnumAdapter.class)
+	private String language;
 	@XmlElement(name = "songNotes")
 	private String songNotes;
 	@XmlElement(name = "tonality")
@@ -77,6 +75,27 @@ public class Song implements Serializable, Comparable<Song> {
 	 */
 	public Song() {
 		// default constructor
+	}
+	
+	public Song(Map<String, String> map) {
+		this.fromMap(map);
+	}
+	
+	public Song(Song song) {
+		title = song.getTitle();
+		composer = song.getComposer();
+		authorText = song.getAuthorText();
+		authorTranslation = song.getAuthorTranslation();
+		publisher = song.getPublisher();
+		additionalCopyrightNotes = song.getAdditionalCopyrightNotes();
+		language = song.getLanguage();
+		songNotes = song.getSongNotes();
+		tonality = song.getTonality();
+		tempo = song.getTempo();
+		uuid = song.getUUID();
+		chordSequence = song.getChordSequence();
+		drumNotes = song.getChordSequence();
+		lyrics = song.getLyrics();
 	}
 	
 	/**
@@ -114,7 +133,7 @@ public class Song implements Serializable, Comparable<Song> {
 		return additionalCopyrightNotes;
 	}
 	
-	public LanguageEnum getLanguage() {
+	public String getLanguage() {
 		return language;
 	}
 	
@@ -172,7 +191,7 @@ public class Song implements Serializable, Comparable<Song> {
 		this.additionalCopyrightNotes = additionalCopyrightNotes;
 	}
 	
-	public void setLanguage(LanguageEnum language) {
+	public void setLanguage(String language) {
 		this.language = language;
 	}
 	
@@ -249,32 +268,34 @@ public class Song implements Serializable, Comparable<Song> {
 		if (getClass() != obj.getClass())
 			return false;
 		Song other = (Song) obj;
-		if (chordSequence == null) {
-			if (other.chordSequence != null)
-				return false;
-		} else if (!chordSequence.equals(other.chordSequence))
-			return false;
-		if (getDrumNotes() == null) {
-			if (other.getDrumNotes() != null)
-				return false;
-		} else if (!getDrumNotes().equals(other.getDrumNotes()))
-			return false;
-		if (lyrics == null) {
-			if (other.lyrics != null)
-				return false;
-		} else if (!lyrics.equals(other.lyrics))
-			return false;
-		if (title == null) {
-			if (other.title != null)
-				return false;
-		} else if (!title.equals(other.title))
-			return false;
-		return true;
+		return equalsAllowNull(uuid, other.uuid) &&
+			equalsAllowNull(title, other.title) &&
+			equalsAllowNull(composer, other.composer) &&
+			equalsAllowNull(authorText, other.authorText) &&
+			equalsAllowNull(authorTranslation, other.authorTranslation) &&
+			equalsAllowNull(publisher, other.publisher) &&
+			equalsAllowNull(additionalCopyrightNotes, other.additionalCopyrightNotes) &&
+			equalsAllowNull(language, other.language) &&
+			equalsAllowNull(songNotes, other.songNotes) &&
+			equalsAllowNull(tonality, other.tonality) &&
+			equalsAllowNull(chordSequence, other.chordSequence) &&
+			equalsAllowNull(drumNotes, other.drumNotes) &&
+			equalsAllowNull(tempo, other.tempo) &&
+			equalsAllowNull(lyrics, other.lyrics);
 	}
 	
 	@Override
 	public String toString() {
 		return "SONG[" + title + "|" + uuid + "]";
+	}
+	
+	private static boolean equalsAllowNull(String str, String str2) {
+		if (str == null || str.isEmpty()) {
+			if (str2 != null && !str2.isEmpty())
+				return false;
+		} else if (!str.equals(str2))
+			return false;
+		return true;
 	}
 	
 	private static boolean isEmpty(String str) {
@@ -288,7 +309,7 @@ public class Song implements Serializable, Comparable<Song> {
 			&& isEmpty(getAuthorTranslation())
 			&& isEmpty(getPublisher())
 			&& isEmpty(getAdditionalCopyrightNotes())
-			&& isEmpty(getLanguage().getInternalName())
+			&& isEmpty(getLanguage()) // .getInternalName()
 			&& isEmpty(getSongNotes())
 			&& isEmpty(getLyrics())
 			&& isEmpty(getTonality())
@@ -308,7 +329,7 @@ public class Song implements Serializable, Comparable<Song> {
 				put("authorTranslation", getAuthorTranslation());
 				put("publisher", getPublisher());
 				put("additionalCopyrightNotes", getAdditionalCopyrightNotes());
-				put("language", getLanguage().getInternalName());
+				put("language", getLanguage()); // .getInternalName()
 				put("songNotes", getSongNotes());
 				put("lyrics", getLyrics());
 				put("tonality", getTonality());
@@ -345,12 +366,15 @@ public class Song implements Serializable, Comparable<Song> {
 					setAdditionalCopyrightNotes(value);
 					break;
 				case "language":
-					try {
-						setLanguage(new LanguageEnumAdapter().unmarshal(value));
-					} catch (Exception e) {
-						// TODO: Allow more/different languages.
-						setLanguage(LanguageEnum.ENGLISH);
-					}
+					setLanguage(value);
+					/*
+					 * try {
+					 * setLanguage(new LanguageEnumAdapter().unmarshal(value));
+					 * } catch (Exception e) {
+					 * // TODO: Allow more/different languages.
+					 * setLanguage(LanguageEnum.ENGLISH);
+					 * }
+					 */
 					break;
 				case "songNotes":
 					setSongNotes(value);

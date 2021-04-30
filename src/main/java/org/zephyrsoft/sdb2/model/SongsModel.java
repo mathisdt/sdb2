@@ -17,8 +17,10 @@
 package org.zephyrsoft.sdb2.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -48,8 +50,8 @@ public class SongsModel implements Iterable<Song>, Persistable {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SongsModel.class);
 	
-	@XmlElement(name = "autoSort")
-	private boolean autoSort = true;
+	// @XmlElement(name = "autoSort")
+	private boolean autoSort = false;
 	
 	@XmlElement(name = "song")
 	private List<Song> songs = null;
@@ -129,7 +131,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		if (autoSort) {
 			sortSongs();
 		}
-		notifyListModelListeners();
+		notifyListModelListeners(Arrays.asList(e));
 		return b;
 	}
 	
@@ -138,17 +140,19 @@ public class SongsModel implements Iterable<Song>, Persistable {
 			throw new IllegalStateException("should insert song at a specific position, but auto-sorting is enabled");
 		} else {
 			songs.add(index, e);
-			notifyListModelListeners();
+			notifyListModelListeners(Arrays.asList(e));
 		}
 	}
 	
 	public boolean removeSong(Song o) {
-		boolean b = songs.remove(o);
-		if (autoSort) {
-			sortSongs();
+		boolean removed = songs.remove(o);
+		if (removed) {
+			if (autoSort) {
+				sortSongs();
+			}
+			notifyListModelListeners(Arrays.asList(new Song(o.getUUID())));
 		}
-		notifyListModelListeners();
-		return b;
+		return removed;
 	}
 	
 	public Song removeSong(int index) {
@@ -156,20 +160,22 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		if (autoSort) {
 			sortSongs();
 		}
-		notifyListModelListeners();
+		notifyListModelListeners(Arrays.asList(new Song(ret.getUUID())));
 		return ret;
 	}
 	
 	public void update(SongsModel newModel) {
+		ArrayList<Song> changedSongs = new ArrayList<>(songs);
 		songs.clear();
 		songs.addAll(newModel.getSongs());
 		if (autoSort) {
 			sortSongs();
 		}
-		notifyListModelListeners();
+		changedSongs.addAll(songs);
+		notifyListModelListeners(changedSongs);
 	}
 	
-	private void notifyListModelListeners() {
+	private void notifyListModelListeners(Iterable<Song> changedSongs) {
 		LOG.trace("notifyListModelListeners");
 		for (TransparentListModel<Song> model : createdListModels) {
 			ListDataListener[] listeners = model.getListDataListeners();
@@ -178,7 +184,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 			}
 		}
 		for (SongsModelListener listener : songsModelListeners) {
-			listener.songsModelChanged();
+			listener.songsModelChanged(changedSongs);
 		}
 	}
 	
@@ -191,17 +197,35 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		return null;
 	}
 	
-	public void updateSongByUUID(Song song) {
-		Song found = getByUUID(song.getUUID());
-		if (found != null)
-			songs.remove(found);
-		if (song.isEmpty()) {
-			songs.add(song);
-			if (autoSort) {
-				sortSongs();
+	/**
+	 * Update multiple songs in songs by adding them as new ones, or updating them field by field.
+	 * 
+	 * To remove songs, simply use empty ones.
+	 * 
+	 * @param changedSongs
+	 * @return number of actually changed songs
+	 */
+	public List<Song> updateSongsByUUID(Iterable<Song> changedSongs) {
+		ArrayList<Song> actuallyChangedSongs = new ArrayList<Song>();
+		for (Song song : changedSongs) {
+			Song found = getByUUID(song.getUUID());
+			if (song.isEmpty()) {
+				if (found != null && songs.remove(found))
+					actuallyChangedSongs.add(song);
+			} else if (found == null) {
+				if (songs.add(song))
+					actuallyChangedSongs.add(song);
+			} else if (!found.equals(song)) {
+				found.fromMap(song.toMap());
+				actuallyChangedSongs.add(song);
 			}
 		}
-		notifyListModelListeners();
+		if (!actuallyChangedSongs.isEmpty()) {
+			if (autoSort)
+				sortSongs();
+			notifyListModelListeners(actuallyChangedSongs);
+		}
+		return actuallyChangedSongs;
 	}
 	
 	@Override
@@ -213,11 +237,16 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		Collections.sort(songs);
 	}
 	
-	public void sortAndUpdateView() {
+	/**
+	 * Notify the Songsmodel, that some underlying songs changed.
+	 *
+	 * @param changedSongs
+	 */
+	public void songsChanged(Iterable<Song> changedSongs) {
 		if (autoSort) {
 			sortSongs();
 		}
-		notifyListModelListeners();
+		notifyListModelListeners(changedSongs);
 	}
 	
 	public Collection<Song> getSongs() {
@@ -243,11 +272,19 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		} else {
 			Song ret = songs.remove(selectedIndex);
 			songs.add(newIndex, ret);
-			notifyListModelListeners();
+			notifyListModelListeners(null);
 		}
 	}
 	
 	public void removeSongsModelListener(SongsModelListener songsModelListener) {
 		songsModelListeners.remove(songsModelListener);
+	}
+	
+	public HashMap<String, Song> toMap() {
+		HashMap<String, Song> map = new HashMap<>(songs.size());
+		for (Song song : songs) {
+			map.put(song.getUUID(), song);
+		}
+		return map;
 	}
 }

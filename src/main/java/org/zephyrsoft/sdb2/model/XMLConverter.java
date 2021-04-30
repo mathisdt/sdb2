@@ -32,14 +32,18 @@ import org.zephyrsoft.sdb2.model.statistics.StatisticsModel;
  */
 public class XMLConverter {
 	
-	public static void fromPersistableToXML(Persistable model, OutputStream outputStream) {
+	public static void fromPersistableToXML(Persistable model, OutputStream outputStream, boolean formattedOutput) {
 		try {
 			Marshaller marshaller = createMarshaller();
-			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, formattedOutput);
 			marshaller.marshal(model, outputStream);
 		} catch (JAXBException e) {
 			throw new IllegalStateException("could not marshal model to XML", e);
 		}
+	}
+	
+	public static void fromPersistableToXML(Persistable model, OutputStream outputStream) {
+		fromPersistableToXML(model, outputStream, true);
 	}
 	
 	public static <T extends Persistable> T fromXMLToPersistable(InputStream xmlInputStream) {
