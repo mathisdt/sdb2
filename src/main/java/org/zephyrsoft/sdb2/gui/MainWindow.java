@@ -252,7 +252,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JTextField textFieldRemoteServer;
 	private JTextField textFieldRemoteUsername;
 	private JTextField textFieldRemotePrefix;
-	private JTextField textFieldRemoteNamespace;
+	private JTextField textFieldRemoteRoom;
 	private JTextField textFieldRemotePassword;
 	private JLabel lblRemoteUsername;
 	private JLabel lblRemotePassword;
@@ -279,7 +279,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	private JLabel lblRemotePrefix;
 	
-	private JLabel lblRemoteNamespace;
+	private JLabel lblRemoteRoom;
 	
 	private JLabel lblStatus;
 	
@@ -561,7 +561,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		textFieldRemoteUsername.setText(settingsModel.get(SettingKey.REMOTE_USERNAME, String.class));
 		textFieldRemotePassword.setText(settingsModel.get(SettingKey.REMOTE_PASSWORD, String.class));
 		textFieldRemotePrefix.setText(settingsModel.get(SettingKey.REMOTE_PREFIX, String.class));
-		textFieldRemoteNamespace.setText(settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class));
+		textFieldRemoteRoom.setText(settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class));
 	}
 	
 	private static void setSpinnerValue(JSpinner spinner, Object value) {
@@ -610,7 +610,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			settingsModel.put(SettingKey.REMOTE_SERVER, textFieldRemoteServer.getText());
 			settingsModel.put(SettingKey.REMOTE_PASSWORD, textFieldRemotePassword.getText());
 			settingsModel.put(SettingKey.REMOTE_USERNAME, textFieldRemoteUsername.getText());
-			settingsModel.put(SettingKey.REMOTE_NAMESPACE, textFieldRemoteNamespace.getText());
+			settingsModel.put(SettingKey.REMOTE_NAMESPACE, textFieldRemoteRoom.getText());
 			settingsModel.put(SettingKey.REMOTE_PREFIX, textFieldRemotePrefix.getText());
 			// copying is not necessary for fonts, colors, the logo file and the slide show directory
 			// because those settings are only stored directly in the model
@@ -822,7 +822,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		setEnabledIfNotNull(textFieldRemoteUsername, enabled);
 		setEnabledIfNotNull(textFieldRemotePassword, enabled);
 		setEnabledIfNotNull(textFieldRemotePrefix, enabled);
-		setEnabledIfNotNull(textFieldRemoteNamespace, enabled);
+		setEnabledIfNotNull(textFieldRemoteRoom, enabled);
 		// disable the "unlock" button when enabling the other controls
 		// (and the other way around)
 		setEnabledIfNotNull(btnUnlock, !enabled);
@@ -2802,21 +2802,21 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_textFieldRemotePrefix.gridy = 30;
 		panel.add(textFieldRemotePrefix, gbc_textFieldRemotePrefix);
 		
-		lblRemoteNamespace = new JLabel("Remote namespace");
-		GridBagConstraints gbc_lblRemoteNamespace = new GridBagConstraints();
-		gbc_lblRemoteNamespace.anchor = GridBagConstraints.EAST;
-		gbc_lblRemoteNamespace.insets = new Insets(0, 0, 5, 5);
-		gbc_lblRemoteNamespace.gridx = 1;
-		gbc_lblRemoteNamespace.gridy = 31;
-		panel.add(lblRemoteNamespace, gbc_lblRemoteNamespace);
+		lblRemoteRoom = new JLabel("Remote room");
+		GridBagConstraints gbc_lblRemoteRoom = new GridBagConstraints();
+		gbc_lblRemoteRoom.anchor = GridBagConstraints.EAST;
+		gbc_lblRemoteRoom.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRemoteRoom.gridx = 1;
+		gbc_lblRemoteRoom.gridy = 31;
+		panel.add(lblRemoteRoom, gbc_lblRemoteRoom);
 		
-		textFieldRemoteNamespace = new JTextField();
-		GridBagConstraints gbc_textFieldRemoteNamespace = new GridBagConstraints();
-		gbc_textFieldRemoteNamespace.fill = GridBagConstraints.HORIZONTAL;
-		gbc_textFieldRemoteNamespace.insets = new Insets(0, 0, 5, 5);
-		gbc_textFieldRemoteNamespace.gridx = 3;
-		gbc_textFieldRemoteNamespace.gridy = 31;
-		panel.add(textFieldRemoteNamespace, gbc_textFieldRemoteNamespace);
+		textFieldRemoteRoom = new JTextField();
+		GridBagConstraints gbc_textFieldRemoteRoom = new GridBagConstraints();
+		gbc_textFieldRemoteRoom.fill = GridBagConstraints.HORIZONTAL;
+		gbc_textFieldRemoteRoom.insets = new Insets(0, 0, 5, 5);
+		gbc_textFieldRemoteRoom.gridx = 3;
+		gbc_textFieldRemoteRoom.gridy = 31;
+		panel.add(textFieldRemoteRoom, gbc_textFieldRemoteRoom);
 		
 		glassPane = (Container) getGlassPane();
 		glassPane.setVisible(true);

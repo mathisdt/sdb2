@@ -51,7 +51,7 @@ public class RemoteController {
 	private final MqttObject<Health> healthDB;
 	private final RemotePresenter remotePresenter;
 	private final String prefix;
-	private final String namespace;
+	private final String room;
 	private final String server;
 	private final String username;
 	private final String password;
@@ -63,10 +63,10 @@ public class RemoteController {
 	 * You may set a prefix if you want to share a broker with multiple instance groups.
 	 * The prefix may be a code, where only selected users have access too. It must be set if you want to set up or use
 	 * a global mqtt server for multiple organizations.
-	 * A Organization may have different namespaces, to split up presentation instances into.
-	 * Users may have only access to some namespaces.
+	 * A Organization may have different rooms, to split up presentation instances into.
+	 * Users may have only access to some rooms.
 	 * <p>
-	 * A namespace contains one shared presentation, and multiple playlists.
+	 * A room contains one shared presentation, and multiple playlists.
 	 * <p>
 	 * All properties are by default without local notify. They can't be used for in program synchronization.
 	 * Furthermore they are retained.
@@ -76,7 +76,7 @@ public class RemoteController {
 	 */
 	public RemoteController(SettingsModel settingsModel, MainController mainController, MainWindow mainWindow) throws MqttException {
 		prefix = settingsModel.get(SettingKey.REMOTE_PREFIX, String.class);
-		namespace = settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class);
+		room = settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class);
 		server = settingsModel.get(SettingKey.REMOTE_SERVER, String.class);
 		username = settingsModel.get(SettingKey.REMOTE_USERNAME, String.class);
 		password = settingsModel.get(SettingKey.REMOTE_PASSWORD, String.class);
@@ -229,7 +229,7 @@ public class RemoteController {
 	}
 	
 	private String formatTopic(String topic) {
-		return String.format(topic, prefix.isBlank() ? "" : prefix + "/", namespace);
+		return String.format(topic, prefix.isBlank() ? "" : prefix + "/", room);
 	}
 	
 	private String formatClientIDTopic(String topic) {
@@ -238,12 +238,12 @@ public class RemoteController {
 	
 	public boolean checkSettingsChanged(SettingsModel settings) {
 		String sPrefix = settings.get(SettingKey.REMOTE_PREFIX, String.class);
-		String sNamespace = settings.get(SettingKey.REMOTE_NAMESPACE, String.class);
+		String sRoom = settings.get(SettingKey.REMOTE_NAMESPACE, String.class);
 		String sServer = settings.get(SettingKey.REMOTE_SERVER, String.class);
 		String sUsername = settings.get(SettingKey.REMOTE_USERNAME, String.class);
 		String sPassword = settings.get(SettingKey.REMOTE_PASSWORD, String.class);
 		
-		return !sPrefix.equals(prefix) || !sNamespace.equals(namespace) || !sServer.equals(server) || !sUsername.equals(sUsername) || !sPassword
+		return !sPrefix.equals(prefix) || !sRoom.equals(room) || !sServer.equals(server) || !sUsername.equals(sUsername) || !sPassword
 			.equals(password);
 	}
 	

@@ -17,7 +17,7 @@ package org.zephyrsoft.sdb2.remote;
 
 /**
  * ACL v1/connect/+
- * v1/namespaces/%s/song
+ * v1/rooms/%s/song
  */
 public class RemoteTopic {
 	
@@ -25,15 +25,15 @@ public class RemoteTopic {
 	final static int HEALTH_DB_QOS = 1;
 	final static boolean HEALTH_DB_RETAINED = true;
 	
-	final static String SONG = "%snamespaces/v1/%s/song";
+	final static String SONG = "%srooms/v1/%s/song";
 	final static int SONG_QOS = 0;
 	final static boolean SONG_RETAINED = true;
 	
-	final static String SONG_POSITION = "%snamespaces/v1/%s/songposition";
+	final static String SONG_POSITION = "%srooms/v1/%s/songposition";
 	final static int SONG_POSITION_QOS = 0;
 	final static boolean SONG_POSITION_RETAINED = true;
 	
-	final static String PLAYLIST = "%snamespaces/v1/%s/playlist";
+	final static String PLAYLIST = "%srooms/v1/%s/playlist";
 	final static int PLAYLIST_QOS = 0;
 	final static boolean PLAYLIST_RETAINED = true;
 	
