@@ -33,7 +33,7 @@ public class PatchController extends SongsModelController {
 	private static final String PREF_COMMENT = "RemoteController DB Properties";
 	private static final String PREF_DB_PREFIX = "DB_PREFIX";
 	private static final String PREF_DB_SERVER = "DB_SERVER";
-	private static final String PREF_SONGS_VERSION_ID = "PREF_SONGS_VERSION_ID";
+	private static final String PREF_SONGS_VERSION_ID = "SONGS_VERSION_ID";
 	private final HashMap<String, Collection<Song>> patchMap = new HashMap<>();
 	private final HashMap<Long, PatchVersion> patchVersions = new HashMap<>();
 	private final HashSet<String> rejects = new HashSet<>();
@@ -94,7 +94,7 @@ public class PatchController extends SongsModelController {
 			}
 		}
 		
-		// Check if prefix has changed:
+		// Reset if prefix has changed:
 		currentVersionId = Long.parseLong(properties.getProperty(PREF_SONGS_VERSION_ID, "0"));
 		if (!remoteController.getPrefix().equals(properties.getProperty(PREF_DB_PREFIX, remoteController.getPrefix())) ||
 			!remoteController.getServer().equals(properties.getProperty(PREF_DB_SERVER, remoteController.getServer())))
@@ -143,7 +143,6 @@ public class PatchController extends SongsModelController {
 				requestMissingPatches();
 			}
 		} else if (patchVersion.getId() < currentVersionId) {
-			// Currently the only way is to reset the whole database and load all patches again.
 			resetDB();
 			requestMissingPatches();
 		}
@@ -158,11 +157,10 @@ public class PatchController extends SongsModelController {
 		rejects.clear();
 		patchMap.clear();
 		conflicts.clear();
+		offlineChanges = null;
 		
-		db.update(new SongsModel());
-		// mainController.getSongs().removeSongsModelListener(this);
-		super.update(new SongsModel());
-		// mainController.getSongs().addSongsModelListener(this);
+		db.clear();
+		songs.clear();
 		currentVersionId = 0;
 	}
 	
@@ -249,7 +247,7 @@ public class PatchController extends SongsModelController {
 	 * So offline changes may be overridden.
 	 */
 	private void publishOfflineChanges() {
-		if (offlineChanges != null && !offlineChanges.isEmpty() &&
+		if (offlineChanges != null &&
 			remoteController.getLatestVersion().get().getId() == currentVersionId
 			&& remoteController.getHealthDB().get() == Health.online) {
 			changeSongs(offlineChanges);
@@ -364,26 +362,12 @@ public class PatchController extends SongsModelController {
 	@Override
 	public boolean updateSongs(Iterable<Song> changedSongs) {
 		changeSongs(changedSongs);
-		// TODO: Wait for reject/version or timeout.
 		return true;
 	}
 	
 	@Override
 	public boolean removeSong(Song songToDelete) {
 		changeSongs(Collections.singletonList(new Song(songToDelete.getUUID())));
-		// TODO: Wait for reject/version or timeout.
 		return true;
 	}
-	
-	/**
-	 * @see org.zephyrsoft.sdb2.util.SongsModelListener#songsModelChanged()
-	 */
-	/*
-	 * @Override
-	 * public void songsModelChanged(Iterable<Song> changedSongs) {
-	 * if (changedSongs == null)
-	 * return;
-	 * changeSongs(changedSongs);
-	 * }
-	 */
 }

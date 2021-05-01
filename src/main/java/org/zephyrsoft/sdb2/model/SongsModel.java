@@ -17,7 +17,6 @@
 package org.zephyrsoft.sdb2.model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -68,6 +67,11 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		this();
 		setAutoSort(songsModel.isAutoSort());
 		update(songsModel);
+	}
+	
+	public SongsModel(boolean autosort) {
+		this();
+		this.autoSort = autosort;
 	}
 	
 	public SongsModel(Collection<Song> songs, boolean autosort) {
@@ -131,7 +135,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		if (autoSort) {
 			sortSongs();
 		}
-		notifyListModelListeners(Arrays.asList(e));
+		notifyListModelListeners();
 		return b;
 	}
 	
@@ -140,7 +144,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 			throw new IllegalStateException("should insert song at a specific position, but auto-sorting is enabled");
 		} else {
 			songs.add(index, e);
-			notifyListModelListeners(Arrays.asList(e));
+			notifyListModelListeners();
 		}
 	}
 	
@@ -150,7 +154,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 			if (autoSort) {
 				sortSongs();
 			}
-			notifyListModelListeners(Arrays.asList(new Song(o.getUUID())));
+			notifyListModelListeners();
 		}
 		return removed;
 	}
@@ -160,7 +164,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		if (autoSort) {
 			sortSongs();
 		}
-		notifyListModelListeners(Arrays.asList(new Song(ret.getUUID())));
+		notifyListModelListeners();
 		return ret;
 	}
 	
@@ -172,10 +176,15 @@ public class SongsModel implements Iterable<Song>, Persistable {
 			sortSongs();
 		}
 		changedSongs.addAll(songs);
-		notifyListModelListeners(changedSongs);
+		notifyListModelListeners();
 	}
 	
-	private void notifyListModelListeners(Iterable<Song> changedSongs) {
+	public void clear() {
+		songs.clear();
+		notifyListModelListeners();
+	}
+	
+	private void notifyListModelListeners() {
 		LOG.trace("notifyListModelListeners");
 		for (TransparentListModel<Song> model : createdListModels) {
 			ListDataListener[] listeners = model.getListDataListeners();
@@ -184,7 +193,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 			}
 		}
 		for (SongsModelListener listener : songsModelListeners) {
-			listener.songsModelChanged(changedSongs);
+			listener.songsModelChanged();
 		}
 	}
 	
@@ -223,7 +232,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		if (!actuallyChangedSongs.isEmpty()) {
 			if (autoSort)
 				sortSongs();
-			notifyListModelListeners(actuallyChangedSongs);
+			notifyListModelListeners();
 		}
 		return actuallyChangedSongs;
 	}
@@ -235,18 +244,6 @@ public class SongsModel implements Iterable<Song>, Persistable {
 	
 	private void sortSongs() {
 		Collections.sort(songs);
-	}
-	
-	/**
-	 * Notify the Songsmodel, that some underlying songs changed.
-	 *
-	 * @param changedSongs
-	 */
-	public void songsChanged(Iterable<Song> changedSongs) {
-		if (autoSort) {
-			sortSongs();
-		}
-		notifyListModelListeners(changedSongs);
 	}
 	
 	public Collection<Song> getSongs() {
@@ -272,7 +269,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		} else {
 			Song ret = songs.remove(selectedIndex);
 			songs.add(newIndex, ret);
-			notifyListModelListeners(null);
+			notifyListModelListeners();
 		}
 	}
 	

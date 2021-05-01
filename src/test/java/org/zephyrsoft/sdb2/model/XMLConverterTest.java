@@ -35,67 +35,67 @@ import org.zephyrsoft.sdb2.model.statistics.StatisticsModel;
  * Tests the behaviour of {@link XMLConverter}.
  */
 public class XMLConverterTest {
-
+	
 	private static final String SONG_1_LYRICS = "Liebe Gäste, liebe Geschwister,\n"
-			+ "bitte schaltet eure Handys während\n" + "des Gottesdienstes aus oder auf lautlos.\n" + "Danke!\n" + "\n"
-			+ "Dear guests, dear brothers and sisters\n" + "please switch off or mute your cellphones\n"
-			+ "during the service.\n" + "Thank You!\n" + "\n" + "If you need translation \n"
-			+ "please ask one of the ushers.";
-
+		+ "bitte schaltet eure Handys während\n" + "des Gottesdienstes aus oder auf lautlos.\n" + "Danke!\n" + "\n"
+		+ "Dear guests, dear brothers and sisters\n" + "please switch off or mute your cellphones\n"
+		+ "during the service.\n" + "Thank You!\n" + "\n" + "If you need translation \n"
+		+ "please ask one of the ushers.";
+	
 	private static final String SONG_2_LYRICS = "The sun comes up, it is a new day dawning,\n"
-			+ "[Die Sonne geht auf, ein neuer Tag bricht an]\n" + "It is time to sing Your song again.\n"
-			+ "[Es ist wieder Zeit Dein Lied zu singen]\n" + "Whatever may pass, and whatever lies before me,\n"
-			+ "[Was immer passieren mag, was immer vor mir liegt]\n" + "Let me be singing when the evening comes!\n"
-			+ "[Lass mich singen wenn der Abend kommt]\n" + "\n" + "Bless the Lord, o my soul, o my soul,\n"
-			+ "[Preis den Herrn, meine Seele, oh meine Seele]\n" + "Worship His holy name!\n"
-			+ "[Bete Seinen heiligen Namen an]\n" + "Sing like never before, o my soul!\n"
-			+ "[Sing wie nie zuvor, oh meine Seele!]\n" + "I will worship His holy name.\n"
-			+ "[Ich werde seinen heiligen Namen anbeten]\n" + "\n" + "...";
-
+		+ "[Die Sonne geht auf, ein neuer Tag bricht an]\n" + "It is time to sing Your song again.\n"
+		+ "[Es ist wieder Zeit Dein Lied zu singen]\n" + "Whatever may pass, and whatever lies before me,\n"
+		+ "[Was immer passieren mag, was immer vor mir liegt]\n" + "Let me be singing when the evening comes!\n"
+		+ "[Lass mich singen wenn der Abend kommt]\n" + "\n" + "Bless the Lord, o my soul, o my soul,\n"
+		+ "[Preis den Herrn, meine Seele, oh meine Seele]\n" + "Worship His holy name!\n"
+		+ "[Bete Seinen heiligen Namen an]\n" + "Sing like never before, o my soul!\n"
+		+ "[Sing wie nie zuvor, oh meine Seele!]\n" + "I will worship His holy name.\n"
+		+ "[Ich werde seinen heiligen Namen anbeten]\n" + "\n" + "...";
+	
 	private static final String SONGS_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-			+ "<songs>\n" + "    <autoSort>true</autoSort>\n" + "    <song>\n"
-			+ "        <additionalCopyrightNotes></additionalCopyrightNotes>\n" + "        <authorText></authorText>\n"
-			+ "        <authorTranslation></authorTranslation>\n" + "        <chordSequence></chordSequence>\n"
-			+ "        <composer></composer>\n" + "        <lyrics>" + SONG_1_LYRICS + "</lyrics>\n"
-			+ "        <publisher></publisher>\n" + "        <songNotes></songNotes>\n"
-			+ "        <title>_Liebe Gäste, Liebe Geschwister</title>\n" + "        <tonality></tonality>\n"
-			+ "        <uuid>094a9c6b-456c-405c-b8f7-7285c33d3c37</uuid>\n" + "    </song>\n" + "    <song>\n"
-			+ "        <additionalCopyrightNotes></additionalCopyrightNotes>\n" + "        <authorText></authorText>\n"
-			+ "        <authorTranslation></authorTranslation>\n" + "        <chordSequence></chordSequence>\n"
-			+ "        <composer>Matt Redman &amp; Jonas Myrin</composer>\n" + "        <language>english</language>\n"
-			+ "        <lyrics>" + SONG_2_LYRICS + "</lyrics>\n" + "        <publisher></publisher>\n"
-			+ "        <songNotes></songNotes>\n" + "        <title>10.000 Reasons</title>\n"
-			+ "        <tonality></tonality>\n" + "        <uuid>b867931a-d333-4e05-9847-f8ae80cdb5b2</uuid>\n"
-			+ "    </song>\n" + "</songs>\n";
-
+		+ "<songs>\n" + "    <song>\n"
+		+ "        <additionalCopyrightNotes></additionalCopyrightNotes>\n" + "        <authorText></authorText>\n"
+		+ "        <authorTranslation></authorTranslation>\n" + "        <chordSequence></chordSequence>\n"
+		+ "        <composer></composer>\n" + "        <lyrics>" + SONG_1_LYRICS + "</lyrics>\n"
+		+ "        <publisher></publisher>\n" + "        <songNotes></songNotes>\n"
+		+ "        <title>_Liebe Gäste, Liebe Geschwister</title>\n" + "        <tonality></tonality>\n"
+		+ "        <uuid>094a9c6b-456c-405c-b8f7-7285c33d3c37</uuid>\n" + "    </song>\n" + "    <song>\n"
+		+ "        <additionalCopyrightNotes></additionalCopyrightNotes>\n" + "        <authorText></authorText>\n"
+		+ "        <authorTranslation></authorTranslation>\n" + "        <chordSequence></chordSequence>\n"
+		+ "        <composer>Matt Redman &amp; Jonas Myrin</composer>\n" + "        <language>english</language>\n"
+		+ "        <lyrics>" + SONG_2_LYRICS + "</lyrics>\n" + "        <publisher></publisher>\n"
+		+ "        <songNotes></songNotes>\n" + "        <title>10.000 Reasons</title>\n"
+		+ "        <tonality></tonality>\n" + "        <uuid>b867931a-d333-4e05-9847-f8ae80cdb5b2</uuid>\n"
+		+ "    </song>\n" + "</songs>\n";
+	
 	private static final String STATISTICS_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-			+ "<statistics>\n" + "    <songStatistics>\n" + "        <presentedOn>\n"
-			+ "            <date>2017-08-22</date>\n" + "            <date>2017-08-24</date>\n"
-			+ "        </presentedOn>\n" + "        <songUuid>7d3ee81d-e69b-4d05-a257-2e51c0377ac5</songUuid>\n"
-			+ "    </songStatistics>\n" + "    <songStatistics>\n" + "        <presentedOn>\n"
-			+ "            <date>2017-11-21</date>\n" + "        </presentedOn>\n"
-			+ "        <songUuid>094a9c6b-456c-405c-b8f7-7285c33d3c37</songUuid>\n" + "    </songStatistics>\n"
-			+ "</statistics>\n";
-
+		+ "<statistics>\n" + "    <songStatistics>\n" + "        <presentedOn>\n"
+		+ "            <date>2017-08-22</date>\n" + "            <date>2017-08-24</date>\n"
+		+ "        </presentedOn>\n" + "        <songUuid>7d3ee81d-e69b-4d05-a257-2e51c0377ac5</songUuid>\n"
+		+ "    </songStatistics>\n" + "    <songStatistics>\n" + "        <presentedOn>\n"
+		+ "            <date>2017-11-21</date>\n" + "        </presentedOn>\n"
+		+ "        <songUuid>094a9c6b-456c-405c-b8f7-7285c33d3c37</songUuid>\n" + "    </songStatistics>\n"
+		+ "</statistics>\n";
+	
 	private static final String SETTINGS_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-			+ "<settings>\n" + "    <setting>\n" + "        <key>BACKGROUND_COLOR</key>\n"
-			+ "        <value class=\"awt-color\">\n" + "            <red>1</red>\n" + "            <green>2</green>\n"
-			+ "            <blue>3</blue>\n" + "            <alpha>255</alpha>\n" + "        </value>\n"
-			+ "    </setting>\n" + "    <setting>\n" + "        <key>BOTTOM_MARGIN</key>\n"
-			+ "        <value class=\"int\">25</value>\n" + "    </setting>\n" + "    <setting>\n"
-			+ "        <key>COPYRIGHT_FONT</key>\n" + "        <value class=\"awt-font\">\n"
-			+ "            <name>Dialog.bold</name>\n" + "            <style>1</style>\n"
-			+ "            <size>14</size>\n" + "        </value>\n" + "    </setting>\n" + "    <setting>\n"
-			+ "        <key>LOGO_FILE</key>\n"
-			+ "        <value class=\"string\">/home/mathis/Bilder-Incoming/20170917-1927_img_0155.jpg</value>\n"
-			+ "    </setting>\n" + "    <setting>\n" + "        <key>SCREEN_2_CONTENTS</key>\n"
-			+ "        <value class=\"org.zephyrsoft.sdb2.model.ScreenContentsEnum\">OnlyLyrics</value>\n"
-			+ "    </setting>\n" + "    <setting>\n" + "        <key>SHOW_TITLE</key>\n"
-			+ "        <value class=\"boolean\">false</value>\n" + "    </setting>\n" + "    <setting>\n"
-			+ "        <key>SONG_LIST_FILTER</key>\n"
-			+ "        <value class=\"org.zephyrsoft.sdb2.model.FilterTypeEnum\">TitleAndLyrics</value>\n"
-			+ "    </setting>\n" + "</settings>\n";
-
+		+ "<settings>\n" + "    <setting>\n" + "        <key>BACKGROUND_COLOR</key>\n"
+		+ "        <value class=\"awt-color\">\n" + "            <red>1</red>\n" + "            <green>2</green>\n"
+		+ "            <blue>3</blue>\n" + "            <alpha>255</alpha>\n" + "        </value>\n"
+		+ "    </setting>\n" + "    <setting>\n" + "        <key>BOTTOM_MARGIN</key>\n"
+		+ "        <value class=\"int\">25</value>\n" + "    </setting>\n" + "    <setting>\n"
+		+ "        <key>COPYRIGHT_FONT</key>\n" + "        <value class=\"awt-font\">\n"
+		+ "            <name>Dialog.bold</name>\n" + "            <style>1</style>\n"
+		+ "            <size>14</size>\n" + "        </value>\n" + "    </setting>\n" + "    <setting>\n"
+		+ "        <key>LOGO_FILE</key>\n"
+		+ "        <value class=\"string\">/home/mathis/Bilder-Incoming/20170917-1927_img_0155.jpg</value>\n"
+		+ "    </setting>\n" + "    <setting>\n" + "        <key>SCREEN_2_CONTENTS</key>\n"
+		+ "        <value class=\"org.zephyrsoft.sdb2.model.ScreenContentsEnum\">OnlyLyrics</value>\n"
+		+ "    </setting>\n" + "    <setting>\n" + "        <key>SHOW_TITLE</key>\n"
+		+ "        <value class=\"boolean\">false</value>\n" + "    </setting>\n" + "    <setting>\n"
+		+ "        <key>SONG_LIST_FILTER</key>\n"
+		+ "        <value class=\"org.zephyrsoft.sdb2.model.FilterTypeEnum\">TitleAndLyrics</value>\n"
+		+ "    </setting>\n" + "</settings>\n";
+	
 	@Test
 	public void xmlFromStatistics() {
 		StatisticsModel model = new StatisticsModel();
@@ -104,22 +104,22 @@ public class XMLConverterTest {
 		model.addStatisticsEntry(song1, LocalDate.of(2017, 8, 24));
 		Song song2 = new Song("094a9c6b-456c-405c-b8f7-7285c33d3c37");
 		model.addStatisticsEntry(song2, LocalDate.of(2017, 11, 21));
-
+		
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		XMLConverter.fromPersistableToXML(model, outputStream);
 		String output = outputStream.toString();
 		assertEquals(STATISTICS_XML, output);
 	}
-
+	
 	@Test
 	public void statisticsFromXML() {
 		StatisticsModel model = XMLConverter.fromXMLToPersistable(new ByteArrayInputStream(STATISTICS_XML.getBytes()));
-
+		
 		assertNotNull(model);
 		assertNotNull(model.getStatistics("7d3ee81d-e69b-4d05-a257-2e51c0377ac5"));
 		assertNotNull(model.getStatistics("094a9c6b-456c-405c-b8f7-7285c33d3c37"));
 	}
-
+	
 	@Test
 	public void xmlFromSettings() {
 		SettingsModel settingsModel = new SettingsModel();
@@ -130,17 +130,17 @@ public class XMLConverterTest {
 		settingsModel.put(SettingKey.BOTTOM_MARGIN, 25);
 		settingsModel.put(SettingKey.LOGO_FILE, "/home/mathis/Bilder-Incoming/20170917-1927_img_0155.jpg");
 		settingsModel.put(SettingKey.SHOW_TITLE, false);
-
+		
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		XMLConverter.fromPersistableToXML(settingsModel, outputStream);
 		String output = outputStream.toString();
 		assertEquals(SETTINGS_XML, output);
 	}
-
+	
 	@Test
 	public void settingsFromXML() {
 		SettingsModel model = XMLConverter.fromXMLToPersistable(new ByteArrayInputStream(SETTINGS_XML.getBytes()));
-
+		
 		assertNotNull(model);
 		assertTrue(model.isSet(SettingKey.BACKGROUND_COLOR));
 		assertNotNull(model.get(SettingKey.BACKGROUND_COLOR, Color.class));
@@ -157,11 +157,11 @@ public class XMLConverterTest {
 		assertTrue(model.isSet(SettingKey.SHOW_TITLE));
 		assertNotNull(model.get(SettingKey.SHOW_TITLE, Boolean.class));
 	}
-
+	
 	@Test
 	public void xmlFromSongs() {
 		SongsModel model = new SongsModel();
-
+		
 		Song song1 = new Song("094a9c6b-456c-405c-b8f7-7285c33d3c37");
 		song1.setTitle("_Liebe Gäste, Liebe Geschwister");
 		song1.setComposer("");
@@ -174,7 +174,7 @@ public class XMLConverterTest {
 		song1.setChordSequence("");
 		song1.setLyrics(SONG_1_LYRICS);
 		model.addSong(song1);
-
+		
 		Song song2 = new Song("b867931a-d333-4e05-9847-f8ae80cdb5b2");
 		song2.setTitle("10.000 Reasons");
 		song2.setComposer("Matt Redman & Jonas Myrin");
@@ -188,20 +188,20 @@ public class XMLConverterTest {
 		song2.setChordSequence("");
 		song2.setLyrics(SONG_2_LYRICS);
 		model.addSong(song2);
-
+		
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		XMLConverter.fromPersistableToXML(model, outputStream);
 		String output = outputStream.toString();
 		assertEquals(SONGS_XML, output);
 	}
-
+	
 	@Test
 	public void songsFromXML() {
 		SongsModel model = XMLConverter.fromXMLToPersistable(new ByteArrayInputStream(SONGS_XML.getBytes()));
-
+		
 		assertNotNull(model);
 		assertNotNull(model.getSongs());
 		assertEquals(2, model.getSongs().size());
 	}
-
+	
 }

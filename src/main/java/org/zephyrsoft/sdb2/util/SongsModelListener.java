@@ -16,9 +16,6 @@
  */
 package org.zephyrsoft.sdb2.util;
 
-import java.util.Collection;
-
-import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 
 /**
@@ -26,6 +23,6 @@ import org.zephyrsoft.sdb2.model.SongsModel;
  */
 public interface SongsModelListener {
 	
-	void songsModelChanged(Iterable<Song> changedSongs);
+	void songsModelChanged();
 	
 }

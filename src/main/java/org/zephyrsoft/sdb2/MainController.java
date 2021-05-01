@@ -101,7 +101,8 @@ public class MainController implements Scroller {
 	private RemoteController remoteController;
 	
 	private String songsFileName = FileAndDirectoryLocations.getDefaultSongsFileName();
-	private SongsModel songs = null;
+	private final SongsModel songs = new SongsModel();
+	private SongsModelController songsController = new SongsModelController(songs);
 	private SettingsModel settings = null;
 	
 	private List<SelectableDisplay> screens;
@@ -115,8 +116,6 @@ public class MainController implements Scroller {
 	private final static Pattern imagePattern = Pattern.compile("(?i)^.*\\.(png|jpg|jpeg|gif|bmp)$");
 	
 	private Thread shutdownHook = null;
-	
-	private SongsModelController songsController;
 	
 	public MainController(IOController ioController, StatisticsController statisticsController) {
 		this.ioController = ioController;
@@ -418,13 +417,7 @@ public class MainController implements Scroller {
 		}
 		SongsModel songsLoaded = populateSongsModel(songsFileName);
 		if (songsLoaded != null) {
-			if (songs == null) {
-				songsLoaded.setAutoSort(true);
-				songs = songsLoaded;
-				songsController = new SongsModelController(songs);
-			} else {
-				songsController.update(songsLoaded);
-			}
+			songsController.update(songsLoaded);
 		}
 		
 		if (shutdownHook != null) {
