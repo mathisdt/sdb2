@@ -2,16 +2,15 @@
  * This file is part of the Song Database (SDB).
  *
  * SDB is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
+ * under the terms of the GNU General Public License 3.0 as published by
+ * the Free Software Foundation.
  *
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * GNU General Public License 3.0 for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU General Public License 3.0
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
 package org.zephyrsoft.sdb2.util.gui;
@@ -22,13 +21,14 @@ import java.awt.Image;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 
 /**
  * Preview accessory for images in {@link JFileChooser}
- * 
+ *
  * @author Oracle and/or its affiliates
  */
 public class ImagePreview extends JComponent implements PropertyChangeListener {

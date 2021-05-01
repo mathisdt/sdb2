@@ -2,16 +2,15 @@
  * This file is part of the Song Database (SDB).
  *
  * SDB is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
+ * under the terms of the GNU General Public License 3.0 as published by
+ * the Free Software Foundation.
  *
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * GNU General Public License 3.0 for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU General Public License 3.0
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
 package org.zephyrsoft.sdb2.gui;
@@ -48,9 +47,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -200,7 +199,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JButton btnUnselect;
 	private JButton btnDown;
 	private JPanel panelSectionButtons;
-	private List<PartButtonGroup> listSectionButtons = new LinkedList<>();
+	private List<PartButtonGroup> listSectionButtons = new ArrayList<>();
 	private GridBagConstraints panelSectionButtonsHints;
 	private GridBagConstraints panelSectionButtonsLastRowHints;
 	private JButton btnJumpToSelected;
