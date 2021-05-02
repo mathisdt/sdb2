@@ -99,9 +99,11 @@ public class PatchController extends SongsModelController {
 		if (!remoteController.getPrefix().equals(properties.getProperty(PREF_DB_PREFIX, remoteController.getPrefix())) ||
 			!remoteController.getServer().equals(properties.getProperty(PREF_DB_SERVER, remoteController.getServer())))
 			resetDB();
-		LOG.debug("Loaded db at prefix \"" + remoteController.getPrefix() + "\" and version: " + currentVersionId);
+		LOG.debug("Loaded db for server " + remoteController.getServer() + "\\" + remoteController.getPrefix() + " and version: " + currentVersionId);
 		
+		// Collect offline changes, align songs with db, and rebase changes later:
 		offlineChanges = collectChanges(songs);
+		songs.update(db);
 		
 		return true;
 	}
@@ -255,19 +257,34 @@ public class PatchController extends SongsModelController {
 		}
 	}
 	
+	/**
+	 * To collect differences with the db and also update the given songs to match with the db.
+	 *
+	 * @param songs
+	 * @param alignWithDB
+	 * @return
+	 */
 	private List<Song> collectChanges(SongsModel songs) {
 		List<Song> changes = new LinkedList<>();
 		Map<String, Song> dbMap = db.toMap();
 		Map<String, Song> songsMap = songs.toMap();
 		// If song is has been changed in songs:
-		for (Map.Entry<String, Song> entry : songsMap.entrySet()) {
-			if (!entry.getValue().equals(dbMap.get(entry.getKey())))
-				changes.add(entry.getValue());
+		for (Map.Entry<String, Song> songsEntry : songsMap.entrySet()) {
+			if (dbMap.containsKey(songsEntry.getKey())) {
+				Song dbSong = dbMap.get(songsEntry.getKey());
+				if (!songsEntry.getValue().equals(dbSong)) {
+					changes.add(songsEntry.getValue());
+				}
+			} else {
+				// New Song in songs:
+				changes.add(songsEntry.getValue());
+			}
 		}
-		// If song has been removed in songs, add an empty one:
+		// If song has been removed in songs, add an empty one to changes:
 		for (String key : dbMap.keySet()) {
-			if (!songsMap.containsKey(key))
+			if (!songsMap.containsKey(key)) {
 				changes.add(new Song(key));
+			}
 		}
 		return changes;
 	}

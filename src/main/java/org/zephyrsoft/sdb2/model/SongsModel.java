@@ -168,13 +168,11 @@ public class SongsModel implements Iterable<Song>, Persistable {
 	}
 	
 	public void update(SongsModel newModel) {
-		ArrayList<Song> changedSongs = new ArrayList<>(songs);
 		songs.clear();
 		songs.addAll(newModel.getSongs());
 		if (autoSort) {
 			sortSongs();
 		}
-		changedSongs.addAll(songs);
 		notifyListModelListeners();
 	}
 	
@@ -214,7 +212,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 	 * @return number of actually changed songs
 	 */
 	public List<Song> updateSongsByUUID(Iterable<Song> changedSongs) {
-		ArrayList<Song> actuallyChangedSongs = new ArrayList<Song>();
+		ArrayList<Song> actuallyChangedSongs = new ArrayList<>();
 		for (Song song : changedSongs) {
 			Song found = getByUUID(song.getUUID());
 			if (song.isEmpty()) {

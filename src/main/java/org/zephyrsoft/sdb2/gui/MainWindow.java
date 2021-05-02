@@ -2865,6 +2865,10 @@ public class MainWindow extends JFrame implements UIScroller {
 				path = "/org/zephyrsoft/sdb2/remote-orange.png";
 				tooltip = "Remote disconnecting...";
 				break;
+			case DB_DISCONNECTED:
+				path = "/org/zephyrsoft/sdb2/remote-orange.png";
+				tooltip = "Remote db offline! Please notify your admin!";
+				break;
 			case FAILURE:
 				path = "/org/zephyrsoft/sdb2/remote-red.png";
 				tooltip = "Remote connection failure! Type Strg+R to reconnect.";

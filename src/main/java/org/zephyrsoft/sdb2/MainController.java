@@ -100,7 +100,7 @@ public class MainController implements Scroller {
 	private RemoteController remoteController;
 	
 	private String songsFileName = FileAndDirectoryLocations.getDefaultSongsFileName();
-	private final SongsModel songs = new SongsModel();
+	private final SongsModel songs = new SongsModel(true);
 	private SongsModelController songsController = new SongsModelController(songs);
 	private SettingsModel settings = null;
 	
@@ -138,6 +138,7 @@ public class MainController implements Scroller {
 				remoteController.getHealthDB().onChange((h, args) -> {
 					if (h == Health.online && !(songsController instanceof PatchController))
 						songsController = new PatchController(songs, remoteController);
+					setRemoteStatus(h == Health.online ? RemoteStatus.CONNECTED : RemoteStatus.DB_DISCONNECTED);
 				});
 				if (remoteController.getHealthDB().get() == Health.online && !(songsController instanceof PatchController))
 					songsController = new PatchController(songs, remoteController);
@@ -375,7 +376,6 @@ public class MainController implements Scroller {
 		if (remoteController != null) {
 			setRemoteStatus(RemoteStatus.DISCONNECTING);
 			if (songsController != null) {
-				songsController.save();
 				songsController = new SongsModelController(songs);
 			}
 			if (presentationControl != null)

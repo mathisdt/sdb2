@@ -16,11 +16,7 @@
  */
 package org.zephyrsoft.sdb2.model;
 
-import org.zephyrsoft.sdb2.IOController;
-
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * 
@@ -32,23 +28,23 @@ public class SongsModelController {
 	public SongsModelController(SongsModel songs) {
 		this.songs = songs;
 	}
-
+	
 	public boolean updateSong(Song changedSong) {
 		return updateSongs(Collections.singletonList(changedSong));
 	}
-
+	
 	public boolean updateSongs(Iterable<Song> changedSongs) {
 		return !songs.updateSongsByUUID(changedSongs).isEmpty();
 	}
-
+	
 	public boolean removeSong(Song songToDelete) {
 		return songs.removeSong(songToDelete);
 	}
-
-	public void update(SongsModel songs){
-		songs.update(songs);
+	
+	public void update(SongsModel songs) {
+		this.songs.update(songs);
 	}
-
+	
 	public boolean save() {
 		// TODO: We could move saveSongs from Maincontroller here
 		return true;
