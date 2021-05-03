@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -103,7 +104,11 @@ public class PatchController extends SongsModelController {
 		
 		// Collect offline changes, align songs with db, and rebase changes later:
 		offlineChanges = collectChanges(songs);
-		songs.update(db);
+		// Make sure our local songs are align with db:
+		ArrayList<Song> copy = new ArrayList<Song>(db.getSize());
+		for (Song song : db)
+			copy.add(new Song(song));
+		songs.update(new SongsModel(copy, false));
 		
 		return true;
 	}
@@ -189,15 +194,17 @@ public class PatchController extends SongsModelController {
 				return;
 		}
 		
-		ArrayList<Song> changedSongs = new ArrayList<>();
+		HashMap<String, Song> changedSongs = new HashMap<>();
 		long versionAfterChangingSongs = currentVersionId;
 		final DiffMatchPatch dmp = new DiffMatchPatch();
 		while (patchVersions.containsKey(versionAfterChangingSongs + 1) && patchMap.containsKey(patchVersions.get(versionAfterChangingSongs + 1)
 			.getUUID())) {
 			PatchVersion nextVersion = patchVersions.get(versionAfterChangingSongs + 1);
 			Collection<Song> patch = patchMap.get(nextVersion.getUUID());
-			for (Song patchSong : patch) {
-				Song song = db.getByUUID(patchSong.getUUID());
+			for (Song patchSong : Objects.requireNonNull(patch)) {
+				Song song = changedSongs.get(patchSong.getUUID());
+				if (song == null)
+					song = db.getByUUID(patchSong.getUUID());
 				Map<String, String> songEntries = song == null ? new Song(patchSong.getUUID()).toMap() : song.toMap();
 				for (Map.Entry<String, String> patchEntry : patchSong.toMap().entrySet()) {
 					if (patchEntry.getKey().equals("uuid") || patchEntry.getValue() == null || patchEntry.getValue().isEmpty())
@@ -213,18 +220,18 @@ public class PatchController extends SongsModelController {
 					else
 						songEntries.put(patchEntry.getKey(), (String) result[0]);
 				}
-				changedSongs.add(new Song(songEntries));
+				changedSongs.put(patchSong.getUUID(), new Song(songEntries));
 			}
 			versionAfterChangingSongs = nextVersion.getId();
 		}
 		if (!changedSongs.isEmpty()) {
-			db.updateSongsByUUID(changedSongs);
+			db.updateSongsByUUID(changedSongs.values());
 			currentVersionId = versionAfterChangingSongs;
 			
 			// Identify conflicts, remove them from offline changes
 			if (offlineChanges != null && !offlineChanges.isEmpty()) {
 				LinkedList<Song> conflictChanges = new LinkedList<>();
-				for (Song remoteChange : changedSongs) {
+				for (Song remoteChange : changedSongs.values()) {
 					for (Song offlineChange : offlineChanges) {
 						if (remoteChange.getUUID().equals(offlineChange.getUUID())) {
 							conflictChanges.add(offlineChange);
@@ -235,7 +242,7 @@ public class PatchController extends SongsModelController {
 				conflicts.addAll(conflictChanges);
 			}
 			
-			super.updateSongs(changedSongs);
+			super.updateSongs(changedSongs.values());
 		}
 		publishOfflineChanges();
 	}

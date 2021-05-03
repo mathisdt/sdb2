@@ -147,7 +147,7 @@ public class RemoteController {
 				(a, b) -> false);
 			
 			healthDB = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.HEALTH_DB),
-				Health::valueOf, null, RemoteTopic.PATCHES_REQUEST_PATCH_QOS, RemoteTopic.PATCHES_REQUEST_PATCH_RETAINED, null);
+				Health::valueOf, null, RemoteTopic.HEALTH_DB_QOS, RemoteTopic.HEALTH_DB_RETAINED, null);
 		} else {
 			this.playlist = null;
 			this.requestVersion = null;

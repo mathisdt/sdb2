@@ -1058,7 +1058,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		setTextAndRewind(textFieldAuthorTranslation, song.getAuthorTranslation());
 		setTextAndRewind(textFieldPublisher, song.getPublisher());
 		setTextAndRewind(textFieldAdditionalCopyrightNotes, song.getAdditionalCopyrightNotes());
-		setTextAndRewind(textFieldTempo, song.getSongNotes());
+		setTextAndRewind(textFieldTempo, song.getTempo());
 		setTextAndRewind(editorChordSequence, song.getChordSequence());
 		setTextAndRewind(editorDrumNotes, song.getDrumNotes());
 		setTextAndRewind(editorSongNotes, song.getSongNotes());
