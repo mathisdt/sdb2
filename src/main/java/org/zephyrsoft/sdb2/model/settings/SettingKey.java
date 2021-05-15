@@ -95,6 +95,8 @@ public enum SettingKey {
 	REMOTE_SERVER(String.class),
 	/** user-name for remote connection */
 	REMOTE_USERNAME(String.class),
+	/** client id for remote connection */
+	REMOTE_CLIENT_ID(String.class),
 	/** password for remote connection */
 	REMOTE_PASSWORD(String.class),
 	/** prefix for remote connection */

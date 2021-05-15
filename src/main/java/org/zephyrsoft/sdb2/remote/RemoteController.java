@@ -2,15 +2,16 @@
  * This file is part of the Song Database (SDB).
  *
  * SDB is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License 3.0 as published by
- * the Free Software Foundation.
+ * under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
  *
  * SDB is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License 3.0 for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 3.0
+ * You should have received a copy of the GNU General Public License
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
 package org.zephyrsoft.sdb2.remote;
@@ -24,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.gui.MainWindow;
+import org.zephyrsoft.sdb2.model.Persistable;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.XMLConverter;
@@ -40,19 +42,19 @@ public class RemoteController {
 	
 	private final MQTT mqtt;
 	private final MqttObject<Song> song;
-	private final MqttObject<SongPosition> songPosition;
+	private final MqttObject<Position> position;
 	private final MqttObject<SongsModel> playlist;
-	private final MqttObject<PatchVersion> latestVersion;
-	private final MqttObject<PatchVersion> requestVersion;
-	private final MqttObject<SongsModel> latestPatch;
-	private final MqttObject<SongsModel> requestPatch;
-	private final MqttObject<Long> requestGet;
-	private final MqttObject<String> latestReject;
+	private final MqttObject<Version> latestVersion;
+	private final MqttObject<SongsModel> latestChanges;
+	private final MqttObject<PatchRequest> requestGet;
+	private final MqttObject<Patches> requestPatches;
+	private final MqttObject<ChangeReject> latestReject;
 	private final MqttObject<Health> healthDB;
 	private final RemotePresenter remotePresenter;
 	private final String prefix;
 	private final String room;
 	private final String server;
+	private final String clientID;
 	private final String username;
 	private final String password;
 	private final boolean showTitle;
@@ -81,85 +83,94 @@ public class RemoteController {
 		username = settingsModel.get(SettingKey.REMOTE_USERNAME, String.class);
 		password = settingsModel.get(SettingKey.REMOTE_PASSWORD, String.class);
 		showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
+		clientID = settingsModel.get(SettingKey.REMOTE_CLIENT_ID, String.class);
 		
-		mqtt = new MQTT(server, username, password);
+		mqtt = new MQTT(server, clientID, username, password);
 		
 		mqtt.onConnectionLost(cause -> {
 			mainController.setRemoteStatus(RemoteStatus.FAILURE);
 			cause.printStackTrace();
 		});
 		
-		song = new MqttObject<>(mqtt, formatTopic(RemoteTopic.SONG),
-			RemoteController::parseSong, RemoteController::songToString, RemoteTopic.SONG_QOS, RemoteTopic.SONG_RETAINED,
+		position = new MqttObject<>(mqtt, formatTopic(RemoteTopic.POSITION), (s) -> (Position) parseXML(s),
+			RemoteController::toXML, RemoteTopic.POSITION_QOS, RemoteTopic.POSITION_RETAINED,
 			null);
-		if (mainWindow != null)
-			song.onRemoteChange((s, a) -> mainWindow.present(s));
-		else
-			song.onRemoteChange((s, a) -> mainController.present(new Presentable(s, null)));
+		position.onRemoteChange((p, a) -> handleSongPositionChange(mainController, mainWindow, p));
 		
-		songPosition = new MqttObject<>(mqtt, formatTopic(RemoteTopic.SONG_POSITION), SongPosition::parseSongPosition,
-			null, RemoteTopic.SONG_POSITION_QOS, RemoteTopic.SONG_POSITION_RETAINED,
+		song = new MqttObject<>(mqtt, formatTopic(RemoteTopic.SONG),
+			(s) -> (Song) parseXML(s), RemoteController::toXML, RemoteTopic.SONG_QOS, RemoteTopic.SONG_RETAINED,
 			null);
-		songPosition.onRemoteChange((p, a) -> {
-			try {
-				mainController.moveToLine(p.getPart(showTitle), p.getLine());
-			} catch (IndexOutOfBoundsException e) {
-				LOG.warn("Part or line out of bounds!");
-			}
-			
-		});
-		// TODO: add mainwindow caller
+		song.onRemoteChange((s, a) -> handleSongChange(mainController, mainWindow, s));
 		
 		if (mainWindow != null) {
 			playlist = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PLAYLIST),
-				RemoteController::parseSongsModel,
-				RemoteController::songsModelToString, RemoteTopic.PLAYLIST_QOS, RemoteTopic.PLAYLIST_RETAINED,
+				(s) -> (SongsModel) parseXML(s),
+				RemoteController::toXML, RemoteTopic.PLAYLIST_QOS, RemoteTopic.PLAYLIST_RETAINED,
 				null);
 			playlist.onRemoteChange((p, a) -> mainWindow.getPresentModel().update(p));
 			mainWindow.getPresentModel().addSongsModelListener(() -> playlist.set(new SongsModel(mainWindow.getPresentModel())));
 			
 			latestVersion = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PATCHES_LATEST_VERSION),
-				PatchVersion::parsePatchVersion,
-				null, RemoteTopic.PATCHES_LATEST_VERSION_QOS, RemoteTopic.PATCHES_LATEST_VERSION_RETAINED,
+				(s) -> (Version) parseXML(s),
+				RemoteController::toXML, RemoteTopic.PATCHES_LATEST_VERSION_QOS, RemoteTopic.PATCHES_LATEST_VERSION_RETAINED,
 				(a, b) -> false);
 			
-			latestPatch = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PATCHES_LATEST_PATCH),
-				RemoteController::parseSongsModel,
-				RemoteController::songsModelToString, RemoteTopic.PATCHES_LATEST_PATCH_QOS, RemoteTopic.PATCHES_LATEST_PATCH_RETAINED,
+			latestChanges = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PATCHES_LATEST_CHANGES),
+				(s) -> (SongsModel) parseXML(s),
+				RemoteController::toXML, RemoteTopic.PATCHES_LATEST_CHANGES_QOS, RemoteTopic.PATCHES_LATEST_CHANEGS_RETAINED,
 				(a, b) -> false);
 			
 			latestReject = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PATCHES_LATEST_REJECT),
-				null,
+				(s) -> (ChangeReject) parseXML(s),
 				null, RemoteTopic.PATCHES_LATEST_REJECT_QOS, RemoteTopic.PATCHES_LATEST_REJECT_RETAINED,
 				(a, b) -> false);
 			
 			requestGet = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.PATCHES_REQUEST_GET),
-				String::valueOf, RemoteTopic.PATCHES_REQUEST_GET_QOS, RemoteTopic.PATCHES_REQUEST_GET_RETAINED);
+				RemoteController::toXML, RemoteTopic.PATCHES_REQUEST_GET_QOS, RemoteTopic.PATCHES_REQUEST_GET_RETAINED);
 			
-			requestVersion = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.PATCHES_REQUEST_VERSION),
-				PatchVersion::parsePatchVersion,
-				null, RemoteTopic.PATCHES_REQUEST_VERSION_QOS, RemoteTopic.PATCHES_REQUEST_VERSION_RETAINED,
-				(a, b) -> false);
-			
-			requestPatch = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.PATCHES_REQUEST_PATCH),
-				RemoteController::parseSongsModel,
-				RemoteController::songsModelToString, RemoteTopic.PATCHES_REQUEST_PATCH_QOS, RemoteTopic.PATCHES_REQUEST_PATCH_RETAINED,
+			requestPatches = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.PATCHES_REQUEST_PATCHES),
+				(s) -> (Patches) parseXML(s),
+				RemoteController::toXML, RemoteTopic.PATCHES_REQUEST_PATCHES_QOS, RemoteTopic.PATCHES_REQUEST_PATCHES_RETAINED,
 				(a, b) -> false);
 			
 			healthDB = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.HEALTH_DB),
 				Health::valueOf, null, RemoteTopic.HEALTH_DB_QOS, RemoteTopic.HEALTH_DB_RETAINED, null);
 		} else {
 			this.playlist = null;
-			this.requestVersion = null;
-			this.requestPatch = null;
+			this.requestPatches = null;
 			this.requestGet = null;
 			this.latestVersion = null;
 			this.latestReject = null;
-			this.latestPatch = null;
+			this.latestChanges = null;
 			this.healthDB = null;
 		}
 		
 		remotePresenter = new RemotePresenter(this, showTitle);
+	}
+	
+	private void handleSongChange(MainController mainController, MainWindow mainWindow, Song song) {
+		if (mainWindow != null)
+			mainWindow.present(song);
+		else
+			mainController.present(new Presentable(song, null));
+		// TODO: Directly jump to current position:
+		// if(song != null)
+		// handleSongPositionChange(mainController, mainWindow, position.get());
+	}
+	
+	private void handleSongPositionChange(MainController mainController, MainWindow mainWindow, Position p) {
+		if (p == null) {
+			// TODO Use empty position message as blank instead of null.
+			// handleSongChange(mainController, mainWindow, null);
+			return;
+		} else if (song != null && song.get() != null && song.get().getUUID() != null && song.get().getUUID().equals(p.getUUID())) {
+			// TODO: add mainwindow call, to also visualize the move inside the gui.
+			try {
+				mainController.moveToLine(p.getPart(showTitle), p.getLine());
+			} catch (IndexOutOfBoundsException e) {
+				LOG.warn("Part or line out of bounds!");
+			}
+		}
 	}
 	
 	public MqttObject<Song> getSong() {
@@ -170,8 +181,8 @@ public class RemoteController {
 		return playlist;
 	}
 	
-	public MqttObject<SongPosition> getSongPosition() {
-		return songPosition;
+	public MqttObject<Position> getPosition() {
+		return position;
 	}
 	
 	public RemotePresenter getRemotePresenter(Presentable presentable) {
@@ -179,46 +190,18 @@ public class RemoteController {
 		return remotePresenter;
 	}
 	
-	/**
-	 * Converts a song object to string.
-	 *
-	 * @return song as string
-	 */
-	private static String songToString(Song song) {
-		SongsModel model = new SongsModel();
-		if (song != null)
-			model.addSong(song);
-		return songsModelToString(model);
-	}
-	
-	/**
-	 * Parses a song string to a song object.
-	 *
-	 * @return song as string
-	 */
-	private static Song parseSong(String xml) {
-		SongsModel model = parseSongsModel(xml);
-		return model.getSongs().size() == 1 ? model.getSongs().iterator().next() : null;
-	}
-	
-	/**
-	 * Converts a SongsModel object to string.
-	 *
-	 * @return SongsModel as string
-	 */
-	private static String songsModelToString(SongsModel songsModel) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		XMLConverter.fromPersistableToXML(songsModel, baos, false);
-		return baos.toString(StandardCharsets.UTF_8);
-	}
-	
-	/**
-	 * Parses a SongsModel string to a SongsModel object.
-	 *
-	 * @return SongsModel instance
-	 */
-	static SongsModel parseSongsModel(String xml) {
+	static Persistable parseXML(String xml) {
+		if (xml.isEmpty())
+			return null;
 		return XMLConverter.fromXMLToPersistable(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+	}
+	
+	static String toXML(Persistable persistable) {
+		if (persistable == null)
+			return "";
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		XMLConverter.fromPersistableToXML(persistable, baos, false, true);
+		return baos.toString(StandardCharsets.UTF_8);
 	}
 	
 	/**
@@ -233,7 +216,7 @@ public class RemoteController {
 	}
 	
 	private String formatClientIDTopic(String topic) {
-		return String.format(topic, prefix.isBlank() ? "" : prefix + "/", mqtt.getClientID());
+		return String.format(topic, prefix.isBlank() ? "" : prefix + "/", clientID);
 	}
 	
 	public boolean checkSettingsChanged(SettingsModel settings) {
@@ -242,32 +225,29 @@ public class RemoteController {
 		String sServer = settings.get(SettingKey.REMOTE_SERVER, String.class);
 		String sUsername = settings.get(SettingKey.REMOTE_USERNAME, String.class);
 		String sPassword = settings.get(SettingKey.REMOTE_PASSWORD, String.class);
+		String sClientID = settings.get(SettingKey.REMOTE_CLIENT_ID, String.class);
 		
 		return !sPrefix.equals(prefix) || !sRoom.equals(room) || !sServer.equals(server) || !sUsername.equals(sUsername) || !sPassword
-			.equals(password);
+			.equals(password) || !sClientID.equals(clientID);
 	}
 	
-	public MqttObject<PatchVersion> getLatestVersion() {
+	public MqttObject<Version> getLatestVersion() {
 		return latestVersion;
 	}
 	
-	public MqttObject<PatchVersion> getRequestVersion() {
-		return requestVersion;
+	public MqttObject<SongsModel> getLatestChanges() {
+		return latestChanges;
 	}
 	
-	public MqttObject<SongsModel> getLatestPatch() {
-		return latestPatch;
+	public MqttObject<Patches> getRequestPatches() {
+		return requestPatches;
 	}
 	
-	public MqttObject<SongsModel> getRequestPatch() {
-		return requestPatch;
-	}
-	
-	public MqttObject<Long> getRequestGet() {
+	public MqttObject<PatchRequest> getRequestGet() {
 		return requestGet;
 	}
 	
-	public MqttObject<String> getLatestReject() {
+	public MqttObject<ChangeReject> getLatestReject() {
 		return latestReject;
 	}
 	

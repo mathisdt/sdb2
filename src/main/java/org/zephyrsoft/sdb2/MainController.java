@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -136,8 +137,20 @@ public class MainController implements Scroller {
 			try {
 				remoteController = new RemoteController(settings, this, mainWindow);
 				remoteController.getHealthDB().onChange((h, args) -> {
-					if (h == Health.online && !(songsController instanceof PatchController))
-						songsController = new PatchController(songs, remoteController);
+					switch (h) {
+						case online:
+							if (!(songsController instanceof PatchController))
+								songsController = new PatchController(songs, remoteController);
+							break;
+						case offline:
+							if (!(songsController instanceof PatchController))
+								break;
+							SongsModelController oldController = songsController;
+							songsController = new SongsModelController(songs);
+							oldController.save();
+							oldController.close();
+							break;
+					}
 					setRemoteStatus(h == Health.online ? RemoteStatus.CONNECTED : RemoteStatus.DB_DISCONNECTED);
 				});
 				if (remoteController.getHealthDB().get() == Health.online && !(songsController instanceof PatchController))
@@ -375,7 +388,8 @@ public class MainController implements Scroller {
 	public boolean closeRemoteController() {
 		if (remoteController != null) {
 			setRemoteStatus(RemoteStatus.DISCONNECTING);
-			if (songsController != null) {
+			if (songsController != null && songsController instanceof PatchController) {
+				songsController.close();
 				songsController = new SongsModelController(songs);
 			}
 			if (presentationControl != null)
@@ -524,6 +538,7 @@ public class MainController implements Scroller {
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_PASSWORD, "");
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_SERVER, "tcp://localhost:1883");
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_USERNAME, "");
+		putDefaultIfKeyIsUnset(SettingKey.REMOTE_CLIENT_ID, UUID.randomUUID().toString());
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_PREFIX, "");
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_NAMESPACE, "default");
 		

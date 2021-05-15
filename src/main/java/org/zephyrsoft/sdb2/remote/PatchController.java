@@ -18,7 +18,6 @@ import java.util.Properties;
 import java.util.UUID;
 
 import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
-import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch.Patch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.FileAndDirectoryLocations;
@@ -26,6 +25,7 @@ import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.SongsModelController;
 import org.zephyrsoft.sdb2.model.XMLConverter;
+import org.zephyrsoft.sdb2.remote.MqttObject.OnChangeListener;
 
 public class PatchController extends SongsModelController {
 	
@@ -36,13 +36,18 @@ public class PatchController extends SongsModelController {
 	private static final String PREF_DB_SERVER = "DB_SERVER";
 	private static final String PREF_SONGS_VERSION_ID = "SONGS_VERSION_ID";
 	private final HashMap<String, Collection<Song>> patchMap = new HashMap<>();
-	private final HashMap<Long, PatchVersion> patchVersions = new HashMap<>();
+	private final HashMap<Long, Version> patchVersions = new HashMap<>();
 	private final HashSet<String> rejects = new HashSet<>();
 	private long currentVersionId;
 	private final RemoteController remoteController;
 	private boolean initialRequestMissingPatches;
 	private SongsModel db;
 	private List<Song> offlineChanges;
+	private OnChangeListener<SongsModel> onLatestChangeListener = (changes, args) -> addChanges(changes,
+		(String) args[RemoteTopic.PATCHES_LATEST_CHANGES_ARG_UUID]);
+	private OnChangeListener<Version> onLatestVersionListener = (version, args) -> addPatchVersion(version);
+	private OnChangeListener<ChangeReject> onLatestRejectListener = (reject, args) -> rejectPatch(reject.getUUID());
+	private OnChangeListener<Patches> onRequestPatchesListener = (patches, args) -> addPatches(patches);
 	
 	// Contains overwritten local changes: TODO: Add all rejected too
 	// We could create a mergetool to
@@ -54,11 +59,10 @@ public class PatchController extends SongsModelController {
 		
 		load();
 		
-		remoteController.getLatestPatch().onChange((patch, args) -> addPatch(patch, (String) args[RemoteTopic.PATCHES_LATEST_PATCH_ARG_UUID]));
-		remoteController.getRequestPatch().onChange((patch, args) -> addPatch(patch, (String) args[RemoteTopic.PATCHES_REQUEST_PATCH_ARG_UUID]));
-		remoteController.getLatestVersion().onChange((version, args) -> addPatchVersion(version));
-		remoteController.getRequestVersion().onChange((version, args) -> addPatchVersion(version));
-		remoteController.getLatestReject().onChange((uuid, args) -> rejectPatch(uuid));
+		remoteController.getLatestChanges().onChange(onLatestChangeListener);
+		remoteController.getLatestVersion().onChange(onLatestVersionListener);
+		remoteController.getLatestReject().onChange(onLatestRejectListener);
+		remoteController.getRequestPatches().onChange(onRequestPatchesListener);
 		
 		addPatchVersion(remoteController.getLatestVersion().get());
 	}
@@ -115,10 +119,10 @@ public class PatchController extends SongsModelController {
 	
 	/**
 	 * To reject patches.
-	 * 
+	 *
 	 * TODO: There is currently no reject handling for published patches by this client.
 	 * As the server may allows fast forward merges. The user has to handle everything else.
-	 * 
+	 *
 	 * @param hash
 	 */
 	private void rejectPatch(String hash) {
@@ -131,25 +135,25 @@ public class PatchController extends SongsModelController {
 	/**
 	 * Add patchversion to patchversion list.
 	 *
-	 * @param patchVersion
+	 * @param version
 	 */
-	private void addPatchVersion(PatchVersion patchVersion) {
-		if (patchVersion == null)
+	private void addPatchVersion(Version version) {
+		if (version == null)
 			return;
 		
-		if (patchVersion.getId() == currentVersionId) {
+		if (version.getID() == currentVersionId) {
 			publishOfflineChanges();
 			return;
 		}
 		
-		if (patchVersion.getId() > currentVersionId) {
-			patchVersions.put(patchVersion.getId(), patchVersion);
+		if (version.getID() > currentVersionId) {
+			patchVersions.put(version.getID(), version);
 			applyPatches();
 			if (!initialRequestMissingPatches && remoteController.getHealthDB().get() == Health.online) {
 				initialRequestMissingPatches = true;
 				requestMissingPatches();
 			}
-		} else if (patchVersion.getId() < currentVersionId) {
+		} else if (version.getID() < currentVersionId) {
 			resetDB();
 			requestMissingPatches();
 		}
@@ -174,14 +178,26 @@ public class PatchController extends SongsModelController {
 	/**
 	 * Add a new patch to the patchMap and apply if the version exists and if it's not rejected.
 	 *
-	 * @param patch
+	 * @param changes
 	 */
-	private void addPatch(SongsModel patch, String uuid) {
+	private void addChanges(SongsModel changes, String uuid) {
 		if (rejects.contains(uuid))
 			rejects.remove(uuid);
 		else
-			patchMap.put(uuid, patch.getSongs());
+			patchMap.put(uuid, changes.getSongs());
 		applyPatches();
+	}
+	
+	/**
+	 * Add multiple patches in one call.
+	 *
+	 * @param patches
+	 */
+	private void addPatches(Patches patches) {
+		for (Patch patch : patches.getPatches()) {
+			addChanges(patch.getSongs(), patch.getVersion().getUUID());
+			addPatchVersion(patch.getVersion());
+		}
 	}
 	
 	/**
@@ -189,7 +205,7 @@ public class PatchController extends SongsModelController {
 	 * It will run only if we got all patches up to the last one to not update the local database to frequently.
 	 */
 	private void applyPatches() {
-		for (Long i = currentVersionId + 1; i <= remoteController.getLatestVersion().get().getId(); i++) {
+		for (Long i = currentVersionId + 1; i <= remoteController.getLatestVersion().get().getID(); i++) {
 			if (!patchVersions.containsKey(i) || !patchMap.containsKey(patchVersions.get(i).getUUID()))
 				return;
 		}
@@ -199,7 +215,7 @@ public class PatchController extends SongsModelController {
 		final DiffMatchPatch dmp = new DiffMatchPatch();
 		while (patchVersions.containsKey(versionAfterChangingSongs + 1) && patchMap.containsKey(patchVersions.get(versionAfterChangingSongs + 1)
 			.getUUID())) {
-			PatchVersion nextVersion = patchVersions.get(versionAfterChangingSongs + 1);
+			Version nextVersion = patchVersions.get(versionAfterChangingSongs + 1);
 			Collection<Song> patch = patchMap.get(nextVersion.getUUID());
 			for (Song patchSong : Objects.requireNonNull(patch)) {
 				Song song = changedSongs.get(patchSong.getUUID());
@@ -212,7 +228,7 @@ public class PatchController extends SongsModelController {
 					
 					String previous = songEntries.containsKey(patchEntry.getKey()) && songEntries.get(patchEntry.getKey()) != null ? songEntries
 						.get(patchEntry.getKey()) : "";
-					LinkedList<Patch> patchesForEntry = (LinkedList<Patch>) dmp.patchFromText(patchEntry.getValue());
+					LinkedList<DiffMatchPatch.Patch> patchesForEntry = (LinkedList<DiffMatchPatch.Patch>) dmp.patchFromText(patchEntry.getValue());
 					Object[] result = dmp.patchApply(patchesForEntry, previous);
 					// TODO: Check if all patches could be applied.
 					if (((String) result[0]).isEmpty())
@@ -222,25 +238,13 @@ public class PatchController extends SongsModelController {
 				}
 				changedSongs.put(patchSong.getUUID(), new Song(songEntries));
 			}
-			versionAfterChangingSongs = nextVersion.getId();
+			versionAfterChangingSongs = nextVersion.getID();
 		}
 		if (!changedSongs.isEmpty()) {
 			db.updateSongsByUUID(changedSongs.values());
 			currentVersionId = versionAfterChangingSongs;
 			
-			// Identify conflicts, remove them from offline changes
-			if (offlineChanges != null && !offlineChanges.isEmpty()) {
-				LinkedList<Song> conflictChanges = new LinkedList<>();
-				for (Song remoteChange : changedSongs.values()) {
-					for (Song offlineChange : offlineChanges) {
-						if (remoteChange.getUUID().equals(offlineChange.getUUID())) {
-							conflictChanges.add(offlineChange);
-						}
-					}
-				}
-				offlineChanges.removeAll(conflictChanges);
-				conflicts.addAll(conflictChanges);
-			}
+			identifyConflicts(changedSongs);
 			
 			super.updateSongs(changedSongs.values());
 		}
@@ -248,16 +252,37 @@ public class PatchController extends SongsModelController {
 	}
 	
 	/**
+	 * To identify conflicts of pulled changes with local offline changes.
+	 *
+	 * @param changedSongs
+	 */
+	private void identifyConflicts(HashMap<String, Song> changedSongs) {
+		// Identify conflicts, remove them from offline changes
+		if (offlineChanges != null && !offlineChanges.isEmpty()) {
+			LinkedList<Song> conflictChanges = new LinkedList<>();
+			for (Song remoteChange : changedSongs.values()) {
+				for (Song offlineChange : offlineChanges) {
+					if (remoteChange.getUUID().equals(offlineChange.getUUID())) {
+						conflictChanges.add(offlineChange);
+					}
+				}
+			}
+			offlineChanges.removeAll(conflictChanges);
+			conflicts.addAll(conflictChanges);
+		}
+	}
+	
+	/**
 	 * Call this: To collect and send local changes.
 	 * This may take some time and as it compares the whole offline list with the current db.
 	 * It will be only done once, and if the db is up to date, to avoid server side rejects.
-	 * 
+	 *
 	 * TODO: Currently, online changes are preferred, as it runs after all online changes are applied.
 	 * So offline changes may be overridden.
 	 */
 	private void publishOfflineChanges() {
 		if (offlineChanges != null &&
-			remoteController.getLatestVersion().get().getId() == currentVersionId
+			remoteController.getLatestVersion().get().getID() == currentVersionId
 			&& remoteController.getHealthDB().get() == Health.online) {
 			changeSongs(offlineChanges);
 			offlineChanges = null;
@@ -268,7 +293,6 @@ public class PatchController extends SongsModelController {
 	 * To collect differences with the db and also update the given songs to match with the db.
 	 *
 	 * @param songs
-	 * @param alignWithDB
 	 * @return
 	 */
 	private List<Song> collectChanges(SongsModel songs) {
@@ -333,8 +357,8 @@ public class PatchController extends SongsModelController {
 		if (patchSongs.size() > 0) {
 			long newVersionId = currentVersionId + 1;
 			String uuid = UUID.randomUUID().toString();
-			remoteController.getLatestPatch().set(new SongsModel(patchSongs, false), remoteController.getUsername(), String.valueOf(newVersionId),
-				uuid);
+			remoteController.getLatestChanges().set(new SongsModel(patchSongs, false),
+				remoteController.getUsername(), String.valueOf(newVersionId), uuid);
 			// TODO: wait for reject or version change.
 		}
 	}
@@ -343,10 +367,11 @@ public class PatchController extends SongsModelController {
 	 * To request missing patches if, there are patches missing.
 	 */
 	private void requestMissingPatches() {
-		MqttObject<PatchVersion> latestVersion = remoteController.getLatestVersion();
-		if (latestVersion.get() != null && latestVersion.get().getId() > currentVersionId) {
-			for (long i = currentVersionId + 1; i <= latestVersion.get().getId(); i += 1)
-				remoteController.getRequestGet().set(i);
+		if (remoteController == null)
+			return;
+		MqttObject<Version> latestVersion = remoteController.getLatestVersion();
+		if (latestVersion.get() != null && latestVersion.get().getID() > currentVersionId) {
+			remoteController.getRequestGet().set(new PatchRequest(currentVersionId + 1));
 		}
 	}
 	
@@ -378,6 +403,18 @@ public class PatchController extends SongsModelController {
 		}
 	}
 	
+	/**
+	 * @see org.zephyrsoft.sdb2.model.SongsModelController#close()
+	 */
+	@Override
+	public boolean close() {
+		remoteController.getLatestChanges().removeOnChangeListener(onLatestChangeListener);
+		remoteController.getLatestVersion().removeOnChangeListener(onLatestVersionListener);
+		remoteController.getLatestReject().removeOnChangeListener(onLatestRejectListener);
+		remoteController.getRequestPatches().removeOnChangeListener(onRequestPatchesListener);
+		return true;
+	}
+	
 	@Override
 	public void update(SongsModel songs) {
 		changeSongs(collectChanges(songs));
@@ -394,4 +431,5 @@ public class PatchController extends SongsModelController {
 		changeSongs(Collections.singletonList(new Song(songToDelete.getUUID())));
 		return true;
 	}
+	
 }

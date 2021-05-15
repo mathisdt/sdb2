@@ -49,4 +49,9 @@ public class SongsModelController {
 		// TODO: We could move saveSongs from Maincontroller here
 		return true;
 	}
+	
+	public boolean close() {
+		// Called before replaced by another controller
+		return true;
+	}
 }
