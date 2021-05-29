@@ -15,9 +15,9 @@
  */
 package org.zephyrsoft.sdb2.util.converter;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
-
 import org.zephyrsoft.sdb2.model.LanguageEnum;
+
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 /**
  * XML adapter for {@link LanguageEnum}.
