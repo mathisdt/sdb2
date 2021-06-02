@@ -17,9 +17,9 @@ package org.zephyrsoft.sdb2.util.converter;
 
 import java.time.LocalDate;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
-
 import org.zephyrsoft.sdb2.util.DateTools;
+
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 /**
  * XML adapter for {@link LocalDate}.

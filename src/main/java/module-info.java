@@ -16,7 +16,7 @@ open module org.zephyrsoft.sdb2 {
 	requires org.apache.poi.poi;
 	requires itextpdf;
 	
-	requires java.xml.bind;
+	requires jakarta.xml.bind;
 	requires java.desktop;
 	requires java.sql;
 	requires java.net.http;
