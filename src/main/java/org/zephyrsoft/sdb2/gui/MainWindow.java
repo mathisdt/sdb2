@@ -490,7 +490,6 @@ public class MainWindow extends JFrame implements UIScroller {
 			FieldName[] fieldsToSearch = settingsModel.get(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.class).getFields();
 			songsListFiltered = indexer.search(IndexType.ALL_SONGS, textFieldFilter.getText(), fieldsToSearch);
 			songsListModel.refilter();
-			// TODO: implement a merging strategy, by comparing changes with the current opened song.
 			// saveSong();
 			songsListSelected = songsList.getSelectedValue();
 			loadSong();
@@ -525,7 +524,7 @@ public class MainWindow extends JFrame implements UIScroller {
 				applyFilter();
 			}
 		});
-		
+
 		// prepare for settings
 		controller.detectScreens();
 		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));

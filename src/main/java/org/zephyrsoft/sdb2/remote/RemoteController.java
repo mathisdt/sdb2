@@ -153,18 +153,15 @@ public class RemoteController {
 			mainWindow.present(song);
 		else
 			mainController.present(new Presentable(song, null));
-		// TODO: Directly jump to current position:
 		// if(song != null)
 		// handleSongPositionChange(mainController, mainWindow, position.get());
 	}
 	
 	private void handleSongPositionChange(MainController mainController, MainWindow mainWindow, Position p) {
 		if (p == null) {
-			// TODO Use empty position message as blank instead of null.
 			// handleSongChange(mainController, mainWindow, null);
 			return;
 		} else if (song != null && song.get() != null && song.get().getUUID() != null && song.get().getUUID().equals(p.getUUID())) {
-			// TODO: add mainwindow call, to also visualize the move inside the gui.
 			try {
 				mainController.moveToLine(p.getPart(showTitle), p.getLine());
 			} catch (IndexOutOfBoundsException e) {

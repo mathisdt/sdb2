@@ -231,9 +231,7 @@ public class MainController implements Scroller {
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
 		}
-		
-		// TODO REMOTE Add RemotePresenter and currentlyPresentedSong here, if remotePresenter does implement getParts.
-		
+
 		if (presentationControl.isEmpty()) {
 			ErrorDialog
 				.openDialog(

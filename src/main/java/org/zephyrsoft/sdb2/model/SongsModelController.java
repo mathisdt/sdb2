@@ -46,7 +46,6 @@ public class SongsModelController {
 	}
 	
 	public boolean save() {
-		// TODO: We could move saveSongs from Maincontroller here
 		return true;
 	}
 	

@@ -49,8 +49,7 @@ public class PatchController extends SongsModelController {
 	private OnChangeListener<ChangeReject> onLatestRejectListener = (reject, args) -> rejectPatch(reject.getUUID());
 	private OnChangeListener<Patches> onRequestPatchesListener = (patches, args) -> addPatches(patches);
 	
-	// Contains overwritten local changes: TODO: Add all rejected too
-	// We could create a mergetool to
+	// Contains overwritten local changes:
 	private LinkedList<Song> conflicts = new LinkedList<>();
 	
 	public PatchController(SongsModel songs, RemoteController remoteController) {
@@ -120,7 +119,7 @@ public class PatchController extends SongsModelController {
 	/**
 	 * To reject patches.
 	 *
-	 * TODO: There is currently no reject handling for published patches by this client.
+	 * There is currently no reject handling for published patches by this client.
 	 * As the server may allows fast forward merges. The user has to handle everything else.
 	 *
 	 * @param hash
@@ -230,7 +229,6 @@ public class PatchController extends SongsModelController {
 						.get(patchEntry.getKey()) : "";
 					LinkedList<DiffMatchPatch.Patch> patchesForEntry = (LinkedList<DiffMatchPatch.Patch>) dmp.patchFromText(patchEntry.getValue());
 					Object[] result = dmp.patchApply(patchesForEntry, previous);
-					// TODO: Check if all patches could be applied.
 					if (((String) result[0]).isEmpty())
 						songEntries.remove(patchEntry.getKey());
 					else
@@ -277,7 +275,7 @@ public class PatchController extends SongsModelController {
 	 * This may take some time and as it compares the whole offline list with the current db.
 	 * It will be only done once, and if the db is up to date, to avoid server side rejects.
 	 *
-	 * TODO: Currently, online changes are preferred, as it runs after all online changes are applied.
+	 * Currently, online changes are preferred, as it runs after all online changes are applied.
 	 * So offline changes may be overridden.
 	 */
 	private void publishOfflineChanges() {
@@ -359,7 +357,6 @@ public class PatchController extends SongsModelController {
 			String uuid = UUID.randomUUID().toString();
 			remoteController.getLatestChanges().set(new SongsModel(patchSongs, false),
 				remoteController.getUsername(), String.valueOf(newVersionId), uuid);
-			// TODO: wait for reject or version change.
 		}
 	}
 	

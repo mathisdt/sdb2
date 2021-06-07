@@ -88,7 +88,6 @@ public class Position implements Persistable {
 	 */
 	@Override
 	public void initIfNecessary() {
-		// TODO
-		
+
 	}
 }
