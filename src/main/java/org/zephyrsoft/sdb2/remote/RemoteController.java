@@ -32,9 +32,6 @@ import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 
-/**
- *
- */
 public class RemoteController {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(RemoteController.class);

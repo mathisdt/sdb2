@@ -15,9 +15,6 @@
  */
 package org.zephyrsoft.sdb2.remote;
 
-/**
- *
- */
 public enum Health {
 	online,
 	offline;
