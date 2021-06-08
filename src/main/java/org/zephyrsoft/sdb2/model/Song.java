@@ -27,7 +27,6 @@ import jakarta.xml.bind.annotation.XmlAccessorOrder;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * Representation of a song.
@@ -81,7 +80,7 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 		this();
 		this.fromMap(map);
 	}
-
+	
 	public Song(Song song) {
 		this();
 		title = song.getTitle();
@@ -99,7 +98,7 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 		tempo = song.getTempo();
 		lyrics = song.getLyrics();
 	}
-
+	
 	/**
 	 * Create a song instance.
 	 *
@@ -155,7 +154,7 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 	public String getTempo() {
 		return tempo;
 	}
-
+	
 	public String getChordSequence() {
 		return chordSequence;
 	}
@@ -163,7 +162,7 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 	public String getDrumNotes() {
 		return drumNotes;
 	}
-
+	
 	public String getCleanChordSequence() {
 		return chordSequence == null
 			? null
@@ -221,15 +220,15 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 	public void setTempo(String tempo) {
 		this.tempo = tempo;
 	}
-
+	
 	public void setDrumNotes(String drumNotes) {
 		this.drumNotes = drumNotes;
 	}
-
+	
 	private void setUUID(String uuid) {
 		this.uuid = uuid;
 	}
-
+	
 	@Override
 	public int compareTo(Song o) {
 		int ret = 0;
@@ -286,25 +285,27 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 			equalsAllowNull(tempo, other.tempo) &&
 			equalsAllowNull(lyrics, other.lyrics);
 	}
-
+	
 	@Override
 	public String toString() {
 		return "SONG[" + title + "|" + uuid + "]";
 	}
-
+	
 	private static boolean equalsAllowNull(String str, String str2) {
 		if (str == null || str.isEmpty()) {
-			if (str2 != null && !str2.isEmpty())
+			if (str2 != null && !str2.isEmpty()) {
 				return false;
-		} else if (!str.equals(str2))
+			}
+		} else if (!str.equals(str2)) {
 			return false;
+		}
 		return true;
 	}
 	
 	private static boolean isEmpty(String str) {
 		return str == null || str.isEmpty();
 	}
-
+	
 	public boolean isEmpty() {
 		return isEmpty(getTitle())
 			&& isEmpty(getComposer())
@@ -320,7 +321,7 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 			&& isEmpty(getDrumNotes())
 			&& isEmpty(getChordSequence());
 	}
-
+	
 	public Map<String, String> toMap() {
 		return new HashMap<>() {
 			private static final long serialVersionUID = -4450093906395824130L;
@@ -342,7 +343,7 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 			}
 		};
 	}
-
+	
 	public void fromMap(Map<String, String> map) {
 		for (Map.Entry<String, String> entry : map.entrySet()) {
 			String value = entry.getValue();
@@ -392,9 +393,9 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 			}
 		}
 	}
-
+	
 	@Override
 	public void initIfNecessary() {
-
+		
 	}
 }

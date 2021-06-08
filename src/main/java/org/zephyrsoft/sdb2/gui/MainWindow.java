@@ -50,7 +50,9 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import javax.swing.DefaultListSelectionModel;
@@ -86,7 +88,6 @@ import org.zephyrsoft.sdb2.FileAndDirectoryLocations;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.gui.KeyboardShortcut.Modifiers;
 import org.zephyrsoft.sdb2.gui.renderer.FilterTypeCellRenderer;
-import org.zephyrsoft.sdb2.gui.renderer.LanguageCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenDisplayCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
@@ -155,7 +156,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	private JEditorPane editorLyrics;
 	private JTextField textFieldTitle;
-	private JComboBox<LanguageEnum> comboBoxLanguage;
+	private JComboBox<String> comboBoxLanguage;
 	private JTextField textFieldTonality;
 	private JTextField textFieldComposer;
 	private JTextField textFieldAuthorText;
@@ -294,17 +295,24 @@ public class MainWindow extends JFrame implements UIScroller {
 		// read program version
 		lblProgramVersion.setText(VersionTools.getCurrent());
 		
+		// Add all languages:
+		// Set<String> languages = Arrays.stream(Locale.getISOLanguages())
+		// .map(Locale::new)
+		// .map(Locale::getDisplayLanguage)
+		// .collect(Collectors.toCollection(TreeSet::new));
+		//
+		// for (String language : languages) {
+		// comboBoxLanguage.addItem(language);
+		// }
 		// fill in available values for language
 		for (LanguageEnum item : LanguageEnum.values()) {
-			comboBoxLanguage.addItem(item);
+			comboBoxLanguage.addItem(item.getInternalName());
 		}
 		// fill in available values for filter type
 		for (FilterTypeEnum item : FilterTypeEnum.values()) {
 			comboSongListFiltering.addItem(item);
 		}
 		clearSongData();
-		// add renderer for language
-		comboBoxLanguage.setRenderer(new LanguageCellRenderer());
 		// add renderer for filter type
 		comboSongListFiltering.setRenderer(new FilterTypeCellRenderer());
 		// disable editing fields
@@ -524,7 +532,7 @@ public class MainWindow extends JFrame implements UIScroller {
 				applyFilter();
 			}
 		});
-
+		
 		// prepare for settings
 		controller.detectScreens();
 		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
@@ -622,6 +630,22 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	private void indexAllSongs() {
 		indexer.index(IndexType.ALL_SONGS, songsModel.getSongs());
+		
+		comboBoxLanguage.removeAllItems();
+		Set<String> languages = new HashSet<>();
+		// fill in available values for language
+		for (LanguageEnum item : LanguageEnum.values()) {
+			languages.add(item.getInternalName());
+		}
+		// Fill in used languages:
+		for (Song song : songsModel.getSongs()) {
+			if (song.getLanguage() != null && !song.getLanguage().isBlank()) {
+				languages.add(song.getLanguage());
+			}
+		}
+		for (String language : languages) {
+			comboBoxLanguage.addItem(language);
+		}
 	}
 	
 	/**
@@ -2858,7 +2882,7 @@ public class MainWindow extends JFrame implements UIScroller {
 				break;
 			case CONNECTED:
 				path = "/org/zephyrsoft/sdb2/remote-green.png";
-				tooltip = "Remote connected. Type Strg+R to reconnect.";
+				tooltip = "Remote connected. Type Ctrl+R to reconnect.";
 				break;
 			case DISCONNECTING:
 				path = "/org/zephyrsoft/sdb2/remote-orange.png";
@@ -2870,7 +2894,7 @@ public class MainWindow extends JFrame implements UIScroller {
 				break;
 			case FAILURE:
 				path = "/org/zephyrsoft/sdb2/remote-red.png";
-				tooltip = "Remote connection failure! Type Strg+R to reconnect.";
+				tooltip = "Remote connection failure! Type Ctrl+R to reconnect.";
 				break;
 		}
 		lblStatus.setIcon(ResourceTools.getIcon(getClass(), path));
@@ -2968,7 +2992,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		return textFieldTitle;
 	}
 	
-	public JComboBox<LanguageEnum> getComboBoxLanguage() {
+	public JComboBox<String> getComboBoxLanguage() {
 		return comboBoxLanguage;
 	}
 	
@@ -3000,7 +3024,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		return textFieldAdditionalCopyrightNotes;
 	}
 	
-	public JTextField getTextFieldSongNotes() {
+	public JTextField getTextFieldTempo() {
 		return textFieldTempo;
 	}
 	
