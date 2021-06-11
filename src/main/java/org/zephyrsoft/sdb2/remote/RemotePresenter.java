@@ -34,11 +34,13 @@ public class RemotePresenter implements Presenter {
 	
 	private Presentable presentable;
 	private final RemoteController remoteController;
+	private final boolean showTitle;
 	
 	// private ArrayList parts;
 	
-	public RemotePresenter(RemoteController remoteController) {
+	public RemotePresenter(RemoteController remoteController, boolean showTitle) {
 		this.remoteController = remoteController;
+		this.showTitle = showTitle;
 	}
 	
 	@Override
@@ -63,7 +65,9 @@ public class RemotePresenter implements Presenter {
 	
 	@Override
 	public void moveToLine(Integer part, Integer line) {
-		remoteController.getSongPosition().set(new SongPosition(part, line));
+		if (presentable.getSong() != null) {
+			remoteController.getPosition().set(new Position(presentable.getSong().getUUID(), part, line, showTitle));
+		}
 	}
 	
 	@Override
@@ -85,12 +89,13 @@ public class RemotePresenter implements Presenter {
 		
 		if (presentable.getSong() != null) {
 			remoteController.getSong().set(presentable.getSong());
-			remoteController.getSongPosition().set(new SongPosition(0, 0));
+			remoteController.getPosition().set(new Position(presentable.getSong().getUUID(), 0, 0));
 		} else if (presentable.getImage() != null) {
 			LOG.warn("Images are not presented over remote");
 		} else {
 			// display a blank screen: // hidePresenter();
 			remoteController.getSong().set(null);
+			remoteController.getPosition().set(null);
 		}
 	}
 	

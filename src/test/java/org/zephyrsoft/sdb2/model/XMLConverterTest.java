@@ -244,7 +244,7 @@ public class XMLConverterTest {
 		song2.setAuthorTranslation("");
 		song2.setPublisher("");
 		song2.setAdditionalCopyrightNotes("");
-		song2.setLanguage(LanguageEnum.ENGLISH);
+		song2.setLanguage("english");
 		song2.setSongNotes("");
 		song2.setTonality("");
 		song2.setChordSequence("");

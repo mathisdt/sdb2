@@ -152,6 +152,12 @@
 			<artifactId>org.eclipse.paho.client.mqttv3</artifactId>
 			<version>${version.paho-mqtt}</version>
 		</dependency>
+		<dependency>
+		  <groupId>org.bitbucket.cowwoc</groupId>
+		  <artifactId>diff-match-patch</artifactId>
+		  <version>1.1</version>
+		</dependency>
+						
 
 		<!-- logging -->
 		<dependency>
