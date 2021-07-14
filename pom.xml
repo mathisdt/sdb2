@@ -32,7 +32,7 @@
 		<skipOwasp>false</skipOwasp>
 
 		<!-- dependency versions -->
-		<version.spring>5.3.8</version.spring>
+		<version.spring>5.3.9</version.spring>
 		<version.slf4j>2.0.0-alpha1</version.slf4j>
 		<version.logback>1.3.0-alpha4</version.logback><!-- 1.3.0-alpha5 has a bug: https://jira.qos.ch/browse/LOGBACK-1491 -->
 		<version.args4j>2.33</version.args4j>
