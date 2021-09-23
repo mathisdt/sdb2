@@ -2,15 +2,19 @@
 
 set -e
 
+if [ -z "$JAVA_HOME" ]; then
+  echo "no JAVA_HOME defined"
+  exit 1
+fi
 JDK_LINUX=$JAVA_HOME
-if [ ! -d "$JDK_LINUX" -o ! -d "$JDK_LINUX/jmods" ]; then
-	echo "JAVA_HOME has to point to a directory containing a Linux JDK in version 11"
+if [ ! -d "$JDK_LINUX" -o ! -d "$JDK_LINUX/jmods" -o "$($JDK_LINUX/bin/java --version | head -n 1 | sed -e 's#^openjdk ##' -e 's#[^0-9].*$##')" != "17" ]; then
+	echo "JAVA_HOME has to point to a directory containing a Linux JDK in version 17"
 	exit 1
 fi
 
 echo "downloading a Windows JDK from adoptopenjdk.net"
 # ATTENTION: has to match the version used on Linux -> .travis.yml
-wget -q -O /tmp/windows-jdk.zip 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?openjdk_impl=hotspot&os=windows&arch=x64&release=latest&type=jdk&heap_size=normal'
+wget -q -O /tmp/windows-jdk.zip 'https://api.adoptium.net/v3/binary/latest/17/ga/windows/x64/jdk/hotspot/normal/adoptium?project=jdk'
 unzip -qq -d /tmp/windows-jdk /tmp/windows-jdk.zip
 JDK_WINDOWS=$(ls -d /tmp/windows-jdk/*)
 if [ ! -d "$JDK_WINDOWS" -o ! -d "$JDK_WINDOWS/jmods" ]; then
@@ -24,6 +28,7 @@ MODULES=java.desktop,java.scripting,java.xml,java.sql,java.net.http,java.managem
 
 echo "creating a Linux JRE"
 $JDK_LINUX/bin/jlink \
+    --no-man-pages \
     --module-path $JDK_LINUX/jmods/ \
     --add-modules $MODULES \
     --output $DIR/target/sdb2-bundle-linux/jre
@@ -40,6 +45,7 @@ cp $DIR/src/main/resources/org/zephyrsoft/sdb2/icon-128.png $DIR/target/sdb2-bun
 
 echo "creating a Windows JRE"
 $JDK_LINUX/bin/jlink \
+    --no-man-pages \
     --module-path $JDK_WINDOWS/jmods/ \
     --add-modules $MODULES \
     --output $DIR/target/sdb2-bundle-windows/jre
