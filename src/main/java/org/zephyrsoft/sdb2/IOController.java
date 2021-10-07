@@ -72,7 +72,7 @@ public class IOController {
 							BasicFileAttributes attr = Files.readAttributes(file, BasicFileAttributes.class);
 							Instant fileTime = attr.lastModifiedTime().toInstant();
 							if (ignoreCompletely != null && !ignoreCompletely
-								&& event.context() instanceof Path && ((Path) event.context()).endsWith(file.getFileName())
+								&& event.context()instanceof Path p && p.endsWith(file.getFileName())
 								&& ignoreUntil.isBefore(fileTime)) {
 								affectsSongsXml = true;
 							}

@@ -44,9 +44,18 @@ public class ExportServiceTest {
 		song1.setTitle("Test-Song 1");
 		song2.setTitle("Test-Song 2");
 		song3.setTitle("Test-Song 3");
-		song1.setLyrics("A     B          X\nLyrics of Song 1\n[Translation of Song 1]");
-		song2.setLyrics("[Intro of a part of Song 2]\nA     B          Y\nLyrics of Song 2");
-		song3.setLyrics("Lyrics of Song 3\n\nSecond paragraph of Song 3");
+		song1.setLyrics("""
+			A     B          X
+			Lyrics of Song 1
+			[Translation of Song 1]""");
+		song2.setLyrics("""
+			[Intro of a part of Song 2]
+			A     B          Y
+			Lyrics of Song 2""");
+		song3.setLyrics("""
+			Lyrics of Song 3
+			
+			Second paragraph of Song 3""");
 		songs = Lists.newArrayList(song1, song2, song3);
 	}
 	

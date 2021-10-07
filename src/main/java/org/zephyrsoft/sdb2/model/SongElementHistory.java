@@ -15,8 +15,6 @@
  */
 package org.zephyrsoft.sdb2.model;
 
-import static java.util.stream.Collectors.toList;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -113,7 +111,7 @@ public class SongElementHistory implements Iterable<SongElement> {
 			// filter unwanted types and convert to types only
 			List<SongElement> filteredElements = workingCopy.stream()
 				.filter(e -> !without.contains(e.getType()))
-				.collect(toList());
+				.toList();
 			// see if one of the type sequence matches
 			for (List<SongElementMatcher> sequence : lastSeen) {
 				if (lengthOkAndEndOfFirstMatchesSecond(filteredElements, sequence)) {

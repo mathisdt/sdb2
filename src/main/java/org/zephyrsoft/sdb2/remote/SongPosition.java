@@ -48,8 +48,8 @@ public class SongPosition {
 	
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof SongPosition) {
-			return this.part == ((SongPosition) obj).getPart() && this.line == ((SongPosition) obj).getLine();
+		if (obj instanceof SongPosition sp) {
+			return this.part == sp.getPart() && this.line == sp.getLine();
 		} else {
 			return false;
 		}

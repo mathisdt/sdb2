@@ -131,7 +131,11 @@ import say.swing.JFontChooser;
  */
 public class MainWindow extends JFrame implements UIScroller {
 	
-	private static final String PROBLEM_WHILE_SAVING = "There was a problem while saving the data.\n\nPlease examine the log file at:\n";
+	private static final String PROBLEM_WHILE_SAVING = """
+		There was a problem while saving the data.
+		
+		Please examine the log file at:
+		""";
 	
 	private static final Presentable BLANK_SCREEN = new Presentable(null, null);
 	
@@ -2849,26 +2853,26 @@ public class MainWindow extends JFrame implements UIScroller {
 		String path = null;
 		String tooltip = null;
 		switch (status) {
-			case OFF:
+			case OFF -> {
 				path = "/org/zephyrsoft/sdb2/remote-off.png";
 				tooltip = "Remote disabled.";
-				break;
-			case CONNECTING:
+			}
+			case CONNECTING -> {
 				path = "/org/zephyrsoft/sdb2/remote-orange.png";
 				tooltip = "Remote connecting...";
-				break;
-			case CONNECTED:
+			}
+			case CONNECTED -> {
 				path = "/org/zephyrsoft/sdb2/remote-green.png";
 				tooltip = "Remote connected. Type Strg+R to reconnect.";
-				break;
-			case DISCONNECTING:
+			}
+			case DISCONNECTING -> {
 				path = "/org/zephyrsoft/sdb2/remote-orange.png";
 				tooltip = "Remote disconnecting...";
-				break;
-			case FAILURE:
+			}
+			case FAILURE -> {
 				path = "/org/zephyrsoft/sdb2/remote-red.png";
 				tooltip = "Remote connection failure! Type Strg+R to reconnect.";
-				break;
+			}
 		}
 		lblStatus.setIcon(ResourceTools.getIcon(getClass(), path));
 		lblStatus.setToolTipText(tooltip);
