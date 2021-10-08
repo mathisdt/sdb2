@@ -33,8 +33,8 @@
 
 		<!-- dependency versions -->
 		<version.spring>5.3.10</version.spring>
-		<version.slf4j>2.0.0-alpha5</version.slf4j>
-		<version.logback>1.3.0-alpha10</version.logback>
+		<version.slf4j>1.7.32</version.slf4j>
+		<version.logback>1.2.6</version.logback>
 		<version.args4j>2.33</version.args4j>
 		<version.commons-lang3>3.12.0</version.commons-lang3>
 		<version.commons-text>1.9</version.commons-text>
