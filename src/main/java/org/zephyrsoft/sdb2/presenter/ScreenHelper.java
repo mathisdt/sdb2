@@ -15,9 +15,7 @@
  */
 package org.zephyrsoft.sdb2.presenter;
 
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,11 +27,17 @@ import org.zephyrsoft.sdb2.model.SelectableDisplay;
  * Helper class for dealing with multiple screens.
  */
 public final class ScreenHelper {
+
+	private static final ScreenChangeListener SCREEN_CHANGE_LISTENER = new ScreenChangeListener();
 	
 	private ScreenHelper() {
 		// this class should not be instantiated
 	}
-	
+
+	public static void addChangeListener(Runnable listener) {
+		SCREEN_CHANGE_LISTENER.addListener(listener);
+	}
+
 	/**
 	 * Get the comprehensive list of all screens attached to the system.
 	 */

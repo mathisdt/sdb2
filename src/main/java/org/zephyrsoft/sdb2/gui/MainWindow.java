@@ -519,10 +519,9 @@ public class MainWindow extends JFrame implements UIScroller {
 		});
 		
 		// prepare for settings
-		controller.detectScreens();
-		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
-		comboPresentationScreen2Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
-		
+		updateScreenModels();
+		ScreenHelper.addChangeListener(this::updateScreenModels);
+
 		// load values for instantly displayed settings
 		updateFontButtons();
 		Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
@@ -539,11 +538,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		setSpinnerValue(spinnerDistanceTextCopyright, settingsModel.get(SettingKey.DISTANCE_TEXT_COPYRIGHT,
 			Integer.class));
 		comboSongListFiltering.setSelectedItem(settingsModel.get(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.class));
-		comboPresentationScreen1Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
-			settingsModel.get(SettingKey.SCREEN_1_DISPLAY, Integer.class)));
 		comboPresentationScreen1Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.class));
-		comboPresentationScreen2Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
-			settingsModel.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)));
 		comboPresentationScreen2Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class));
 		setSpinnerValue(spinnerCountAsDisplayedAfter, settingsModel.get(SettingKey.SECONDS_UNTIL_COUNTED, Integer.class));
 		setSpinnerValue(spinnerSlideShowSeconds, settingsModel.get(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, Integer.class));
@@ -555,7 +550,16 @@ public class MainWindow extends JFrame implements UIScroller {
 		textFieldRemotePrefix.setText(settingsModel.get(SettingKey.REMOTE_PREFIX, String.class));
 		textFieldRemoteNamespace.setText(settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class));
 	}
-	
+	private void updateScreenModels() {
+		controller.detectScreens();
+		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
+		comboPresentationScreen2Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
+		comboPresentationScreen1Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
+			settingsModel.get(SettingKey.SCREEN_1_DISPLAY, Integer.class)));
+		comboPresentationScreen2Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
+			settingsModel.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)));
+	}
+
 	private static void setSpinnerValue(JSpinner spinner, Object value) {
 		spinner.setValue(value == null ? 0 : value);
 	}
@@ -563,7 +567,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	protected void handleSettingsUnlock() {
 		// reload screens
 		controller.detectScreens();
-		
+
 		// enable controls
 		setSettingsEnabled(true);
 	}
