@@ -520,7 +520,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		
 		// prepare for settings
 		updateScreenModels();
-		ScreenHelper.addChangeListener(this::updateScreenModels);
+		ScreenHelper.addChangeListener(() -> SwingUtilities.invokeLater(this::updateScreenModels));
 
 		// load values for instantly displayed settings
 		updateFontButtons();
