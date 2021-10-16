@@ -28,6 +28,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
+		<maven.build.timestamp.format>yyyyMMdd_HHmmss</maven.build.timestamp.format>
+
 		<!-- override when building locally using -DskipOwasp=true -->
 		<skipOwasp>false</skipOwasp>
 
@@ -215,6 +217,60 @@
 			<email>dev@zephyrsoft.org</email>
 		</developer>
 	</developers>
+
+	<profiles>
+		<!-- Build docker image: $ mvn package -Pdocker-image Build & push to the registry: $ mvn install -Pdocker-image -->
+		<profile>
+			<id>docker-image</id>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>com.google.cloud.tools</groupId>
+							<artifactId>jib-maven-plugin</artifactId>
+							<version>3.1.4</version>
+							<executions>
+								<execution>
+									<id>build-docker-image</id>
+									<phase>package</phase>
+									<goals>
+										<goal>build</goal>
+									</goals>
+									<configuration>
+										<from>
+											<image>eclipse-temurin:17-jdk-centos7</image>
+											<auth>
+												<username>${env.DOCKER_USERNAME}</username>
+												<password>${env.DOCKER_TOKEN}</password>
+											</auth>
+										</from>
+										<to>
+											<image>ghcr.io/${env.GITHUB_USERNAME}/${project.artifactId}:${project.version}_${maven.build.timestamp}</image>
+											<auth>
+												<username>${env.GITHUB_USERNAME}</username>
+												<password>${env.GITHUB_TOKEN}</password>
+											</auth>
+										</to>
+										<container>
+											<workingDirectory>/app</workingDirectory>
+											<user>1000:1000</user>
+										</container>
+									</configuration>
+								</execution>
+							</executions>
+						</plugin>
+					</plugins>
+	            </pluginManagement>
+
+				<plugins>
+					<plugin>
+						<groupId>com.google.cloud.tools</groupId>
+						<artifactId>jib-maven-plugin</artifactId>
+					</plugin>
+				</plugins>
+	        </build>
+		</profile>
+	</profiles>
 
 	<build>
 		<plugins>
