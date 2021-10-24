@@ -32,7 +32,7 @@
 		<skipOwasp>false</skipOwasp>
 
 		<!-- dependency versions -->
-		<version.spring>5.3.11</version.spring>
+		<version.spring>5.3.12</version.spring>
 		<version.slf4j>1.7.32</version.slf4j>
 		<version.logback>1.2.6</version.logback>
 		<version.args4j>2.33</version.args4j>
@@ -240,7 +240,7 @@
 						<configuration>
 							<rules>
 								<requireJavaVersion>
-									<version>11</version>
+									<version>17</version>
 								</requireJavaVersion>
 								<requireMavenVersion>
 									<version>3.5.4</version>
