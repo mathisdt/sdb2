@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import org.junit.Before;
@@ -27,8 +28,9 @@ import org.zephyrsoft.sdb2.model.ExportFormat;
 import org.zephyrsoft.sdb2.model.Song;
 
 import com.google.common.collect.Lists;
-import com.itextpdf.text.pdf.PdfReader;
-import com.itextpdf.text.pdf.parser.PdfTextExtractor;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfReader;
+import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
 
 public class ExportServiceTest {
 	
@@ -63,81 +65,92 @@ public class ExportServiceTest {
 	public void exportAll() throws Exception {
 		byte[] exported = exportService.export(new ExportFormat(true, true, false), songs);
 		
-		PdfReader reader = new PdfReader(exported);
-		assertEquals(reader.getNumberOfPages(), 4);
+		PdfDocument document = new PdfDocument(new PdfReader(new ByteArrayInputStream(exported)));
+		assertEquals(4, document.getNumberOfPages());
 		
-		String page1 = PdfTextExtractor.getTextFromPage(reader, 1);
+		String page1 = PdfTextExtractor.getTextFromPage(document.getPage(1));
 		assertTrue(page1.contains("Lyrics of Song 1"));
 		assertTrue(page1.contains("Translation of Song 1"));
 		assertTrue(page1.matches("(?s)^.*A +B +X.*$"));
+		assertTrue(page1.contains("- 1 -"));
 		
-		String page2 = PdfTextExtractor.getTextFromPage(reader, 2);
+		String page2 = PdfTextExtractor.getTextFromPage(document.getPage(2));
 		assertTrue(page2.contains("Lyrics of Song 2"));
 		assertTrue(page2.contains("Intro of a part of Song 2"));
 		assertTrue(page2.matches("(?s)^.*A +B +Y.*$"));
+		assertTrue(page2.contains("- 2 -"));
 		
-		String page3 = PdfTextExtractor.getTextFromPage(reader, 3);
+		String page3 = PdfTextExtractor.getTextFromPage(document.getPage(3));
 		assertTrue(page3.contains("Lyrics of Song 3"));
+		assertTrue(page3.contains("- 3 -"));
 	}
 	
 	@Test
 	public void exportOnlyWithChords() throws Exception {
 		byte[] exported = exportService.export(new ExportFormat(true, true, true), songs);
 		
-		PdfReader reader = new PdfReader(exported);
-		assertEquals(reader.getNumberOfPages(), 3);
+		PdfDocument document = new PdfDocument(new PdfReader(new ByteArrayInputStream(exported)));
+		assertEquals(3, document.getNumberOfPages());
 		
-		String page1 = PdfTextExtractor.getTextFromPage(reader, 1);
+		String page1 = PdfTextExtractor.getTextFromPage(document.getPage(1));
 		assertTrue(page1.contains("Lyrics of Song 1"));
 		assertTrue(page1.contains("Translation of Song 1"));
 		assertTrue(page1.matches("(?s)^.*A +B +X.*$"));
+		assertTrue(page1.contains("- 1 -"));
 		
-		String page2 = PdfTextExtractor.getTextFromPage(reader, 2);
+		String page2 = PdfTextExtractor.getTextFromPage(document.getPage(2));
 		assertTrue(page2.contains("Lyrics of Song 2"));
 		assertTrue(page2.contains("Intro of a part of Song 2"));
 		assertTrue(page2.matches("(?s)^.*A +B +Y.*$"));
+		assertTrue(page2.contains("- 2 -"));
 	}
 	
 	@Test
 	public void exportWithoutChords() throws Exception {
 		byte[] exported = exportService.export(new ExportFormat(true, false, false), songs);
 		
-		PdfReader reader = new PdfReader(exported);
-		assertEquals(reader.getNumberOfPages(), 4);
+		PdfDocument document = new PdfDocument(new PdfReader(new ByteArrayInputStream(exported)));
+		assertEquals(4, document.getNumberOfPages());
 		
-		String page1 = PdfTextExtractor.getTextFromPage(reader, 1);
+		String page1 = PdfTextExtractor.getTextFromPage(document.getPage(1));
 		assertTrue(page1.contains("Lyrics of Song 1"));
 		assertTrue(page1.contains("Translation of Song 1"));
 		assertFalse(page1.matches("(?s)^.*A +B +X.*$"));
+		assertTrue(page1.contains("- 1 -"));
 		
-		String page2 = PdfTextExtractor.getTextFromPage(reader, 2);
+		String page2 = PdfTextExtractor.getTextFromPage(document.getPage(2));
 		assertTrue(page2.contains("Lyrics of Song 2"));
 		assertTrue(page2.contains("Intro of a part of Song 2"));
 		assertFalse(page2.matches("(?s)^.*A +B +Y.*$"));
+		assertTrue(page2.contains("- 2 -"));
 		
-		String page3 = PdfTextExtractor.getTextFromPage(reader, 3);
+		String page3 = PdfTextExtractor.getTextFromPage(document.getPage(3));
 		assertTrue(page3.contains("Lyrics of Song 3"));
+		assertTrue(page3.contains("- 3 -"));
 	}
 	
 	@Test
 	public void exportWithoutChordsAndTranslation() throws Exception {
 		byte[] exported = exportService.export(new ExportFormat(false, false, false), songs);
 		
-		PdfReader reader = new PdfReader(exported);
-		assertEquals(reader.getNumberOfPages(), 4);
+		PdfDocument document = new PdfDocument(new PdfReader(new ByteArrayInputStream(exported)));
+		assertEquals(4, document.getNumberOfPages());
 		
-		String page1 = PdfTextExtractor.getTextFromPage(reader, 1);
+		String page1 = PdfTextExtractor.getTextFromPage(document.getPage(1));
 		assertTrue(page1.contains("Lyrics of Song 1"));
 		assertFalse(page1.contains("Translation of Song 1"));
 		assertFalse(page1.matches("(?s)^.*A +B +X.*$"));
+		assertTrue(page1.contains("- 1 -"));
 		
-		String page2 = PdfTextExtractor.getTextFromPage(reader, 2);
+		String page2 = PdfTextExtractor.getTextFromPage(document.getPage(2));
 		assertTrue(page2.contains("Lyrics of Song 2"));
 		assertFalse(page2.contains("Intro of a part of Song 2"));
 		assertFalse(page2.matches("(?s)^.*A +B +Y.*$"));
+		assertTrue(page2.contains("- 2 -"));
 		
-		String page3 = PdfTextExtractor.getTextFromPage(reader, 3);
+		String page3 = PdfTextExtractor.getTextFromPage(document.getPage(3));
 		assertTrue(page3.contains("Lyrics of Song 3"));
+		assertTrue(page3.contains("- 3 -"));
 	}
 	
 }

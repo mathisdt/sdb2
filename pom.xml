@@ -11,10 +11,10 @@
 	<url>https://zephyrsoft.org/sdb</url>
 
 	<licenses>
-	    <license>
-	        <name>GNU General Public License (GPL), Version 3.0</name>
-	        <url>https://www.gnu.org/licenses/gpl-3.0.html</url>
-	    </license>
+		<license>
+			<name>GNU General Public License (GPL), Version 3.0</name>
+			<url>https://www.gnu.org/licenses/gpl-3.0.html</url>
+		</license>
 	</licenses>
 
 	<scm>
@@ -36,12 +36,13 @@
 		<!-- dependency versions -->
 		<version.spring>5.3.14</version.spring>
 		<version.slf4j>1.7.32</version.slf4j>
-		<version.logback>1.2.7</version.logback>
+		<version.logback>1.2.9</version.logback>
+		<version.log4j>2.17.0</version.log4j>
 		<version.args4j>2.33</version.args4j>
 		<version.commons-lang3>3.12.0</version.commons-lang3>
 		<version.commons-text>1.9</version.commons-text>
 		<version.togglz>3.0.0</version.togglz>
-		<version.itext>5.5.13.2</version.itext>
+		<version.itext>7.2.0</version.itext>
 		<version.poi>5.1.0</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
@@ -61,7 +62,7 @@
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>
 				<artifactId>log4j-api</artifactId>
-				<version>2.16.0</version>
+				<version>${version.log4j}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -95,7 +96,17 @@
 		</dependency>
 		<dependency>
 			<groupId>com.itextpdf</groupId>
-			<artifactId>itextpdf</artifactId>
+			<artifactId>kernel</artifactId>
+			<version>${version.itext}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>io</artifactId>
+			<version>${version.itext}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>layout</artifactId>
 			<version>${version.itext}</version>
 		</dependency>
 		<dependency>
@@ -410,7 +421,7 @@
 						<configuration>
 							<target>
 								<copy todir="${project.build.directory}/distribution" overwrite="true" verbose="true">
-									<fileset dir="${project.basedir}/src/dist" includes="**"/>
+									<fileset dir="${project.basedir}/src/dist" includes="**" />
 								</copy>
 							</target>
 						</configuration>
@@ -530,7 +541,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore/>
+										<ignore />
 									</action>
 								</pluginExecution>
 								<pluginExecution>
@@ -549,7 +560,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore/>
+										<ignore />
 									</action>
 								</pluginExecution>
 							</pluginExecutions>

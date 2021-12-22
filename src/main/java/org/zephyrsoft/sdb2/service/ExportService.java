@@ -24,7 +24,6 @@ import static org.zephyrsoft.sdb2.model.SongElementEnum.TRANSLATION;
 import static org.zephyrsoft.sdb2.model.SongElementMatcher.is;
 
 import java.io.ByteArrayOutputStream;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -41,63 +40,60 @@ import org.zephyrsoft.sdb2.model.SongElementHistory;
 import org.zephyrsoft.sdb2.model.SongElementHistory.SongElementHistoryQueryResult;
 import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.sdb2.util.ChordSpaceCorrector;
+import org.zephyrsoft.sdb2.util.TextRendererNonTrimming;
 
-import com.itextpdf.text.Chunk;
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Element;
-import com.itextpdf.text.Font;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Phrase;
-import com.itextpdf.text.Rectangle;
-import com.itextpdf.text.pdf.BaseFont;
-import com.itextpdf.text.pdf.ColumnText;
-import com.itextpdf.text.pdf.PdfAction;
-import com.itextpdf.text.pdf.PdfContentByte;
-import com.itextpdf.text.pdf.PdfDestination;
-import com.itextpdf.text.pdf.PdfPageEventHelper;
-import com.itextpdf.text.pdf.PdfWriter;
-import com.itextpdf.text.pdf.draw.DottedLineSeparator;
+import com.itextpdf.io.font.PdfEncodings;
+import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.kernel.events.Event;
+import com.itextpdf.kernel.events.IEventHandler;
+import com.itextpdf.kernel.events.PdfDocumentEvent;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.font.PdfFontFactory.EmbeddingStrategy;
+import com.itextpdf.kernel.geom.Rectangle;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfPage;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.action.PdfAction;
+import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
+import com.itextpdf.kernel.pdf.canvas.draw.DottedLine;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.AbstractElement;
+import com.itextpdf.layout.element.AreaBreak;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Tab;
+import com.itextpdf.layout.element.TabStop;
+import com.itextpdf.layout.element.Text;
+import com.itextpdf.layout.properties.AreaBreakType;
+import com.itextpdf.layout.properties.TabAlignment;
 
 /**
  * Exports songs as PDF in different variations.
  */
 public class ExportService {
 	
-	private class PageNumbers extends PdfPageEventHelper {
-		private final Font footerFont = new Font(Font.FontFamily.UNDEFINED, 10, Font.ITALIC);
-		
+	private class PageNumbers implements IEventHandler {
 		@Override
-		public void onEndPage(PdfWriter writer, Document document) {
-			PdfContentByte cb = writer.getDirectContent();
-			Phrase footer = new Phrase("- " + document.getPageNumber() + " -", footerFont);
-			ColumnText.showTextAligned(cb, Element.ALIGN_CENTER,
-				footer,
-				(document.right() - document.left()) / 2 + document.leftMargin(),
-				document.bottom() - 10, 0);
-		}
-	}
-	
-	private class TOC extends PdfPageEventHelper {
-		protected int counter = 0;
-		protected final List<SimpleEntry<String, SimpleEntry<String, Integer>>> toc = new ArrayList<>();
-		
-		@Override
-		public void onGenericTag(PdfWriter writer, Document document, Rectangle rect, String text) {
-			String name = "dest" + (counter++);
-			int page = writer.getPageNumber();
-			toc.add(new SimpleEntry<>(text, new SimpleEntry<>(name, page)));
-			writer.addNamedDestination(name, page, new PdfDestination(PdfDestination.FITH, rect.getTop()));
-		}
-		
-		public List<SimpleEntry<String, SimpleEntry<String, Integer>>> getTOC() {
-			return toc;
+		public void handleEvent(Event event) {
+			PdfDocumentEvent docEvent = (PdfDocumentEvent) event;
+			PdfPage page = docEvent.getPage();
+			int pageNum = docEvent.getDocument().getPageNumber(page);
+			PdfCanvas canvas = new PdfCanvas(page);
+			canvas.beginText();
+			canvas.setFontAndSize(baseFont, 10);
+			Rectangle pageSize = page.getPageSizeWithRotation();
+			canvas.moveText(pageSize.getWidth() / 2 - 10, 15);
+			canvas.showText(String.format("- %d -", pageNum));
+			canvas.endText();
+			canvas.stroke();
+			canvas.release();
 		}
 	}
 	
 	private class ExportInProgress {
-		private ExportFormat exportFormat;
-		private Document document;
+		private final ExportFormat exportFormat;
+		private final Document document;
+		private final List<TocEntry> toc = new ArrayList<>();
 		/** only used in song body (not for title or copyright) */
 		private Paragraph currentLine;
 		
@@ -110,16 +106,12 @@ public class ExportService {
 			return exportFormat;
 		}
 		
-		public void setExportFormat(ExportFormat exportFormat) {
-			this.exportFormat = exportFormat;
-		}
-		
 		public Document getDocument() {
 			return document;
 		}
 		
-		public void setDocument(Document document) {
-			this.document = document;
+		public List<TocEntry> getToc() {
+			return toc;
 		}
 		
 		public Paragraph getCurrentLine() {
@@ -140,26 +132,45 @@ public class ExportService {
 	
 	@FunctionalInterface
 	private interface SongElementHandler {
-		void handleElement(ExportInProgress exportInProgress, Song song, SongElementHistory history)
-			throws DocumentException;
+		void handleElement(ExportInProgress exportInProgress, Song song, SongElementHistory history);
 	}
 	
-	private final Font titleFont;
-	private final Font lyricsFont;
-	private final Font translationFont;
-	private final Font copyrightFont;
+	@FunctionalInterface
+	private interface AttributeSetter {
+		void apply(AbstractElement<?> element);
+	}
+	
+	private final AttributeSetter titleAttributes;
+	private final AttributeSetter lyricsAttributes;
+	private final AttributeSetter translationAttributes;
+	private final AttributeSetter copyrightAttributes;
 	private final ChordSpaceCorrector chordSpaceCorrector;
 	private final Map<SongElementEnum, SongElementHandler> songElementHandlers;
+	private final PdfFont baseFont;
 	
 	public ExportService() throws Exception {
-		BaseFont baseFont = BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.WINANSI, BaseFont.EMBEDDED);
-		titleFont = new Font(baseFont, 20, Font.BOLD);
-		lyricsFont = new Font(baseFont, 12);
-		translationFont = new Font(baseFont, 8, Font.ITALIC);
-		copyrightFont = new Font(baseFont, 10);
+		baseFont = PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN, PdfEncodings.WINANSI, EmbeddingStrategy.PREFER_EMBEDDED);
+		PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.TIMES_BOLD, PdfEncodings.WINANSI, EmbeddingStrategy.PREFER_EMBEDDED);
+		PdfFont italicFont = PdfFontFactory.createFont(StandardFonts.TIMES_ITALIC, PdfEncodings.WINANSI, EmbeddingStrategy.PREFER_EMBEDDED);
+		titleAttributes = e -> {
+			e.setFont(boldFont);
+			e.setFontSize(20);
+		};
+		lyricsAttributes = e -> {
+			e.setFont(baseFont);
+			e.setFontSize(12);
+		};
+		translationAttributes = e -> {
+			e.setFont(italicFont);
+			e.setFontSize(8);
+		};
+		copyrightAttributes = e -> {
+			e.setFont(italicFont);
+			e.setFontSize(10);
+		};
 		
 		chordSpaceCorrector = new ChordSpaceCorrector(
-			text -> (int) lyricsFont.getBaseFont().getWidthPointKerned(text, lyricsFont.getSize()));
+			text -> (int) baseFont.getWidth(text, 12));
 		
 		songElementHandlers = buildSongElementHandlerMap();
 	}
@@ -177,16 +188,19 @@ public class ExportService {
 	
 	private SongElementHandler titleHandler() {
 		return (exportInProgress, song, history) -> {
-			Chunk chunk = new Chunk(song.getTitle() + "\n");
-			chunk.setGenericTag(song.getTitle());
-			Paragraph paragraph = paragraph(titleFont);
+			Text chunk = new Text(song.getTitle() + "\n");
+			exportInProgress.getToc().add(new TocEntry(song.getUUID(), song.getTitle(),
+				exportInProgress.getDocument().getPdfDocument().getNumberOfPages()));
+			Paragraph paragraph = paragraph(titleAttributes);
+			paragraph.setDestination(song.getUUID());
+			paragraph.setMarginBottom(15);
 			paragraph.add(chunk);
 			exportInProgress.getDocument().add(paragraph);
 			
 			if (exportInProgress.getExportFormat().areChordsShown() && StringUtils.isNotBlank(song.getCleanChordSequence())) {
 				// insert chord sequence directly after title
-				Paragraph chordSequence = paragraph(song.getCleanChordSequence() + "\n\n", lyricsFont);
-				chordSequence.setIndentationLeft(30);
+				Paragraph chordSequence = paragraph(song.getCleanChordSequence() + "\n\n", lyricsAttributes);
+				chordSequence.setPaddingLeft(30);
 				exportInProgress.getDocument().add(chordSequence);
 			}
 		};
@@ -204,24 +218,31 @@ public class ExportService {
 				chordsLine = chordSpaceCorrector.correctChordSpaces(queryResult.getMatchedElements().get(0).getContent(),
 					history.current().getContent()) + "\n";
 			}
-			Paragraph currentLine = exportInProgress.getOrCreateCurrentLine(() -> paragraph());
+			Paragraph currentLine = exportInProgress.getOrCreateCurrentLine(this::paragraph);
 			if (history.current().getIndentation() > 0) {
-				currentLine.setIndentationLeft(calculateIndentation(history.current()));
+				currentLine.setPaddingLeft(calculateIndentation(history.current()));
 			}
-			currentLine.add(chunk(chordsLine + history.current().getContent(), lyricsFont));
+			currentLine.add(text(chordsLine + history.current().getContent(), lyricsAttributes));
 		};
 	}
 	
 	private SongElementHandler translationHandler() {
 		return (exportInProgress, song, history) -> {
 			if (exportInProgress.getExportFormat().isTranslationShown()) {
-				Paragraph currentLine = exportInProgress.getOrCreateCurrentLine(() -> paragraph());
+				Paragraph currentLine = exportInProgress.getOrCreateCurrentLine(this::paragraph);
 				if (history.current().getIndentation() > 0) {
-					currentLine.setIndentationLeft(calculateIndentation(history.current()));
+					currentLine.setPaddingLeft(calculateIndentation(history.current()));
 				}
-				currentLine.add(chunk(history.current().getContent(), translationFont));
+				currentLine.add(text(history.current().getContent(), translationAttributes));
 			}
 		};
+	}
+	
+	private Text text(String text, AttributeSetter attributes) {
+		Text result = new Text(text);
+		attributes.apply(result);
+		result.setNextRenderer(new TextRendererNonTrimming(result));
+		return result;
 	}
 	
 	private SongElementHandler newlineHandler() {
@@ -232,7 +253,7 @@ public class ExportService {
 					.end().isMatched()) {
 					// two empty paragraphs won't render as an empty line (iText-specific behaviour),
 					// so we have to add a newline to the existing paragraph instead
-					exportInProgress.getCurrentLine().add(chunk("\n"));
+					exportInProgress.getCurrentLine().add("\n");
 				}
 				exportInProgress.getDocument().add(exportInProgress.getCurrentLine());
 			}
@@ -242,13 +263,13 @@ public class ExportService {
 	
 	private SongElementHandler copyrightHandler() {
 		return (exportInProgress, song, history) -> {
-			Paragraph copyright = paragraph(history.current().getContent(), copyrightFont);
+			Paragraph copyright = paragraph(history.current().getContent(), copyrightAttributes);
 			SongElementHistoryQueryResult queryResult = history.query()
 				.without(NEW_LINE)
 				.lastSeen(is(COPYRIGHT))
 				.end();
 			if (!queryResult.isMatched()) {
-				copyright.setSpacingBefore(20);
+				copyright.setPaddingTop(20);
 			}
 			exportInProgress.getDocument().add(copyright);
 		};
@@ -262,8 +283,7 @@ public class ExportService {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		
 		try {
-			TOC toc = new TOC();
-			Document document = beginDocument(toc, outputStream);
+			Document document = beginDocument(outputStream);
 			
 			ExportInProgress exportInProgress = new ExportInProgress(exportFormat, document);
 			for (Song song : songs) {
@@ -282,78 +302,65 @@ public class ExportService {
 					}
 				}
 				
-				document.newPage();
+				document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
 			}
 			
-			appendTableOfContents(document, toc);
+			appendTableOfContents(document, exportInProgress.getToc());
 			
 			document.close();
-		} catch (DocumentException e) {
+		} catch (Exception e) {
 			throw new RuntimeException("error while creating PDF document", e);
 		}
 		
 		return outputStream.toByteArray();
 	}
 	
-	private Document beginDocument(TOC toc, ByteArrayOutputStream outputStream) throws DocumentException {
-		Document document = new Document();
-		PdfWriter writer = PdfWriter.getInstance(document, outputStream);
-		writer.setPageEvent(toc);
-		writer.setPageEvent(new PageNumbers());
-		document.setMargins(50, 50, 30, 30);
-		document.open();
-		return document;
+	private static record TocEntry(String technicalName, String title, Integer pageNumber) {
+		// nothing here
 	}
 	
-	private void appendTableOfContents(Document document, TOC toc) throws DocumentException {
-		document.add(paragraph("Table of Contents", titleFont));
-		Chunk dottedLine = new Chunk(new DottedLineSeparator());
-		List<SimpleEntry<String, SimpleEntry<String, Integer>>> entries = toc.getTOC();
-		for (SimpleEntry<String, SimpleEntry<String, Integer>> entry : entries) {
-			String songTitle = entry.getKey();
-			String destination = entry.getValue().getKey();
-			Integer pageNumber = entry.getValue().getValue();
+	private Document beginDocument(ByteArrayOutputStream outputStream) {
+		PdfDocument pdf = new PdfDocument(new PdfWriter(outputStream));
+		pdf.addEventHandler(PdfDocumentEvent.START_PAGE, new PageNumbers());
+		Document doc = new Document(pdf);
+		doc.setMargins(50, 50, 30, 30);
+		return doc;
+	}
+	
+	private void appendTableOfContents(Document document, List<TocEntry> toc) {
+		document.add(paragraph("Table of Contents", titleAttributes));
+		for (TocEntry tocEntry : toc) {
+			String songTitle = tocEntry.title();
+			String technicalName = tocEntry.technicalName();
+			Integer pageNumber = tocEntry.pageNumber();
 			
-			Paragraph p = paragraph(lyricsFont);
-			Chunk title = new Chunk(songTitle);
-			title.setAction(PdfAction.gotoLocalPage(destination, false));
-			p.add(title);
-			p.add(dottedLine);
-			Chunk number = new Chunk(String.valueOf(pageNumber));
-			number.setAction(PdfAction.gotoLocalPage(destination, false));
-			p.add(number);
+			Paragraph p = paragraph(lyricsAttributes);
+			p.addTabStops(List.of(new TabStop(580, TabAlignment.RIGHT, new DottedLine())))
+				.add(songTitle)
+				.add(new Tab())
+				.add(String.valueOf(pageNumber))
+				.setAction(PdfAction.createGoTo(technicalName));
 			document.add(p);
 		}
 	}
 	
-	private Chunk chunk(String text) {
-		return new Chunk(text);
-	}
-	
-	private Chunk chunk(String text, Font font) {
-		return new Chunk(text, font);
-	}
-	
 	private Paragraph paragraph() {
-		// not using paragraph(String, Font) because it will look different (iText-specific behaviour)
 		Paragraph paragraph = new Paragraph();
-		paragraph.setExtraParagraphSpace(0);
-		paragraph.setPaddingTop(0);
-		paragraph.setSpacingBefore(0);
-		paragraph.setSpacingAfter(0);
+		paragraph.setMultipliedLeading(1);
+		paragraph.setMargin(0);
+		paragraph.setPadding(0);
 		return paragraph;
 	}
 	
-	private Paragraph paragraph(Font font) {
-		return paragraph(null, font);
+	private Paragraph paragraph(AttributeSetter attributes) {
+		Paragraph paragraph = paragraph();
+		attributes.apply(paragraph);
+		return paragraph;
 	}
 	
-	private Paragraph paragraph(String text, Font font) {
-		Paragraph paragraph = new Paragraph(text, font);
-		paragraph.setExtraParagraphSpace(0);
-		paragraph.setPaddingTop(0);
-		paragraph.setSpacingBefore(0);
-		paragraph.setSpacingAfter(0);
+	private Paragraph paragraph(String text, AttributeSetter attributes) {
+		Paragraph paragraph = paragraph(attributes);
+		paragraph.add(text);
 		return paragraph;
 	}
 	

@@ -12,7 +12,10 @@ open module org.zephyrsoft.sdb2 {
 	requires args4j;
 	requires lucene.core;
 	requires org.apache.poi.poi;
-	requires itextpdf;
+	
+	requires kernel;
+	requires io;
+	requires layout;
 	
 	requires jakarta.xml.bind;
 	requires java.desktop;
