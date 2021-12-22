@@ -1,4 +1,4 @@
-![license](https://img.shields.io/github/license/mathisdt/sdb2.svg?style=flat) [![Travis-CI Build](https://img.shields.io/travis/mathisdt/sdb2.svg?label=Travis-CI%20Build&style=flat)](https://travis-ci.org/mathisdt/sdb2/) [![last released](https://img.shields.io/github/release-date/mathisdt/sdb2.svg?label=last%20released&style=flat)](https://github.com/mathisdt/sdb2/releases)
+![license](https://img.shields.io/github/license/mathisdt/sdb2.svg?style=flat) [![Build](https://github.com/mathisdt/sdb2/actions/workflows/build.yaml/badge.svg)](https://github.com/mathisdt/sdb2/actions) [![last released](https://img.shields.io/github/release-date/mathisdt/sdb2.svg?label=last%20released&style=flat)](https://github.com/mathisdt/sdb2/releases)
 
 # Song Database
 
