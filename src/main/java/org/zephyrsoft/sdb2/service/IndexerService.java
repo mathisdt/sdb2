@@ -25,6 +25,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
+import org.apache.lucene.analysis.custom.CustomAnalyzer;
+import org.apache.lucene.analysis.ngram.NGramFilterFactory;
+import org.apache.lucene.analysis.standard.StandardTokenizerFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
@@ -40,14 +44,11 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.Song;
-import org.zephyrsoft.sdb2.util.repackaged.lucene.analyzers.common.CustomAnalyzer;
-import org.zephyrsoft.sdb2.util.repackaged.lucene.analyzers.common.LowerCaseFilterFactory;
-import org.zephyrsoft.sdb2.util.repackaged.lucene.analyzers.common.NGramFilterFactory;
-import org.zephyrsoft.sdb2.util.repackaged.lucene.analyzers.common.StandardTokenizerFactory;
 
 import com.google.common.base.Stopwatch;
 
@@ -84,8 +85,7 @@ public class IndexerService {
 		executor.execute(() -> {
 			Stopwatch stopwatch = Stopwatch.createStarted();
 			
-			@SuppressWarnings("deprecation")
-			Directory directory = new org.apache.lucene.store.RAMDirectory();
+			Directory directory = new ByteBuffersDirectory();
 			try {
 				Analyzer analyzer = CustomAnalyzer.builder()
 					.withTokenizer(StandardTokenizerFactory.class)

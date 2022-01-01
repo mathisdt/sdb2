@@ -46,7 +46,7 @@
 		<version.poi>5.1.0</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
-		<version.lucene>8.11.0</version.lucene>
+		<version.lucene>9.0.0</version.lucene>
 		<version.paho-mqtt>1.2.5</version.paho-mqtt>
 		<version.guava>31.0.1-jre</version.guava>
 		<version.gson>2.8.9</version.gson>
@@ -129,14 +129,11 @@
 			<artifactId>lucene-core</artifactId>
 			<version>${version.lucene}</version>
 		</dependency>
-		<!-- this is commented out (and partly repackaged in org.zephyrsoft.sdb2.util.repackaged.lucene.analyzers.common)
-			because Java 9+ modules are not supported by Lucene yet - there are split
-			package issues when using lucene-core AND lucene-analyzers-common -->
-		<!-- <dependency> -->
-		<!-- <groupId>org.apache.lucene</groupId> -->
-		<!-- <artifactId>lucene-analyzers-common</artifactId> -->
-		<!-- <version>${version.lucene}</version> -->
-		<!-- </dependency> -->
+		<dependency>
+		    <groupId>org.apache.lucene</groupId>
+		    <artifactId>lucene-analysis-common</artifactId>
+		    <version>${version.lucene}</version>
+		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>

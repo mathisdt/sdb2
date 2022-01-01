@@ -10,7 +10,8 @@ open module org.zephyrsoft.sdb2 {
 	requires togglz.core;
 	
 	requires args4j;
-	requires lucene.core;
+	requires org.apache.lucene.core;
+	requires org.apache.lucene.analysis.common;
 	requires org.apache.poi.poi;
 	
 	requires kernel;
