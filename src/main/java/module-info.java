@@ -1,8 +1,6 @@
 open module org.zephyrsoft.sdb2 {
 	
 	requires org.slf4j;
-	requires ch.qos.logback.core;
-	requires ch.qos.logback.classic;
 	requires org.apache.commons.lang3;
 	requires org.apache.commons.text;
 	requires com.google.common;
@@ -12,9 +10,13 @@ open module org.zephyrsoft.sdb2 {
 	requires togglz.core;
 	
 	requires args4j;
-	requires lucene.core;
+	requires org.apache.lucene.core;
+	requires org.apache.lucene.analysis.common;
 	requires org.apache.poi.poi;
-	requires itextpdf;
+	
+	requires kernel;
+	requires io;
+	requires layout;
 	
 	requires jakarta.xml.bind;
 	requires java.desktop;

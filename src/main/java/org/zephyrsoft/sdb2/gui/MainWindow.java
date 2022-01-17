@@ -135,7 +135,11 @@ import say.swing.JFontChooser;
  */
 public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListener {
 	
-	private static final String PROBLEM_WHILE_SAVING = "There was a problem while saving the data.\n\nPlease examine the log file at:\n";
+	private static final String PROBLEM_WHILE_SAVING = """
+		There was a problem while saving the data.
+
+		Please examine the log file at:
+		""";
 	
 	private static final Presentable BLANK_SCREEN = new Presentable(null, null);
 	
@@ -170,7 +174,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private JEditorPane editorChordSequence;
 	private JEditorPane editorDrumNotes;
 	private JEditorPane editorSongNotes;
-	
+
 	private KeyboardShortcutManager keyboardShortcutManager;
 	private final MainController controller;
 	private IndexerService indexer;
@@ -298,7 +302,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		
 		// read program version
 		lblProgramVersion.setText(VersionTools.getCurrent());
-		
+
 		// fill in available values for filter type
 		for (FilterTypeEnum item : FilterTypeEnum.values()) {
 			comboSongListFiltering.addItem(item);
@@ -519,10 +523,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		});
 		
 		// prepare for settings
-		controller.detectScreens();
-		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
-		comboPresentationScreen2Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
-		
+		updateScreenModels();
+		ScreenHelper.addChangeListener(() -> SwingUtilities.invokeLater(this::updateScreenModels));
+
 		// load values for instantly displayed settings
 		updateFontButtons();
 		Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
@@ -539,11 +542,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		setSpinnerValue(spinnerDistanceTextCopyright, settingsModel.get(SettingKey.DISTANCE_TEXT_COPYRIGHT,
 			Integer.class));
 		comboSongListFiltering.setSelectedItem(settingsModel.get(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.class));
-		comboPresentationScreen1Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
-			settingsModel.get(SettingKey.SCREEN_1_DISPLAY, Integer.class)));
 		comboPresentationScreen1Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_1_CONTENTS, ScreenContentsEnum.class));
-		comboPresentationScreen2Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
-			settingsModel.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)));
 		comboPresentationScreen2Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class));
 		setSpinnerValue(spinnerCountAsDisplayedAfter, settingsModel.get(SettingKey.SECONDS_UNTIL_COUNTED, Integer.class));
 		setSpinnerValue(spinnerSlideShowSeconds, settingsModel.get(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, Integer.class));
@@ -555,7 +554,16 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		textFieldRemotePrefix.setText(settingsModel.get(SettingKey.REMOTE_PREFIX, String.class));
 		textFieldRemoteRoom.setText(settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class));
 	}
-	
+	private void updateScreenModels() {
+		controller.detectScreens();
+		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
+		comboPresentationScreen2Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
+		comboPresentationScreen1Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
+			settingsModel.get(SettingKey.SCREEN_1_DISPLAY, Integer.class)));
+		comboPresentationScreen2Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
+			settingsModel.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)));
+	}
+
 	private static void setSpinnerValue(JSpinner spinner, Object value) {
 		spinner.setValue(value == null ? 0 : value);
 	}
@@ -563,7 +571,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	protected void handleSettingsUnlock() {
 		// reload screens
 		controller.detectScreens();
-		
+
 		// enable controls
 		setSettingsEnabled(true);
 	}
@@ -630,10 +638,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		for (String language : languages) {
 			comboBoxLanguage.addItem(language);
 		}
-		
+
 		SwingUtilities.invokeLater(() -> {
 			LOG.debug("Loading songsmodel changes into ui..");
-			
+
 			Song newSelectedSong = selectNewSongWithUUID != null ? songsModel.getByUUID(selectNewSongWithUUID) : null;
 			if (newSelectedSong != null) {
 				selectNewSongWithUUID = null;
@@ -654,7 +662,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 					}
 				}
 			}
-			
+
 			// Update songlist / make it visible:
 			if (songsListFiltered != null && selectedSong != null && textFieldFilter != null && !textFieldFilter.getText().isBlank()
 				&& !songsListFiltered.contains(selectedSong)) {
@@ -664,31 +672,31 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		});
 	}
-	
+
 	private Song rebaseChanges(Song songFromRemote) {
 		if (!isSongDataChanged()) {
 			return songFromRemote;
 		}
-		
+
 		Song songFromGui = songFromGUI();
 		if (songFromGui.equals(songFromRemote)) {
 			return songFromRemote;
 		}
-		
+
 		Song localPatch = PatchController.patch(songFromGui, selectedSong);
 		if (localPatch.isEmpty()) {
 			return songFromRemote;
 		}
-		
+
 		// Merge/Remove equal patches:
 		Song remotePatch = PatchController.patch(songFromRemote, selectedSong);
 		Song mergedPatch = PatchController.mergePatches(remotePatch, localPatch);
 		return PatchController.applyPatch(selectedSong, mergedPatch);
-		
+
 		// Or simply apply our local changes ontop of the remote changes:
 		// return PatchController.applyPatch(songFromRemote, patch);
 	}
-	
+
 	private void setSelectedSong(Song song) {
 		boolean sameSong = song == null || selectedSong == null || !StringTools.equalsWithNullAsEmpty(selectedSong.getUUID(), song.getUUID());
 		selectedSong = song;
@@ -703,7 +711,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			loadSong(sameSong);
 		}
 	}
-	
+
 	/**
 	 * Let the user select a font, save it into the {@link SettingsModel} (if changed) and re-enable the settings tab.
 	 *
@@ -939,7 +947,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		if (!isSongDataChanged()) {
 			return;
 		}
-		
+
 		LOG.debug("saveSongData: {}", selectedSong.getTitle());
 		controller.getSongsController().updateSong(songFromGUI());
 	}
@@ -963,7 +971,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		FieldName[] fieldsToSearch = settingsModel.get(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.class).getFields();
 		songsListFiltered = indexer.search(IndexType.ALL_SONGS, filterText, fieldsToSearch);
 		songsListModel.refilter();
-		
+
 		// Find and select currently opened song:
 		SwingUtilities.invokeLater(() -> {
 			songsList.setValueIsAdjusting(true);
@@ -1242,7 +1250,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		Song currentlyPresentedSong = controller.getCurrentlyPresentedSong();
 		if (currentlyPresentedSong != null) {
 			List<Song> songs = presentListModel.getAllElements();
-			
+
 			// Search for new equal songs starting with last used song position:
 			int startIndex = Math.max(0, presentList.getSelectedIndex());
 			for (int i = 0; i < songs.size(); i++) {
@@ -1580,7 +1588,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			public void componentShown(ComponentEvent e) {
 				loadSong(true);
 			}
-			
+
 			@Override
 			public void componentHidden(ComponentEvent e) {
 				try {
@@ -1802,7 +1810,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			editorChordSequence.getFont().getSize()));
 		scrollPaneChordSequence.setViewportView(editorChordSequence);
 		editorChordSequence.setBackground(Color.WHITE);
-		
+
 		JLabel lblDrumNotes = new JLabel("Drum notes");
 		GridBagConstraints gbcLblDrumNotes = new GridBagConstraints();
 		gbcLblDrumNotes.fill = GridBagConstraints.HORIZONTAL;
@@ -1811,7 +1819,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblDrumNotes.gridx = 1;
 		gbcLblDrumNotes.gridy = 8;
 		panelEdit.add(lblDrumNotes, gbcLblDrumNotes);
-		
+
 		JScrollPane scrollPaneDrumNotes = new JScrollPane();
 		GridBagConstraints gbcScrollPaneDrumNotes = new GridBagConstraints();
 		gbcScrollPaneDrumNotes.gridheight = 2;
@@ -1822,13 +1830,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcScrollPaneDrumNotes.gridx = 1;
 		gbcScrollPaneDrumNotes.gridy = 9;
 		panelEdit.add(scrollPaneDrumNotes, gbcScrollPaneDrumNotes);
-		
+
 		editorDrumNotes = new JEditorPane();
 		editorDrumNotes.setFont(new Font("Monospaced", editorDrumNotes.getFont().getStyle(),
 			editorDrumNotes.getFont().getSize()));
 		scrollPaneDrumNotes.setViewportView(editorDrumNotes);
 		editorDrumNotes.setBackground(Color.WHITE);
-		
+
 		JLabel lblSongNotes = new JLabel("Song Notes (not shown in presentation)");
 		GridBagConstraints gbcLblSongNotes = new GridBagConstraints();
 		gbcLblSongNotes.fill = GridBagConstraints.HORIZONTAL;
@@ -1837,7 +1845,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblSongNotes.gridx = 2;
 		gbcLblSongNotes.gridy = 8;
 		panelEdit.add(lblSongNotes, gbcLblSongNotes);
-		
+
 		JScrollPane scrollPaneSongNotes = new JScrollPane();
 		GridBagConstraints gbcScrollPaneSongNotes = new GridBagConstraints();
 		gbcScrollPaneSongNotes.gridheight = 2;
@@ -1848,11 +1856,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcScrollPaneSongNotes.gridx = 2;
 		gbcScrollPaneSongNotes.gridy = 9;
 		panelEdit.add(scrollPaneSongNotes, gbcScrollPaneSongNotes);
-		
+
 		editorSongNotes = new JEditorPane();
 		scrollPaneSongNotes.setViewportView(editorSongNotes);
 		editorSongNotes.setBackground(Color.WHITE);
-		
+
 		for (JComponent v : new JComponent[] {
 			textFieldTonality,
 			textFieldAdditionalCopyrightNotes,
@@ -1869,7 +1877,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			editorDrumNotes
 		}) {
 			v.addFocusListener(new FocusListener() {
-				
+
 				@Override
 				public void focusLost(FocusEvent e) {
 					try {
@@ -1879,11 +1887,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 						handleError(ex);
 					}
 				}
-				
+
 				@Override
 				public void focusGained(FocusEvent e) {
 					// TODO
-					
+
 				}
 			});
 		}
@@ -2958,30 +2966,30 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		String path = null;
 		String tooltip = null;
 		switch (status) {
-			case OFF:
+			case OFF -> {
 				path = "/org/zephyrsoft/sdb2/remote-off.png";
 				tooltip = "Remote disabled.";
-				break;
-			case CONNECTING:
+			}
+			case CONNECTING -> {
 				path = "/org/zephyrsoft/sdb2/remote-orange.png";
 				tooltip = "Remote connecting...";
-				break;
-			case CONNECTED:
+			}
+			case CONNECTED -> {
 				path = "/org/zephyrsoft/sdb2/remote-green.png";
-				tooltip = "Remote connected. Type Ctrl+R to reconnect.";
-				break;
-			case DISCONNECTING:
+				tooltip = "Remote connected. Type Strg+R to reconnect.";
+			}
+			case DISCONNECTING -> {
 				path = "/org/zephyrsoft/sdb2/remote-orange.png";
 				tooltip = "Remote disconnecting...";
-				break;
-			case DB_DISCONNECTED:
+			}
+			case DB_DISCONNECTED -> {
 				path = "/org/zephyrsoft/sdb2/remote-orange.png";
 				tooltip = "Remote db offline! Please notify your admin!";
-				break;
-			case FAILURE:
+			}
+			case FAILURE -> {
 				path = "/org/zephyrsoft/sdb2/remote-red.png";
-				tooltip = "Remote connection failure! Type Ctrl+R to reconnect.";
-				break;
+				tooltip = "Remote connection failure! Type Strg+R to reconnect.";
+			}
 		}
 		lblStatus.setIcon(ResourceTools.getIcon(getClass(), path));
 		lblStatus.setToolTipText(tooltip);
@@ -3137,5 +3145,5 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	public SongsModel getPresentModel() {
 		return presentModel;
 	}
-	
+
 }

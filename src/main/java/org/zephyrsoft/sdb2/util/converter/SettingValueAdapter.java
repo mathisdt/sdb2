@@ -191,8 +191,8 @@ public class SettingValueAdapter extends XmlAdapter<Object, Object> {
 	
 	@Override
 	public Object unmarshal(Object v) throws Exception {
-		if (v instanceof Element) {
-			return fromElement((Element) v);
+		if (v instanceof Element el) {
+			return fromElement(el);
 		} else {
 			return v;
 		}

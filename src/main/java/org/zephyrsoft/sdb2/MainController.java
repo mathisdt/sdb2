@@ -15,8 +15,6 @@
  */
 package org.zephyrsoft.sdb2;
 
-import static java.util.stream.Collectors.toList;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.io.File;
@@ -90,6 +88,14 @@ import com.google.common.collect.Ordering;
  */
 public class MainController implements Scroller {
 	
+	private static final String PRESENTATION_DISPLAY_WARNING = """
+		Could not start presentation!
+		
+		Please specify at least one existing presentation display:
+		Check your system configuration
+		and/or adjust this program's configuration
+		(see tab "Global Settings")!""";
+	
 	private static final Logger LOG = LoggerFactory.getLogger(MainController.class);
 	
 	private Executor contentChanger = Executors.newSingleThreadExecutor();
@@ -159,10 +165,11 @@ public class MainController implements Scroller {
 				setRemoteStatus(RemoteStatus.CONNECTED);
 			} catch (MqttException e) {
 				setRemoteStatus(RemoteStatus.FAILURE);
-				ErrorDialog.openDialog(null, "Error while connecting to remote server.\n"
-					+ "Please check settings or your network connection.\n"
-					+ "Otherwise ask your system or network administrator.\n"
-					+ "To reconnect, type Strg+R.");
+				ErrorDialog.openDialog(null, """
+					Error while connecting to remote server.
+					Please check settings or your network connection.
+					Otherwise ask your system or network administrator.
+					To reconnect, type Strg+R.""");
 			}
 		}
 	}
@@ -203,11 +210,11 @@ public class MainController implements Scroller {
 		if (presentationControl != null
 			&& presentationControl.getPresenters().size() == presentersConfigured
 			&& (presentationControl.getPresenters().isEmpty() ||
-				(presentationControl.getPresenters().get(0) instanceof PresenterWindow
-					&& ((PresenterWindow) presentationControl.getPresenters().get(0)).metadataMatches(screen1, VirtualScreen.SCREEN_A)))
+				(presentationControl.getPresenters().get(0)instanceof PresenterWindow pw
+					&& pw.metadataMatches(screen1, VirtualScreen.SCREEN_A)))
 			&& (presentationControl.getPresenters().size() <= 2 ||
-				(presentationControl.getPresenters().get(1) instanceof PresenterWindow
-					&& ((PresenterWindow) presentationControl.getPresenters().get(1)).metadataMatches(screen2, VirtualScreen.SCREEN_B)))) {
+				(presentationControl.getPresenters().get(1)instanceof PresenterWindow pw
+					&& pw.metadataMatches(screen2, VirtualScreen.SCREEN_B)))) {
 			LOG.trace("re-using the existing presenters");
 			currentlyPresentedSong = presentable.getSong();
 			presentationControl.setContent(presentable);
@@ -236,7 +243,7 @@ public class MainController implements Scroller {
 			ErrorDialog
 				.openDialog(
 					null,
-					"Could not start presentation!\n\nPlease specify at least one existing presentation display:\nCheck your system configuration\nand/or adjust this program's configuration\n(see tab \"Global Settings\")!");
+					PRESENTATION_DISPLAY_WARNING);
 			return false;
 		} else {
 			if (remoteController != null)
@@ -259,12 +266,12 @@ public class MainController implements Scroller {
 					ErrorDialog
 						.openDialog(
 							null,
-							"Could not start presentation!\n\nPlease specify at least one existing presentation display:\nCheck your system configuration\nand/or adjust this program's configuration\n(see tab \"Global Settings\")!");
+							PRESENTATION_DISPLAY_WARNING);
 				}
 				
 				// now stop old presentation (if any), do not stop remote presenters
 				if (oldPresentationControl != null) {
-					oldPresentationControl.removeIf((p) -> p instanceof RemotePresenter);
+					oldPresentationControl.removeIf(p -> p instanceof RemotePresenter);
 					oldPresentationControl.hidePresenter();
 					oldPresentationControl.disposePresenter();
 				}
@@ -391,7 +398,7 @@ public class MainController implements Scroller {
 				songsController = new SongsModelController(songs);
 			}
 			if (presentationControl != null)
-				presentationControl.removeIf((p) -> p instanceof RemotePresenter);
+				presentationControl.removeIf(p -> p instanceof RemotePresenter);
 			remoteController.close();
 			remoteController = null;
 			setRemoteStatus(RemoteStatus.OFF);
@@ -456,9 +463,10 @@ public class MainController implements Scroller {
 			ioController.startWatching(songsFileName, () -> {
 				LOG.info("change in file {} detected", songsFileName);
 				
-				int selected = JOptionPane.showConfirmDialog(mainWindow,
-					"The songs file on disk was changed by another process (maybe remote synchronisation). Should it be reloaded?\n\n"
-						+ "Songs already added to the 'Present Songs' tab will remain unchanged. Unsaved changes in the 'Edit Song' tab will be lost.",
+				int selected = JOptionPane.showConfirmDialog(mainWindow, """
+					The songs file on disk was changed by another process (maybe remote synchronisation). Should it be reloaded?
+					
+					Songs already added to the 'Present Songs' tab will remain unchanged. Unsaved changes in the 'Edit Song' tab will be lost.""",
 					"Songs file changed on disk", JOptionPane.YES_NO_OPTION);
 				if (selected == JOptionPane.YES_OPTION) {
 					LOG.info("reloading songs from {}", songsFileName);
@@ -481,9 +489,12 @@ public class MainController implements Scroller {
 		settings = ioController.readSettings(is -> XMLConverter.fromXMLToPersistable(is));
 		if (settings == null) {
 			// there was a problem while reading
-			SwingUtilities.invokeLater(() -> ErrorDialog.openDialogBlocking(mainWindow, "Could not read saved settings!\n\n"
-				+ "Started with default values,\nyou might have to adjust some settings\n"
-				+ "(see tab \"Global Settings\")."));
+			SwingUtilities.invokeLater(() -> ErrorDialog.openDialogBlocking(mainWindow, """
+				Could not read saved settings!
+				
+				Started with default values,
+				you might have to adjust some settings
+				(see tab "Global Settings")."""));
 			settings = new SettingsModel();
 		}
 		loadDefaultSettingsForUnsetSettings();
@@ -588,7 +599,10 @@ public class MainController implements Scroller {
 		File songsBackupFile = saveSongsToBackupFile();
 		if (songsBackupFile == null) {
 			LOG.error("could not write backup file while saving database");
-			ErrorDialog.openDialog(null, "Could not save songs!\n\n(Phase 1 - write backup file)");
+			ErrorDialog.openDialog(null, """
+				Could not save songs!
+				
+				(Phase 1 - write backup file)""");
 			return false;
 		}
 		try {
@@ -599,7 +613,10 @@ public class MainController implements Scroller {
 			Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
 		} catch (IOException e) {
 			LOG.error("could not copy backup to real file while saving database");
-			ErrorDialog.openDialog(null, "Could not save songs!\n\n(Phase 2 - write file)");
+			ErrorDialog.openDialog(null, """
+				Could not save songs!
+				
+				(Phase 2 - write file)""");
 			return false;
 		} finally {
 			ioController.startWatchingAgain();
@@ -780,7 +797,7 @@ public class MainController implements Scroller {
 				.map(path -> path.toFile())
 				.filter(file -> imagePattern.matcher(file.getName()).matches())
 				.sorted()
-				.collect(toList());
+				.toList();
 			return Iterables.cycle(images).iterator();
 		} catch (IOException e) {
 			return null;

@@ -23,22 +23,24 @@ import java.awt.image.BufferedImage;
 
 import org.junit.Test;
 
-import com.itextpdf.text.Font;
-import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.io.font.PdfEncodings;
+import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.kernel.font.PdfFontFactory.EmbeddingStrategy;
 
 public class ChordSpaceCorrectorTest {
 	
 	private static final String CHORDS_INPUT = "A       B            C            D                    Em              F     A     F A";
 	private static final String TEXT_INPUT = "This is a Test which only should demonstrate that the service works as expected.";
-	private static final String EXPECTED_OUTPUT_PDF = "A        B                   C                   D                              Em                    F        A  F A";
+	private static final String EXPECTED_OUTPUT_PDF = "A        B                   C                   D                              Em                    F         A  F A";
 	private static final String EXPECTED_OUTPUT_PRESENTATION = "A        B                   C                   D                                Em                    F         A  F A";
 	
 	@Test
 	public void correctChordSpacesForPdf() throws Exception {
-		BaseFont baseFont = BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.WINANSI, BaseFont.EMBEDDED);
-		Font lyricsFont = new Font(baseFont, 12);
+		PdfFont baseFont = PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN, PdfEncodings.WINANSI, EmbeddingStrategy.PREFER_EMBEDDED);
 		ChordSpaceCorrector chordSpaceCorrector = new ChordSpaceCorrector(
-			text -> (int) lyricsFont.getBaseFont().getWidthPointKerned(text, lyricsFont.getSize()));
+			text -> (int) baseFont.getWidth(text, 12));
 		
 		String result = chordSpaceCorrector.correctChordSpaces(CHORDS_INPUT, TEXT_INPUT);
 		assertEquals(EXPECTED_OUTPUT_PDF, result);

@@ -190,17 +190,17 @@ public class SongView extends JPanel implements Scroller {
 		SongElement previousChordsElement = null;
 		for (SongElement songElement : toDisplay) {
 			switch (songElement.getType()) {
-				case LYRICS:
+				case LYRICS -> {
 					if (previousChordsElement == null) {
 						continue;
 					}
 					previousChordsElement.setContent(
 						chordSpaceCorrector.correctChordSpaces(previousChordsElement.getContent(), songElement.getContent()));
 					previousChordsElement = null;
-					break;
-				case CHORDS:
+				}
+				case CHORDS -> {
 					previousChordsElement = songElement;
-					break;
+				}
 			}
 		}
 		

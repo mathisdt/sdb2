@@ -25,6 +25,7 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.MemoryImageSource;
 import java.util.List;
 import java.util.Objects;
@@ -100,7 +101,14 @@ public class PresenterWindow extends JFrame implements Presenter {
 		// remove window decorations
 		setUndecorated(true);
 		getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-		screenSize = graphicsConfiguration.getBounds();
+		
+		Rectangle screenSizeUntransformed = graphicsConfiguration.getBounds();
+		Rectangle2D screenSizeTransformed = graphicsConfiguration.getDefaultTransform().createTransformedShape(screenSizeUntransformed).getBounds2D();
+		int width = (int) screenSizeTransformed.getMaxX() - (int) screenSizeTransformed.getMinX();
+		int height = (int) screenSizeTransformed.getMaxY() - (int) screenSizeTransformed.getMinY();
+		screenSize = new Rectangle((int) screenSizeTransformed.getMinX(), (int) screenSizeTransformed.getMinY(), width, height);
+		// screenSize = graphicsConfiguration.getBounds();
+		
 		setBounds(screenSize);
 		
 		contentPane = new JPanel();
@@ -148,9 +156,9 @@ public class PresenterWindow extends JFrame implements Presenter {
 			contentPane.removeAll();
 			
 			Color backgroundColor = setBackgroundColor(virtualScreen, settings);
-			if (getGlassPane() instanceof TranslucentPanel
-				&& !Objects.equals(backgroundColor, ((TranslucentPanel) getGlassPane()).getBaseColor())) {
-				((TranslucentPanel) getGlassPane()).setBaseColor(backgroundColor);
+			if (getGlassPane()instanceof TranslucentPanel tp
+				&& !Objects.equals(backgroundColor, tp.getBaseColor())) {
+				tp.setBaseColor(backgroundColor);
 			}
 			
 			int topMargin = settings.get(SettingKey.TOP_MARGIN, Integer.class);

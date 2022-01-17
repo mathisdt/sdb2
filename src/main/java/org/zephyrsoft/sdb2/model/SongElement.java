@@ -69,8 +69,8 @@ public class SongElement {
 	
 	@Override
 	public boolean equals(Object obj) {
-		return obj instanceof SongElement && type == ((SongElement) obj).getType()
-			&& StringTools.equals(content, ((SongElement) obj).getContent());
+		return obj instanceof SongElement se && type == se.getType()
+			&& StringTools.equals(content, se.getContent());
 	}
 	
 }

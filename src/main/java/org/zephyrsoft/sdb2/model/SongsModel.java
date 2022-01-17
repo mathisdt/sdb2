@@ -256,7 +256,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 	
 	@Override
 	public boolean equals(Object model2) {
-		return model2 != null && model2 instanceof SongsModel && getSongs().equals(((SongsModel) model2).getSongs());
+		return model2 instanceof SongsModel sm && getSongs().equals(sm.getSongs());
 	}
 	
 	/**
