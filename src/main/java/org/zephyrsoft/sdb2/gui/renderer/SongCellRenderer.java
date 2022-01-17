@@ -127,8 +127,10 @@ public class SongCellRenderer implements ListCellRenderer<Song> {
 		boolean isSelected, boolean cellHasFocus) {
 		
 		SongCell ret = new SongCell(30);
-		ret.setSongTitle(value.getTitle() != null ? value.getTitle() : "");
-		ret.setFirstLine(SongParser.getFirstLyricsLine(value));
+		if (value != null) {
+			ret.setSongTitle(value.getTitle() != null ? value.getTitle() : "");
+			ret.setFirstLine(SongParser.getFirstLyricsLine(value));
+		}
 		
 		ret.setForeground(Color.BLACK);
 		if (isSelected) {

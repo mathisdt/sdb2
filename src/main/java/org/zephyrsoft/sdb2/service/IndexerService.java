@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -68,6 +69,8 @@ public class IndexerService {
 	
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
+	private final CopyOnWriteArrayList<OnIndexChangeListener> onIndexChangeListeners = new CopyOnWriteArrayList<>();
+	
 	private Directory getIndex(IndexType indexType) {
 		synchronized (INDEXES_LOCK) {
 			return indexes.get(indexType);
@@ -109,6 +112,7 @@ public class IndexerService {
 				putIndex(indexType, directory);
 				stopwatch.stop();
 				LOG.info("indexing songs in background thread took {}", stopwatch.toString());
+				onIndexChangeListeners.forEach((l) -> l.OnIndexChange());
 			}
 		});
 	}
@@ -157,6 +161,18 @@ public class IndexerService {
 			LOG.warn("problem while searching", e);
 			return new ArrayList<>(0);
 		}
+	}
+	
+	public void onIndexChange(OnIndexChangeListener onIndexChangeListener) {
+		onIndexChangeListeners.add(onIndexChangeListener);
+	}
+	
+	public void removeOnIndexChange(OnIndexChangeListener onIndexChangeListener) {
+		onIndexChangeListeners.remove(onIndexChangeListener);
+	}
+	
+	public interface OnIndexChangeListener {
+		void OnIndexChange();
 	}
 	
 }

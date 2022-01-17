@@ -25,12 +25,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.bitbucket.cowwoc.diffmatchpatch.DiffMatchPatch;
 import org.slf4j.Logger;
@@ -41,6 +43,7 @@ import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.SongsModelController;
 import org.zephyrsoft.sdb2.model.XMLConverter;
 import org.zephyrsoft.sdb2.remote.MqttObject.OnChangeListener;
+import org.zephyrsoft.sdb2.util.StringTools;
 
 public class PatchController extends SongsModelController {
 	
@@ -226,7 +229,6 @@ public class PatchController extends SongsModelController {
 		
 		HashMap<String, Song> changedSongs = new HashMap<>();
 		long versionAfterChangingSongs = currentVersionId;
-		final DiffMatchPatch dmp = new DiffMatchPatch();
 		while (patchVersions.containsKey(versionAfterChangingSongs + 1) && patchMap.containsKey(patchVersions.get(versionAfterChangingSongs + 1)
 			.getUUID())) {
 			Version nextVersion = patchVersions.get(versionAfterChangingSongs + 1);
@@ -235,21 +237,8 @@ public class PatchController extends SongsModelController {
 				Song song = changedSongs.get(patchSong.getUUID());
 				if (song == null)
 					song = db.getByUUID(patchSong.getUUID());
-				Map<String, String> songEntries = song == null ? new Song(patchSong.getUUID()).toMap() : song.toMap();
-				for (Map.Entry<String, String> patchEntry : patchSong.toMap().entrySet()) {
-					if (patchEntry.getKey().equals("uuid") || patchEntry.getValue() == null || patchEntry.getValue().isEmpty())
-						continue;
-					
-					String previous = songEntries.containsKey(patchEntry.getKey()) && songEntries.get(patchEntry.getKey()) != null ? songEntries
-						.get(patchEntry.getKey()) : "";
-					LinkedList<DiffMatchPatch.Patch> patchesForEntry = (LinkedList<DiffMatchPatch.Patch>) dmp.patchFromText(patchEntry.getValue());
-					Object[] result = dmp.patchApply(patchesForEntry, previous);
-					if (((String) result[0]).isEmpty())
-						songEntries.remove(patchEntry.getKey());
-					else
-						songEntries.put(patchEntry.getKey(), (String) result[0]);
-				}
-				changedSongs.put(patchSong.getUUID(), new Song(songEntries));
+				Song patchedSong = applyPatch(song, patchSong);
+				changedSongs.put(patchSong.getUUID(), patchedSong);
 			}
 			versionAfterChangingSongs = nextVersion.getID();
 		}
@@ -339,30 +328,12 @@ public class PatchController extends SongsModelController {
 	 * @param newSongs
 	 */
 	private void changeSongs(Iterable<Song> newSongs) {
-		final DiffMatchPatch dmp = new DiffMatchPatch();
-		
 		LinkedList<Song> patchSongs = new LinkedList<>();
 		for (Song newSong : newSongs) {
 			Song songFromDB = db.getByUUID(newSong.getUUID());
 			if (songFromDB == null)
 				songFromDB = new Song(newSong.getUUID());
-			Map<String, String> songEntries = songFromDB.toMap();
-			HashMap<String, String> patchSongMap = new HashMap<>();
-			for (Map.Entry<String, String> newSongEntry : newSong.toMap().entrySet()) {
-				if (newSongEntry.getKey().equals("uuid"))
-					continue;
-				String textNew = newSongEntry.getValue();
-				String textOld = songEntries.get(newSongEntry.getKey());
-				if (textNew == null)
-					textNew = "";
-				if (textOld == null)
-					textOld = "";
-				String patchesText = dmp.patchToText(dmp.patchMake(textOld, textNew));
-				if (!patchesText.isEmpty())
-					patchSongMap.put(newSongEntry.getKey(), patchesText);
-			}
-			Song patchSong = new Song(newSong.getUUID());
-			patchSong.fromMap(patchSongMap);
+			Song patchSong = patch(newSong, songFromDB);
 			if (!patchSong.isEmpty())
 				patchSongs.add(patchSong);
 		}
@@ -373,6 +344,83 @@ public class PatchController extends SongsModelController {
 			remoteController.getLatestChanges().set(new SongsModel(patchSongs, false),
 				remoteController.getUsername(), String.valueOf(newVersionId), uuid);
 		}
+	}
+	
+	public static Song patch(Song song, Song baseSong) {
+		final DiffMatchPatch dmp = new DiffMatchPatch();
+		
+		Map<String, String> songEntries = baseSong.toMap();
+		HashMap<String, String> patchSongMap = new HashMap<>();
+		for (Map.Entry<String, String> newSongEntry : song.toMap().entrySet()) {
+			if (newSongEntry.getKey().equals("uuid"))
+				continue;
+			String textNew = StringTools.nullAsEmptyString(newSongEntry.getValue());
+			String textOld = StringTools.nullAsEmptyString(songEntries.get(newSongEntry.getKey()));
+			String patchesText = dmp.patchToText(dmp.patchMake(textOld, textNew));
+			if (!patchesText.isEmpty())
+				patchSongMap.put(newSongEntry.getKey(), patchesText);
+		}
+		Song patchSong = new Song(song.getUUID());
+		patchSong.fromMap(patchSongMap);
+		return patchSong;
+	}
+	
+	public static Song applyPatch(Song song, Song patch) {
+		final DiffMatchPatch dmp = new DiffMatchPatch();
+		
+		Map<String, String> songEntries = song == null ? new Song(patch.getUUID()).toMap() : song.toMap();
+		for (Map.Entry<String, String> patchEntry : patch.toMap().entrySet()) {
+			if (patchEntry.getKey().equals("uuid") || StringTools.isEmpty(patchEntry.getValue()))
+				continue;
+			
+			String previous = songEntries.containsKey(patchEntry.getKey()) && songEntries.get(patchEntry.getKey()) != null ? songEntries
+				.get(patchEntry.getKey()) : "";
+			LinkedList<DiffMatchPatch.Patch> patchesForEntry = (LinkedList<DiffMatchPatch.Patch>) dmp.patchFromText(patchEntry.getValue());
+			
+			Object[] result = dmp.patchApply(patchesForEntry, previous);
+			if (((String) result[0]).isEmpty())
+				songEntries.remove(patchEntry.getKey());
+			else
+				songEntries.put(patchEntry.getKey(), (String) result[0]);
+		}
+		return new Song(songEntries);
+	}
+	
+	public static Song mergePatches(Song patchOne, Song patchTwo) {
+		final DiffMatchPatch dmp = new DiffMatchPatch();
+		
+		Map<String, LinkedHashSet<String>> patches = new HashMap<>();
+		for (Map.Entry<String, String> patchEntry : patchOne.toMap().entrySet()) {
+			if (patchEntry.getKey().equals("uuid") || StringTools.isEmpty(patchEntry.getValue()))
+				continue;
+			
+			patches.put(patchEntry.getKey(), dmp.patchFromText(patchEntry.getValue()).stream()
+				.map(DiffMatchPatch.Patch::toString).collect(Collectors.toCollection(LinkedHashSet::new)));
+		}
+		
+		for (Map.Entry<String, String> patchEntry : patchTwo.toMap().entrySet()) {
+			if (patchEntry.getKey().equals("uuid") || StringTools.isEmpty(patchEntry.getValue()))
+				continue;
+			
+			LinkedHashSet<String> patchesTwo = dmp.patchFromText(patchEntry.getValue()).stream()
+				.map(DiffMatchPatch.Patch::toString).collect(Collectors.toCollection(LinkedHashSet::new));
+			if (!patches.containsKey(patchEntry.getKey())) {
+				patches.put(patchEntry.getKey(), patchesTwo);
+				continue;
+			}
+			
+			patches.get(patchEntry.getKey()).addAll(patchesTwo);
+		}
+		
+		Map<String, String> songEntries = new Song(patchOne.getUUID()).toMap();
+		for (Map.Entry<String, LinkedHashSet<String>> patchEntry : patches.entrySet()) {
+			StringBuilder text = new StringBuilder();
+			for (String aPatch : patchEntry.getValue()) {
+				text.append(aPatch);
+			}
+			songEntries.put(patchEntry.getKey(), text.toString());
+		}
+		return new Song(songEntries);
 	}
 	
 	/**

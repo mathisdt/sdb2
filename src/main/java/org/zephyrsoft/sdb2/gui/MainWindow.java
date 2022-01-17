@@ -37,6 +37,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -94,7 +96,6 @@ import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ExportFormat;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
-import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableDisplay;
 import org.zephyrsoft.sdb2.model.Song;
@@ -105,11 +106,13 @@ import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.UIScroller;
+import org.zephyrsoft.sdb2.remote.PatchController;
 import org.zephyrsoft.sdb2.remote.RemoteStatus;
 import org.zephyrsoft.sdb2.service.ExportService;
 import org.zephyrsoft.sdb2.service.FieldName;
 import org.zephyrsoft.sdb2.service.IndexType;
 import org.zephyrsoft.sdb2.service.IndexerService;
+import org.zephyrsoft.sdb2.service.IndexerService.OnIndexChangeListener;
 import org.zephyrsoft.sdb2.util.CustomFileFilter;
 import org.zephyrsoft.sdb2.util.ResourceTools;
 import org.zephyrsoft.sdb2.util.StringTools;
@@ -130,7 +133,7 @@ import say.swing.JFontChooser;
 /**
  * Main window of the application.
  */
-public class MainWindow extends JFrame implements UIScroller {
+public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListener {
 	
 	private static final String PROBLEM_WHILE_SAVING = "There was a problem while saving the data.\n\nPlease examine the log file at:\n";
 	
@@ -179,7 +182,8 @@ public class MainWindow extends JFrame implements UIScroller {
 	private SongsModel songsModel;
 	private TransparentFilterableListModel<Song> songsListModel;
 	private Collection<Song> songsListFiltered;
-	private Song songsListSelected;
+	private Song selectedSong;
+	private String selectNewSongWithUUID;
 	
 	private FixedWidthJList<Song> presentList;
 	private SongsModel presentModel;
@@ -295,19 +299,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		// read program version
 		lblProgramVersion.setText(VersionTools.getCurrent());
 		
-		// Add all languages:
-		// Set<String> languages = Arrays.stream(Locale.getISOLanguages())
-		// .map(Locale::new)
-		// .map(Locale::getDisplayLanguage)
-		// .collect(Collectors.toCollection(TreeSet::new));
-		//
-		// for (String language : languages) {
-		// comboBoxLanguage.addItem(language);
-		// }
-		// fill in available values for language
-		for (LanguageEnum item : LanguageEnum.values()) {
-			comboBoxLanguage.addItem(item.getInternalName());
-		}
 		// fill in available values for filter type
 		for (FilterTypeEnum item : FilterTypeEnum.values()) {
 			comboSongListFiltering.addItem(item);
@@ -428,6 +419,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			}
 		});
 		
+		indexer.onIndexChange(this);
 		setModels(controller.getSongs(), controller.getSettings());
 		setVisible(true);
 		textFieldFilter.requestFocusInWindow();
@@ -494,13 +486,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		// If some song changes, index changes, update the list and load the current song again
 		songsModel.addSongsModelListener(() -> {
 			indexAllSongs();
-			
-			FieldName[] fieldsToSearch = settingsModel.get(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.class).getFields();
-			songsListFiltered = indexer.search(IndexType.ALL_SONGS, textFieldFilter.getText(), fieldsToSearch);
-			songsListModel.refilter();
-			// saveSong();
-			songsListSelected = songsList.getSelectedValue();
-			loadSong();
 		});
 		// start indexing once after initialization
 		indexAllSongs();
@@ -630,13 +615,12 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	private void indexAllSongs() {
 		indexer.index(IndexType.ALL_SONGS, songsModel.getSongs());
-		
+	}
+	
+	@Override
+	public void OnIndexChange() {
 		comboBoxLanguage.removeAllItems();
 		Set<String> languages = new HashSet<>();
-		// fill in available values for language
-		for (LanguageEnum item : LanguageEnum.values()) {
-			languages.add(item.getInternalName());
-		}
 		// Fill in used languages:
 		for (Song song : songsModel.getSongs()) {
 			if (song.getLanguage() != null && !song.getLanguage().isBlank()) {
@@ -645,6 +629,78 @@ public class MainWindow extends JFrame implements UIScroller {
 		}
 		for (String language : languages) {
 			comboBoxLanguage.addItem(language);
+		}
+		
+		SwingUtilities.invokeLater(() -> {
+			LOG.debug("Loading songsmodel changes into ui..");
+			
+			Song newSelectedSong = selectNewSongWithUUID != null ? songsModel.getByUUID(selectNewSongWithUUID) : null;
+			if (newSelectedSong != null) {
+				selectNewSongWithUUID = null;
+				// Open song, if just added with handleNewSong
+				setSelectedSong(newSelectedSong);
+			} else if (selectedSong != null) {
+				// If current opened song differs, reopen it.
+				// This means overwrite current editor changes without saving them.
+				newSelectedSong = songsModel.getByUUID(selectedSong.getUUID());
+				if (!selectedSong.equals(newSelectedSong)) {
+					if (newSelectedSong == null) {
+						// Song is deleted:
+						setSelectedSong(null);
+					} else {
+						// Song is updated
+						// newSelectedSong = rebaseChanges(newSelectedSong);
+						setSelectedSong(newSelectedSong);
+					}
+				}
+			}
+			
+			// Update songlist / make it visible:
+			if (songsListFiltered != null && selectedSong != null && textFieldFilter != null && !textFieldFilter.getText().isBlank()
+				&& !songsListFiltered.contains(selectedSong)) {
+				textFieldFilter.setText("");
+			} else {
+				applyFilter();
+			}
+		});
+	}
+	
+	private Song rebaseChanges(Song songFromRemote) {
+		if (!isSongDataChanged()) {
+			return songFromRemote;
+		}
+		
+		Song songFromGui = songFromGUI();
+		if (songFromGui.equals(songFromRemote)) {
+			return songFromRemote;
+		}
+		
+		Song localPatch = PatchController.patch(songFromGui, selectedSong);
+		if (localPatch.isEmpty()) {
+			return songFromRemote;
+		}
+		
+		// Merge/Remove equal patches:
+		Song remotePatch = PatchController.patch(songFromRemote, selectedSong);
+		Song mergedPatch = PatchController.mergePatches(remotePatch, localPatch);
+		return PatchController.applyPatch(selectedSong, mergedPatch);
+		
+		// Or simply apply our local changes ontop of the remote changes:
+		// return PatchController.applyPatch(songFromRemote, patch);
+	}
+	
+	private void setSelectedSong(Song song) {
+		boolean sameSong = song == null || selectedSong == null || !StringTools.equalsWithNullAsEmpty(selectedSong.getUUID(), song.getUUID());
+		selectedSong = song;
+		if (selectedSong == null) {
+			clearSongData();
+			setSongEditingEnabled(false);
+			// disable buttons
+			btnDeleteSong.setEnabled(false);
+			btnSelectSong.setEnabled(false);
+			btnExportPdfSelected.setEnabled(false);
+		} else {
+			loadSong(sameSong);
 		}
 	}
 	
@@ -860,14 +916,15 @@ public class MainWindow extends JFrame implements UIScroller {
 	protected void handleSongsListSelectionChanged(ListSelectionEvent e) {
 		// only the last event in a row should fire these actions (check valueIsAdjusting)
 		if (!e.getValueIsAdjusting()) {
+			LOG.debug("SongListselectionChange");
 			saveSong();
-			songsListSelected = songsList.getSelectedValue();
-			loadSong();
+			selectedSong = songsList.getSelectedValue();
+			loadSong(true);
 		}
 	}
 	
 	private void saveSong() {
-		if (songsListSelected != null) {
+		if (selectedSong != null) {
 			saveSongWithoutChangingGUI();
 			clearSongData();
 			setSongEditingEnabled(false);
@@ -879,33 +936,43 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	private void saveSongWithoutChangingGUI() {
-		if (songsListSelected != null) {
-			saveSongData(songsListSelected);
+		if (!isSongDataChanged()) {
+			return;
 		}
+		
+		LOG.debug("saveSongData: {}", selectedSong.getTitle());
+		controller.getSongsController().updateSong(songFromGUI());
 	}
 	
-	private void loadSong() {
-		if (songsListSelected != null) {
-			loadSongData(songsListSelected);
-			setSongEditingEnabled(true);
-			// enable buttons
-			btnDeleteSong.setEnabled(true);
-			btnSelectSong.setEnabled(true);
-			btnExportPdfSelected.setEnabled(true);
+	private void loadSong(final boolean rewind) {
+		if (selectedSong != null) {
+			loadSongData(selectedSong, rewind);
+			if (rewind) {
+				setSongEditingEnabled(true);
+				// enable buttons
+				btnDeleteSong.setEnabled(true);
+				btnSelectSong.setEnabled(true);
+				btnExportPdfSelected.setEnabled(true);
+			}
 		}
 	}
 	
 	private void applyFilter() {
-		saveSong();
+		// Filter:
+		final String filterText = textFieldFilter.getText();
 		FieldName[] fieldsToSearch = settingsModel.get(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.class).getFields();
-		songsListFiltered = indexer.search(IndexType.ALL_SONGS, textFieldFilter.getText(), fieldsToSearch);
+		songsListFiltered = indexer.search(IndexType.ALL_SONGS, filterText, fieldsToSearch);
 		songsListModel.refilter();
-		songsListSelected = songsList.getSelectedValue();
-		loadSong();
+		
+		// Find and select currently opened song:
 		SwingUtilities.invokeLater(() -> {
-			// when filtering, the user usually wants to see the top of the list
-			songsList.clearSelection();
-			songsList.scrollRectToVisible(new Rectangle(0, 0, 1, 1));
+			songsList.setValueIsAdjusting(true);
+			if (songsListFiltered.contains(selectedSong) || StringTools.isBlank(filterText)) {
+				songsList.setSelectedValue(selectedSong, true);
+			} else {
+				songsList.clearSelection();
+				songsList.scrollRectToVisible(new Rectangle(0, 0, 1, 1));
+			}
 		});
 	}
 	
@@ -933,113 +1000,86 @@ public class MainWindow extends JFrame implements UIScroller {
 		}
 	}
 	
-	protected void handleSongDataFocusLost() {
-		saveSongWithoutChangingGUI();
+	private boolean isSongDataChanged() {
+		return selectedSong != null && (!StringTools.equalsWithNullAsEmpty(selectedSong.getLyrics(), editorLyrics.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getTitle(), textFieldTitle.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getLanguage(), (String) comboBoxLanguage.getEditor().getItem())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getTonality(), textFieldTonality.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getComposer(), textFieldComposer.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getAuthorText(), textFieldAuthorText.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getAuthorTranslation(), textFieldAuthorTranslation.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getPublisher(), textFieldPublisher.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getAdditionalCopyrightNotes(), textFieldAdditionalCopyrightNotes
+				.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getTempo(), textFieldTempo.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getChordSequence(), editorChordSequence.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getDrumNotes(), editorDrumNotes.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getSongNotes(), editorSongNotes.getText()));
 	}
 	
-	/**
-	 * Stores all data contained in the GUI elements.
-	 *
-	 * @param readableSong
-	 *            the songsModel object to which the data should be written
-	 */
-	private synchronized void saveSongData(Song readableSong) {
-		LOG.debug("saveSongData: {}", readableSong.getTitle());
-		
-		boolean dataChanged = false;
-		Song song = new Song(readableSong);
+	private Song songFromGUI() {
+		Song song = new Song(selectedSong);
 		
 		if (!StringTools.equalsWithNullAsEmpty(song.getLyrics(), editorLyrics.getText())) {
 			song.setLyrics(editorLyrics.getText());
-			LOG.debug("changed song attribute: Lyrics");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getTitle(), textFieldTitle.getText())) {
 			song.setTitle(textFieldTitle.getText());
-			LOG.debug("changed song attribute: Title");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getLanguage(), (String) comboBoxLanguage.getEditor().getItem())) {
 			song.setLanguage((String) comboBoxLanguage.getEditor().getItem());
-			LOG.debug("changed song attribute: Language");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getTonality(), textFieldTonality.getText())) {
 			song.setTonality(textFieldTonality.getText());
-			LOG.debug("changed song attribute: Tonality");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getComposer(), textFieldComposer.getText())) {
 			song.setComposer(textFieldComposer.getText());
-			LOG.debug("changed song attribute: Composer");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getAuthorText(), textFieldAuthorText.getText())) {
 			song.setAuthorText(textFieldAuthorText.getText());
-			LOG.debug("changed song attribute: AuthorText");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getAuthorTranslation(), textFieldAuthorTranslation.getText())) {
 			song.setAuthorTranslation(textFieldAuthorTranslation.getText());
-			LOG.debug("changed song attribute: AuthorTranslation");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getPublisher(), textFieldPublisher.getText())) {
 			song.setPublisher(textFieldPublisher.getText());
-			LOG.debug("changed song attribute: Publisher");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getAdditionalCopyrightNotes(), textFieldAdditionalCopyrightNotes
 			.getText())) {
 			song.setAdditionalCopyrightNotes(textFieldAdditionalCopyrightNotes.getText());
-			LOG.debug("changed song attribute: AdditionalCopyrightNotes");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getTempo(), textFieldTempo.getText())) {
 			song.setTempo(textFieldTempo.getText());
-			LOG.debug("changed song attribute: Tempo");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getChordSequence(), editorChordSequence.getText())) {
 			song.setChordSequence(editorChordSequence.getText());
-			LOG.debug("changed song attribute: ChordSequence");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getDrumNotes(), editorDrumNotes.getText())) {
 			song.setDrumNotes(editorDrumNotes.getText());
-			LOG.debug("changed song attribute: DrumNotes");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getSongNotes(), editorSongNotes.getText())) {
 			song.setSongNotes(editorSongNotes.getText());
-			LOG.debug("changed song attribute: SongNotes");
-			dataChanged = true;
 		}
-		
-		if (dataChanged) {
-			// put the songs in the right order again
-			controller.getSongsController().updateSong(song);
-			// songsModel.songsChanged(Arrays.asList(song));
-		}
+		return song;
 	}
 	
 	/**
 	 * Deletes all values contained in the GUI elements of the song editing tab.
 	 */
 	private void clearSongData() {
-		setTextAndRewind(editorLyrics, "");
-		setTextAndRewind(textFieldTitle, "");
+		setText(editorLyrics, "", true);
+		setText(textFieldTitle, "", true);
 		comboBoxLanguage.setSelectedItem(null);
-		setTextAndRewind(textFieldTonality, "");
-		setTextAndRewind(textFieldComposer, "");
-		setTextAndRewind(textFieldAuthorText, "");
-		setTextAndRewind(textFieldAuthorTranslation, "");
-		setTextAndRewind(textFieldPublisher, "");
-		setTextAndRewind(textFieldAdditionalCopyrightNotes, "");
-		setTextAndRewind(textFieldTempo, "");
-		setTextAndRewind(editorChordSequence, "");
-		setTextAndRewind(editorDrumNotes, "");
-		setTextAndRewind(editorSongNotes, "");
+		setText(textFieldTonality, "", true);
+		setText(textFieldComposer, "", true);
+		setText(textFieldAuthorText, "", true);
+		setText(textFieldAuthorTranslation, "", true);
+		setText(textFieldPublisher, "", true);
+		setText(textFieldAdditionalCopyrightNotes, "", true);
+		setText(textFieldTempo, "", true);
+		setText(editorChordSequence, "", true);
+		setText(editorDrumNotes, "", true);
+		setText(editorSongNotes, "", true);
 	}
 	
 	/**
@@ -1070,26 +1110,31 @@ public class MainWindow extends JFrame implements UIScroller {
 	 * @param song
 	 *            the songsModel object which should be read
 	 */
-	private synchronized void loadSongData(final Song song) {
-		LOG.debug("loadSongData: {}", song.getTitle());
-		setTextAndRewind(editorLyrics, song.getLyrics());
-		setTextAndRewind(textFieldTitle, song.getTitle());
-		comboBoxLanguage.setSelectedItem(song.getLanguage());
-		setTextAndRewind(textFieldTonality, song.getTonality());
-		setTextAndRewind(textFieldComposer, song.getComposer());
-		setTextAndRewind(textFieldAuthorText, song.getAuthorText());
-		setTextAndRewind(textFieldAuthorTranslation, song.getAuthorTranslation());
-		setTextAndRewind(textFieldPublisher, song.getPublisher());
-		setTextAndRewind(textFieldAdditionalCopyrightNotes, song.getAdditionalCopyrightNotes());
-		setTextAndRewind(textFieldTempo, song.getTempo());
-		setTextAndRewind(editorChordSequence, song.getChordSequence());
-		setTextAndRewind(editorDrumNotes, song.getDrumNotes());
-		setTextAndRewind(editorSongNotes, song.getSongNotes());
+	private synchronized void loadSongData(final Song song, final boolean rewind) {
+		LOG.debug("loadSongData: {} {}", song.getTitle(), song.getUUID());
+		setText(editorLyrics, song.getLyrics(), rewind);
+		setText(textFieldTitle, song.getTitle(), rewind);
+		((JTextField) comboBoxLanguage.getEditor().getEditorComponent()).setText(song.getLanguage());
+		if (rewind) {
+			((JTextField) comboBoxLanguage.getEditor().getEditorComponent()).setCaretPosition(0);
+		}
+		setText(textFieldTonality, song.getTonality(), rewind);
+		setText(textFieldComposer, song.getComposer(), rewind);
+		setText(textFieldAuthorText, song.getAuthorText(), rewind);
+		setText(textFieldAuthorTranslation, song.getAuthorTranslation(), rewind);
+		setText(textFieldPublisher, song.getPublisher(), rewind);
+		setText(textFieldAdditionalCopyrightNotes, song.getAdditionalCopyrightNotes(), rewind);
+		setText(textFieldTempo, song.getTempo(), rewind);
+		setText(editorChordSequence, song.getChordSequence(), rewind);
+		setText(editorDrumNotes, song.getDrumNotes(), rewind);
+		setText(editorSongNotes, song.getSongNotes(), rewind);
 	}
 	
-	private static void setTextAndRewind(JTextComponent textComponent, String textToSet) {
+	private static void setText(JTextComponent textComponent, String textToSet, boolean rewind) {
 		textComponent.setText(textToSet);
-		textComponent.setCaretPosition(0);
+		if (rewind) {
+			textComponent.setCaretPosition(0);
+		}
 	}
 	
 	protected void handleWindowClosing() {
@@ -1112,24 +1157,28 @@ public class MainWindow extends JFrame implements UIScroller {
 	}
 	
 	protected void handleSongNew() {
-		applyFilter();
-		songsList.clearSelection();
-		songsListSelected = new Song(StringTools.createUUID());
-		loadSong();
+		// saveSong();
+		// applyFilter();
+		// songsList.clearSelection();
+		Song song = new Song(StringTools.createUUID());
+		song.setTitle("New Song");
+		song.setLyrics("Put your lyrics here");
+		selectNewSongWithUUID = song.getUUID();
+		controller.getSongsController().updateSong(song);
 	}
 	
 	protected void handleSongDelete() {
-		if (songsListSelected != null) {
-			Song songToDelete = songsListSelected;
-			songsList.removeSelectionInterval(0, songsModel.getSize() - 1);
+		if (selectedSong != null) {
+			Song songToDelete = selectedSong;
+			// songsList.removeSelectionInterval(0, songsModel.getSize() - 1);
 			controller.getSongsController().removeSong(songToDelete);
-			applyFilter();
+			// applyFilter();
 		}
 	}
 	
 	protected void handleSongSelect() {
-		if (songsListSelected != null) {
-			presentModel.addSong(songsListSelected);
+		if (selectedSong != null) {
+			presentModel.addSong(selectedSong);
 			tabbedPane.setSelectedIndex(TAB_INDEX_PRESENT);
 			presentList.requestFocusInWindow();
 			setDefaultDividerLocation();
@@ -1181,10 +1230,11 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	protected void handleJumpToSelectedSong() {
 		if (presentListSelected != null) {
-			if (!songsListModel.contains(presentListSelected)) {
-				textFieldFilter.setText("");
+			textFieldFilter.setText("");
+			Song songInSongs = songsModel.getByUUID(presentListSelected.getUUID());
+			if (songInSongs != null) {
+				songsList.setSelectedValue(songInSongs, true);
 			}
-			songsList.setSelectedValue(presentListSelected, true);
 		}
 	}
 	
@@ -1454,7 +1504,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				try {
-					if (e.getClickCount() >= 2 && songsListSelected != null) {
+					if (e.getClickCount() >= 2 && selectedSong != null) {
 						// double-clicked: put into present list
 						handleSongSelect();
 					}
@@ -1528,13 +1578,14 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelEdit.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentShown(ComponentEvent e) {
-				loadSong();
+				loadSong(true);
 			}
 			
 			@Override
 			public void componentHidden(ComponentEvent e) {
 				try {
-					saveSongWithoutChangingGUI();
+					saveSong();
+					// saveSongWithoutChangingGUI();
 				} catch (Throwable ex) {
 					handleError(ex);
 				}
@@ -1802,6 +1853,41 @@ public class MainWindow extends JFrame implements UIScroller {
 		scrollPaneSongNotes.setViewportView(editorSongNotes);
 		editorSongNotes.setBackground(Color.WHITE);
 		
+		for (JComponent v : new JComponent[] {
+			textFieldTonality,
+			textFieldAdditionalCopyrightNotes,
+			textFieldAuthorText,
+			textFieldAuthorTranslation,
+			textFieldComposer,
+			textFieldPublisher,
+			textFieldTempo,
+			textFieldTitle,
+			(JTextField) comboBoxLanguage.getEditor().getEditorComponent(),
+			editorLyrics,
+			editorChordSequence,
+			editorSongNotes,
+			editorDrumNotes
+		}) {
+			v.addFocusListener(new FocusListener() {
+				
+				@Override
+				public void focusLost(FocusEvent e) {
+					try {
+						// saveSong();
+						saveSongWithoutChangingGUI();
+					} catch (Throwable ex) {
+						handleError(ex);
+					}
+				}
+				
+				@Override
+				public void focusGained(FocusEvent e) {
+					// TODO
+					
+				}
+			});
+		}
+		
 		// MARK Present Panel
 		JPanel panelPresent = new JPanel();
 		tabbedPane.addTab("Present Songs", null, panelPresent, null);
@@ -2061,7 +2147,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(chckbxWithChords, gbc_chckbxWithChords);
 		
 		btnExportPdfSelected = new JButton("Export selected song");
-		btnExportPdfSelected.addActionListener(safeAction(e -> handleExport(Arrays.asList(songsListSelected))));
+		btnExportPdfSelected.addActionListener(safeAction(e -> handleExport(Arrays.asList(selectedSong))));
 		
 		chckbxOnlyExportSongs = new JCheckBox("only export songs which have chords");
 		GridBagConstraints gbc_chckbxOnlyExportSongs = new GridBagConstraints();
@@ -3051,4 +3137,5 @@ public class MainWindow extends JFrame implements UIScroller {
 	public SongsModel getPresentModel() {
 		return presentModel;
 	}
+	
 }

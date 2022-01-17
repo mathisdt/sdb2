@@ -25,7 +25,6 @@ import javax.swing.ListCellRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
-import org.zephyrsoft.sdb2.model.LanguageEnum;
 
 /**
  * A {@link ListCellRenderer} for {@link LanguageEnum} values.

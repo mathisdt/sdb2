@@ -57,7 +57,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 	
 	private List<TransparentListModel<Song>> createdListModels = null;
 	
-	private List<SongsModelListener> songsModelListeners = null;
+	private ArrayList<SongsModelListener> songsModelListeners = null;
 	
 	public SongsModel() {
 		initIfNecessary();
@@ -223,7 +223,9 @@ public class SongsModel implements Iterable<Song>, Persistable {
 				if (songs.add(song))
 					actuallyChangedSongs.add(song);
 			} else if (!found.equals(song)) {
-				found.fromMap(song.toMap());
+				songs.remove(found);
+				songs.add(song);
+				// found.fromMap(song.toMap());
 				actuallyChangedSongs.add(song);
 			}
 		}

@@ -482,9 +482,13 @@ public class SongView extends JPanel implements Scroller {
 	}
 	
 	private void adjustHeightIfNecessary() {
-		// adjust height to meet at least the required value so that all text is visible
-		if (text.getSize().height < text.getPreferredSize().height) {
-			text.setSize(text.getSize().width, text.getPreferredSize().height);
+		try {
+			// adjust height to meet at least the required value so that all text is visible
+			if (text.getSize().height < text.getPreferredSize().height) {
+				text.setSize(text.getSize().width, text.getPreferredSize().height);
+			}
+		} catch (NullPointerException e) {
+			// This is a fix for remote, where moveToLine is called to fast after startup
 		}
 	}
 	
