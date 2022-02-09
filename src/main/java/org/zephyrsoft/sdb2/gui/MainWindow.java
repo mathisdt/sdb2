@@ -44,7 +44,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -521,7 +520,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		// prepare for settings
 		updateScreenModels();
 		ScreenHelper.addChangeListener(() -> SwingUtilities.invokeLater(this::updateScreenModels));
-
+		
 		// load values for instantly displayed settings
 		updateFontButtons();
 		Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
@@ -550,6 +549,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		textFieldRemotePrefix.setText(settingsModel.get(SettingKey.REMOTE_PREFIX, String.class));
 		textFieldRemoteNamespace.setText(settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class));
 	}
+	
 	private void updateScreenModels() {
 		controller.detectScreens();
 		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
@@ -559,7 +559,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		comboPresentationScreen2Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
 			settingsModel.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)));
 	}
-
+	
 	private static void setSpinnerValue(JSpinner spinner, Object value) {
 		spinner.setValue(value == null ? 0 : value);
 	}
@@ -567,7 +567,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	protected void handleSettingsUnlock() {
 		// reload screens
 		controller.detectScreens();
-
+		
 		// enable controls
 		setSettingsEnabled(true);
 	}
@@ -2916,10 +2916,10 @@ public class MainWindow extends JFrame implements UIScroller {
 			// export
 			ExportFormat format = new ExportFormat(chckbxWithTranslation.isSelected(),
 				chckbxWithChords.isSelected(), chckbxOnlyExportSongs.isSelected());
-			byte[] exported = exportService.export(format, songs);
 			try {
+				byte[] exported = exportService.export(format, songs);
 				Files.write(exported, target);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				handleError(e);
 			}
 		}
