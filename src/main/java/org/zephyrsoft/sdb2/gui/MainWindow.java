@@ -35,8 +35,6 @@ import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
@@ -137,7 +135,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	private static final String PROBLEM_WHILE_SAVING = """
 		There was a problem while saving the data.
-
+		
 		Please examine the log file at:
 		""";
 	
@@ -174,7 +172,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private JEditorPane editorChordSequence;
 	private JEditorPane editorDrumNotes;
 	private JEditorPane editorSongNotes;
-
+	
 	private KeyboardShortcutManager keyboardShortcutManager;
 	private final MainController controller;
 	private IndexerService indexer;
@@ -302,7 +300,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		
 		// read program version
 		lblProgramVersion.setText(VersionTools.getCurrent());
-
+		
 		// fill in available values for filter type
 		for (FilterTypeEnum item : FilterTypeEnum.values()) {
 			comboSongListFiltering.addItem(item);
@@ -525,7 +523,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		// prepare for settings
 		updateScreenModels();
 		ScreenHelper.addChangeListener(() -> SwingUtilities.invokeLater(this::updateScreenModels));
-
+		
 		// load values for instantly displayed settings
 		updateFontButtons();
 		Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
@@ -554,6 +552,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		textFieldRemotePrefix.setText(settingsModel.get(SettingKey.REMOTE_PREFIX, String.class));
 		textFieldRemoteRoom.setText(settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class));
 	}
+	
 	private void updateScreenModels() {
 		controller.detectScreens();
 		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
@@ -563,7 +562,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		comboPresentationScreen2Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
 			settingsModel.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)));
 	}
-
+	
 	private static void setSpinnerValue(JSpinner spinner, Object value) {
 		spinner.setValue(value == null ? 0 : value);
 	}
@@ -571,7 +570,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	protected void handleSettingsUnlock() {
 		// reload screens
 		controller.detectScreens();
-
+		
 		// enable controls
 		setSettingsEnabled(true);
 	}
@@ -638,15 +637,15 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		for (String language : languages) {
 			comboBoxLanguage.addItem(language);
 		}
-
+		
 		SwingUtilities.invokeLater(() -> {
 			LOG.debug("Loading songsmodel changes into ui..");
-
+			
 			Song newSelectedSong = selectNewSongWithUUID != null ? songsModel.getByUUID(selectNewSongWithUUID) : null;
 			if (newSelectedSong != null) {
 				selectNewSongWithUUID = null;
 				// Open song, if just added with handleNewSong
-				setSelectedSong(newSelectedSong);
+				setSelectedSong(newSelectedSong, false);
 			} else if (selectedSong != null) {
 				// If current opened song differs, reopen it.
 				// This means overwrite current editor changes without saving them.
@@ -654,15 +653,15 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				if (!selectedSong.equals(newSelectedSong)) {
 					if (newSelectedSong == null) {
 						// Song is deleted:
-						setSelectedSong(null);
+						setSelectedSong(null, false);
 					} else {
 						// Song is updated
-						// newSelectedSong = rebaseChanges(newSelectedSong);
-						setSelectedSong(newSelectedSong);
+						newSelectedSong = rebaseChanges(newSelectedSong);
+						setSelectedSong(newSelectedSong, false);
 					}
 				}
 			}
-
+			
 			// Update songlist / make it visible:
 			if (songsListFiltered != null && selectedSong != null && textFieldFilter != null && !textFieldFilter.getText().isBlank()
 				&& !songsListFiltered.contains(selectedSong)) {
@@ -672,34 +671,43 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		});
 	}
-
+	
 	private Song rebaseChanges(Song songFromRemote) {
 		if (!isSongDataChanged()) {
 			return songFromRemote;
 		}
-
+		
 		Song songFromGui = songFromGUI();
 		if (songFromGui.equals(songFromRemote)) {
 			return songFromRemote;
 		}
-
+		
 		Song localPatch = PatchController.patch(songFromGui, selectedSong);
 		if (localPatch.isEmpty()) {
 			return songFromRemote;
 		}
-
+		
 		// Merge/Remove equal patches:
 		Song remotePatch = PatchController.patch(songFromRemote, selectedSong);
 		Song mergedPatch = PatchController.mergePatches(remotePatch, localPatch);
 		return PatchController.applyPatch(selectedSong, mergedPatch);
-
+		
 		// Or simply apply our local changes ontop of the remote changes:
 		// return PatchController.applyPatch(songFromRemote, patch);
 	}
-
-	private void setSelectedSong(Song song) {
-		boolean sameSong = song == null || selectedSong == null || !StringTools.equalsWithNullAsEmpty(selectedSong.getUUID(), song.getUUID());
+	
+	private void setSelectedSong(Song song, boolean save) {
+		// Save Song:
+		if (save && selectedSong != null) {
+			saveSongWithoutChangingGUI();
+		}
+		
+		// Update selected song, if its already open (uuid is the same), do not rewind cursors.
+		boolean rewindCursors = song == null || selectedSong == null || !StringTools.equalsWithNullAsEmpty(selectedSong.getUUID(), song.getUUID());
+		
+		LOG.debug("setSelectedSong: {} selected before={}", song, selectedSong);
 		selectedSong = song;
+		
 		if (selectedSong == null) {
 			clearSongData();
 			setSongEditingEnabled(false);
@@ -708,10 +716,17 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			btnSelectSong.setEnabled(false);
 			btnExportPdfSelected.setEnabled(false);
 		} else {
-			loadSong(sameSong);
+			loadSongData(selectedSong, rewindCursors);
+			if (rewindCursors) {
+				setSongEditingEnabled(true);
+				// enable buttons
+				btnDeleteSong.setEnabled(true);
+				btnSelectSong.setEnabled(true);
+				btnExportPdfSelected.setEnabled(true);
+			}
 		}
 	}
-
+	
 	/**
 	 * Let the user select a font, save it into the {@link SettingsModel} (if changed) and re-enable the settings tab.
 	 *
@@ -924,22 +939,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	protected void handleSongsListSelectionChanged(ListSelectionEvent e) {
 		// only the last event in a row should fire these actions (check valueIsAdjusting)
 		if (!e.getValueIsAdjusting()) {
-			LOG.debug("SongListselectionChange");
-			saveSong();
-			selectedSong = songsList.getSelectedValue();
-			loadSong(true);
-		}
-	}
-	
-	private void saveSong() {
-		if (selectedSong != null) {
-			saveSongWithoutChangingGUI();
-			clearSongData();
-			setSongEditingEnabled(false);
-			// disable buttons
-			btnDeleteSong.setEnabled(false);
-			btnSelectSong.setEnabled(false);
-			btnExportPdfSelected.setEnabled(false);
+			Song song = songsList.getSelectedValue();
+			LOG.debug("SongListselectionChange to {}", song);
+			setSelectedSong(song, true);
 		}
 	}
 	
@@ -947,22 +949,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		if (!isSongDataChanged()) {
 			return;
 		}
-
+		
 		LOG.debug("saveSongData: {}", selectedSong.getTitle());
 		controller.getSongsController().updateSong(songFromGUI());
-	}
-	
-	private void loadSong(final boolean rewind) {
-		if (selectedSong != null) {
-			loadSongData(selectedSong, rewind);
-			if (rewind) {
-				setSongEditingEnabled(true);
-				// enable buttons
-				btnDeleteSong.setEnabled(true);
-				btnSelectSong.setEnabled(true);
-				btnExportPdfSelected.setEnabled(true);
-			}
-		}
 	}
 	
 	private void applyFilter() {
@@ -971,7 +960,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		FieldName[] fieldsToSearch = settingsModel.get(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.class).getFields();
 		songsListFiltered = indexer.search(IndexType.ALL_SONGS, filterText, fieldsToSearch);
 		songsListModel.refilter();
-
+		
 		// Find and select currently opened song:
 		SwingUtilities.invokeLater(() -> {
 			songsList.setValueIsAdjusting(true);
@@ -1075,6 +1064,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	 * Deletes all values contained in the GUI elements of the song editing tab.
 	 */
 	private void clearSongData() {
+		LOG.debug("clearSongData");
 		setText(editorLyrics, "", true);
 		setText(textFieldTitle, "", true);
 		comboBoxLanguage.setSelectedItem(null);
@@ -1186,7 +1176,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	protected void handleSongSelect() {
 		if (selectedSong != null) {
-			presentModel.addSong(selectedSong);
+			presentModel.addSong(new Song(selectedSong));
 			tabbedPane.setSelectedIndex(TAB_INDEX_PRESENT);
 			presentList.requestFocusInWindow();
 			setDefaultDividerLocation();
@@ -1250,7 +1240,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		Song currentlyPresentedSong = controller.getCurrentlyPresentedSong();
 		if (currentlyPresentedSong != null) {
 			List<Song> songs = presentListModel.getAllElements();
-
+			
 			// Search for new equal songs starting with last used song position:
 			int startIndex = Math.max(0, presentList.getSelectedIndex());
 			for (int i = 0; i < songs.size(); i++) {
@@ -1364,12 +1354,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_S, Modifiers.CTRL, () -> {
 			LOG.debug("ctrl-s action");
-			saveSongWithoutChangingGUI();
-			boolean success = controller.saveAll();
-			if (!success) {
-				showErrorDialog(PROBLEM_WHILE_SAVING
-					+ FileAndDirectoryLocations.getLogDir());
-			}
+			handleSaveAll();
 		}));
 		
 		// TODO use single Shortcut (without ctrl), put an option in the global settings tab
@@ -1388,8 +1373,18 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_R, Modifiers.CTRL, () -> {
 			LOG.debug("ctrl-r action");
+			handleSaveAll();
 			new Thread(() -> controller.initRemoteController()).start();
 		}));
+	}
+	
+	private void handleSaveAll() {
+		saveSongWithoutChangingGUI();
+		boolean success = controller.saveAll();
+		if (!success) {
+			showErrorDialog(PROBLEM_WHILE_SAVING
+				+ FileAndDirectoryLocations.getLogDir());
+		}
 	}
 	
 	public void handleError(Throwable ex) {
@@ -1583,22 +1578,6 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		JPanel panelEdit = new JPanel();
 		panelEdit.setBorder(new EmptyBorder(5, 5, 5, 5));
 		tabbedPane.addTab("Edit Song", null, panelEdit, null);
-		panelEdit.addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentShown(ComponentEvent e) {
-				loadSong(true);
-			}
-
-			@Override
-			public void componentHidden(ComponentEvent e) {
-				try {
-					saveSong();
-					// saveSongWithoutChangingGUI();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
 		GridBagLayout gblPanelEdit = new GridBagLayout();
 		gblPanelEdit.columnWidths = new int[] { 9999, 9999, 9999 };
 		gblPanelEdit.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -1810,7 +1789,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			editorChordSequence.getFont().getSize()));
 		scrollPaneChordSequence.setViewportView(editorChordSequence);
 		editorChordSequence.setBackground(Color.WHITE);
-
+		
 		JLabel lblDrumNotes = new JLabel("Drum notes");
 		GridBagConstraints gbcLblDrumNotes = new GridBagConstraints();
 		gbcLblDrumNotes.fill = GridBagConstraints.HORIZONTAL;
@@ -1819,7 +1798,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblDrumNotes.gridx = 1;
 		gbcLblDrumNotes.gridy = 8;
 		panelEdit.add(lblDrumNotes, gbcLblDrumNotes);
-
+		
 		JScrollPane scrollPaneDrumNotes = new JScrollPane();
 		GridBagConstraints gbcScrollPaneDrumNotes = new GridBagConstraints();
 		gbcScrollPaneDrumNotes.gridheight = 2;
@@ -1830,13 +1809,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcScrollPaneDrumNotes.gridx = 1;
 		gbcScrollPaneDrumNotes.gridy = 9;
 		panelEdit.add(scrollPaneDrumNotes, gbcScrollPaneDrumNotes);
-
+		
 		editorDrumNotes = new JEditorPane();
 		editorDrumNotes.setFont(new Font("Monospaced", editorDrumNotes.getFont().getStyle(),
 			editorDrumNotes.getFont().getSize()));
 		scrollPaneDrumNotes.setViewportView(editorDrumNotes);
 		editorDrumNotes.setBackground(Color.WHITE);
-
+		
 		JLabel lblSongNotes = new JLabel("Song Notes (not shown in presentation)");
 		GridBagConstraints gbcLblSongNotes = new GridBagConstraints();
 		gbcLblSongNotes.fill = GridBagConstraints.HORIZONTAL;
@@ -1845,7 +1824,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblSongNotes.gridx = 2;
 		gbcLblSongNotes.gridy = 8;
 		panelEdit.add(lblSongNotes, gbcLblSongNotes);
-
+		
 		JScrollPane scrollPaneSongNotes = new JScrollPane();
 		GridBagConstraints gbcScrollPaneSongNotes = new GridBagConstraints();
 		gbcScrollPaneSongNotes.gridheight = 2;
@@ -1856,11 +1835,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcScrollPaneSongNotes.gridx = 2;
 		gbcScrollPaneSongNotes.gridy = 9;
 		panelEdit.add(scrollPaneSongNotes, gbcScrollPaneSongNotes);
-
+		
 		editorSongNotes = new JEditorPane();
 		scrollPaneSongNotes.setViewportView(editorSongNotes);
 		editorSongNotes.setBackground(Color.WHITE);
-
+		
 		for (JComponent v : new JComponent[] {
 			textFieldTonality,
 			textFieldAdditionalCopyrightNotes,
@@ -1877,7 +1856,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			editorDrumNotes
 		}) {
 			v.addFocusListener(new FocusListener() {
-
+				
 				@Override
 				public void focusLost(FocusEvent e) {
 					try {
@@ -1887,11 +1866,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 						handleError(ex);
 					}
 				}
-
+				
 				@Override
 				public void focusGained(FocusEvent e) {
 					// TODO
-
+					
 				}
 			});
 		}
@@ -3145,5 +3124,5 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	public SongsModel getPresentModel() {
 		return presentModel;
 	}
-
+	
 }

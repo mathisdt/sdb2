@@ -50,7 +50,6 @@ public class RemoteController {
 	private final String prefix;
 	private final String room;
 	private final String server;
-	private final String clientID;
 	private final String username;
 	private final String password;
 	private final boolean showTitle;
@@ -79,9 +78,8 @@ public class RemoteController {
 		username = settingsModel.get(SettingKey.REMOTE_USERNAME, String.class);
 		password = settingsModel.get(SettingKey.REMOTE_PASSWORD, String.class);
 		showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
-		clientID = settingsModel.get(SettingKey.REMOTE_CLIENT_ID, String.class);
 		
-		mqtt = new MQTT(server, clientID, username, password);
+		mqtt = new MQTT(server, username, password, true);
 		
 		mqtt.onConnectionLost(cause -> {
 			mainController.setRemoteStatus(RemoteStatus.FAILURE);
@@ -209,7 +207,7 @@ public class RemoteController {
 	}
 	
 	private String formatClientIDTopic(String topic) {
-		return String.format(topic, prefix.isBlank() ? "" : prefix + "/", clientID);
+		return String.format(topic, prefix.isBlank() ? "" : prefix + "/", mqtt.getClientID());
 	}
 	
 	public boolean checkSettingsChanged(SettingsModel settings) {
@@ -218,10 +216,9 @@ public class RemoteController {
 		String sServer = settings.get(SettingKey.REMOTE_SERVER, String.class);
 		String sUsername = settings.get(SettingKey.REMOTE_USERNAME, String.class);
 		String sPassword = settings.get(SettingKey.REMOTE_PASSWORD, String.class);
-		String sClientID = settings.get(SettingKey.REMOTE_CLIENT_ID, String.class);
 		
 		return !sPrefix.equals(prefix) || !sRoom.equals(room) || !sServer.equals(server) || !sUsername.equals(sUsername) || !sPassword
-			.equals(password) || !sClientID.equals(clientID);
+			.equals(password);
 	}
 	
 	public MqttObject<Version> getLatestVersion() {

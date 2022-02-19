@@ -21,9 +21,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttClientPersistence;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,12 +38,8 @@ public class MQTT implements MqttCallback {
 	private CopyOnWriteArrayList<OnMessageListener> onMessageListeners = new CopyOnWriteArrayList<>();
 	private CopyOnWriteArrayList<OnConnectionLostListener> onConnectionLostListeners = new CopyOnWriteArrayList<>();
 	
-	public MQTT(String serverUri) throws MqttException {
-		this(serverUri, UUID.randomUUID().toString(), null, null);
-	}
-	
-	public MQTT(String serverUri, String userName, String password) throws MqttException {
-		this(serverUri, UUID.randomUUID().toString(), userName, password);
+	public MQTT(String serverUri, String userName, String password, boolean cleanSession) throws MqttException {
+		this(serverUri, UUID.randomUUID().toString(), userName, password, cleanSession);
 	}
 	
 	/**
@@ -53,7 +51,7 @@ public class MQTT implements MqttCallback {
 	 *
 	 * @throws MqttException
 	 */
-	public MQTT(String serverUri, String clientID, String userName, String password) throws MqttException {
+	public MQTT(String serverUri, String clientID, String userName, String password, boolean cleanSession) throws MqttException {
 		this.clientID = clientID;
 		
 		MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
@@ -63,7 +61,11 @@ public class MQTT implements MqttCallback {
 		if (!password.isEmpty()) {
 			mqttConnectOptions.setPassword(password.toCharArray());
 		}
-		client = new MqttClient(serverUri, clientID);
+		mqttConnectOptions.setCleanSession(cleanSession);
+		
+		// Connect without persistence if cleanSession is True:
+		MqttClientPersistence persistence = cleanSession ? new MqttDefaultFilePersistence() : null;
+		client = new MqttClient(serverUri, clientID, persistence);
 		client.connectWithResult(mqttConnectOptions);
 		client.setCallback(this);
 	}

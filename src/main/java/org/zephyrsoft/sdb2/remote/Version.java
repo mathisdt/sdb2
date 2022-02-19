@@ -38,6 +38,8 @@ public class Version implements Persistable {
 	private String username;
 	@XmlElement(name = "uuid")
 	private String uuid;
+	@XmlElement(name = "dbuuid")
+	private String dbuuid;
 	
 	public Version() {
 		initIfNecessary();
@@ -59,12 +61,16 @@ public class Version implements Persistable {
 		return username;
 	}
 	
+	public String getDBUUID() {
+		return dbuuid;
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Version) {
 			Version cmp = ((Version) obj);
 			return this.id == cmp.getID() && this.uuid.equals(cmp.getUUID()) && username.equals(cmp.getUsername())
-				&& this.timestamp == cmp.getTimestamp();
+				&& this.timestamp == cmp.getTimestamp() && this.dbuuid.equals(cmp.getDBUUID());
 		} else {
 			return false;
 		}

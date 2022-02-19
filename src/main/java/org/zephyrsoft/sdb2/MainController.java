@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -210,10 +209,10 @@ public class MainController implements Scroller {
 		if (presentationControl != null
 			&& presentationControl.getPresenters().size() == presentersConfigured
 			&& (presentationControl.getPresenters().isEmpty() ||
-				(presentationControl.getPresenters().get(0)instanceof PresenterWindow pw
+				(presentationControl.getPresenters().get(0) instanceof PresenterWindow pw
 					&& pw.metadataMatches(screen1, VirtualScreen.SCREEN_A)))
 			&& (presentationControl.getPresenters().size() <= 2 ||
-				(presentationControl.getPresenters().get(1)instanceof PresenterWindow pw
+				(presentationControl.getPresenters().get(1) instanceof PresenterWindow pw
 					&& pw.metadataMatches(screen2, VirtualScreen.SCREEN_B)))) {
 			LOG.trace("re-using the existing presenters");
 			currentlyPresentedSong = presentable.getSong();
@@ -238,7 +237,7 @@ public class MainController implements Scroller {
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
 		}
-
+		
 		if (presentationControl.isEmpty()) {
 			ErrorDialog
 				.openDialog(
@@ -547,7 +546,6 @@ public class MainController implements Scroller {
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_PASSWORD, "");
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_SERVER, "tcp://localhost:1883");
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_USERNAME, "");
-		putDefaultIfKeyIsUnset(SettingKey.REMOTE_CLIENT_ID, UUID.randomUUID().toString());
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_PREFIX, "");
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_NAMESPACE, "default");
 		

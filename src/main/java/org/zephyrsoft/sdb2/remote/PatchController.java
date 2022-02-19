@@ -52,20 +52,23 @@ public class PatchController extends SongsModelController {
 	private static final String PREF_COMMENT = "RemoteController DB Properties";
 	private static final String PREF_DB_PREFIX = "DB_PREFIX";
 	private static final String PREF_DB_SERVER = "DB_SERVER";
+	private static final String PREF_DB_UUID = "DB_UUID";
 	private static final String PREF_SONGS_VERSION_ID = "SONGS_VERSION_ID";
 	private final HashMap<String, Collection<Song>> patchMap = new HashMap<>();
 	private final HashMap<Long, Version> patchVersions = new HashMap<>();
 	private final HashSet<String> rejects = new HashSet<>();
 	private long currentVersionId;
 	private final RemoteController remoteController;
-	private boolean initialRequestMissingPatches;
 	private SongsModel db;
 	private List<Song> offlineChanges;
 	private OnChangeListener<SongsModel> onLatestChangeListener = (changes, args) -> addChanges(changes,
-		(String) args[RemoteTopic.PATCHES_LATEST_CHANGES_ARG_UUID]);
-	private OnChangeListener<Version> onLatestVersionListener = (version, args) -> addPatchVersion(version);
+		(String) args[RemoteTopic.PATCHES_LATEST_CHANGES_ARG_UUID], true);
+	private OnChangeListener<Version> onLatestVersionListener = (version, args) -> addPatchVersion(version, true);
 	private OnChangeListener<ChangeReject> onLatestRejectListener = (reject, args) -> rejectPatch(reject.getUUID());
 	private OnChangeListener<Patches> onRequestPatchesListener = (patches, args) -> addPatches(patches);
+	private MqttObject.OnChangeListener<Version> onInitialLatestVersionListener = (version, args) -> requestMissingPatches();
+	private boolean requestedMissingPatches;
+	private String dbUUID = "";
 	
 	// Contains overwritten local changes:
 	private LinkedList<Song> conflicts = new LinkedList<>();
@@ -76,19 +79,19 @@ public class PatchController extends SongsModelController {
 		
 		load();
 		
+		requestedMissingPatches = false;
 		remoteController.getLatestChanges().onChange(onLatestChangeListener);
 		remoteController.getLatestVersion().onChange(onLatestVersionListener);
 		remoteController.getLatestReject().onChange(onLatestRejectListener);
 		remoteController.getRequestPatches().onChange(onRequestPatchesListener);
-		
-		addPatchVersion(remoteController.getLatestVersion().get());
+		addPatchVersion(remoteController.getLatestVersion().get(), true);
 	}
 	
 	/**
 	 * Resets the database if prefix has changed, reads the current database version resets the
 	 * requestMissingPatch boolean.
 	 */
-	private boolean load() {
+	private void load() {
 		File dbFile = new File(FileAndDirectoryLocations.getDefaultDBFileName());
 		File dbPropertiesFile = new File(FileAndDirectoryLocations.getDefaultDBPropertiesFileName());
 		if (dbFile.exists() && !dbPropertiesFile.exists())
@@ -116,11 +119,13 @@ public class PatchController extends SongsModelController {
 			}
 		}
 		
-		// Reset if prefix has changed:
+		// Load db properties:
 		currentVersionId = Long.parseLong(properties.getProperty(PREF_SONGS_VERSION_ID, "0"));
+		dbUUID = properties.getProperty(PREF_DB_UUID, "");
+		// Reset if prefix has changed:
 		if (!remoteController.getPrefix().equals(properties.getProperty(PREF_DB_PREFIX, remoteController.getPrefix())) ||
 			!remoteController.getServer().equals(properties.getProperty(PREF_DB_SERVER, remoteController.getServer())))
-			resetDB();
+			resetDB("");
 		LOG.debug("Loaded db for server " + remoteController.getServer() + "\\" + remoteController.getPrefix() + " and version: " + currentVersionId);
 		
 		// Collect offline changes, align songs with db, and rebase changes later:
@@ -130,8 +135,6 @@ public class PatchController extends SongsModelController {
 		for (Song song : db)
 			copy.add(new Song(song));
 		songs.update(new SongsModel(copy, false));
-		
-		return true;
 	}
 	
 	/**
@@ -154,38 +157,60 @@ public class PatchController extends SongsModelController {
 	 *
 	 * @param version
 	 */
-	private void addPatchVersion(Version version) {
+	private void addPatchVersion(Version version, boolean apply) {
 		if (version == null)
 			return;
 		
-		if (version.getID() == currentVersionId) {
-			publishOfflineChanges();
-			return;
+		// First: Check if database changed
+		if (!dbUUID.equals(version.getDBUUID())) {
+			resetDB(version.getDBUUID());
 		}
 		
+		// Then: Check if there is a new version
 		if (version.getID() > currentVersionId) {
 			patchVersions.put(version.getID(), version);
-			applyPatches();
-			if (!initialRequestMissingPatches && remoteController.getHealthDB().get() == Health.online) {
-				initialRequestMissingPatches = true;
-				requestMissingPatches();
-			}
-		} else if (version.getID() < currentVersionId) {
-			resetDB();
-			requestMissingPatches();
 		}
+		
+		// Then apply patches:
+		if (apply)
+			applyPatches();
+		
+		// If this is the first time, request missing patches.
+		if (!requestedMissingPatches)
+			requestedMissingPatches = requestMissingPatches();
+	}
+	
+	/**
+	 * To request missing patches if, there are patches missing. This will not block.
+	 *
+	 * @return true, if request could made or no request was necessary
+	 */
+	public boolean requestMissingPatches() {
+		if (remoteController == null)
+			return false;
+		
+		MqttObject<Version> latestVersion = remoteController.getLatestVersion();
+		if (latestVersion.get() == null) {
+			return false;
+		}
+		
+		if (latestVersion.get().getID() > currentVersionId)
+			remoteController.getRequestGet().set(new PatchRequest(currentVersionId + 1));
+		return true;
 	}
 	
 	/**
 	 * This will reset the local database to version 0.
 	 * You have to request missing patches again to reset to the latest version.
 	 */
-	private void resetDB() {
+	private void resetDB(String dbUUID) {
+		this.dbUUID = dbUUID;
 		patchVersions.clear();
 		rejects.clear();
 		patchMap.clear();
 		conflicts.clear();
 		offlineChanges = null;
+		requestedMissingPatches = false;
 		
 		db.clear();
 		songs.clear();
@@ -197,12 +222,13 @@ public class PatchController extends SongsModelController {
 	 *
 	 * @param changes
 	 */
-	private void addChanges(SongsModel changes, String uuid) {
+	private void addChanges(SongsModel changes, String uuid, boolean apply) {
 		if (rejects.contains(uuid))
 			rejects.remove(uuid);
 		else
 			patchMap.put(uuid, changes.getSongs());
-		applyPatches();
+		if (apply)
+			applyPatches();
 	}
 	
 	/**
@@ -212,9 +238,10 @@ public class PatchController extends SongsModelController {
 	 */
 	private void addPatches(Patches patches) {
 		for (Patch patch : patches.getPatches()) {
-			addChanges(patch.getSongs(), patch.getVersion().getUUID());
-			addPatchVersion(patch.getVersion());
+			addChanges(patch.getSongs(), patch.getVersion().getUUID(), false);
+			addPatchVersion(patch.getVersion(), false);
 		}
+		applyPatches();
 	}
 	
 	/**
@@ -222,35 +249,45 @@ public class PatchController extends SongsModelController {
 	 * It will run only if we got all patches up to the last one to not update the local database to frequently.
 	 */
 	private void applyPatches() {
-		for (Long i = currentVersionId + 1; i <= remoteController.getLatestVersion().get().getID(); i++) {
-			if (!patchVersions.containsKey(i) || !patchMap.containsKey(patchVersions.get(i).getUUID()))
-				return;
+		if (remoteController.getLatestVersion().get().getID() > currentVersionId) {
+			for (Long i = currentVersionId + 1; i <= remoteController.getLatestVersion().get().getID(); i++) {
+				if (!patchVersions.containsKey(i) || !patchMap.containsKey(patchVersions.get(i).getUUID())) {
+					return;
+				}
+			}
+			
+			HashMap<String, Song> changedSongs = new HashMap<>();
+			long versionAfterChangingSongs = currentVersionId;
+			while (patchVersions.containsKey(versionAfterChangingSongs + 1) && patchMap.containsKey(patchVersions.get(versionAfterChangingSongs + 1)
+				.getUUID())) {
+				Version nextVersion = patchVersions.get(versionAfterChangingSongs + 1);
+				Collection<Song> patch = patchMap.get(nextVersion.getUUID());
+				for (Song patchSong : Objects.requireNonNull(patch)) {
+					Song song = changedSongs.get(patchSong.getUUID());
+					if (song == null)
+						song = db.getByUUID(patchSong.getUUID());
+					Song patchedSong = applyPatch(song, patchSong);
+					changedSongs.put(patchSong.getUUID(), patchedSong);
+				}
+				versionAfterChangingSongs = nextVersion.getID();
+			}
+			if (!changedSongs.isEmpty()) {
+				db.updateSongsByUUID(changedSongs.values());
+				currentVersionId = versionAfterChangingSongs;
+				
+				identifyConflicts(changedSongs);
+				
+				super.updateSongs(changedSongs.values());
+			}
 		}
 		
-		HashMap<String, Song> changedSongs = new HashMap<>();
-		long versionAfterChangingSongs = currentVersionId;
-		while (patchVersions.containsKey(versionAfterChangingSongs + 1) && patchMap.containsKey(patchVersions.get(versionAfterChangingSongs + 1)
-			.getUUID())) {
-			Version nextVersion = patchVersions.get(versionAfterChangingSongs + 1);
-			Collection<Song> patch = patchMap.get(nextVersion.getUUID());
-			for (Song patchSong : Objects.requireNonNull(patch)) {
-				Song song = changedSongs.get(patchSong.getUUID());
-				if (song == null)
-					song = db.getByUUID(patchSong.getUUID());
-				Song patchedSong = applyPatch(song, patchSong);
-				changedSongs.put(patchSong.getUUID(), patchedSong);
-			}
-			versionAfterChangingSongs = nextVersion.getID();
+		// If we have offline changes, publish them:
+		if (offlineChanges != null &&
+			remoteController.getLatestVersion().get().getID() == currentVersionId
+			&& remoteController.getHealthDB().get() == Health.online) {
+			changeSongs(offlineChanges);
+			offlineChanges = null;
 		}
-		if (!changedSongs.isEmpty()) {
-			db.updateSongsByUUID(changedSongs.values());
-			currentVersionId = versionAfterChangingSongs;
-			
-			identifyConflicts(changedSongs);
-			
-			super.updateSongs(changedSongs.values());
-		}
-		publishOfflineChanges();
 	}
 	
 	/**
@@ -271,23 +308,6 @@ public class PatchController extends SongsModelController {
 			}
 			offlineChanges.removeAll(conflictChanges);
 			conflicts.addAll(conflictChanges);
-		}
-	}
-	
-	/**
-	 * Call this: To collect and send local changes.
-	 * This may take some time and as it compares the whole offline list with the current db.
-	 * It will be only done once, and if the db is up to date, to avoid server side rejects.
-	 *
-	 * Currently, online changes are preferred, as it runs after all online changes are applied.
-	 * So offline changes may be overridden.
-	 */
-	private void publishOfflineChanges() {
-		if (offlineChanges != null &&
-			remoteController.getLatestVersion().get().getID() == currentVersionId
-			&& remoteController.getHealthDB().get() == Health.online) {
-			changeSongs(offlineChanges);
-			offlineChanges = null;
 		}
 	}
 	
@@ -424,18 +444,6 @@ public class PatchController extends SongsModelController {
 	}
 	
 	/**
-	 * To request missing patches if, there are patches missing.
-	 */
-	private void requestMissingPatches() {
-		if (remoteController == null)
-			return;
-		MqttObject<Version> latestVersion = remoteController.getLatestVersion();
-		if (latestVersion.get() != null && latestVersion.get().getID() > currentVersionId) {
-			remoteController.getRequestGet().set(new PatchRequest(currentVersionId + 1));
-		}
-	}
-	
-	/**
 	 * Save the synchronized database at the current version.
 	 */
 	@Override
@@ -453,6 +461,7 @@ public class PatchController extends SongsModelController {
 			properties.setProperty(PREF_DB_PREFIX, remoteController.getPrefix());
 			properties.setProperty(PREF_DB_SERVER, remoteController.getServer());
 			properties.setProperty(PREF_SONGS_VERSION_ID, String.valueOf(currentVersionId));
+			properties.setProperty(PREF_DB_UUID, dbUUID);
 			properties.storeToXML(new FileOutputStream(dbPropertiesFile), PREF_COMMENT);
 			
 			LOG.debug("Saved db to with version " + currentVersionId);
@@ -472,6 +481,7 @@ public class PatchController extends SongsModelController {
 		remoteController.getLatestVersion().removeOnChangeListener(onLatestVersionListener);
 		remoteController.getLatestReject().removeOnChangeListener(onLatestRejectListener);
 		remoteController.getRequestPatches().removeOnChangeListener(onRequestPatchesListener);
+		remoteController.getLatestVersion().removeOnChangeListener(onInitialLatestVersionListener);
 		return true;
 	}
 	

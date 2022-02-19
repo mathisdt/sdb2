@@ -21,7 +21,7 @@ package org.zephyrsoft.sdb2.remote;
  */
 public class RemoteTopic {
 	
-	final static String HEALTH_DB = "%shealth/v1/db";
+	final static String HEALTH_DB = "%sdb/v1/health";
 	final static int HEALTH_DB_QOS = 1;
 	final static boolean HEALTH_DB_RETAINED = true;
 	
