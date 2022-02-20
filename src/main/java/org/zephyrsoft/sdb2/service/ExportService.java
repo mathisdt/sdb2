@@ -140,15 +140,15 @@ public class ExportService {
 		void apply(AbstractElement<?> element);
 	}
 	
-	private final AttributeSetter titleAttributes;
-	private final AttributeSetter lyricsAttributes;
-	private final AttributeSetter translationAttributes;
-	private final AttributeSetter copyrightAttributes;
-	private final ChordSpaceCorrector chordSpaceCorrector;
-	private final Map<SongElementEnum, SongElementHandler> songElementHandlers;
-	private final PdfFont baseFont;
+	private AttributeSetter titleAttributes;
+	private AttributeSetter lyricsAttributes;
+	private AttributeSetter translationAttributes;
+	private AttributeSetter copyrightAttributes;
+	private ChordSpaceCorrector chordSpaceCorrector;
+	private Map<SongElementEnum, SongElementHandler> songElementHandlers;
+	private PdfFont baseFont;
 	
-	public ExportService() throws Exception {
+	private void init() throws Exception {
 		baseFont = PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN, PdfEncodings.WINANSI, EmbeddingStrategy.PREFER_EMBEDDED);
 		PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.TIMES_BOLD, PdfEncodings.WINANSI, EmbeddingStrategy.PREFER_EMBEDDED);
 		PdfFont italicFont = PdfFontFactory.createFont(StandardFonts.TIMES_ITALIC, PdfEncodings.WINANSI, EmbeddingStrategy.PREFER_EMBEDDED);
@@ -279,7 +279,9 @@ public class ExportService {
 		return element.getIndentation() * 12;
 	}
 	
-	public byte[] export(ExportFormat exportFormat, Collection<Song> songs) {
+	public byte[] export(ExportFormat exportFormat, Collection<Song> songs) throws Exception {
+		init();
+		
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		
 		try {

@@ -44,7 +44,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -3008,10 +3007,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			// export
 			ExportFormat format = new ExportFormat(chckbxWithTranslation.isSelected(),
 				chckbxWithChords.isSelected(), chckbxOnlyExportSongs.isSelected());
-			byte[] exported = exportService.export(format, songs);
 			try {
+				byte[] exported = exportService.export(format, songs);
 				Files.write(exported, target);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				handleError(e);
 			}
 		}

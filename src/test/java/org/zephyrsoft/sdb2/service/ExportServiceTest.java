@@ -38,7 +38,7 @@ public class ExportServiceTest {
 	private List<Song> songs;
 	
 	@Before
-	public void setup() throws Exception {
+	public void setup() {
 		exportService = new ExportService();
 		Song song1 = new Song("abcde-10000");
 		Song song2 = new Song("abcde-20000");
