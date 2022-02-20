@@ -1176,7 +1176,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	protected void handleSongSelect() {
 		if (selectedSong != null) {
-			presentModel.addSong(new Song(selectedSong));
+			presentModel.addSong(selectedSong);
 			tabbedPane.setSelectedIndex(TAB_INDEX_PRESENT);
 			presentList.requestFocusInWindow();
 			setDefaultDividerLocation();
