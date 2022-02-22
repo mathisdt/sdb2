@@ -75,7 +75,6 @@ public class XMLConverterTest {
 	private static final String SONGS_XML = """
 		<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 		<songs>
-		    <autoSort>true</autoSort>
 		    <song>
 		        <additionalCopyrightNotes></additionalCopyrightNotes>
 		        <authorText></authorText>

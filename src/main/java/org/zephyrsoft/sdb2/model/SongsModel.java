@@ -49,7 +49,6 @@ public class SongsModel implements Iterable<Song>, Persistable {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SongsModel.class);
 	
-	// @XmlElement(name = "autoSort")
 	private boolean autoSort = false;
 	
 	@XmlElement(name = "song")
