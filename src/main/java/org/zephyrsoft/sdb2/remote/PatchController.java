@@ -315,14 +315,17 @@ public class PatchController extends SongsModelController {
 	 * To collect differences with the db and also update the given songs to match with the db.
 	 *
 	 * @param songs
+	 *            Empty songs are handled as not existing songs.
 	 * @return
 	 */
 	private List<Song> collectChanges(SongsModel songs) {
 		List<Song> changes = new LinkedList<>();
 		Map<String, Song> dbMap = db.toMap();
 		Map<String, Song> songsMap = songs.toMap();
-		// If song is has been changed in songs:
+		// If song has been changed in songs:
 		for (Map.Entry<String, Song> songsEntry : songsMap.entrySet()) {
+			if (songsEntry.getValue().isEmpty())
+				continue;
 			if (dbMap.containsKey(songsEntry.getKey())) {
 				Song dbSong = dbMap.get(songsEntry.getKey());
 				if (!songsEntry.getValue().equals(dbSong)) {
@@ -335,7 +338,7 @@ public class PatchController extends SongsModelController {
 		}
 		// If song has been removed in songs, add an empty one to changes:
 		for (String key : dbMap.keySet()) {
-			if (!songsMap.containsKey(key)) {
+			if (!songsMap.containsKey(key) || songsMap.get(key).isEmpty()) {
 				changes.add(new Song(key));
 			}
 		}
