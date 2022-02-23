@@ -70,7 +70,7 @@ public class IndexerService {
 	
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	
-	private final CopyOnWriteArrayList<OnIndexChangeListener> onIndexChangeListeners = new CopyOnWriteArrayList<>();
+	private final ArrayList<OnIndexChangeListener> onIndexChangeListeners = new ArrayList<>();
 	
 	private Directory getIndex(IndexType indexType) {
 		synchronized (INDEXES_LOCK) {
@@ -112,7 +112,7 @@ public class IndexerService {
 				putIndex(indexType, directory);
 				stopwatch.stop();
 				LOG.info("indexing songs in background thread took {}", stopwatch.toString());
-				onIndexChangeListeners.forEach((l) -> l.OnIndexChange());
+				onIndexChangeListeners.forEach((l) -> l.onIndexChange());
 			}
 		});
 	}
@@ -172,7 +172,7 @@ public class IndexerService {
 	}
 	
 	public interface OnIndexChangeListener {
-		void OnIndexChange();
+		void onIndexChange();
 	}
 	
 }

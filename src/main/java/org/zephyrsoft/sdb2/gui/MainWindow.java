@@ -35,8 +35,8 @@ import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -624,7 +624,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	}
 	
 	@Override
-	public void OnIndexChange() {
+	public void onIndexChange() {
 		comboBoxLanguage.removeAllItems();
 		Set<String> languages = new HashSet<>();
 		// Fill in used languages:
@@ -633,9 +633,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				languages.add(song.getLanguage());
 			}
 		}
-		for (String language : languages) {
-			comboBoxLanguage.addItem(language);
-		}
+		languages.forEach(comboBoxLanguage::addItem);
 		
 		SwingUtilities.invokeLater(() -> {
 			LOG.debug("Loading songsmodel changes into ui..");
@@ -690,9 +688,6 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		Song remotePatch = PatchController.patch(songFromRemote, selectedSong);
 		Song mergedPatch = PatchController.mergePatches(remotePatch, localPatch);
 		return PatchController.applyPatch(selectedSong, mergedPatch);
-		
-		// Or simply apply our local changes ontop of the remote changes:
-		// return PatchController.applyPatch(songFromRemote, patch);
 	}
 	
 	private void setSelectedSong(Song song, boolean save) {
@@ -1154,9 +1149,6 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	}
 	
 	protected void handleSongNew() {
-		// saveSong();
-		// applyFilter();
-		// songsList.clearSelection();
 		Song song = new Song(StringTools.createUUID());
 		song.setTitle("New Song");
 		song.setLyrics("Put your lyrics here");
@@ -1166,10 +1158,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	protected void handleSongDelete() {
 		if (selectedSong != null) {
-			Song songToDelete = selectedSong;
-			// songsList.removeSelectionInterval(0, songsModel.getSize() - 1);
-			controller.getSongsController().removeSong(songToDelete);
-			// applyFilter();
+			controller.getSongsController().removeSong(selectedSong);
 		}
 	}
 	
@@ -1241,7 +1230,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			List<Song> songs = presentListModel.getAllElements();
 			
 			// Search for new equal songs starting with last used song position:
-			int startIndex = Math.max(0, presentList.getSelectedIndex());
+			int startIndex = presentList.getSelectedIndex() + 1;
 			for (int i = 0; i < songs.size(); i++) {
 				int p = (i + startIndex) % songs.size();
 				if (songs.get(p).equals(currentlyPresentedSong)) {
@@ -1264,8 +1253,17 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			|| currentlyPresentedSong == null && song != null) {
 			presentListSelected = song;
 			handleSongPresent();
-			handleJumpToPresentedSong();
 		}
+	}
+	
+	/**
+	 * A update playlist function, which can be called by a remote controller.
+	 *
+	 * @param song
+	 */
+	public void updatePlaylist(SongsModel playlist) {
+		getPresentModel().update(playlist);
+		setDefaultDividerLocation();
 	}
 	
 	protected void handleSongPresent() {
@@ -1854,22 +1852,15 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			editorSongNotes,
 			editorDrumNotes
 		}) {
-			v.addFocusListener(new FocusListener() {
+			v.addFocusListener(new FocusAdapter() {
 				
 				@Override
 				public void focusLost(FocusEvent e) {
 					try {
-						// saveSong();
 						saveSongWithoutChangingGUI();
 					} catch (Throwable ex) {
 						handleError(ex);
 					}
-				}
-				
-				@Override
-				public void focusGained(FocusEvent e) {
-					// TODO
-					
 				}
 			});
 		}

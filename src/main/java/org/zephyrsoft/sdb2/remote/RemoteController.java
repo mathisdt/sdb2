@@ -101,7 +101,7 @@ public class RemoteController {
 				(s) -> (SongsModel) parseXML(s),
 				RemoteController::toXML, RemoteTopic.PLAYLIST_QOS, RemoteTopic.PLAYLIST_RETAINED,
 				null);
-			playlist.onRemoteChange((p, a) -> mainWindow.getPresentModel().update(p));
+			playlist.onRemoteChange((p, a) -> mainWindow.updatePlaylist(p));
 			mainWindow.getPresentModel().addSongsModelListener(() -> playlist.set(new SongsModel(mainWindow.getPresentModel())));
 			
 			latestVersion = new MqttObject<>(mqtt, formatTopic(RemoteTopic.PATCHES_LATEST_VERSION),

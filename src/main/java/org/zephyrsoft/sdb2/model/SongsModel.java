@@ -56,7 +56,7 @@ public class SongsModel implements Iterable<Song>, Persistable {
 	
 	private List<TransparentListModel<Song>> createdListModels = null;
 	
-	private ArrayList<SongsModelListener> songsModelListeners = null;
+	private List<SongsModelListener> songsModelListeners = null;
 	
 	public SongsModel() {
 		initIfNecessary();
