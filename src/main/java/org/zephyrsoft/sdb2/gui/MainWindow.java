@@ -1244,8 +1244,6 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	/**
 	 * A present function, which can be called by a remote controller.
-	 *
-	 * @param song
 	 */
 	public void present(Song song) {
 		Song currentlyPresentedSong = controller.getCurrentlyPresentedSong();
@@ -1258,8 +1256,6 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	/**
 	 * A update playlist function, which can be called by a remote controller.
-	 *
-	 * @param song
 	 */
 	public void updatePlaylist(SongsModel playlist) {
 		getPresentModel().update(playlist);

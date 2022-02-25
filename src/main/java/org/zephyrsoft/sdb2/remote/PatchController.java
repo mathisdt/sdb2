@@ -131,7 +131,7 @@ public class PatchController extends SongsModelController {
 		// Collect offline changes, align songs with db, and rebase changes later:
 		offlineChanges = collectChanges(songs);
 		// Make sure our local songs are align with db:
-		ArrayList<Song> copy = new ArrayList<Song>(db.getSize());
+		List<Song> copy = new ArrayList<>(db.getSize());
 		for (Song song : db)
 			copy.add(new Song(song));
 		songs.update(new SongsModel(copy, false));
@@ -203,8 +203,8 @@ public class PatchController extends SongsModelController {
 	 * This will reset the local database to version 0.
 	 * You have to request missing patches again to reset to the latest version.
 	 */
-	private void resetDB(String dbUUID) {
-		this.dbUUID = dbUUID;
+	private void resetDB(String newDbUUID) {
+		dbUUID = newDbUUID;
 		patchVersions.clear();
 		rejects.clear();
 		patchMap.clear();
@@ -314,14 +314,13 @@ public class PatchController extends SongsModelController {
 	/**
 	 * To collect differences with the db and also update the given songs to match with the db.
 	 *
-	 * @param songs
+	 * @param songsToCheck
 	 *            Empty songs are handled as not existing songs.
-	 * @return
 	 */
-	private List<Song> collectChanges(SongsModel songs) {
+	private List<Song> collectChanges(SongsModel songsToCheck) {
 		List<Song> changes = new LinkedList<>();
 		Map<String, Song> dbMap = db.toMap();
-		Map<String, Song> songsMap = songs.toMap();
+		Map<String, Song> songsMap = songsToCheck.toMap();
 		// If song has been changed in songs:
 		for (Map.Entry<String, Song> songsEntry : songsMap.entrySet()) {
 			if (songsEntry.getValue().isEmpty())
@@ -489,8 +488,8 @@ public class PatchController extends SongsModelController {
 	}
 	
 	@Override
-	public void update(SongsModel songs) {
-		changeSongs(collectChanges(songs));
+	public void update(SongsModel songsForUpdate) {
+		changeSongs(collectChanges(songsForUpdate));
 	}
 	
 	@Override

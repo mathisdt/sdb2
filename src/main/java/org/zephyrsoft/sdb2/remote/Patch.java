@@ -25,7 +25,6 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
-
 @XmlRootElement(name = "patch")
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
@@ -41,7 +40,7 @@ public class Patch implements Persistable {
 	
 	@Override
 	public void initIfNecessary() {
-		
+		// nothing to do
 	}
 	
 	public SongsModel getSongs() {

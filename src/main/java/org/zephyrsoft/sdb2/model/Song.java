@@ -396,6 +396,6 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 	
 	@Override
 	public void initIfNecessary() {
-		
+		// nothing to do
 	}
 }

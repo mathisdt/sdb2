@@ -39,11 +39,9 @@ public class ChangeReject implements Persistable {
 	
 	@Override
 	public void initIfNecessary() {
+		// nothing to do
 	}
 	
-	/**
-	 * @return
-	 */
 	public String getUUID() {
 		return uuid;
 	}
