@@ -75,7 +75,6 @@ public class XMLConverterTest {
 	private static final String SONGS_XML = """
 		<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 		<songs>
-		    <autoSort>true</autoSort>
 		    <song>
 		        <additionalCopyrightNotes></additionalCopyrightNotes>
 		        <authorText></authorText>
@@ -256,7 +255,7 @@ public class XMLConverterTest {
 		song2.setAuthorTranslation("");
 		song2.setPublisher("");
 		song2.setAdditionalCopyrightNotes("");
-		song2.setLanguage(LanguageEnum.ENGLISH);
+		song2.setLanguage("english");
 		song2.setSongNotes("");
 		song2.setTonality("");
 		song2.setChordSequence("");

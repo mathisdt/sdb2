@@ -49,7 +49,9 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import javax.swing.DefaultListSelectionModel;
@@ -85,14 +87,12 @@ import org.zephyrsoft.sdb2.FileAndDirectoryLocations;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.gui.KeyboardShortcut.Modifiers;
 import org.zephyrsoft.sdb2.gui.renderer.FilterTypeCellRenderer;
-import org.zephyrsoft.sdb2.gui.renderer.LanguageCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenDisplayCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ExportFormat;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
-import org.zephyrsoft.sdb2.model.LanguageEnum;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableDisplay;
 import org.zephyrsoft.sdb2.model.Song;
@@ -103,11 +103,13 @@ import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.UIScroller;
+import org.zephyrsoft.sdb2.remote.PatchController;
 import org.zephyrsoft.sdb2.remote.RemoteStatus;
 import org.zephyrsoft.sdb2.service.ExportService;
 import org.zephyrsoft.sdb2.service.FieldName;
 import org.zephyrsoft.sdb2.service.IndexType;
 import org.zephyrsoft.sdb2.service.IndexerService;
+import org.zephyrsoft.sdb2.service.IndexerService.OnIndexChangeListener;
 import org.zephyrsoft.sdb2.util.CustomFileFilter;
 import org.zephyrsoft.sdb2.util.ResourceTools;
 import org.zephyrsoft.sdb2.util.StringTools;
@@ -128,7 +130,7 @@ import say.swing.JFontChooser;
 /**
  * Main window of the application.
  */
-public class MainWindow extends JFrame implements UIScroller {
+public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListener {
 	
 	private static final String PROBLEM_WHILE_SAVING = """
 		There was a problem while saving the data.
@@ -158,15 +160,17 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	private JEditorPane editorLyrics;
 	private JTextField textFieldTitle;
-	private JComboBox<LanguageEnum> comboBoxLanguage;
+	private JComboBox<String> comboBoxLanguage;
 	private JTextField textFieldTonality;
 	private JTextField textFieldComposer;
 	private JTextField textFieldAuthorText;
 	private JTextField textFieldAuthorTranslation;
 	private JTextField textFieldPublisher;
 	private JTextField textFieldAdditionalCopyrightNotes;
-	private JTextField textFieldSongNotes;
+	private JTextField textFieldTempo;
 	private JEditorPane editorChordSequence;
+	private JEditorPane editorDrumNotes;
+	private JEditorPane editorSongNotes;
 	
 	private KeyboardShortcutManager keyboardShortcutManager;
 	private final MainController controller;
@@ -179,7 +183,8 @@ public class MainWindow extends JFrame implements UIScroller {
 	private SongsModel songsModel;
 	private TransparentFilterableListModel<Song> songsListModel;
 	private Collection<Song> songsListFiltered;
-	private Song songsListSelected;
+	private Song selectedSong;
+	private String selectNewSongWithUUID;
 	
 	private FixedWidthJList<Song> presentList;
 	private SongsModel presentModel;
@@ -253,7 +258,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	private JTextField textFieldRemoteServer;
 	private JTextField textFieldRemoteUsername;
 	private JTextField textFieldRemotePrefix;
-	private JTextField textFieldRemoteNamespace;
+	private JTextField textFieldRemoteRoom;
 	private JTextField textFieldRemotePassword;
 	private JLabel lblRemoteUsername;
 	private JLabel lblRemotePassword;
@@ -280,7 +285,7 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	private JLabel lblRemotePrefix;
 	
-	private JLabel lblRemoteNamespace;
+	private JLabel lblRemoteRoom;
 	
 	private JLabel lblStatus;
 	
@@ -295,17 +300,11 @@ public class MainWindow extends JFrame implements UIScroller {
 		// read program version
 		lblProgramVersion.setText(VersionTools.getCurrent());
 		
-		// fill in available values for language
-		for (LanguageEnum item : LanguageEnum.values()) {
-			comboBoxLanguage.addItem(item);
-		}
 		// fill in available values for filter type
 		for (FilterTypeEnum item : FilterTypeEnum.values()) {
 			comboSongListFiltering.addItem(item);
 		}
 		clearSongData();
-		// add renderer for language
-		comboBoxLanguage.setRenderer(new LanguageCellRenderer());
 		// add renderer for filter type
 		comboSongListFiltering.setRenderer(new FilterTypeCellRenderer());
 		// disable editing fields
@@ -324,7 +323,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		btnExportPdfSelected.setEnabled(false);
 		// create empty songsModel for the "selected songs" list
 		presentModel = new SongsModel();
-		presentModel.setAutoSort(false);
 		presentListModel = presentModel.getListModel();
 		presentList.setModel(presentListModel);
 		
@@ -422,6 +420,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			}
 		});
 		
+		indexer.onIndexChange(this);
 		setModels(controller.getSongs(), controller.getSettings());
 		setVisible(true);
 		textFieldFilter.requestFocusInWindow();
@@ -485,7 +484,10 @@ public class MainWindow extends JFrame implements UIScroller {
 		songsListModel = songs.getFilterableListModel();
 		songsList.setModel(songsListModel);
 		
-		songsModel.addSongsModelListener(() -> indexAllSongs());
+		// If some song changes, index changes, update the list and load the current song again
+		songsModel.addSongsModelListener(() -> {
+			indexAllSongs();
+		});
 		// start indexing once after initialization
 		indexAllSongs();
 		
@@ -547,7 +549,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		textFieldRemoteUsername.setText(settingsModel.get(SettingKey.REMOTE_USERNAME, String.class));
 		textFieldRemotePassword.setText(settingsModel.get(SettingKey.REMOTE_PASSWORD, String.class));
 		textFieldRemotePrefix.setText(settingsModel.get(SettingKey.REMOTE_PREFIX, String.class));
-		textFieldRemoteNamespace.setText(settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class));
+		textFieldRemoteRoom.setText(settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class));
 	}
 	
 	private void updateScreenModels() {
@@ -606,7 +608,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			settingsModel.put(SettingKey.REMOTE_SERVER, textFieldRemoteServer.getText());
 			settingsModel.put(SettingKey.REMOTE_PASSWORD, textFieldRemotePassword.getText());
 			settingsModel.put(SettingKey.REMOTE_USERNAME, textFieldRemoteUsername.getText());
-			settingsModel.put(SettingKey.REMOTE_NAMESPACE, textFieldRemoteNamespace.getText());
+			settingsModel.put(SettingKey.REMOTE_NAMESPACE, textFieldRemoteRoom.getText());
 			settingsModel.put(SettingKey.REMOTE_PREFIX, textFieldRemotePrefix.getText());
 			// copying is not necessary for fonts, colors, the logo file and the slide show directory
 			// because those settings are only stored directly in the model
@@ -621,10 +623,108 @@ public class MainWindow extends JFrame implements UIScroller {
 		indexer.index(IndexType.ALL_SONGS, songsModel.getSongs());
 	}
 	
+	@Override
+	public void onIndexChange() {
+		comboBoxLanguage.removeAllItems();
+		Set<String> languages = new HashSet<>();
+		// Fill in used languages:
+		for (Song song : songsModel.getSongs()) {
+			if (song.getLanguage() != null && !song.getLanguage().isBlank()) {
+				languages.add(song.getLanguage());
+			}
+		}
+		languages.forEach(comboBoxLanguage::addItem);
+		
+		SwingUtilities.invokeLater(() -> {
+			LOG.debug("Loading songsmodel changes into ui..");
+			
+			Song newSelectedSong = selectNewSongWithUUID != null ? songsModel.getByUUID(selectNewSongWithUUID) : null;
+			if (newSelectedSong != null) {
+				selectNewSongWithUUID = null;
+				// Open song, if just added with handleNewSong
+				setSelectedSong(newSelectedSong, false);
+			} else if (selectedSong != null) {
+				// If current opened song differs, reopen it.
+				// This means overwrite current editor changes without saving them.
+				newSelectedSong = songsModel.getByUUID(selectedSong.getUUID());
+				if (!selectedSong.equals(newSelectedSong)) {
+					if (newSelectedSong == null) {
+						// Song is deleted:
+						setSelectedSong(null, false);
+					} else {
+						// Song is updated
+						newSelectedSong = rebaseChanges(newSelectedSong);
+						setSelectedSong(newSelectedSong, false);
+					}
+				}
+			}
+			
+			// Update songlist / make it visible:
+			if (songsListFiltered != null && selectedSong != null && textFieldFilter != null && !textFieldFilter.getText().isBlank()
+				&& !songsListFiltered.contains(selectedSong)) {
+				textFieldFilter.setText("");
+			} else {
+				applyFilter();
+			}
+		});
+	}
+	
+	private Song rebaseChanges(Song songFromRemote) {
+		if (!isSongDataChanged()) {
+			return songFromRemote;
+		}
+		
+		Song songFromGui = songFromGUI();
+		if (songFromGui.equals(songFromRemote)) {
+			return songFromRemote;
+		}
+		
+		Song localPatch = PatchController.patch(songFromGui, selectedSong);
+		if (localPatch.isEmpty()) {
+			return songFromRemote;
+		}
+		
+		// Merge/Remove equal patches:
+		Song remotePatch = PatchController.patch(songFromRemote, selectedSong);
+		Song mergedPatch = PatchController.mergePatches(remotePatch, localPatch);
+		return PatchController.applyPatch(selectedSong, mergedPatch);
+	}
+	
+	private void setSelectedSong(Song song, boolean save) {
+		// Save Song:
+		if (save && selectedSong != null) {
+			saveSongWithoutChangingGUI();
+		}
+		
+		// Update selected song, if its already open (uuid is the same), do not rewind cursors.
+		boolean rewindCursors = song == null || selectedSong == null || !StringTools.equalsWithNullAsEmpty(selectedSong.getUUID(), song.getUUID());
+		
+		LOG.debug("setSelectedSong: {} selected before={}", song, selectedSong);
+		selectedSong = song;
+		
+		if (selectedSong == null) {
+			clearSongData();
+			setSongEditingEnabled(false);
+			// disable buttons
+			btnDeleteSong.setEnabled(false);
+			btnSelectSong.setEnabled(false);
+			btnExportPdfSelected.setEnabled(false);
+		} else {
+			loadSongData(selectedSong, rewindCursors);
+			if (rewindCursors) {
+				setSongEditingEnabled(true);
+				// enable buttons
+				btnDeleteSong.setEnabled(true);
+				btnSelectSong.setEnabled(true);
+				btnExportPdfSelected.setEnabled(true);
+			}
+		}
+	}
+	
 	/**
 	 * Let the user select a font, save it into the {@link SettingsModel} (if changed) and re-enable the settings tab.
 	 *
-	 * @param target
+	 * @param targets
 	 *            the target setting for the newly selected font
 	 */
 	private void selectFont(SettingKey... targets) {
@@ -818,7 +918,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		setEnabledIfNotNull(textFieldRemoteUsername, enabled);
 		setEnabledIfNotNull(textFieldRemotePassword, enabled);
 		setEnabledIfNotNull(textFieldRemotePrefix, enabled);
-		setEnabledIfNotNull(textFieldRemoteNamespace, enabled);
+		setEnabledIfNotNull(textFieldRemoteRoom, enabled);
 		// disable the "unlock" button when enabling the other controls
 		// (and the other way around)
 		setEnabledIfNotNull(btnUnlock, !enabled);
@@ -833,52 +933,37 @@ public class MainWindow extends JFrame implements UIScroller {
 	protected void handleSongsListSelectionChanged(ListSelectionEvent e) {
 		// only the last event in a row should fire these actions (check valueIsAdjusting)
 		if (!e.getValueIsAdjusting()) {
-			saveSong();
-			songsListSelected = songsList.getSelectedValue();
-			loadSong();
-		}
-	}
-	
-	private void saveSong() {
-		if (songsListSelected != null) {
-			saveSongWithoutChangingGUI();
-			clearSongData();
-			setSongEditingEnabled(false);
-			// disable buttons
-			btnDeleteSong.setEnabled(false);
-			btnSelectSong.setEnabled(false);
-			btnExportPdfSelected.setEnabled(false);
+			Song song = songsList.getSelectedValue();
+			LOG.debug("SongListselectionChange to {}", song);
+			setSelectedSong(song, true);
 		}
 	}
 	
 	private void saveSongWithoutChangingGUI() {
-		if (songsListSelected != null) {
-			saveSongData(songsListSelected);
+		if (!isSongDataChanged()) {
+			return;
 		}
-	}
-	
-	private void loadSong() {
-		if (songsListSelected != null) {
-			loadSongData(songsListSelected);
-			setSongEditingEnabled(true);
-			// enable buttons
-			btnDeleteSong.setEnabled(true);
-			btnSelectSong.setEnabled(true);
-			btnExportPdfSelected.setEnabled(true);
-		}
+		
+		LOG.debug("saveSongData: {}", selectedSong.getTitle());
+		controller.getSongsController().updateSong(songFromGUI());
 	}
 	
 	private void applyFilter() {
-		saveSong();
+		// Filter:
+		final String filterText = textFieldFilter.getText();
 		FieldName[] fieldsToSearch = settingsModel.get(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.class).getFields();
-		songsListFiltered = indexer.search(IndexType.ALL_SONGS, textFieldFilter.getText(), fieldsToSearch);
+		songsListFiltered = indexer.search(IndexType.ALL_SONGS, filterText, fieldsToSearch);
 		songsListModel.refilter();
-		songsListSelected = songsList.getSelectedValue();
-		loadSong();
+		
+		// Find and select currently opened song:
 		SwingUtilities.invokeLater(() -> {
-			// when filtering, the user usually wants to see the top of the list
-			songsList.clearSelection();
-			songsList.scrollRectToVisible(new Rectangle(0, 0, 1, 1));
+			songsList.setValueIsAdjusting(true);
+			if (songsListFiltered.contains(selectedSong) || StringTools.isBlank(filterText)) {
+				songsList.setSelectedValue(selectedSong, true);
+			} else {
+				songsList.clearSelection();
+				songsList.scrollRectToVisible(new Rectangle(0, 0, 1, 1));
+			}
 		});
 	}
 	
@@ -906,99 +991,87 @@ public class MainWindow extends JFrame implements UIScroller {
 		}
 	}
 	
-	protected void handleSongDataFocusLost() {
-		saveSongWithoutChangingGUI();
+	private boolean isSongDataChanged() {
+		return selectedSong != null && (!StringTools.equalsWithNullAsEmpty(selectedSong.getLyrics(), editorLyrics.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getTitle(), textFieldTitle.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getLanguage(), (String) comboBoxLanguage.getEditor().getItem())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getTonality(), textFieldTonality.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getComposer(), textFieldComposer.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getAuthorText(), textFieldAuthorText.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getAuthorTranslation(), textFieldAuthorTranslation.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getPublisher(), textFieldPublisher.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getAdditionalCopyrightNotes(), textFieldAdditionalCopyrightNotes
+				.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getTempo(), textFieldTempo.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getChordSequence(), editorChordSequence.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getDrumNotes(), editorDrumNotes.getText())
+			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getSongNotes(), editorSongNotes.getText()));
 	}
 	
-	/**
-	 * Stores all data contained in the GUI elements.
-	 *
-	 * @param song
-	 *            the songsModel object to which the data should be written
-	 */
-	private synchronized void saveSongData(Song song) {
-		LOG.debug("saveSongData: {}", song.getTitle());
-		
-		boolean dataChanged = false;
+	private Song songFromGUI() {
+		Song song = new Song(selectedSong);
 		
 		if (!StringTools.equalsWithNullAsEmpty(song.getLyrics(), editorLyrics.getText())) {
 			song.setLyrics(editorLyrics.getText());
-			LOG.debug("changed song attribute: Lyrics");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getTitle(), textFieldTitle.getText())) {
 			song.setTitle(textFieldTitle.getText());
-			LOG.debug("changed song attribute: Title");
-			dataChanged = true;
 		}
-		if (song.getLanguage() != (LanguageEnum) comboBoxLanguage.getSelectedItem()) {
-			song.setLanguage((LanguageEnum) comboBoxLanguage.getSelectedItem());
-			LOG.debug("changed song attribute: Language");
-			dataChanged = true;
+		if (!StringTools.equalsWithNullAsEmpty(song.getLanguage(), (String) comboBoxLanguage.getEditor().getItem())) {
+			song.setLanguage((String) comboBoxLanguage.getEditor().getItem());
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getTonality(), textFieldTonality.getText())) {
 			song.setTonality(textFieldTonality.getText());
-			LOG.debug("changed song attribute: Tonality");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getComposer(), textFieldComposer.getText())) {
 			song.setComposer(textFieldComposer.getText());
-			LOG.debug("changed song attribute: Composer");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getAuthorText(), textFieldAuthorText.getText())) {
 			song.setAuthorText(textFieldAuthorText.getText());
-			LOG.debug("changed song attribute: AuthorText");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getAuthorTranslation(), textFieldAuthorTranslation.getText())) {
 			song.setAuthorTranslation(textFieldAuthorTranslation.getText());
-			LOG.debug("changed song attribute: AuthorTranslation");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getPublisher(), textFieldPublisher.getText())) {
 			song.setPublisher(textFieldPublisher.getText());
-			LOG.debug("changed song attribute: Publisher");
-			dataChanged = true;
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getAdditionalCopyrightNotes(), textFieldAdditionalCopyrightNotes
 			.getText())) {
 			song.setAdditionalCopyrightNotes(textFieldAdditionalCopyrightNotes.getText());
-			LOG.debug("changed song attribute: AdditionalCopyrightNotes");
-			dataChanged = true;
 		}
-		if (!StringTools.equalsWithNullAsEmpty(song.getSongNotes(), textFieldSongNotes.getText())) {
-			song.setSongNotes(textFieldSongNotes.getText());
-			LOG.debug("changed song attribute: SongNotes");
-			dataChanged = true;
+		if (!StringTools.equalsWithNullAsEmpty(song.getTempo(), textFieldTempo.getText())) {
+			song.setTempo(textFieldTempo.getText());
 		}
 		if (!StringTools.equalsWithNullAsEmpty(song.getChordSequence(), editorChordSequence.getText())) {
 			song.setChordSequence(editorChordSequence.getText());
-			LOG.debug("changed song attribute: ChordSequence");
-			dataChanged = true;
 		}
-		
-		if (dataChanged) {
-			// put the songs in the right order again
-			songsModel.sortAndUpdateView();
+		if (!StringTools.equalsWithNullAsEmpty(song.getDrumNotes(), editorDrumNotes.getText())) {
+			song.setDrumNotes(editorDrumNotes.getText());
 		}
+		if (!StringTools.equalsWithNullAsEmpty(song.getSongNotes(), editorSongNotes.getText())) {
+			song.setSongNotes(editorSongNotes.getText());
+		}
+		return song;
 	}
 	
 	/**
 	 * Deletes all values contained in the GUI elements of the song editing tab.
 	 */
 	private void clearSongData() {
-		setTextAndRewind(editorLyrics, "");
-		setTextAndRewind(textFieldTitle, "");
+		LOG.debug("clearSongData");
+		setText(editorLyrics, "", true);
+		setText(textFieldTitle, "", true);
 		comboBoxLanguage.setSelectedItem(null);
-		setTextAndRewind(textFieldTonality, "");
-		setTextAndRewind(textFieldComposer, "");
-		setTextAndRewind(textFieldAuthorText, "");
-		setTextAndRewind(textFieldAuthorTranslation, "");
-		setTextAndRewind(textFieldPublisher, "");
-		setTextAndRewind(textFieldAdditionalCopyrightNotes, "");
-		setTextAndRewind(textFieldSongNotes, "");
-		setTextAndRewind(editorChordSequence, "");
+		setText(textFieldTonality, "", true);
+		setText(textFieldComposer, "", true);
+		setText(textFieldAuthorText, "", true);
+		setText(textFieldAuthorTranslation, "", true);
+		setText(textFieldPublisher, "", true);
+		setText(textFieldAdditionalCopyrightNotes, "", true);
+		setText(textFieldTempo, "", true);
+		setText(editorChordSequence, "", true);
+		setText(editorDrumNotes, "", true);
+		setText(editorSongNotes, "", true);
 	}
 	
 	/**
@@ -1014,8 +1087,10 @@ public class MainWindow extends JFrame implements UIScroller {
 		textFieldAuthorTranslation.setEnabled(state);
 		textFieldPublisher.setEnabled(state);
 		textFieldAdditionalCopyrightNotes.setEnabled(state);
-		textFieldSongNotes.setEnabled(state);
+		textFieldTempo.setEnabled(state);
 		editorChordSequence.setEnabled(state);
+		editorDrumNotes.setEnabled(state);
+		editorSongNotes.setEnabled(state);
 		if (state) {
 			editorLyrics.setCaretPosition(0);
 		}
@@ -1027,24 +1102,31 @@ public class MainWindow extends JFrame implements UIScroller {
 	 * @param song
 	 *            the songsModel object which should be read
 	 */
-	private synchronized void loadSongData(final Song song) {
-		LOG.debug("loadSongData: {}", song.getTitle());
-		setTextAndRewind(editorLyrics, song.getLyrics());
-		setTextAndRewind(textFieldTitle, song.getTitle());
-		comboBoxLanguage.setSelectedItem(song.getLanguage());
-		setTextAndRewind(textFieldTonality, song.getTonality());
-		setTextAndRewind(textFieldComposer, song.getComposer());
-		setTextAndRewind(textFieldAuthorText, song.getAuthorText());
-		setTextAndRewind(textFieldAuthorTranslation, song.getAuthorTranslation());
-		setTextAndRewind(textFieldPublisher, song.getPublisher());
-		setTextAndRewind(textFieldAdditionalCopyrightNotes, song.getAdditionalCopyrightNotes());
-		setTextAndRewind(textFieldSongNotes, song.getSongNotes());
-		setTextAndRewind(editorChordSequence, song.getChordSequence());
+	private synchronized void loadSongData(final Song song, final boolean rewind) {
+		LOG.debug("loadSongData: {} {}", song.getTitle(), song.getUUID());
+		setText(editorLyrics, song.getLyrics(), rewind);
+		setText(textFieldTitle, song.getTitle(), rewind);
+		((JTextField) comboBoxLanguage.getEditor().getEditorComponent()).setText(song.getLanguage());
+		if (rewind) {
+			((JTextField) comboBoxLanguage.getEditor().getEditorComponent()).setCaretPosition(0);
+		}
+		setText(textFieldTonality, song.getTonality(), rewind);
+		setText(textFieldComposer, song.getComposer(), rewind);
+		setText(textFieldAuthorText, song.getAuthorText(), rewind);
+		setText(textFieldAuthorTranslation, song.getAuthorTranslation(), rewind);
+		setText(textFieldPublisher, song.getPublisher(), rewind);
+		setText(textFieldAdditionalCopyrightNotes, song.getAdditionalCopyrightNotes(), rewind);
+		setText(textFieldTempo, song.getTempo(), rewind);
+		setText(editorChordSequence, song.getChordSequence(), rewind);
+		setText(editorDrumNotes, song.getDrumNotes(), rewind);
+		setText(editorSongNotes, song.getSongNotes(), rewind);
 	}
 	
-	private static void setTextAndRewind(JTextComponent textComponent, String textToSet) {
+	private static void setText(JTextComponent textComponent, String textToSet, boolean rewind) {
 		textComponent.setText(textToSet);
-		textComponent.setCaretPosition(0);
+		if (rewind) {
+			textComponent.setCaretPosition(0);
+		}
 	}
 	
 	protected void handleWindowClosing() {
@@ -1068,23 +1150,21 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	protected void handleSongNew() {
 		Song song = new Song(StringTools.createUUID());
-		songsModel.addSong(song);
-		applyFilter();
-		songsList.setSelectedValue(song, true);
+		song.setTitle("New Song");
+		song.setLyrics("Put your lyrics here");
+		selectNewSongWithUUID = song.getUUID();
+		controller.getSongsController().updateSong(song);
 	}
 	
 	protected void handleSongDelete() {
-		if (songsListSelected != null) {
-			Song songToDelete = songsListSelected;
-			songsList.removeSelectionInterval(0, songsModel.getSize() - 1);
-			songsModel.removeSong(songToDelete);
-			applyFilter();
+		if (selectedSong != null) {
+			controller.getSongsController().removeSong(selectedSong);
 		}
 	}
 	
 	protected void handleSongSelect() {
-		if (songsListSelected != null) {
-			presentModel.addSong(songsListSelected);
+		if (selectedSong != null) {
+			presentModel.addSong(selectedSong);
 			tabbedPane.setSelectedIndex(TAB_INDEX_PRESENT);
 			presentList.requestFocusInWindow();
 			setDefaultDividerLocation();
@@ -1136,18 +1216,29 @@ public class MainWindow extends JFrame implements UIScroller {
 	
 	protected void handleJumpToSelectedSong() {
 		if (presentListSelected != null) {
-			if (!songsListModel.contains(presentListSelected)) {
-				textFieldFilter.setText("");
+			textFieldFilter.setText("");
+			Song songInSongs = songsModel.getByUUID(presentListSelected.getUUID());
+			if (songInSongs != null) {
+				songsList.setSelectedValue(songInSongs, true);
 			}
-			songsList.setSelectedValue(presentListSelected, true);
 		}
 	}
 	
 	protected void handleJumpToPresentedSong() {
 		Song currentlyPresentedSong = controller.getCurrentlyPresentedSong();
 		if (currentlyPresentedSong != null) {
-			presentList.setSelectedValue(currentlyPresentedSong, true);
-			handleJumpToSelectedSong();
+			List<Song> songs = presentListModel.getAllElements();
+			
+			// Search for new equal songs starting with last used song position:
+			int startIndex = presentList.getSelectedIndex() + 1;
+			for (int i = 0; i < songs.size(); i++) {
+				int p = (i + startIndex) % songs.size();
+				if (songs.get(p).equals(currentlyPresentedSong)) {
+					presentList.setSelectedValue(songs.get(p), true);
+					handleJumpToSelectedSong();
+					break;
+				}
+			}
 		}
 	}
 	
@@ -1157,8 +1248,22 @@ public class MainWindow extends JFrame implements UIScroller {
 	 * @param song
 	 */
 	public void present(Song song) {
-		presentListSelected = song;
-		handleSongPresent();
+		Song currentlyPresentedSong = controller.getCurrentlyPresentedSong();
+		if (currentlyPresentedSong != null && !currentlyPresentedSong.equals(song)
+			|| currentlyPresentedSong == null && song != null) {
+			presentListSelected = song;
+			handleSongPresent();
+		}
+	}
+	
+	/**
+	 * A update playlist function, which can be called by a remote controller.
+	 *
+	 * @param song
+	 */
+	public void updatePlaylist(SongsModel playlist) {
+		getPresentModel().update(playlist);
+		setDefaultDividerLocation();
 	}
 	
 	protected void handleSongPresent() {
@@ -1246,12 +1351,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_S, Modifiers.CTRL, () -> {
 			LOG.debug("ctrl-s action");
-			saveSongWithoutChangingGUI();
-			boolean success = controller.saveAll();
-			if (!success) {
-				showErrorDialog(PROBLEM_WHILE_SAVING
-					+ FileAndDirectoryLocations.getLogDir());
-			}
+			handleSaveAll();
 		}));
 		
 		// TODO use single Shortcut (without ctrl), put an option in the global settings tab
@@ -1270,8 +1370,18 @@ public class MainWindow extends JFrame implements UIScroller {
 		
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_R, Modifiers.CTRL, () -> {
 			LOG.debug("ctrl-r action");
+			handleSaveAll();
 			new Thread(() -> controller.initRemoteController()).start();
 		}));
+	}
+	
+	private void handleSaveAll() {
+		saveSongWithoutChangingGUI();
+		boolean success = controller.saveAll();
+		if (!success) {
+			showErrorDialog(PROBLEM_WHILE_SAVING
+				+ FileAndDirectoryLocations.getLogDir());
+		}
 	}
 	
 	public void handleError(Throwable ex) {
@@ -1394,7 +1504,7 @@ public class MainWindow extends JFrame implements UIScroller {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				try {
-					if (e.getClickCount() >= 2 && songsListSelected != null) {
+					if (e.getClickCount() >= 2 && selectedSong != null) {
 						// double-clicked: put into present list
 						handleSongSelect();
 					}
@@ -1493,16 +1603,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelEdit.add(scrollPaneLyrics, gbcScrollPaneLyrics);
 		
 		editorLyrics = new JEditorPane();
-		editorLyrics.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				try {
-					handleSongDataFocusLost();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
 		editorLyrics
 			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
@@ -1533,16 +1633,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelEdit.add(lblPublisher, gbcLblPublisher);
 		
 		textFieldTitle = new JTextField();
-		textFieldTitle.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				try {
-					handleSongDataFocusLost();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
 		GridBagConstraints gbcTextFieldTitle = new GridBagConstraints();
 		gbcTextFieldTitle.insets = new Insets(0, 0, 5, 5);
 		gbcTextFieldTitle.fill = GridBagConstraints.HORIZONTAL;
@@ -1552,16 +1642,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		textFieldTitle.setColumns(10);
 		
 		textFieldComposer = new JTextField();
-		textFieldComposer.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				try {
-					handleSongDataFocusLost();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
 		GridBagConstraints gbcTextFieldComposer = new GridBagConstraints();
 		gbcTextFieldComposer.insets = new Insets(0, 0, 5, 5);
 		gbcTextFieldComposer.fill = GridBagConstraints.HORIZONTAL;
@@ -1571,16 +1651,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		textFieldComposer.setColumns(10);
 		
 		textFieldPublisher = new JTextField();
-		textFieldPublisher.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				try {
-					handleSongDataFocusLost();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
 		GridBagConstraints gbcTextFieldPublisher = new GridBagConstraints();
 		gbcTextFieldPublisher.insets = new Insets(0, 0, 5, 0);
 		gbcTextFieldPublisher.fill = GridBagConstraints.HORIZONTAL;
@@ -1614,16 +1684,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelEdit.add(lblAdditionalCopyrightNotes, gbcLblAdditionalCopyrightNotes);
 		
 		comboBoxLanguage = new JComboBox<>();
-		comboBoxLanguage.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				try {
-					handleSongDataFocusLost();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		comboBoxLanguage.setEditable(true);
 		GridBagConstraints gbcComboBoxLanguage = new GridBagConstraints();
 		gbcComboBoxLanguage.insets = new Insets(0, 0, 5, 5);
 		gbcComboBoxLanguage.fill = GridBagConstraints.HORIZONTAL;
@@ -1632,16 +1693,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelEdit.add(comboBoxLanguage, gbcComboBoxLanguage);
 		
 		textFieldAuthorText = new JTextField();
-		textFieldAuthorText.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				try {
-					handleSongDataFocusLost();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
 		GridBagConstraints gbcTextFieldAuthorText = new GridBagConstraints();
 		gbcTextFieldAuthorText.insets = new Insets(0, 0, 5, 5);
 		gbcTextFieldAuthorText.fill = GridBagConstraints.HORIZONTAL;
@@ -1651,16 +1702,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		textFieldAuthorText.setColumns(10);
 		
 		textFieldAdditionalCopyrightNotes = new JTextField();
-		textFieldAdditionalCopyrightNotes.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				try {
-					handleSongDataFocusLost();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
 		GridBagConstraints gbcTextFieldAdditionalCopyrightNotes = new GridBagConstraints();
 		gbcTextFieldAdditionalCopyrightNotes.insets = new Insets(0, 0, 5, 0);
 		gbcTextFieldAdditionalCopyrightNotes.fill = GridBagConstraints.HORIZONTAL;
@@ -1685,25 +1726,15 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcLblAuthorTranslation.gridy = 6;
 		panelEdit.add(lblAuthorTranslation, gbcLblAuthorTranslation);
 		
-		JLabel lblSongNotes = new JLabel("Song Notes (not shown in presentation)");
-		GridBagConstraints gbcLblSongNotes = new GridBagConstraints();
-		gbcLblSongNotes.fill = GridBagConstraints.HORIZONTAL;
-		gbcLblSongNotes.insets = new Insets(0, 0, 5, 0);
-		gbcLblSongNotes.gridx = 2;
-		gbcLblSongNotes.gridy = 6;
-		panelEdit.add(lblSongNotes, gbcLblSongNotes);
+		JLabel lblTempo = new JLabel("Tempo");
+		GridBagConstraints gbcLblTempo = new GridBagConstraints();
+		gbcLblTempo.fill = GridBagConstraints.HORIZONTAL;
+		gbcLblTempo.insets = new Insets(0, 0, 5, 0);
+		gbcLblTempo.gridx = 2;
+		gbcLblTempo.gridy = 6;
+		panelEdit.add(lblTempo, gbcLblTempo);
 		
 		textFieldTonality = new JTextField();
-		textFieldTonality.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				try {
-					handleSongDataFocusLost();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
 		GridBagConstraints gbcTextFieldTonality = new GridBagConstraints();
 		gbcTextFieldTonality.insets = new Insets(0, 0, 5, 5);
 		gbcTextFieldTonality.fill = GridBagConstraints.HORIZONTAL;
@@ -1713,17 +1744,6 @@ public class MainWindow extends JFrame implements UIScroller {
 		textFieldTonality.setColumns(10);
 		
 		textFieldAuthorTranslation = new JTextField();
-		textFieldAuthorTranslation.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				try {
-					handleSongDataFocusLost();
-					
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
 		GridBagConstraints gbcTextFieldAuthorTranslation = new GridBagConstraints();
 		gbcTextFieldAuthorTranslation.insets = new Insets(0, 0, 5, 5);
 		gbcTextFieldAuthorTranslation.fill = GridBagConstraints.HORIZONTAL;
@@ -1732,29 +1752,19 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelEdit.add(textFieldAuthorTranslation, gbcTextFieldAuthorTranslation);
 		textFieldAuthorTranslation.setColumns(10);
 		
-		textFieldSongNotes = new JTextField();
-		textFieldSongNotes.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				try {
-					handleSongDataFocusLost();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
+		textFieldTempo = new JTextField();
 		GridBagConstraints gbcTextFieldSongNotes = new GridBagConstraints();
 		gbcTextFieldSongNotes.insets = new Insets(0, 0, 5, 0);
 		gbcTextFieldSongNotes.fill = GridBagConstraints.HORIZONTAL;
 		gbcTextFieldSongNotes.gridx = 2;
 		gbcTextFieldSongNotes.gridy = 7;
-		panelEdit.add(textFieldSongNotes, gbcTextFieldSongNotes);
-		textFieldSongNotes.setColumns(10);
+		panelEdit.add(textFieldTempo, gbcTextFieldSongNotes);
+		textFieldTempo.setColumns(10);
 		
 		JLabel lblChordSequence = new JLabel("Chord Sequence");
 		GridBagConstraints gbcLblChordSequence = new GridBagConstraints();
 		gbcLblChordSequence.fill = GridBagConstraints.HORIZONTAL;
-		gbcLblChordSequence.gridwidth = 3;
+		gbcLblChordSequence.gridwidth = 1;
 		gbcLblChordSequence.insets = new Insets(0, 0, 5, 5);
 		gbcLblChordSequence.gridx = 0;
 		gbcLblChordSequence.gridy = 8;
@@ -1765,27 +1775,95 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbcScrollPaneChordSequence.gridheight = 2;
 		gbcScrollPaneChordSequence.weighty = 1.0;
 		gbcScrollPaneChordSequence.fill = GridBagConstraints.BOTH;
-		gbcScrollPaneChordSequence.gridwidth = 3;
+		gbcScrollPaneChordSequence.gridwidth = 1;
 		gbcScrollPaneChordSequence.insets = new Insets(0, 0, 0, 5);
 		gbcScrollPaneChordSequence.gridx = 0;
 		gbcScrollPaneChordSequence.gridy = 9;
 		panelEdit.add(scrollPaneChordSequence, gbcScrollPaneChordSequence);
 		
 		editorChordSequence = new JEditorPane();
-		editorChordSequence.addFocusListener(new FocusAdapter() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				try {
-					handleSongDataFocusLost();
-				} catch (Throwable ex) {
-					handleError(ex);
-				}
-			}
-		});
 		editorChordSequence.setFont(new Font("Monospaced", editorChordSequence.getFont().getStyle(),
 			editorChordSequence.getFont().getSize()));
 		scrollPaneChordSequence.setViewportView(editorChordSequence);
 		editorChordSequence.setBackground(Color.WHITE);
+		
+		JLabel lblDrumNotes = new JLabel("Drum notes");
+		GridBagConstraints gbcLblDrumNotes = new GridBagConstraints();
+		gbcLblDrumNotes.fill = GridBagConstraints.HORIZONTAL;
+		gbcLblDrumNotes.gridwidth = 1;
+		gbcLblDrumNotes.insets = new Insets(0, 0, 5, 5);
+		gbcLblDrumNotes.gridx = 1;
+		gbcLblDrumNotes.gridy = 8;
+		panelEdit.add(lblDrumNotes, gbcLblDrumNotes);
+		
+		JScrollPane scrollPaneDrumNotes = new JScrollPane();
+		GridBagConstraints gbcScrollPaneDrumNotes = new GridBagConstraints();
+		gbcScrollPaneDrumNotes.gridheight = 2;
+		gbcScrollPaneDrumNotes.weighty = 1.0;
+		gbcScrollPaneDrumNotes.fill = GridBagConstraints.BOTH;
+		gbcScrollPaneDrumNotes.gridwidth = 1;
+		gbcScrollPaneDrumNotes.insets = new Insets(0, 0, 0, 5);
+		gbcScrollPaneDrumNotes.gridx = 1;
+		gbcScrollPaneDrumNotes.gridy = 9;
+		panelEdit.add(scrollPaneDrumNotes, gbcScrollPaneDrumNotes);
+		
+		editorDrumNotes = new JEditorPane();
+		editorDrumNotes.setFont(new Font("Monospaced", editorDrumNotes.getFont().getStyle(),
+			editorDrumNotes.getFont().getSize()));
+		scrollPaneDrumNotes.setViewportView(editorDrumNotes);
+		editorDrumNotes.setBackground(Color.WHITE);
+		
+		JLabel lblSongNotes = new JLabel("Song Notes (not shown in presentation)");
+		GridBagConstraints gbcLblSongNotes = new GridBagConstraints();
+		gbcLblSongNotes.fill = GridBagConstraints.HORIZONTAL;
+		gbcLblSongNotes.gridwidth = 1;
+		gbcLblSongNotes.insets = new Insets(0, 0, 5, 5);
+		gbcLblSongNotes.gridx = 2;
+		gbcLblSongNotes.gridy = 8;
+		panelEdit.add(lblSongNotes, gbcLblSongNotes);
+		
+		JScrollPane scrollPaneSongNotes = new JScrollPane();
+		GridBagConstraints gbcScrollPaneSongNotes = new GridBagConstraints();
+		gbcScrollPaneSongNotes.gridheight = 2;
+		gbcScrollPaneSongNotes.weighty = 1.0;
+		gbcScrollPaneSongNotes.fill = GridBagConstraints.BOTH;
+		gbcScrollPaneSongNotes.gridwidth = 1;
+		gbcScrollPaneSongNotes.insets = new Insets(0, 0, 0, 5);
+		gbcScrollPaneSongNotes.gridx = 2;
+		gbcScrollPaneSongNotes.gridy = 9;
+		panelEdit.add(scrollPaneSongNotes, gbcScrollPaneSongNotes);
+		
+		editorSongNotes = new JEditorPane();
+		scrollPaneSongNotes.setViewportView(editorSongNotes);
+		editorSongNotes.setBackground(Color.WHITE);
+		
+		for (JComponent v : new JComponent[] {
+			textFieldTonality,
+			textFieldAdditionalCopyrightNotes,
+			textFieldAuthorText,
+			textFieldAuthorTranslation,
+			textFieldComposer,
+			textFieldPublisher,
+			textFieldTempo,
+			textFieldTitle,
+			(JTextField) comboBoxLanguage.getEditor().getEditorComponent(),
+			editorLyrics,
+			editorChordSequence,
+			editorSongNotes,
+			editorDrumNotes
+		}) {
+			v.addFocusListener(new FocusAdapter() {
+				
+				@Override
+				public void focusLost(FocusEvent e) {
+					try {
+						saveSongWithoutChangingGUI();
+					} catch (Throwable ex) {
+						handleError(ex);
+					}
+				}
+			});
+		}
 		
 		// MARK Present Panel
 		JPanel panelPresent = new JPanel();
@@ -2046,7 +2124,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		panelImportExportStatistics.add(chckbxWithChords, gbc_chckbxWithChords);
 		
 		btnExportPdfSelected = new JButton("Export selected song");
-		btnExportPdfSelected.addActionListener(safeAction(e -> handleExport(Arrays.asList(songsListSelected))));
+		btnExportPdfSelected.addActionListener(safeAction(e -> handleExport(Arrays.asList(selectedSong))));
 		
 		chckbxOnlyExportSongs = new JCheckBox("only export songs which have chords");
 		GridBagConstraints gbc_chckbxOnlyExportSongs = new GridBagConstraints();
@@ -2810,21 +2888,21 @@ public class MainWindow extends JFrame implements UIScroller {
 		gbc_textFieldRemotePrefix.gridy = 30;
 		panel.add(textFieldRemotePrefix, gbc_textFieldRemotePrefix);
 		
-		lblRemoteNamespace = new JLabel("Remote namespace");
-		GridBagConstraints gbc_lblRemoteNamespace = new GridBagConstraints();
-		gbc_lblRemoteNamespace.anchor = GridBagConstraints.EAST;
-		gbc_lblRemoteNamespace.insets = new Insets(0, 0, 5, 5);
-		gbc_lblRemoteNamespace.gridx = 1;
-		gbc_lblRemoteNamespace.gridy = 31;
-		panel.add(lblRemoteNamespace, gbc_lblRemoteNamespace);
+		lblRemoteRoom = new JLabel("Remote room");
+		GridBagConstraints gbc_lblRemoteRoom = new GridBagConstraints();
+		gbc_lblRemoteRoom.anchor = GridBagConstraints.EAST;
+		gbc_lblRemoteRoom.insets = new Insets(0, 0, 5, 5);
+		gbc_lblRemoteRoom.gridx = 1;
+		gbc_lblRemoteRoom.gridy = 31;
+		panel.add(lblRemoteRoom, gbc_lblRemoteRoom);
 		
-		textFieldRemoteNamespace = new JTextField();
-		GridBagConstraints gbc_textFieldRemoteNamespace = new GridBagConstraints();
-		gbc_textFieldRemoteNamespace.fill = GridBagConstraints.HORIZONTAL;
-		gbc_textFieldRemoteNamespace.insets = new Insets(0, 0, 5, 5);
-		gbc_textFieldRemoteNamespace.gridx = 3;
-		gbc_textFieldRemoteNamespace.gridy = 31;
-		panel.add(textFieldRemoteNamespace, gbc_textFieldRemoteNamespace);
+		textFieldRemoteRoom = new JTextField();
+		GridBagConstraints gbc_textFieldRemoteRoom = new GridBagConstraints();
+		gbc_textFieldRemoteRoom.fill = GridBagConstraints.HORIZONTAL;
+		gbc_textFieldRemoteRoom.insets = new Insets(0, 0, 5, 5);
+		gbc_textFieldRemoteRoom.gridx = 3;
+		gbc_textFieldRemoteRoom.gridy = 31;
+		panel.add(textFieldRemoteRoom, gbc_textFieldRemoteRoom);
 		
 		glassPane = (Container) getGlassPane();
 		glassPane.setVisible(true);
@@ -2872,6 +2950,10 @@ public class MainWindow extends JFrame implements UIScroller {
 			case DISCONNECTING -> {
 				path = "/org/zephyrsoft/sdb2/remote-orange.png";
 				tooltip = "Remote disconnecting...";
+			}
+			case DB_DISCONNECTED -> {
+				path = "/org/zephyrsoft/sdb2/remote-orange.png";
+				tooltip = "Remote db offline! Please notify your admin!";
 			}
 			case FAILURE -> {
 				path = "/org/zephyrsoft/sdb2/remote-red.png";
@@ -2973,7 +3055,7 @@ public class MainWindow extends JFrame implements UIScroller {
 		return textFieldTitle;
 	}
 	
-	public JComboBox<LanguageEnum> getComboBoxLanguage() {
+	public JComboBox<String> getComboBoxLanguage() {
 		return comboBoxLanguage;
 	}
 	
@@ -3005,8 +3087,8 @@ public class MainWindow extends JFrame implements UIScroller {
 		return textFieldAdditionalCopyrightNotes;
 	}
 	
-	public JTextField getTextFieldSongNotes() {
-		return textFieldSongNotes;
+	public JTextField getTextFieldTempo() {
+		return textFieldTempo;
 	}
 	
 	public JEditorPane getEditorChordSequence() {
@@ -3032,4 +3114,5 @@ public class MainWindow extends JFrame implements UIScroller {
 	public SongsModel getPresentModel() {
 		return presentModel;
 	}
+	
 }

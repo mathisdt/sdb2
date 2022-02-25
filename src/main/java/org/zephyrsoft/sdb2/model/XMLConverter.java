@@ -20,6 +20,11 @@ import java.io.OutputStream;
 
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.model.statistics.StatisticsModel;
+import org.zephyrsoft.sdb2.remote.ChangeReject;
+import org.zephyrsoft.sdb2.remote.PatchRequest;
+import org.zephyrsoft.sdb2.remote.Patches;
+import org.zephyrsoft.sdb2.remote.Position;
+import org.zephyrsoft.sdb2.remote.Version;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
@@ -31,14 +36,19 @@ import jakarta.xml.bind.Unmarshaller;
  */
 public class XMLConverter {
 	
-	public static void fromPersistableToXML(Persistable model, OutputStream outputStream) {
+	public static void fromPersistableToXML(Persistable model, OutputStream outputStream, boolean formattedOutput, boolean fragment) {
 		try {
 			Marshaller marshaller = createMarshaller();
-			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, formattedOutput);
+			marshaller.setProperty(Marshaller.JAXB_FRAGMENT, fragment);
 			marshaller.marshal(model, outputStream);
 		} catch (JAXBException e) {
 			throw new IllegalStateException("could not marshal model to XML", e);
 		}
+	}
+	
+	public static void fromPersistableToXML(Persistable model, OutputStream outputStream) {
+		fromPersistableToXML(model, outputStream, true, false);
 	}
 	
 	public static <T extends Persistable> T fromXMLToPersistable(InputStream xmlInputStream) {
@@ -54,7 +64,8 @@ public class XMLConverter {
 	}
 	
 	private static JAXBContext createContext() throws JAXBException {
-		JAXBContext context = JAXBContext.newInstance(SongsModel.class, SettingsModel.class, StatisticsModel.class);
+		JAXBContext context = JAXBContext.newInstance(SongsModel.class, SettingsModel.class, StatisticsModel.class, Version.class,
+			PatchRequest.class, Song.class, Patches.class, ChangeReject.class, Position.class);
 		return context;
 	}
 	

@@ -13,25 +13,9 @@
  * You should have received a copy of the GNU General Public License 3.0
  * along with SDB. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.zephyrsoft.sdb2.util.converter;
+package org.zephyrsoft.sdb2.remote;
 
-import org.zephyrsoft.sdb2.model.LanguageEnum;
-
-import jakarta.xml.bind.annotation.adapters.XmlAdapter;
-
-/**
- * XML adapter for {@link LanguageEnum}.
- */
-public class LanguageEnumAdapter extends XmlAdapter<String, LanguageEnum> {
-	
-	@Override
-	public LanguageEnum unmarshal(String v) throws Exception {
-		return LanguageEnum.withInternalName(v);
-	}
-	
-	@Override
-	public String marshal(LanguageEnum v) throws Exception {
-		return v == null ? null : v.getInternalName();
-	}
-	
+public enum Health {
+	online,
+	offline;
 }

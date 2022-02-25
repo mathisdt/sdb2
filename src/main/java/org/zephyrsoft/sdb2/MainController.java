@@ -58,6 +58,7 @@ import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableDisplay;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
+import org.zephyrsoft.sdb2.model.SongsModelController;
 import org.zephyrsoft.sdb2.model.VirtualScreen;
 import org.zephyrsoft.sdb2.model.XMLConverter;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
@@ -68,6 +69,8 @@ import org.zephyrsoft.sdb2.presenter.PresenterBundle;
 import org.zephyrsoft.sdb2.presenter.PresenterWindow;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.Scroller;
+import org.zephyrsoft.sdb2.remote.Health;
+import org.zephyrsoft.sdb2.remote.PatchController;
 import org.zephyrsoft.sdb2.remote.RemoteController;
 import org.zephyrsoft.sdb2.remote.RemotePresenter;
 import org.zephyrsoft.sdb2.remote.RemoteStatus;
@@ -103,7 +106,8 @@ public class MainController implements Scroller {
 	private RemoteController remoteController;
 	
 	private String songsFileName = FileAndDirectoryLocations.getDefaultSongsFileName();
-	private SongsModel songs = null;
+	private final SongsModel songs = new SongsModel(true);
+	private SongsModelController songsController = new SongsModelController(songs);
 	private SettingsModel settings = null;
 	
 	private List<SelectableDisplay> screens;
@@ -125,6 +129,7 @@ public class MainController implements Scroller {
 	
 	/**
 	 * Will initialize a remote-controller instance or create a new one, if it is already initialized.
+	 * It will also replace the songsController, if a database service is online.
 	 * Run this function in a separate Thread to not block the UI and to see status changes.
 	 */
 	public void initRemoteController() {
@@ -136,6 +141,26 @@ public class MainController implements Scroller {
 			setRemoteStatus(RemoteStatus.CONNECTING);
 			try {
 				remoteController = new RemoteController(settings, this, mainWindow);
+				remoteController.getHealthDB().onChange((h, args) -> {
+					switch (h) {
+						case online:
+							if (!(songsController instanceof PatchController))
+								songsController = new PatchController(songs, remoteController);
+							break;
+						case offline:
+							if (!(songsController instanceof PatchController))
+								break;
+							SongsModelController oldController = songsController;
+							songsController = new SongsModelController(songs);
+							oldController.save();
+							oldController.close();
+							break;
+					}
+					setRemoteStatus(h == Health.online ? RemoteStatus.CONNECTED : RemoteStatus.DB_DISCONNECTED);
+				});
+				if (remoteController.getHealthDB().get() == Health.online && !(songsController instanceof PatchController))
+					songsController = new PatchController(songs, remoteController);
+				
 				setRemoteStatus(RemoteStatus.CONNECTED);
 			} catch (MqttException e) {
 				setRemoteStatus(RemoteStatus.FAILURE);
@@ -184,10 +209,10 @@ public class MainController implements Scroller {
 		if (presentationControl != null
 			&& presentationControl.getPresenters().size() == presentersConfigured
 			&& (presentationControl.getPresenters().isEmpty() ||
-				(presentationControl.getPresenters().get(0)instanceof PresenterWindow pw
+				(presentationControl.getPresenters().get(0) instanceof PresenterWindow pw
 					&& pw.metadataMatches(screen1, VirtualScreen.SCREEN_A)))
 			&& (presentationControl.getPresenters().size() <= 2 ||
-				(presentationControl.getPresenters().get(1)instanceof PresenterWindow pw
+				(presentationControl.getPresenters().get(1) instanceof PresenterWindow pw
 					&& pw.metadataMatches(screen2, VirtualScreen.SCREEN_B)))) {
 			LOG.trace("re-using the existing presenters");
 			currentlyPresentedSong = presentable.getSong();
@@ -212,8 +237,6 @@ public class MainController implements Scroller {
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
 		}
-		
-		// TODO REMOTE Add RemotePresenter and currentlyPresentedSong here, if remotePresenter does implement getParts.
 		
 		if (presentationControl.isEmpty()) {
 			ErrorDialog
@@ -369,6 +392,10 @@ public class MainController implements Scroller {
 	public boolean closeRemoteController() {
 		if (remoteController != null) {
 			setRemoteStatus(RemoteStatus.DISCONNECTING);
+			if (songsController != null && songsController instanceof PatchController) {
+				songsController.close();
+				songsController = new SongsModelController(songs);
+			}
 			if (presentationControl != null)
 				presentationControl.removeIf(p -> p instanceof RemotePresenter);
 			remoteController.close();
@@ -384,10 +411,11 @@ public class MainController implements Scroller {
 	}
 	
 	public boolean saveAll() {
+		boolean successfullySavedDB = songsController == null || songsController.save();
 		boolean successfullySavedSongs = saveSongs();
 		boolean successfullySavedSettings = saveSettings();
 		boolean successfullySavedStatistics = statisticsController.saveStatistics();
-		return successfullySavedSongs && successfullySavedSettings && successfullySavedStatistics;
+		return successfullySavedDB && successfullySavedSongs && successfullySavedSettings && successfullySavedStatistics;
 	}
 	
 	public void shutdown() {
@@ -404,10 +432,9 @@ public class MainController implements Scroller {
 		if (!StringTools.isBlank(fileName)) {
 			songsFileName = fileName;
 		}
-		songs = populateSongsModel(songsFileName);
-		if (songs == null) {
-			// there was a problem while reading
-			songs = new SongsModel();
+		SongsModel songsLoaded = populateSongsModel(songsFileName);
+		if (songsLoaded != null) {
+			songsController.update(songsLoaded);
 		}
 		
 		if (shutdownHook != null) {
@@ -567,12 +594,6 @@ public class MainController implements Scroller {
 	
 	public synchronized boolean saveSongs() {
 		// TODO move method to IOController !?
-		if (songs.isEmpty()) {
-			LOG.warn("didn't save songs because there were none");
-			// this is OK, program may close
-			return true;
-		}
-		
 		File songsBackupFile = saveSongsToBackupFile();
 		if (songsBackupFile == null) {
 			LOG.error("could not write backup file while saving database");
@@ -783,6 +804,10 @@ public class MainController implements Scroller {
 	
 	public RemoteController getRemoteController() {
 		return remoteController;
+	}
+	
+	public SongsModelController getSongsController() {
+		return songsController;
 	}
 	
 }

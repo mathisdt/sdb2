@@ -29,5 +29,6 @@ open module org.zephyrsoft.sdb2 {
 	// for togglz:
 	requires java.scripting;
 	requires org.eclipse.paho.client.mqttv3;
+	requires diff.match.patch;
 	
 }

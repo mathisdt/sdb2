@@ -16,9 +16,10 @@
 package org.zephyrsoft.sdb2.model;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.zephyrsoft.sdb2.util.StringTools;
-import org.zephyrsoft.sdb2.util.converter.LanguageEnumAdapter;
 
 import jakarta.xml.bind.annotation.XmlAccessOrder;
 import jakarta.xml.bind.annotation.XmlAccessType;
@@ -26,7 +27,6 @@ import jakarta.xml.bind.annotation.XmlAccessorOrder;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * Representation of a song.
@@ -34,7 +34,7 @@ import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 @XmlRootElement(name = "song")
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
-public class Song implements Serializable, Comparable<Song> {
+public class Song implements Serializable, Comparable<Song>, Persistable {
 	
 	private static final long serialVersionUID = -7133402923581521674L;
 	
@@ -51,8 +51,7 @@ public class Song implements Serializable, Comparable<Song> {
 	@XmlElement(name = "additionalCopyrightNotes")
 	private String additionalCopyrightNotes;
 	@XmlElement(name = "language")
-	@XmlJavaTypeAdapter(LanguageEnumAdapter.class)
-	private LanguageEnum language;
+	private String language;
 	@XmlElement(name = "songNotes")
 	private String songNotes;
 	@XmlElement(name = "tonality")
@@ -61,6 +60,10 @@ public class Song implements Serializable, Comparable<Song> {
 	private String uuid;
 	@XmlElement(name = "chordSequence")
 	private String chordSequence;
+	@XmlElement(name = "drumNotes")
+	private String drumNotes;
+	@XmlElement(name = "tempo")
+	private String tempo;
 	@XmlElement(name = "lyrics")
 	private String lyrics;
 	
@@ -69,7 +72,31 @@ public class Song implements Serializable, Comparable<Song> {
 	 * unmarshalling from XML.
 	 */
 	public Song() {
+		initIfNecessary();
 		// default constructor
+	}
+	
+	public Song(Map<String, String> map) {
+		this();
+		this.fromMap(map);
+	}
+	
+	public Song(Song song) {
+		this();
+		title = song.getTitle();
+		composer = song.getComposer();
+		authorText = song.getAuthorText();
+		authorTranslation = song.getAuthorTranslation();
+		publisher = song.getPublisher();
+		additionalCopyrightNotes = song.getAdditionalCopyrightNotes();
+		language = song.getLanguage();
+		songNotes = song.getSongNotes();
+		tonality = song.getTonality();
+		uuid = song.getUUID();
+		chordSequence = song.getChordSequence();
+		drumNotes = song.getDrumNotes();
+		tempo = song.getTempo();
+		lyrics = song.getLyrics();
 	}
 	
 	/**
@@ -80,6 +107,7 @@ public class Song implements Serializable, Comparable<Song> {
 	 * @see StringTools#createUUID()
 	 */
 	public Song(String uuid) {
+		this();
 		this.uuid = uuid;
 	}
 	
@@ -107,7 +135,7 @@ public class Song implements Serializable, Comparable<Song> {
 		return additionalCopyrightNotes;
 	}
 	
-	public LanguageEnum getLanguage() {
+	public String getLanguage() {
 		return language;
 	}
 	
@@ -123,8 +151,16 @@ public class Song implements Serializable, Comparable<Song> {
 		return tonality;
 	}
 	
+	public String getTempo() {
+		return tempo;
+	}
+	
 	public String getChordSequence() {
 		return chordSequence;
+	}
+	
+	public String getDrumNotes() {
+		return drumNotes;
 	}
 	
 	public String getCleanChordSequence() {
@@ -157,7 +193,7 @@ public class Song implements Serializable, Comparable<Song> {
 		this.additionalCopyrightNotes = additionalCopyrightNotes;
 	}
 	
-	public void setLanguage(LanguageEnum language) {
+	public void setLanguage(String language) {
 		this.language = language;
 	}
 	
@@ -179,6 +215,18 @@ public class Song implements Serializable, Comparable<Song> {
 	
 	public String getUUID() {
 		return uuid;
+	}
+	
+	public void setTempo(String tempo) {
+		this.tempo = tempo;
+	}
+	
+	public void setDrumNotes(String drumNotes) {
+		this.drumNotes = drumNotes;
+	}
+	
+	private void setUUID(String uuid) {
+		this.uuid = uuid;
 	}
 	
 	@Override
@@ -222,22 +270,20 @@ public class Song implements Serializable, Comparable<Song> {
 		if (getClass() != obj.getClass())
 			return false;
 		Song other = (Song) obj;
-		if (chordSequence == null) {
-			if (other.chordSequence != null)
-				return false;
-		} else if (!chordSequence.equals(other.chordSequence))
-			return false;
-		if (lyrics == null) {
-			if (other.lyrics != null)
-				return false;
-		} else if (!lyrics.equals(other.lyrics))
-			return false;
-		if (title == null) {
-			if (other.title != null)
-				return false;
-		} else if (!title.equals(other.title))
-			return false;
-		return true;
+		return equalsAllowNull(uuid, other.uuid) &&
+			equalsAllowNull(title, other.title) &&
+			equalsAllowNull(composer, other.composer) &&
+			equalsAllowNull(authorText, other.authorText) &&
+			equalsAllowNull(authorTranslation, other.authorTranslation) &&
+			equalsAllowNull(publisher, other.publisher) &&
+			equalsAllowNull(additionalCopyrightNotes, other.additionalCopyrightNotes) &&
+			equalsAllowNull(language, other.language) &&
+			equalsAllowNull(songNotes, other.songNotes) &&
+			equalsAllowNull(tonality, other.tonality) &&
+			equalsAllowNull(chordSequence, other.chordSequence) &&
+			equalsAllowNull(drumNotes, other.drumNotes) &&
+			equalsAllowNull(tempo, other.tempo) &&
+			equalsAllowNull(lyrics, other.lyrics);
 	}
 	
 	@Override
@@ -245,4 +291,111 @@ public class Song implements Serializable, Comparable<Song> {
 		return "SONG[" + title + "|" + uuid + "]";
 	}
 	
+	private static boolean equalsAllowNull(String str, String str2) {
+		if (str == null || str.isEmpty()) {
+			if (str2 != null && !str2.isEmpty()) {
+				return false;
+			}
+		} else if (!str.equals(str2)) {
+			return false;
+		}
+		return true;
+	}
+	
+	private static boolean isEmpty(String str) {
+		return str == null || str.isEmpty();
+	}
+	
+	public boolean isEmpty() {
+		return isEmpty(getTitle())
+			&& isEmpty(getComposer())
+			&& isEmpty(getAuthorText())
+			&& isEmpty(getAuthorTranslation())
+			&& isEmpty(getPublisher())
+			&& isEmpty(getAdditionalCopyrightNotes())
+			&& isEmpty(getLanguage())
+			&& isEmpty(getSongNotes())
+			&& isEmpty(getLyrics())
+			&& isEmpty(getTonality())
+			&& isEmpty(getTempo())
+			&& isEmpty(getDrumNotes())
+			&& isEmpty(getChordSequence());
+	}
+	
+	public Map<String, String> toMap() {
+		return new HashMap<>() {
+			private static final long serialVersionUID = -4450093906395824130L;
+			{
+				put("uuid", getUUID());
+				put("title", getTitle());
+				put("composer", getComposer());
+				put("authorText", getAuthorText());
+				put("authorTranslation", getAuthorTranslation());
+				put("publisher", getPublisher());
+				put("additionalCopyrightNotes", getAdditionalCopyrightNotes());
+				put("language", getLanguage()); // .getInternalName()
+				put("songNotes", getSongNotes());
+				put("lyrics", getLyrics());
+				put("tonality", getTonality());
+				put("tempo", getTempo());
+				put("drumNotes", getDrumNotes());
+				put("chordSequence", getChordSequence());
+			}
+		};
+	}
+	
+	public void fromMap(Map<String, String> map) {
+		for (Map.Entry<String, String> entry : map.entrySet()) {
+			String value = entry.getValue();
+			switch (entry.getKey()) {
+				case "uuid":
+					setUUID(value);
+					break;
+				case "title":
+					setTitle(value);
+					break;
+				case "composer":
+					setComposer(value);
+					break;
+				case "authorText":
+					setAuthorText(value);
+					break;
+				case "authorTranslation":
+					setAuthorTranslation(value);
+					break;
+				case "publisher":
+					setPublisher(value);
+					break;
+				case "additionalCopyrightNotes":
+					setAdditionalCopyrightNotes(value);
+					break;
+				case "language":
+					setLanguage(value);
+					break;
+				case "songNotes":
+					setSongNotes(value);
+					break;
+				case "lyrics":
+					setLyrics(value);
+					break;
+				case "tonality":
+					setTonality(value);
+					break;
+				case "tempo":
+					setTempo(value);
+					break;
+				case "drumNotes":
+					setDrumNotes(value);
+					break;
+				case "chordSequence":
+					setChordSequence(value);
+					break;
+			}
+		}
+	}
+	
+	@Override
+	public void initIfNecessary() {
+		
+	}
 }
