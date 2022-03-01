@@ -49,7 +49,7 @@
 		<version.lucene>9.0.0</version.lucene>
 		<version.paho-mqtt>1.2.5</version.paho-mqtt>
 		<version.diff-match-patch>1.1</version.diff-match-patch>
-		<version.guava>31.0.1-jre</version.guava>
+		<version.guava>31.1-jre</version.guava>
 		<version.gson>2.8.9</version.gson>
 		<version.junit>4.13.2</version.junit>
 		<version.mockito>4.3.1</version.mockito>
