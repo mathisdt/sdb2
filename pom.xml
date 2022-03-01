@@ -48,7 +48,7 @@
 		<version.timingframework>7.3.1</version.timingframework>
 		<version.lucene>9.0.0</version.lucene>
 		<version.paho-mqtt>1.2.5</version.paho-mqtt>
-		<version.diff-match-patch>1.1</version.diff-match-patch>
+		<version.diff-match-patch>1.2</version.diff-match-patch>
 		<version.guava>31.1-jre</version.guava>
 		<version.gson>2.9.0</version.gson>
 		<version.junit>4.13.2</version.junit>
@@ -178,7 +178,7 @@
 		  <artifactId>diff-match-patch</artifactId>
 		  <version>${version.diff-match-patch}</version>
 		</dependency>
-						
+
 
 		<!-- logging -->
 		<dependency>
