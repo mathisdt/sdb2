@@ -78,6 +78,6 @@ public class Version implements Persistable {
 	
 	@Override
 	public void initIfNecessary() {
-		
+		// nothing to do
 	}
 }

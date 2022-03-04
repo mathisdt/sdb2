@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
 
 /**
- * A {@link ListCellRenderer} for {@link LanguageEnum} values.
+ * A {@link ListCellRenderer} for {@link FilterTypeEnum} values.
  */
 public class FilterTypeCellRenderer implements ListCellRenderer<FilterTypeEnum> {
 	

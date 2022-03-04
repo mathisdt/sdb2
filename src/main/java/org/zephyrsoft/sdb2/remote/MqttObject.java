@@ -62,7 +62,7 @@ public class MqttObject<T> {
 	 * @param mqtt
 	 * @param subscriptionTopic
 	 * @param toObject
-	 * @param toString
+	 * @param toPayload
 	 * @param qos
 	 * @param retained
 	 * @param objectEquals
@@ -71,7 +71,7 @@ public class MqttObject<T> {
 	public MqttObject(MQTT mqtt,
 		String subscriptionTopic,
 		Function<byte[], T> toObject,
-		Function<T, byte[]> toString,
+		Function<T, byte[]> toPayload,
 		int qos,
 		boolean retained,
 		BiPredicate<T, T> objectEquals) throws MqttException {
@@ -81,7 +81,7 @@ public class MqttObject<T> {
 			toObject,
 			null,
 			null,
-			toString,
+			toPayload,
 			qos,
 			retained,
 			objectEquals,
@@ -108,7 +108,7 @@ public class MqttObject<T> {
 	 */
 	public MqttObject(MQTT mqtt,
 		String publishTopic,
-		Function<T, byte[]> toString,
+		Function<T, byte[]> toPayload,
 		int qos,
 		boolean retained) throws MqttException {
 		this(mqtt,
@@ -117,7 +117,7 @@ public class MqttObject<T> {
 			null,
 			null,
 			publishTopic,
-			toString,
+			toPayload,
 			qos,
 			retained,
 			null,

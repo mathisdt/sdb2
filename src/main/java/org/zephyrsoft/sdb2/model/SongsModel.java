@@ -205,14 +205,14 @@ public class SongsModel implements Iterable<Song>, Persistable {
 	
 	/**
 	 * Update multiple songs in songs by adding them as new ones, or updating them field by field.
-	 * 
+	 *
 	 * To remove songs, simply use empty ones.
-	 * 
+	 *
 	 * @param changedSongs
 	 * @return number of actually changed songs
 	 */
 	public List<Song> updateSongsByUUID(Iterable<Song> changedSongs) {
-		ArrayList<Song> actuallyChangedSongs = new ArrayList<>();
+		List<Song> actuallyChangedSongs = new ArrayList<>();
 		for (Song song : changedSongs) {
 			Song found = getByUUID(song.getUUID());
 			if (song.isEmpty()) {

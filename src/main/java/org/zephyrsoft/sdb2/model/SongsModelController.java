@@ -17,9 +17,6 @@ package org.zephyrsoft.sdb2.model;
 
 import java.util.Collections;
 
-/**
- * 
- */
 public class SongsModelController {
 	
 	protected final SongsModel songs;
@@ -40,8 +37,8 @@ public class SongsModelController {
 		return songs.removeSong(songToDelete);
 	}
 	
-	public void update(SongsModel songs) {
-		this.songs.update(songs);
+	public void update(SongsModel songsForUpdate) {
+		songs.update(songsForUpdate);
 	}
 	
 	public boolean save() {

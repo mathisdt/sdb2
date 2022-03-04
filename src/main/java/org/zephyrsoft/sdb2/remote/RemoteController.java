@@ -88,7 +88,7 @@ public class RemoteController {
 		position = new MqttObject<>(mqtt, formatTopic(RemoteTopic.POSITION), (s) -> (Position) parseXML(s),
 			RemoteController::toXML, RemoteTopic.POSITION_QOS, RemoteTopic.POSITION_RETAINED,
 			null);
-		position.onRemoteChange((p, a) -> handleSongPositionChange(mainController, mainWindow, p));
+		position.onRemoteChange((p, a) -> handleSongPositionChange(mainController, p));
 		
 		song = new MqttObject<>(mqtt, formatTopic(RemoteTopic.SONG),
 			(s) -> (Song) parseXML(s), RemoteController::toXML, RemoteTopic.SONG_QOS, RemoteTopic.SONG_RETAINED,
@@ -141,16 +141,16 @@ public class RemoteController {
 		remotePresenter = new RemotePresenter(this, showTitle);
 	}
 	
-	private void handleSongChange(MainController mainController, MainWindow mainWindow, Song song) {
+	private void handleSongChange(MainController mainController, MainWindow mainWindow, Song newSong) {
 		if (mainWindow != null)
-			mainWindow.present(song);
+			mainWindow.present(newSong);
 		else
-			mainController.present(new Presentable(song, null));
+			mainController.present(new Presentable(newSong, null));
 		// if(song != null)
 		// handleSongPositionChange(mainController, mainWindow, position.get());
 	}
 	
-	private void handleSongPositionChange(MainController mainController, MainWindow mainWindow, Position p) {
+	private void handleSongPositionChange(MainController mainController, Position p) {
 		if (p == null) {
 			// handleSongChange(mainController, mainWindow, null);
 			return;

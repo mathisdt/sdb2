@@ -35,9 +35,9 @@
 
 		<!-- dependency versions -->
 		<version.spring>5.3.16</version.spring>
-		<version.slf4j>1.7.35</version.slf4j>
+		<version.slf4j>1.7.36</version.slf4j>
 		<version.logback>1.2.10</version.logback>
-		<version.log4j>2.17.1</version.log4j>
+		<version.log4j>2.17.2</version.log4j>
 		<version.args4j>2.33</version.args4j>
 		<version.commons-lang3>3.12.0</version.commons-lang3>
 		<version.commons-text>1.9</version.commons-text>
@@ -48,13 +48,13 @@
 		<version.timingframework>7.3.1</version.timingframework>
 		<version.lucene>9.0.0</version.lucene>
 		<version.paho-mqtt>1.2.5</version.paho-mqtt>
-		<version.diff-match-patch>1.1</version.diff-match-patch>
-		<version.guava>31.0.1-jre</version.guava>
-		<version.gson>2.8.9</version.gson>
+		<version.diff-match-patch>1.2</version.diff-match-patch>
+		<version.guava>31.1-jre</version.guava>
+		<version.gson>2.9.0</version.gson>
 		<version.junit>4.13.2</version.junit>
 		<version.mockito>4.3.1</version.mockito>
 		<version.jakarta-xml-bind-api>3.0.1</version.jakarta-xml-bind-api>
-		<version.jakarta-activation-api>2.0.1</version.jakarta-activation-api>
+		<version.jakarta-activation-api>2.1.0</version.jakarta-activation-api>
 		<version.glassfish-jaxb-runtime>3.0.1</version.glassfish-jaxb-runtime>
 	</properties>
 
@@ -178,7 +178,7 @@
 		  <artifactId>diff-match-patch</artifactId>
 		  <version>${version.diff-match-patch}</version>
 		</dependency>
-						
+
 
 		<!-- logging -->
 		<dependency>
@@ -326,7 +326,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>6.5.3</version>
+				<version>7.0.0</version>
 				<configuration>
 					<skip>${skipOwasp}</skip>
 					<failBuildOnCVSS>3</failBuildOnCVSS>
@@ -347,7 +347,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.9.0</version>
+				<version>3.10.0</version>
 				<inherited>true</inherited>
 				<configuration>
 					<release>${version.java}</release>
@@ -509,7 +509,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-site-plugin</artifactId>
-					<version>3.10.0</version>
+					<version>3.11.0</version>
 				</plugin>
 
 				<plugin>
