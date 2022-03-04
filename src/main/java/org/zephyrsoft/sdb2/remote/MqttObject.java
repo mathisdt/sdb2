@@ -175,9 +175,9 @@ public class MqttObject<T> {
 				if (subTopicSplit[i].equals("+") || subTopicSplit[i].equals("#"))
 					newWildcardPositions.add(i);
 			}
-			this.wildcardPositions = newWildcardPositions.toArray(new Integer[0]);
+			wildcardPositions = newWildcardPositions.toArray(new Integer[0]);
 		} else {
-			this.wildcardPositions = new Integer[] {};
+			wildcardPositions = new Integer[] {};
 		}
 		
 		String newPublishTopic = publishTopic != null ? publishTopic : this.subscriptionTopic;
