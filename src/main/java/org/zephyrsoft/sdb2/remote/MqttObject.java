@@ -154,9 +154,9 @@ public class MqttObject<T> {
 		this.subscriptionTopic = subscriptionTopic;
 		this.toObject = toObject;
 		this.takeObject = takeObject;
-		this.toPayload = toPayload != null ? toPayload : (s) -> {
+		this.toPayload = toPayload != null ? toPayload : (t) -> {
 			try {
-				return s.toString().getBytes("UTF-8");
+				return t.toString().getBytes("UTF-8");
 			} catch (UnsupportedEncodingException e) {
 				LOG.warn("Convert object to utf-8 payload failed", e);
 			}
@@ -192,9 +192,19 @@ public class MqttObject<T> {
 		this.publishTopic = newPublishTopic;
 		
 		onMessageListener = (topic, message) -> {
+			
 			if (this.subscriptionTopic != null && MqttTopic.isMatched(this.subscriptionTopic, topic)) {
-				@SuppressWarnings("unchecked")
-				T newObject = this.toObject == null ? (T) message : this.toObject.apply(message);
+				T newObject;
+				if (this.toObject == null) {
+					newObject = (T) message;
+				} else {
+					try {
+						newObject = this.toObject.apply(message);
+					} catch (Exception e) {
+						LOG.warn("Convert payload to object failed", e);
+						return;
+					}
+				}
 				if (this.takeObject != null && !this.takeObject.test(this.object, newObject))
 					return;
 				set(newObject, true, (Object[]) getArgsFromTopic(topic));

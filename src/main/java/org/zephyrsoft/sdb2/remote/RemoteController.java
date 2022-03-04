@@ -189,9 +189,14 @@ public class RemoteController {
 	static byte[] toXML(Persistable persistable) {
 		if (persistable == null)
 			return new byte[0];
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		XMLConverter.fromPersistableToXML(persistable, baos, false, true);
-		return baos.toByteArray();
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			XMLConverter.fromPersistableToXML(persistable, baos, false, true);
+			return baos.toByteArray();
+		} catch (IllegalStateException e) {
+			LOG.warn("Could convert persistable to payload.", e);
+		}
+		return null;
 	}
 	
 	/**
