@@ -17,6 +17,7 @@ package org.zephyrsoft.sdb2.remote;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -169,29 +170,30 @@ public class MqttObject<T> {
 		
 		if (this.subscriptionTopic != null && (this.subscriptionTopic.contains("+") || this.subscriptionTopic.contains("#"))) {
 			String[] subTopicSplit = this.subscriptionTopic.split("/");
-			ArrayList<Integer> wildcardPositions = new ArrayList<>(subTopicSplit.length);
+			List<Integer> newWildcardPositions = new ArrayList<>(subTopicSplit.length);
 			for (int i = 0; i < subTopicSplit.length; i++) {
 				if (subTopicSplit[i].equals("+") || subTopicSplit[i].equals("#"))
-					wildcardPositions.add(i);
+					newWildcardPositions.add(i);
 			}
-			this.wildcardPositions = wildcardPositions.toArray(new Integer[0]);
+			this.wildcardPositions = newWildcardPositions.toArray(new Integer[0]);
 		} else {
-			wildcardPositions = new Integer[] {};
+			this.wildcardPositions = new Integer[] {};
 		}
 		
-		publishTopic = publishTopic != null ? publishTopic : this.subscriptionTopic;
-		if (publishTopic.contains("+") || publishTopic.contains("#")) {
-			String[] pubTopicSplit = publishTopic.split("/");
+		String newPublishTopic = publishTopic != null ? publishTopic : this.subscriptionTopic;
+		if (newPublishTopic.contains("+") || newPublishTopic.contains("#")) {
+			String[] pubTopicSplit = newPublishTopic.split("/");
 			for (int i = 0; i < pubTopicSplit.length; i++) {
 				if (pubTopicSplit[i].equals("+") || pubTopicSplit[i].equals("#"))
 					pubTopicSplit[i] = "%s";
 			}
-			publishTopic = String.join("/", pubTopicSplit);
+			newPublishTopic = String.join("/", pubTopicSplit);
 		}
-		this.publishTopic = publishTopic;
+		this.publishTopic = newPublishTopic;
 		
 		onMessageListener = (topic, message) -> {
 			if (this.subscriptionTopic != null && MqttTopic.isMatched(this.subscriptionTopic, topic)) {
+				@SuppressWarnings("unchecked")
 				T newObject = this.toObject == null ? (T) message : this.toObject.apply(message);
 				if (this.takeObject != null && !this.takeObject.test(this.object, newObject))
 					return;
