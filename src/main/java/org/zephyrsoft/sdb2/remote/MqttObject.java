@@ -15,6 +15,7 @@
  */
 package org.zephyrsoft.sdb2.remote;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -37,8 +38,8 @@ public class MqttObject<T> {
 	private final int qos;
 	private final boolean retained;
 	private MQTT mqtt;
-	private final Function<String, T> toObject;
-	private final Function<T, String> toString;
+	private final Function<byte[], T> toObject;
+	private final Function<T, byte[]> toPayload;
 	private final BiPredicate<T, T> takeObject;
 	private final BiPredicate<T, T> objectEquals;
 	private final CopyOnWriteArrayList<OnChangeListener<T>> onChangeListeners = new CopyOnWriteArrayList<>();
@@ -62,7 +63,7 @@ public class MqttObject<T> {
 	 * @param mqtt
 	 * @param subscriptionTopic
 	 * @param toObject
-	 * @param toString
+	 * @param toPayload
 	 * @param qos
 	 * @param retained
 	 * @param objectEquals
@@ -70,8 +71,8 @@ public class MqttObject<T> {
 	 */
 	public MqttObject(MQTT mqtt,
 		String subscriptionTopic,
-		Function<String, T> toObject,
-		Function<T, String> toString,
+		Function<byte[], T> toObject,
+		Function<T, byte[]> toPayload,
 		int qos,
 		boolean retained,
 		BiPredicate<T, T> objectEquals) throws MqttException {
@@ -81,7 +82,7 @@ public class MqttObject<T> {
 			toObject,
 			null,
 			null,
-			toString,
+			toPayload,
 			qos,
 			retained,
 			objectEquals,
@@ -108,7 +109,7 @@ public class MqttObject<T> {
 	 */
 	public MqttObject(MQTT mqtt,
 		String publishTopic,
-		Function<T, String> toString,
+		Function<T, byte[]> toPayload,
 		int qos,
 		boolean retained) throws MqttException {
 		this(mqtt,
@@ -117,7 +118,7 @@ public class MqttObject<T> {
 			null,
 			null,
 			publishTopic,
-			toString,
+			toPayload,
 			qos,
 			retained,
 			null,
@@ -141,10 +142,10 @@ public class MqttObject<T> {
 	public MqttObject(MQTT mqtt,
 		T object,
 		String subscriptionTopic,
-		Function<String, T> toObject,
+		Function<byte[], T> toObject,
 		BiPredicate<T, T> takeObject,
 		String publishTopic,
-		Function<T, String> toString,
+		Function<T, byte[]> toPayload,
 		int qos,
 		boolean retained,
 		BiPredicate<T, T> objectEquals,
@@ -153,7 +154,14 @@ public class MqttObject<T> {
 		this.subscriptionTopic = subscriptionTopic;
 		this.toObject = toObject;
 		this.takeObject = takeObject;
-		this.toString = toString != null ? toString : Object::toString;
+		this.toPayload = toPayload != null ? toPayload : (t) -> {
+			try {
+				return t.toString().getBytes("UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				LOG.warn("Convert object to utf-8 payload failed", e);
+			}
+			return null;
+		};
 		this.qos = qos;
 		this.retained = retained;
 		this.objectEquals = objectEquals != null ? objectEquals : (a, b) -> a == null ? b == null : a.equals(b);
@@ -184,9 +192,19 @@ public class MqttObject<T> {
 		this.publishTopic = newPublishTopic;
 		
 		onMessageListener = (topic, message) -> {
+			
 			if (this.subscriptionTopic != null && MqttTopic.isMatched(this.subscriptionTopic, topic)) {
-				@SuppressWarnings("unchecked")
-				T newObject = this.toObject == null ? (T) message : this.toObject.apply(message);
+				T newObject;
+				if (this.toObject == null) {
+					newObject = (T) message;
+				} else {
+					try {
+						newObject = this.toObject.apply(message);
+					} catch (Exception e) {
+						LOG.warn("Convert payload to object failed", e);
+						return;
+					}
+				}
 				if (this.takeObject != null && !this.takeObject.test(this.object, newObject))
 					return;
 				set(newObject, true, (Object[]) getArgsFromTopic(topic));
@@ -242,7 +260,7 @@ public class MqttObject<T> {
 		if (publishTopic != null) {
 			new Thread(() -> {
 				mqtt.publish(String.format(publishTopic, args),
-					toString.apply(pObject),
+					toPayload.apply(pObject),
 					qos,
 					retained);
 			}).start();
