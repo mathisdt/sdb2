@@ -78,7 +78,9 @@ public class MQTT implements MqttCallback {
 	@Override
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
 		LOG.debug("Got message: {}", topic);
-		onMessageListeners.forEach(oml -> oml.onMessage(topic, message.toString()));
+		onMessageListeners.forEach(oml -> {
+			oml.onMessage(topic, message.getPayload());
+		});
 	}
 	
 	@Override
@@ -91,11 +93,14 @@ public class MQTT implements MqttCallback {
 		client.subscribe(topic, qos);
 	}
 	
-	public void publish(String topic, String payload, int qos, boolean retained) {
+	public void publish(String topic, byte[] payload, int qos, boolean retained) {
+		if (payload == null) {
+			return;
+		}
 		if (client.isConnected()) {
 			LOG.debug("Publishing message: {}", topic);
 			try {
-				client.publish(topic, payload.getBytes(), qos, retained);
+				client.publish(topic, payload, qos, retained);
 			} catch (Exception e) {
 				// only log the exception
 				LOG.warn("could not publish message", e);
@@ -127,7 +132,7 @@ public class MQTT implements MqttCallback {
 	}
 	
 	public interface OnMessageListener {
-		public abstract void onMessage(String topic, String message);
+		public abstract void onMessage(String topic, byte[] message);
 	}
 	
 	public void onConnectionLost(OnConnectionLostListener onConnectionLostListener) {

@@ -17,7 +17,6 @@ package org.zephyrsoft.sdb2.remote;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.slf4j.Logger;
@@ -128,7 +127,7 @@ public class RemoteController {
 				(a, b) -> false);
 			
 			healthDB = new MqttObject<>(mqtt, formatClientIDTopic(RemoteTopic.HEALTH_DB),
-				Health::valueOf, null, RemoteTopic.HEALTH_DB_QOS, RemoteTopic.HEALTH_DB_RETAINED, null);
+				Health::valueOfBytes, null, RemoteTopic.HEALTH_DB_QOS, RemoteTopic.HEALTH_DB_RETAINED, null);
 		} else {
 			this.playlist = null;
 			this.requestPatches = null;
@@ -181,18 +180,18 @@ public class RemoteController {
 		return remotePresenter;
 	}
 	
-	static Persistable parseXML(String xml) {
-		if (xml.isEmpty())
+	static Persistable parseXML(byte[] xml) {
+		if (xml.length == 0)
 			return null;
-		return XMLConverter.fromXMLToPersistable(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+		return XMLConverter.fromXMLToPersistable(new ByteArrayInputStream(xml));
 	}
 	
-	static String toXML(Persistable persistable) {
+	static byte[] toXML(Persistable persistable) {
 		if (persistable == null)
-			return "";
+			return new byte[0];
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		XMLConverter.fromPersistableToXML(persistable, baos, false, true);
-		return baos.toString(StandardCharsets.UTF_8);
+		return baos.toByteArray();
 	}
 	
 	/**

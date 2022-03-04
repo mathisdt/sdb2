@@ -15,7 +15,23 @@
  */
 package org.zephyrsoft.sdb2.remote;
 
+import java.io.UnsupportedEncodingException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public enum Health {
 	online,
 	offline;
+	
+	private static final Logger LOG = LoggerFactory.getLogger(Health.class);
+	
+	public static Health valueOfBytes(byte[] bytes) {
+		try {
+			return Health.valueOf(new String(bytes, "UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			LOG.warn("Convert bytes to health failed", e);
+		}
+		return null;
+	}
 }
