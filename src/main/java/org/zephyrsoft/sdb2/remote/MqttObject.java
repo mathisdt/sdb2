@@ -139,6 +139,7 @@ public class MqttObject<T> {
 	 *
 	 * @throws MqttException
 	 */
+	@SuppressWarnings("unchecked")
 	public MqttObject(MQTT mqtt,
 		T object,
 		String subscriptionTopic,
