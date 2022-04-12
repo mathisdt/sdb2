@@ -130,6 +130,7 @@ public class MqttObject<T> {
 	 * empty string.
 	 *
 	 */
+	@SuppressWarnings("unchecked")
 	public MqttObject(T object,
 		String subscriptionTopic,
 		Function<byte[], T> toObject,
