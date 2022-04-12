@@ -35,6 +35,8 @@ public class Position implements Persistable {
 	private int part;
 	@XmlElement(name = "line")
 	private int line;
+	@XmlElement(name = "visibility")
+	private boolean visibility = true;
 	
 	public Position() {
 		initIfNecessary();
@@ -44,36 +46,50 @@ public class Position implements Persistable {
 	 * Part: 0 = Title, 1-N Parts
 	 */
 	public Position(String uuid, int part) {
-		this(uuid, part, 0);
+		this(uuid, part, 0, true);
 	}
 	
-	public Position(String uuid, int part, int line) {
+	public Position(String uuid, int part, int line, boolean visibility) {
 		this();
 		this.uuid = uuid;
 		this.part = part;
 		this.line = line;
+		this.visibility = visibility;
 	}
 	
-	public Position(String uuid, int part, int line, boolean partWithTitle) {
-		this(uuid, partWithTitle ? part : part + 1, line);
+	public Position(Position p) {
+		this();
+		this.uuid = p.uuid;
+		this.part = p.part;
+		this.line = p.line;
+		this.visibility = p.visibility;
 	}
 	
 	public int getPart() {
 		return part;
 	}
 	
-	public int getPart(boolean withTitle) {
-		return withTitle ? part : part - 1;
-	}
-	
 	public int getLine() {
 		return line;
+	}
+	
+	public boolean isVisible() {
+		return visibility;
+	}
+	
+	public boolean getVisibility() {
+		return visibility;
+	}
+	
+	public void setVisibility(boolean visibility) {
+		this.visibility = visibility;
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Position) {
-			return this.uuid.equals(((Position) obj).getUUID()) && this.part == ((Position) obj).getPart() && this.line == ((Position) obj).getLine();
+			return this.uuid.equals(((Position) obj).getUUID()) && this.part == ((Position) obj).getPart() && this.line == ((Position) obj).getLine()
+				&& this.visibility == ((Position) obj).getVisibility();
 		} else {
 			return false;
 		}

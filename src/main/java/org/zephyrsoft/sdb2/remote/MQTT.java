@@ -34,7 +34,6 @@ public class MQTT implements MqttCallback {
 	private static final Logger LOG = LoggerFactory.getLogger(MQTT.class);
 	
 	private MqttClient client;
-	private String clientID;
 	private CopyOnWriteArrayList<OnMessageListener> onMessageListeners = new CopyOnWriteArrayList<>();
 	private CopyOnWriteArrayList<OnConnectionLostListener> onConnectionLostListeners = new CopyOnWriteArrayList<>();
 	
@@ -52,8 +51,6 @@ public class MQTT implements MqttCallback {
 	 * @throws MqttException
 	 */
 	public MQTT(String serverUri, String clientID, String userName, String password, boolean cleanSession) throws MqttException {
-		this.clientID = clientID;
-		
 		MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
 		if (!userName.isEmpty()) {
 			mqttConnectOptions.setUserName(userName);
@@ -121,10 +118,6 @@ public class MQTT implements MqttCallback {
 		} catch (MqttException e) {
 			// do nothing
 		}
-	}
-	
-	public String getClientID() {
-		return clientID;
 	}
 	
 	public void onMessage(OnMessageListener onMessageListener) {

@@ -193,4 +193,8 @@ public class PartButtonGroup extends JPanel {
 	protected boolean isActive() {
 		return active;
 	}
+	
+	public AddressablePart getPart() {
+		return part;
+	}
 }

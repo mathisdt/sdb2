@@ -970,24 +970,28 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	protected void handlePresentListSelectionChanged(ListSelectionEvent e) {
 		// only the last event in a row should fire these actions (check valueIsAdjusting)
 		if (!e.getValueIsAdjusting()) {
-			presentListSelected = presentList.getSelectedValue();
-			if (presentListSelected != null) {
-				// enable buttons beneath the present list
-				btnUp.setEnabled(presentList.getSelectedIndex() > 0);
-				btnUnselect.setEnabled(true);
-				btnDown.setEnabled(presentList.getSelectedIndex() < presentModel.getSize() - 1);
-				// enable "present this song" and "jump to selected" buttons
-				btnPresentSelectedSong.setEnabled(true);
-				btnJumpToSelected.setEnabled(true);
-			} else {
-				// disable buttons beneath the present list
-				btnUp.setEnabled(false);
-				btnUnselect.setEnabled(false);
-				btnDown.setEnabled(false);
-				// disable "present this song" and "jump to selected" buttons
-				btnPresentSelectedSong.setEnabled(false);
-				btnJumpToSelected.setEnabled(false);
-			}
+			updateButtonsForPresentListSelection();
+		}
+	}
+	
+	protected void updateButtonsForPresentListSelection() {
+		presentListSelected = presentList.getSelectedValue();
+		if (presentListSelected != null) {
+			// enable buttons beneath the present list
+			btnUp.setEnabled(presentList.getSelectedIndex() > 0);
+			btnUnselect.setEnabled(true);
+			btnDown.setEnabled(presentList.getSelectedIndex() < presentModel.getSize() - 1);
+			// enable "present this song" and "jump to selected" buttons
+			btnPresentSelectedSong.setEnabled(true);
+			btnJumpToSelected.setEnabled(true);
+		} else {
+			// disable buttons beneath the present list
+			btnUp.setEnabled(false);
+			btnUnselect.setEnabled(false);
+			btnDown.setEnabled(false);
+			// disable "present this song" and "jump to selected" buttons
+			btnPresentSelectedSong.setEnabled(false);
+			btnJumpToSelected.setEnabled(false);
 		}
 	}
 	
@@ -1249,8 +1253,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		Song currentlyPresentedSong = controller.getCurrentlyPresentedSong();
 		if (currentlyPresentedSong != null && !currentlyPresentedSong.equals(song)
 			|| currentlyPresentedSong == null && song != null) {
-			presentListSelected = song;
-			handleSongPresent();
+			if (song != null) {
+				presentSong(song);
+			} else {
+				handleBlankScreen();
+			}
 		}
 	}
 	
@@ -1258,18 +1265,44 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	 * A update playlist function, which can be called by a remote controller.
 	 */
 	public void updatePlaylist(SongsModel playlist) {
+		Song selection = presentList.getSelectedValue();
 		getPresentModel().update(playlist);
+		if (selection != null && selection.equals(presentList.getSelectedValue())) {
+			updateButtonsForPresentListSelection();
+		} else if (!playlist.getSongs().contains(selection)) {
+			presentList.clearSelection();
+		} else {
+			presentList.setSelectedValue(selection, true);
+		}
 		setDefaultDividerLocation();
 	}
 	
+	/**
+	 * A setActiveLine function, which can be called by a remote controller.
+	 */
+	public void setActiveLine(Integer part, Integer line) {
+		controller.contentChange(() -> {
+			if (!getUIParts().isEmpty()) {
+				Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
+				int noTitlePart = showTitle ? part : Math.max(part - 1, 0);
+				getUIParts().get(noTitlePart).setActiveLine(line);
+			}
+		});
+	}
+	
 	protected void handleSongPresent() {
-		boolean success = controller.present(new Presentable(presentListSelected, null));
+		presentSong(presentListSelected);
+	}
+	
+	protected void presentSong(Song song) {
+		boolean success = controller.present(new Presentable(song, null));
 		controller.contentChange(() -> controller.stopSlideShow());
 		controller.contentChange(() -> {
 			if (success) {
 				clearSectionButtons();
 				List<AddressablePart> parts = controller.getParts();
-				int partIndex = 0;
+				Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
+				int partIndex = showTitle ? 0 : 1;
 				for (AddressablePart part : parts) {
 					PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller, this);
 					panelSectionButtons.add(buttonGroup, panelSectionButtonsHints);
