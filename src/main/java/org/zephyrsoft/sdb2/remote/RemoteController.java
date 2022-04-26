@@ -107,7 +107,7 @@ public class RemoteController {
 				RemoteController::toXML, RemoteTopic.PATCHES_REQUEST_PATCHES_QOS, RemoteTopic.PATCHES_REQUEST_PATCHES_RETAINED,
 				(a, b) -> false);
 			
-			healthDB = new MqttObject<>(formatClientIDTopic(RemoteTopic.HEALTH_DB),
+			healthDB = new MqttObject<>(formatPrefixTopic(RemoteTopic.HEALTH_DB),
 				Health::valueOfBytes, null, RemoteTopic.HEALTH_DB_QOS, RemoteTopic.HEALTH_DB_RETAINED, null);
 		} else {
 			this.playlist = null;
@@ -220,6 +220,10 @@ public class RemoteController {
 	private String formatClientIDTopic(String topic) {
 		return String.format(topic, getRemotePreferences().getPrefix().isBlank() ? "" : getRemotePreferences().getPrefix() + "/", remotePreferences
 			.getClientID());
+	}
+	
+	private String formatPrefixTopic(String topic) {
+		return String.format(topic, getRemotePreferences().getPrefix().isEmpty() ? "" : getRemotePreferences().getPrefix() + "/");
 	}
 	
 	public MqttObject<Version> getLatestVersion() {

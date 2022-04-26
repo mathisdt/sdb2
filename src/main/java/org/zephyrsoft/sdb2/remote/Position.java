@@ -22,12 +22,24 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorOrder;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlEnum;
+import jakarta.xml.bind.annotation.XmlEnumValue;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "position")
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
 public class Position implements Persistable {
+	
+	@XmlType
+	@XmlEnum(String.class)
+	public enum Visibility {
+		@XmlEnumValue(value = "visible")
+		VISIBLE,
+		@XmlEnumValue(value = "blank")
+		BLANK;
+	}
 	
 	@XmlElement(name = "uuid")
 	private String uuid;
@@ -36,7 +48,7 @@ public class Position implements Persistable {
 	@XmlElement(name = "line")
 	private int line;
 	@XmlElement(name = "visibility")
-	private boolean visibility = true;
+	private Visibility visibility;
 	
 	public Position() {
 		initIfNecessary();
@@ -46,23 +58,32 @@ public class Position implements Persistable {
 	 * Part: 0 = Title, 1-N Parts
 	 */
 	public Position(String uuid, int part) {
-		this(uuid, part, 0, true);
+		this(uuid, part, 0, null);
 	}
 	
-	public Position(String uuid, int part, int line, boolean visibility) {
+	public Position(String uuid, int part, int line) {
+		this(uuid, part, line, null);
+	}
+	
+	public Position(String uuid, int part, int line, Visibility visibility) {
 		this();
 		this.uuid = uuid;
 		this.part = part;
 		this.line = line;
-		this.visibility = visibility;
+		if (visibility == Visibility.VISIBLE)
+			this.visibility = null;
+		else
+			this.visibility = visibility;
+	}
+	
+	public Position(Position p, Visibility visibility) {
+		this(p != null ? p.uuid : null,
+			p != null ? p.part : 0,
+			p != null ? p.line : 0, visibility);
 	}
 	
 	public Position(Position p) {
-		this();
-		this.uuid = p.uuid;
-		this.part = p.part;
-		this.line = p.line;
-		this.visibility = p.visibility;
+		this(p.uuid, p.part, p.line, p.visibility);
 	}
 	
 	public int getPart() {
@@ -74,15 +95,11 @@ public class Position implements Persistable {
 	}
 	
 	public boolean isVisible() {
-		return visibility;
+		return visibility == null || visibility == Visibility.VISIBLE;
 	}
 	
-	public boolean getVisibility() {
+	public Visibility getVisibility() {
 		return visibility;
-	}
-	
-	public void setVisibility(boolean visibility) {
-		this.visibility = visibility;
 	}
 	
 	@Override
