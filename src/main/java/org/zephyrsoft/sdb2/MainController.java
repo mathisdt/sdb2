@@ -70,10 +70,12 @@ import org.zephyrsoft.sdb2.presenter.PresenterWindow;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.Scroller;
 import org.zephyrsoft.sdb2.remote.Health;
+import org.zephyrsoft.sdb2.remote.MQTT;
 import org.zephyrsoft.sdb2.remote.PatchController;
 import org.zephyrsoft.sdb2.remote.RemoteController;
 import org.zephyrsoft.sdb2.remote.RemotePresenter;
 import org.zephyrsoft.sdb2.remote.RemoteStatus;
+import org.zephyrsoft.sdb2.remote.SDB2RemotePreferences;
 import org.zephyrsoft.sdb2.util.StringTools;
 import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
@@ -122,6 +124,10 @@ public class MainController implements Scroller {
 	
 	private Thread shutdownHook = null;
 	
+	private MQTT mqtt;
+	
+	private SDB2RemotePreferences remotePreferences;
+	
 	public MainController(IOController ioController, StatisticsController statisticsController) {
 		this.ioController = ioController;
 		this.statisticsController = statisticsController;
@@ -139,30 +145,38 @@ public class MainController implements Scroller {
 		
 		if (settings.get(SettingKey.REMOTE_ENABLED, Boolean.class)) {
 			setRemoteStatus(RemoteStatus.CONNECTING);
+			remotePreferences = new SDB2RemotePreferences(settings);
+			remoteController = new RemoteController(remotePreferences, this, mainWindow);
+			remoteController.getHealthDB().onChange((h, args) -> {
+				switch (h) {
+					case online:
+						if (!(songsController instanceof PatchController))
+							songsController = new PatchController(songs, remoteController);
+						break;
+					case offline:
+						if (!(songsController instanceof PatchController))
+							break;
+						SongsModelController oldController = songsController;
+						songsController = new SongsModelController(songs);
+						oldController.save();
+						oldController.close();
+						break;
+				}
+				setRemoteStatus(h == Health.online ? RemoteStatus.CONNECTED : RemoteStatus.DB_DISCONNECTED);
+			});
 			try {
-				remoteController = new RemoteController(settings, this, mainWindow);
-				remoteController.getHealthDB().onChange((h, args) -> {
-					switch (h) {
-						case online:
-							if (!(songsController instanceof PatchController))
-								songsController = new PatchController(songs, remoteController);
-							break;
-						case offline:
-							if (!(songsController instanceof PatchController))
-								break;
-							SongsModelController oldController = songsController;
-							songsController = new SongsModelController(songs);
-							oldController.save();
-							oldController.close();
-							break;
-					}
-					setRemoteStatus(h == Health.online ? RemoteStatus.CONNECTED : RemoteStatus.DB_DISCONNECTED);
+				mqtt = new MQTT(remotePreferences.getServer(), remotePreferences.getClientID(), remotePreferences.getUsername(), remotePreferences
+					.getPassword(), true);
+				mqtt.onConnectionLost(cause -> {
+					setRemoteStatus(RemoteStatus.FAILURE);
+					cause.printStackTrace();
 				});
-				if (remoteController.getHealthDB().get() == Health.online && !(songsController instanceof PatchController))
-					songsController = new PatchController(songs, remoteController);
+				remoteController.connectTo(mqtt);
 				
 				setRemoteStatus(RemoteStatus.CONNECTED);
 			} catch (MqttException e) {
+				remoteController = null;
+				mqtt = null;
 				setRemoteStatus(RemoteStatus.FAILURE);
 				ErrorDialog.openDialog(null, """
 					Error while connecting to remote server.
@@ -181,7 +195,7 @@ public class MainController implements Scroller {
 		assert settings != null : "Settings must be load before calling settingsChanged";
 		
 		boolean enableChanged = settings.get(SettingKey.REMOTE_ENABLED, Boolean.class) != (remoteController != null);
-		if (enableChanged || (remoteController != null && remoteController.checkSettingsChanged(settings)))
+		if (enableChanged || (remotePreferences != null && remotePreferences.equals(new SDB2RemotePreferences(settings))))
 			new Thread(() -> initRemoteController()).start();
 	}
 	
@@ -333,6 +347,8 @@ public class MainController implements Scroller {
 				presentationControl.moveToLine(part, line);
 			} catch (IllegalStateException e) {
 				// if song is not displayed yet
+			} catch (NullPointerException e) {
+				// if song is not displayed yet
 			}
 		}
 	}
@@ -340,7 +356,8 @@ public class MainController implements Scroller {
 	private PresenterWindow createPresenter(SelectableDisplay screen, Presentable presentable, VirtualScreen virtualScreen) {
 		if (screen == null || !screen.isAvailable()) {
 			// nothing to be done
-			LOG.debug("could not create presenter window - display is {}", screen == null ? "null" : "unavailable");
+			LOG.debug("could not create presenter window for virtual screen {} - display is {}", virtualScreen.getName(), screen == null ? "null"
+				: "unavailable");
 			return null;
 		}
 		PresenterWindow presenterWindow = null;
@@ -398,8 +415,9 @@ public class MainController implements Scroller {
 			}
 			if (presentationControl != null)
 				presentationControl.removeIf(p -> p instanceof RemotePresenter);
-			remoteController.close();
+			mqtt.close();
 			remoteController = null;
+			mqtt = null;
 			setRemoteStatus(RemoteStatus.OFF);
 		}
 		return true;

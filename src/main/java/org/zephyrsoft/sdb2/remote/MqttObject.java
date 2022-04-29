@@ -60,24 +60,20 @@ public class MqttObject<T> {
 	 * can be null, if not set. toString must create a empty String to unset it. Attention: subcribers may not get the
 	 * empty string.
 	 *
-	 * @param mqtt
 	 * @param subscriptionTopic
 	 * @param toObject
 	 * @param toPayload
 	 * @param qos
 	 * @param retained
 	 * @param objectEquals
-	 * @throws MqttException
 	 */
-	public MqttObject(MQTT mqtt,
-		String subscriptionTopic,
+	public MqttObject(String subscriptionTopic,
 		Function<byte[], T> toObject,
 		Function<T, byte[]> toPayload,
 		int qos,
 		boolean retained,
-		BiPredicate<T, T> objectEquals) throws MqttException {
-		this(mqtt,
-			null,
+		BiPredicate<T, T> objectEquals) {
+		this(null,
 			subscriptionTopic,
 			toObject,
 			null,
@@ -101,19 +97,15 @@ public class MqttObject<T> {
 	 * can be null, if not set. toString must create a empty String to unset it. Attention: subcribers may not get the
 	 * empty string.
 	 *
-	 * @param mqtt
 	 * @param publishTopic
 	 * @param qos
 	 * @param retained
-	 * @throws MqttException
 	 */
-	public MqttObject(MQTT mqtt,
-		String publishTopic,
+	public MqttObject(String publishTopic,
 		Function<T, byte[]> toPayload,
 		int qos,
-		boolean retained) throws MqttException {
-		this(mqtt,
-			null,
+		boolean retained) {
+		this(null,
 			null,
 			null,
 			null,
@@ -137,11 +129,9 @@ public class MqttObject<T> {
 	 * can be null, if not set. toString must create a empty String to unset it. Attention: subcribers may not get the
 	 * empty string.
 	 *
-	 * @throws MqttException
 	 */
 	@SuppressWarnings("unchecked")
-	public MqttObject(MQTT mqtt,
-		T object,
+	public MqttObject(T object,
 		String subscriptionTopic,
 		Function<byte[], T> toObject,
 		BiPredicate<T, T> takeObject,
@@ -150,7 +140,7 @@ public class MqttObject<T> {
 		int qos,
 		boolean retained,
 		BiPredicate<T, T> objectEquals,
-		boolean setDirect) throws MqttException {
+		boolean setDirect) {
 		LOG.trace("new MqttObject: S: {} P: {}", subscriptionTopic, publishTopic);
 		this.subscriptionTopic = subscriptionTopic;
 		this.toObject = toObject;
@@ -211,8 +201,6 @@ public class MqttObject<T> {
 				set(newObject, true, (Object[]) getArgsFromTopic(topic));
 			}
 		};
-		
-		connectTo(mqtt);
 	}
 	
 	public void connectTo(MQTT pMqtt) throws MqttException {

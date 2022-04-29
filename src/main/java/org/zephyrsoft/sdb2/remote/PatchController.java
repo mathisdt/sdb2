@@ -123,10 +123,12 @@ public class PatchController extends SongsModelController {
 		currentVersionId = Long.parseLong(properties.getProperty(PREF_SONGS_VERSION_ID, "0"));
 		dbUUID = properties.getProperty(PREF_DB_UUID, "");
 		// Reset if prefix has changed:
-		if (!remoteController.getPrefix().equals(properties.getProperty(PREF_DB_PREFIX, remoteController.getPrefix())) ||
-			!remoteController.getServer().equals(properties.getProperty(PREF_DB_SERVER, remoteController.getServer())))
+		RemotePreferences remotePreferences = remoteController.getRemotePreferences();
+		if (!remotePreferences.getPrefix().equals(properties.getProperty(PREF_DB_PREFIX, remotePreferences.getPrefix())) ||
+			!remotePreferences.getServer().equals(properties.getProperty(PREF_DB_SERVER, remotePreferences.getServer())))
 			resetDB("");
-		LOG.debug("Loaded db for server " + remoteController.getServer() + "\\" + remoteController.getPrefix() + " and version: " + currentVersionId);
+		LOG.debug("Loaded db for server " + remotePreferences.getServer() + "\\" + remotePreferences.getPrefix() + " and version: "
+			+ currentVersionId);
 		
 		// Collect offline changes, align songs with db, and rebase changes later:
 		offlineChanges = collectChanges(songs);
@@ -364,7 +366,7 @@ public class PatchController extends SongsModelController {
 			long newVersionId = currentVersionId + 1;
 			String uuid = UUID.randomUUID().toString();
 			remoteController.getLatestChanges().set(new SongsModel(patchSongs, false),
-				remoteController.getUsername(), String.valueOf(newVersionId), uuid);
+				remoteController.getRemotePreferences().getUsername(), String.valueOf(newVersionId), uuid);
 		}
 	}
 	
@@ -459,9 +461,10 @@ public class PatchController extends SongsModelController {
 			LOG.debug("writing db to file \"{}\" and db properties to file \"{}\"", dbFile.getAbsolutePath(), dbPropertiesFile.getAbsolutePath());
 			XMLConverter.fromPersistableToXML(db, xmlOutputStream);
 			
+			RemotePreferences remotePreferences = remoteController.getRemotePreferences();
 			Properties properties = new Properties();
-			properties.setProperty(PREF_DB_PREFIX, remoteController.getPrefix());
-			properties.setProperty(PREF_DB_SERVER, remoteController.getServer());
+			properties.setProperty(PREF_DB_PREFIX, remotePreferences.getPrefix());
+			properties.setProperty(PREF_DB_SERVER, remotePreferences.getServer());
 			properties.setProperty(PREF_SONGS_VERSION_ID, String.valueOf(currentVersionId));
 			properties.setProperty(PREF_DB_UUID, dbUUID);
 			properties.storeToXML(new FileOutputStream(dbPropertiesFile), PREF_COMMENT);

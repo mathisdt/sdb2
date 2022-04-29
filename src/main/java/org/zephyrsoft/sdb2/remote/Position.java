@@ -22,12 +22,24 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorOrder;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlEnum;
+import jakarta.xml.bind.annotation.XmlEnumValue;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "position")
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
 public class Position implements Persistable {
+	
+	@XmlType
+	@XmlEnum(String.class)
+	public enum Visibility {
+		@XmlEnumValue(value = "visible")
+		VISIBLE,
+		@XmlEnumValue(value = "blank")
+		BLANK;
+	}
 	
 	@XmlElement(name = "uuid")
 	private String uuid;
@@ -35,6 +47,8 @@ public class Position implements Persistable {
 	private int part;
 	@XmlElement(name = "line")
 	private int line;
+	@XmlElement(name = "visibility")
+	private Visibility visibility;
 	
 	public Position() {
 		initIfNecessary();
@@ -44,36 +58,55 @@ public class Position implements Persistable {
 	 * Part: 0 = Title, 1-N Parts
 	 */
 	public Position(String uuid, int part) {
-		this(uuid, part, 0);
+		this(uuid, part, 0, null);
 	}
 	
 	public Position(String uuid, int part, int line) {
+		this(uuid, part, line, null);
+	}
+	
+	public Position(String uuid, int part, int line, Visibility visibility) {
 		this();
 		this.uuid = uuid;
 		this.part = part;
 		this.line = line;
+		if (visibility == Visibility.VISIBLE)
+			this.visibility = null;
+		else
+			this.visibility = visibility;
 	}
 	
-	public Position(String uuid, int part, int line, boolean partWithTitle) {
-		this(uuid, partWithTitle ? part : part + 1, line);
+	public Position(Position p, Visibility visibility) {
+		this(p != null ? p.uuid : null,
+			p != null ? p.part : 0,
+			p != null ? p.line : 0, visibility);
+	}
+	
+	public Position(Position p) {
+		this(p.uuid, p.part, p.line, p.visibility);
 	}
 	
 	public int getPart() {
 		return part;
 	}
 	
-	public int getPart(boolean withTitle) {
-		return withTitle ? part : part - 1;
-	}
-	
 	public int getLine() {
 		return line;
+	}
+	
+	public boolean isVisible() {
+		return visibility == null || visibility == Visibility.VISIBLE;
+	}
+	
+	public Visibility getVisibility() {
+		return visibility;
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Position) {
-			return this.uuid.equals(((Position) obj).getUUID()) && this.part == ((Position) obj).getPart() && this.line == ((Position) obj).getLine();
+			return this.uuid.equals(((Position) obj).getUUID()) && this.part == ((Position) obj).getPart() && this.line == ((Position) obj).getLine()
+				&& this.visibility == ((Position) obj).getVisibility();
 		} else {
 			return false;
 		}

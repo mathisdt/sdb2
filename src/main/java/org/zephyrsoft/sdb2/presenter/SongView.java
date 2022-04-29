@@ -425,7 +425,8 @@ public class SongView extends JPanel implements Scroller {
 		Preconditions.checkArgument(parts != null, SONG_PARTS_NOT_INITIALIZED);
 		adjustHeightIfNecessary();
 		try {
-			AddressablePart addressablePart = parts.get(part);
+			int noTitlePart = showTitle ? part : Math.max(part - 1, 0);
+			AddressablePart addressablePart = parts.get(noTitlePart);
 			Preconditions.checkArgument(addressablePart != null, "part index does not correspond to a part of the song");
 			Rectangle2D target = text.modelToView2D(addressablePart.getPosition());
 			double targetY = target.getY();
@@ -443,7 +444,8 @@ public class SongView extends JPanel implements Scroller {
 		Preconditions.checkArgument(parts != null, SONG_PARTS_NOT_INITIALIZED);
 		adjustHeightIfNecessary();
 		try {
-			AddressablePart addressablePart = parts.get(part);
+			int noTitlePart = showTitle ? part : Math.max(part - 1, 0);
+			AddressablePart addressablePart = parts.get(noTitlePart);
 			Preconditions.checkArgument(addressablePart != null, "part index does not correspond to a part of the song");
 			AddressableLine addressableLine = addressablePart.get(line);
 			Preconditions.checkArgument(addressableLine != null, "line index does not correspond to a line of the addressed part");
