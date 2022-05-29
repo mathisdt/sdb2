@@ -288,6 +288,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private JLabel lblRemoteRoom;
 	
 	private JLabel lblStatus;
+	private JLabel lblGitCommitHash;
 	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
@@ -299,6 +300,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		
 		// read program version
 		lblProgramVersion.setText(VersionTools.getCurrent());
+		lblGitCommitHash.setText(VersionTools.getGitCommitHash());
 		
 		// fill in available values for filter type
 		for (FilterTypeEnum item : FilterTypeEnum.values()) {
@@ -2121,9 +2123,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		tabbedPane.addTab("Import / Export / Statistics", null, panelImportExportStatistics, null);
 		GridBagLayout gblPanelImportExportStatistics = new GridBagLayout();
 		gblPanelImportExportStatistics.columnWidths = new int[] { 0, 70, 0, 0 };
-		gblPanelImportExportStatistics.rowHeights = new int[] { 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 0 };
+		gblPanelImportExportStatistics.rowHeights = new int[] { 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 };
 		gblPanelImportExportStatistics.columnWeights = new double[] { 1.0, 0.0, 1.0, Double.MIN_VALUE };
-		gblPanelImportExportStatistics.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE };
+		gblPanelImportExportStatistics.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+			Double.MIN_VALUE };
 		panelImportExportStatistics.setLayout(gblPanelImportExportStatistics);
 		
 		JLabel lblExportToPDF = new JLabel("Songs as PDF");
@@ -2207,7 +2210,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_labelExportStatisctics.anchor = GridBagConstraints.SOUTH;
 		gbc_labelExportStatisctics.gridwidth = 3;
 		gbc_labelExportStatisctics.fill = GridBagConstraints.HORIZONTAL;
-		gbc_labelExportStatisctics.insets = new Insets(0, 0, 5, 5);
+		gbc_labelExportStatisctics.insets = new Insets(0, 0, 5, 0);
 		gbc_labelExportStatisctics.gridx = 0;
 		gbc_labelExportStatisctics.gridy = 7;
 		panelImportExportStatistics.add(labelExportStatisctics, gbc_labelExportStatisctics);
@@ -2244,7 +2247,6 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		GridBagConstraints gbcLblProgramVersionTitle = new GridBagConstraints();
 		gbcLblProgramVersionTitle.gridwidth = 3;
 		gbcLblProgramVersionTitle.fill = GridBagConstraints.HORIZONTAL;
-		gbcLblProgramVersionTitle.anchor = GridBagConstraints.SOUTH;
 		gbcLblProgramVersionTitle.insets = new Insets(0, 0, 5, 0);
 		gbcLblProgramVersionTitle.gridx = 0;
 		gbcLblProgramVersionTitle.gridy = 10;
@@ -2254,12 +2256,23 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		lblProgramVersion.setBorder(new EmptyBorder(0, 0, 0, 0));
 		lblProgramVersion.setFont(new Font("DejaVu Sans", Font.ITALIC, 12));
 		GridBagConstraints gbcLblProgramVersion = new GridBagConstraints();
+		gbcLblProgramVersion.insets = new Insets(0, 0, 5, 0);
 		gbcLblProgramVersion.fill = GridBagConstraints.HORIZONTAL;
-		gbcLblProgramVersion.anchor = GridBagConstraints.NORTH;
 		gbcLblProgramVersion.gridwidth = 3;
 		gbcLblProgramVersion.gridx = 0;
 		gbcLblProgramVersion.gridy = 11;
 		panelImportExportStatistics.add(lblProgramVersion, gbcLblProgramVersion);
+		
+		lblGitCommitHash = new JLabel(" ");
+		lblGitCommitHash.setBorder(new EmptyBorder(0, 0, 0, 0));
+		lblGitCommitHash.setFont(new Font("DejaVu Sans", Font.ITALIC, 12));
+		GridBagConstraints gbc_lblGitCommitHash = new GridBagConstraints();
+		gbc_lblGitCommitHash.gridwidth = 3;
+		gbc_lblGitCommitHash.fill = GridBagConstraints.HORIZONTAL;
+		gbc_lblGitCommitHash.insets = new Insets(0, 0, 5, 0);
+		gbc_lblGitCommitHash.gridx = 0;
+		gbc_lblGitCommitHash.gridy = 12;
+		panelImportExportStatistics.add(lblGitCommitHash, gbc_lblGitCommitHash);
 		
 		// MARK Settings Panel
 		JPanel panelSettings = new JPanel();

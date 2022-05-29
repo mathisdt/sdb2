@@ -49,6 +49,10 @@ public class VersionTools {
 		return version;
 	}
 	
+	public static String getGitCommitHash() {
+		return JarTools.getAttributeFromManifest(VersionTools.class, "Git-Commit-ID");
+	}
+	
 	private static String getImplementationVersion() {
 		return JarTools.getAttributeFromManifest(VersionTools.class, "Implementation-Version");
 	}
