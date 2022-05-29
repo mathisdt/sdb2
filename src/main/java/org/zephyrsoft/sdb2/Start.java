@@ -23,6 +23,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.zephyrsoft.sdb2.util.VersionTools;
 import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
 /**
@@ -58,6 +59,7 @@ public final class Start {
 			try {
 				LOG.debug("default file encoding is {}", Charset.defaultCharset().displayName());
 				LOG.debug("default time zone is {}", ZoneId.systemDefault().getId());
+				LOG.debug("application version is {}", VersionTools.getCurrent());
 				
 				LOG.debug("loading application context");
 				new AnnotationConfigApplicationContext(SpringConfiguration.class);
