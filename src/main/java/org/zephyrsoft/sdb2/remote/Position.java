@@ -104,9 +104,12 @@ public class Position implements Persistable {
 	
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof Position) {
-			return this.uuid.equals(((Position) obj).getUUID()) && this.part == ((Position) obj).getPart() && this.line == ((Position) obj).getLine()
-				&& this.visibility == ((Position) obj).getVisibility();
+		if (obj instanceof Position pos) {
+			return ((this.uuid == null && pos.getUUID() == null)
+				|| (this.uuid != null && this.uuid.equals(pos.getUUID())))
+				&& this.part == pos.getPart()
+				&& this.line == pos.getLine()
+				&& this.visibility == pos.getVisibility();
 		} else {
 			return false;
 		}
