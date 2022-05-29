@@ -498,7 +498,7 @@ public class MainController implements Scroller {
 	}
 	
 	public void exportStatisticsAll(File targetExcelFile) {
-		statisticsController.exportStatisticsAll(songs, targetExcelFile);
+		statisticsController.exportStatisticsAll(new SongsModel(songs), targetExcelFile);
 	}
 	
 	public void loadSettings() {
@@ -648,7 +648,7 @@ public class MainController implements Scroller {
 		File file = new File(FileAndDirectoryLocations.getSongsBackupFile());
 		try (OutputStream xmlOutputStream = new FileOutputStream(file)) {
 			LOG.debug("writing songs to backup file \"{}\"", file.getAbsolutePath());
-			XMLConverter.fromPersistableToXML(songs, xmlOutputStream);
+			XMLConverter.fromPersistableToXML(new SongsModel(songs), xmlOutputStream);
 			return file;
 		} catch (IOException e) {
 			LOG.error("could not write songs to backup file \"" + file.getAbsolutePath() + "\"", e);
