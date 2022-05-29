@@ -246,6 +246,26 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>io.github.git-commit-id</groupId>
+				<artifactId>git-commit-id-maven-plugin</artifactId>
+				<version>5.0.0</version>
+				<executions>
+					<execution>
+						<id>get-the-git-infos</id>
+						<goals>
+							<goal>revision</goal>
+						</goals>
+						<phase>initialize</phase>
+					</execution>
+				</executions>
+				<configuration>
+					<generateGitPropertiesFile>true</generateGitPropertiesFile>
+					<generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+                    <commitIdGenerationMode>full</commitIdGenerationMode>
+				</configuration>
+			</plugin>
+
+			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
 				<version>2.10.0</version>
@@ -390,6 +410,7 @@
 						<manifestEntries>
 							<Build-Jdk>${java.version}</Build-Jdk>
 							<Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>
+							<Git-Commit-ID>${git.commit.id.full}</Git-Commit-ID>
 						</manifestEntries>
 					</archive>
 				</configuration>
