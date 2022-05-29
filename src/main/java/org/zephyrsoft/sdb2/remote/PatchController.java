@@ -459,7 +459,7 @@ public class PatchController extends SongsModelController {
 		
 		try (OutputStream xmlOutputStream = new FileOutputStream(dbFile)) {
 			LOG.debug("writing db to file \"{}\" and db properties to file \"{}\"", dbFile.getAbsolutePath(), dbPropertiesFile.getAbsolutePath());
-			XMLConverter.fromPersistableToXML(db, xmlOutputStream);
+			XMLConverter.fromPersistableToXML(new SongsModel(db), xmlOutputStream);
 			
 			RemotePreferences remotePreferences = remoteController.getRemotePreferences();
 			Properties properties = new Properties();
