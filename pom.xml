@@ -46,13 +46,13 @@
 		<version.poi>5.2.2</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
-		<version.lucene>9.1.0</version.lucene>
+		<version.lucene>9.2.0</version.lucene>
 		<version.paho-mqtt>1.2.5</version.paho-mqtt>
 		<version.diff-match-patch>1.2</version.diff-match-patch>
 		<version.guava>31.1-jre</version.guava>
 		<version.gson>2.9.0</version.gson>
 		<version.junit>4.13.2</version.junit>
-		<version.mockito>4.5.1</version.mockito>
+		<version.mockito>4.6.0</version.mockito>
 		<version.jakarta-xml-bind-api>4.0.0</version.jakarta-xml-bind-api>
 		<version.jakarta-activation-api>2.1.0</version.jakarta-activation-api>
 		<version.glassfish-jaxb-runtime>3.0.1</version.glassfish-jaxb-runtime>
@@ -268,7 +268,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
-				<version>2.10.0</version>
+				<version>2.11.0</version>
 				<configuration>
 					<rulesUri>file:///${project.basedir}/rules.xml</rulesUri>
 				</configuration>
