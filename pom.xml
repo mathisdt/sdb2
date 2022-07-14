@@ -42,7 +42,7 @@
 		<version.commons-lang3>3.12.0</version.commons-lang3>
 		<version.commons-text>1.9</version.commons-text>
 		<version.togglz>3.1.1</version.togglz>
-		<version.itext>7.2.2</version.itext>
+		<version.itext>7.2.3</version.itext>
 		<version.poi>5.2.2</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
@@ -55,7 +55,7 @@
 		<version.mockito>4.6.1</version.mockito>
 		<version.jakarta-xml-bind-api>4.0.0</version.jakarta-xml-bind-api>
 		<version.jakarta-activation-api>2.1.0</version.jakarta-activation-api>
-		<version.glassfish-jaxb-runtime>3.0.1</version.glassfish-jaxb-runtime>
+		<version.glassfish-jaxb-runtime>4.0.0</version.glassfish-jaxb-runtime>
 	</properties>
 
 	<dependencyManagement>
@@ -349,7 +349,7 @@
 				<version>7.1.1</version>
 				<configuration>
 					<skip>${skipOwasp}</skip>
-					<failBuildOnCVSS>3</failBuildOnCVSS>
+					<failBuildOnCVSS>7</failBuildOnCVSS>
 					<failOnError>false</failOnError>
 					<suppressionFiles>
 						<suppressionFile>${basedir}/owasp-suppressions.xml</suppressionFile>
