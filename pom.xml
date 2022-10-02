@@ -43,7 +43,7 @@
 		<version.commons-text>1.9</version.commons-text>
 		<version.togglz>3.1.1</version.togglz>
 		<version.itext>7.2.3</version.itext>
-		<version.poi>5.2.2</version.poi>
+		<version.poi>5.2.3</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
 		<version.lucene>9.3.0</version.lucene>
