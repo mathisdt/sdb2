@@ -41,7 +41,7 @@ The Song Database is a program to show lyrics on a digital projector for worship
 - download the latest [SDB2 release](https://github.com/mathisdt/sdb2/releases/latest)
   (use the file named `sdb2-...` which corresponds to your system), unpack it
   and look for an executable in the `bin` subdirectory
-  - if you're on MacOS you have to install Java 11 or later by yourself and use `sdb2-without-jre.zip`
+  - if you're on MacOS you have to install Java 17 or later by yourself and use `sdb2-without-jre.zip`
 
 ## Contributing
 
