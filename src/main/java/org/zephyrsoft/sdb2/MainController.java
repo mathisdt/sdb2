@@ -570,6 +570,7 @@ public class MainController implements Scroller {
 		
 		putDefaultIfKeyIsUnset(SettingKey.SLIDE_SHOW_DIRECTORY, null);
 		putDefaultIfKeyIsUnset(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, Integer.valueOf(20));
+		putDefaultIfKeyIsUnset(SettingKey.FADE_TIME, Integer.valueOf(300));
 		
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_ENABLED, false);
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_PASSWORD, "");

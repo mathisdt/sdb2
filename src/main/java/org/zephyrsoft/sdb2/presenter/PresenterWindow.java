@@ -64,7 +64,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 	private final JPanel contentPane;
 	private SongView songView;
 	
-	private Animator fader = createFader();
+	private Animator fader;
 	
 	private final VirtualScreen virtualScreen;
 	private final SettingsModel settings;
@@ -100,6 +100,8 @@ public class PresenterWindow extends JFrame implements Presenter {
 		calculateScreenSize();
 		
 		setBounds(screenSize);
+		
+		fader = createFader();
 		
 		contentPane = new JPanel();
 		contentPane.setLayout(new BorderLayout(0, 0));
@@ -252,6 +254,9 @@ public class PresenterWindow extends JFrame implements Presenter {
 					// do nothing
 				}
 			}
+			if (fader.getDuration() != settings.get(SettingKey.FADE_TIME, Integer.class).longValue()) {
+				fader = createFader();
+			}
 			fader.addTarget(target);
 			fader.start();
 			try {
@@ -267,7 +272,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 	}
 	
 	private Animator createFader() {
-		return new Animator.Builder().setDuration(75, TimeUnit.MILLISECONDS).build();
+		return new Animator.Builder().setDuration(settings.get(SettingKey.FADE_TIME, Integer.class), TimeUnit.MILLISECONDS).build();
 	}
 	
 	private static Cursor getTransparentCursor() {

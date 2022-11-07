@@ -89,6 +89,8 @@ public enum SettingKey {
 	SLIDE_SHOW_DIRECTORY(String.class),
 	/** how long each picture should be displayed in slide show */
 	SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE(Integer.class),
+	/** how long is the fade-in/fade-out animation (in milliseconds) */
+	FADE_TIME(Integer.class),
 	/** if remote connection should be used */
 	REMOTE_ENABLED(Boolean.class),
 	/** server uri for remote connection */

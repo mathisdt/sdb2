@@ -289,6 +289,8 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	private JLabel lblStatus;
 	private JLabel lblGitCommitHash;
+	private JLabel lblFadeTime;
+	private JSpinner spinnerFadeTime;
 	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
@@ -545,6 +547,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		comboPresentationScreen2Contents.setSelectedItem(settingsModel.get(SettingKey.SCREEN_2_CONTENTS, ScreenContentsEnum.class));
 		setSpinnerValue(spinnerCountAsDisplayedAfter, settingsModel.get(SettingKey.SECONDS_UNTIL_COUNTED, Integer.class));
 		setSpinnerValue(spinnerSlideShowSeconds, settingsModel.get(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, Integer.class));
+		setSpinnerValue(spinnerFadeTime, settingsModel.get(SettingKey.FADE_TIME, Integer.class));
 		
 		checkboxRemoteEnabled.setSelected(settingsModel.get(SettingKey.REMOTE_ENABLED, Boolean.class));
 		textFieldRemoteServer.setText(settingsModel.get(SettingKey.REMOTE_SERVER, String.class));
@@ -580,7 +583,8 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		// only if the "unlock" button is disabled (which means that the settings were just edited)
 		if (btnUnlock != null && !btnUnlock.isEnabled() && settingsModel != null) {
 			commitSpinners(spinnerTopMargin, spinnerLeftMargin, spinnerRightMargin, spinnerBottomMargin,
-				spinnerDistanceTitleText, spinnerDistanceTextCopyright, spinnerCountAsDisplayedAfter, spinnerSlideShowSeconds);
+				spinnerDistanceTitleText, spinnerDistanceTextCopyright, spinnerCountAsDisplayedAfter, spinnerSlideShowSeconds,
+				spinnerFadeTime);
 			// disable controls
 			// copy changed settings to the model
 			settingsModel.put(SettingKey.MINIMAL_SCROLLING, checkboxMinimizeScrolling1.getModel().isSelected());
@@ -605,6 +609,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			settingsModel.put(SettingKey.SCREEN_2_CONTENTS, comboPresentationScreen2Contents.getSelectedItem());
 			settingsModel.put(SettingKey.SECONDS_UNTIL_COUNTED, spinnerCountAsDisplayedAfter.getValue());
 			settingsModel.put(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, spinnerSlideShowSeconds.getValue());
+			settingsModel.put(SettingKey.FADE_TIME, spinnerFadeTime.getValue());
 			
 			settingsModel.put(SettingKey.REMOTE_ENABLED, checkboxRemoteEnabled.getModel().isSelected());
 			settingsModel.put(SettingKey.REMOTE_SERVER, textFieldRemoteServer.getText());
@@ -915,6 +920,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		setEnabledIfNotNull(spinnerCountAsDisplayedAfter, enabled);
 		setEnabledIfNotNull(btnSlideShowDirectory, enabled);
 		setEnabledIfNotNull(spinnerSlideShowSeconds, enabled);
+		setEnabledIfNotNull(spinnerFadeTime, enabled);
 		setEnabledIfNotNull(checkboxRemoteEnabled, enabled);
 		setEnabledIfNotNull(textFieldRemoteServer, enabled);
 		setEnabledIfNotNull(textFieldRemoteUsername, enabled);
@@ -2290,10 +2296,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		scrollPaneSettings.setViewportView(panel);
 		GridBagLayout gblPanel = new GridBagLayout();
 		gblPanel.columnWidths = new int[] { 0, 0, 0, 0, 0, 0, 0 };
-		gblPanel.rowHeights = new int[] { 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 30, 0 };
+		gblPanel.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 		gblPanel.columnWeights = new double[] { 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0 };
 		gblPanel.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-			0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, Double.MIN_VALUE };
+			0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 		panel.setLayout(gblPanel);
 		
 		btnUnlock = new JButton("Unlock");
@@ -2579,6 +2585,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		panel.add(lblTopMargin, gbcLblTopMargin);
 		
 		spinnerTopMargin = new JSpinner();
+		mustBePositive(spinnerTopMargin, true);
 		GridBagConstraints gbcSpinnerTopMargin = new GridBagConstraints();
 		gbcSpinnerTopMargin.fill = GridBagConstraints.HORIZONTAL;
 		gbcSpinnerTopMargin.gridwidth = 3;
@@ -2596,6 +2603,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		panel.add(lblLeftMargin, gbcLblLeftMargin);
 		
 		spinnerLeftMargin = new JSpinner();
+		mustBePositive(spinnerLeftMargin, true);
 		GridBagConstraints gbcSpinnerLeftMargin = new GridBagConstraints();
 		gbcSpinnerLeftMargin.fill = GridBagConstraints.HORIZONTAL;
 		gbcSpinnerLeftMargin.gridwidth = 3;
@@ -2613,6 +2621,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		panel.add(lblRightMargin, gbcLblRightMargin);
 		
 		spinnerRightMargin = new JSpinner();
+		mustBePositive(spinnerRightMargin, true);
 		GridBagConstraints gbcSpinnerRightMargin = new GridBagConstraints();
 		gbcSpinnerRightMargin.fill = GridBagConstraints.HORIZONTAL;
 		gbcSpinnerRightMargin.gridwidth = 3;
@@ -2630,6 +2639,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		panel.add(lblBottomMargin, gbcLblBottomMargin);
 		
 		spinnerBottomMargin = new JSpinner();
+		mustBePositive(spinnerBottomMargin, true);
 		GridBagConstraints gbcSpinnerBottomMargin = new GridBagConstraints();
 		gbcSpinnerBottomMargin.fill = GridBagConstraints.HORIZONTAL;
 		gbcSpinnerBottomMargin.gridwidth = 3;
@@ -2665,6 +2675,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		panel.add(lblDistanceBetweenTitle, gbcLblDistanceBetweenTitle);
 		
 		spinnerDistanceTitleText = new JSpinner();
+		mustBePositive(spinnerDistanceTitleText, true);
 		GridBagConstraints gbcSpinnerDistanceTitleText = new GridBagConstraints();
 		gbcSpinnerDistanceTitleText.fill = GridBagConstraints.HORIZONTAL;
 		gbcSpinnerDistanceTitleText.gridwidth = 3;
@@ -2682,6 +2693,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		panel.add(lblDistanceBetweenText, gbcLblDistanceBetweenText);
 		
 		spinnerDistanceTextCopyright = new JSpinner();
+		mustBePositive(spinnerDistanceTextCopyright, true);
 		GridBagConstraints gbcSpinnerDistanceTextCopyright = new GridBagConstraints();
 		gbcSpinnerDistanceTextCopyright.fill = GridBagConstraints.HORIZONTAL;
 		gbcSpinnerDistanceTextCopyright.gridwidth = 3;
@@ -2811,6 +2823,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		panel.add(lblSecondsToCount, gbcLblSecondsToCount);
 		
 		spinnerCountAsDisplayedAfter = new JSpinner();
+		mustBePositive(spinnerCountAsDisplayedAfter, false);
 		GridBagConstraints gbcSpinnerCountAsDisplayedAfter = new GridBagConstraints();
 		gbcSpinnerCountAsDisplayedAfter.fill = GridBagConstraints.HORIZONTAL;
 		gbcSpinnerCountAsDisplayedAfter.gridwidth = 3;
@@ -2843,6 +2856,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		panel.add(lblSlideShowSeconds, gbc_lblSlideShowSeconds);
 		
 		spinnerSlideShowSeconds = new JSpinner();
+		mustBePositive(spinnerSlideShowSeconds, false);
 		GridBagConstraints gbc_spinnerSlideShowSeconds = new GridBagConstraints();
 		gbc_spinnerSlideShowSeconds.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerSlideShowSeconds.insets = new Insets(0, 0, 5, 5);
@@ -2850,12 +2864,29 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_spinnerSlideShowSeconds.gridy = 25;
 		panel.add(spinnerSlideShowSeconds, gbc_spinnerSlideShowSeconds);
 		
+		lblFadeTime = new JLabel("Fade time in milliseconds");
+		GridBagConstraints gbc_lblFadeTime = new GridBagConstraints();
+		gbc_lblFadeTime.anchor = GridBagConstraints.EAST;
+		gbc_lblFadeTime.insets = new Insets(0, 0, 5, 5);
+		gbc_lblFadeTime.gridx = 1;
+		gbc_lblFadeTime.gridy = 26;
+		panel.add(lblFadeTime, gbc_lblFadeTime);
+		
+		spinnerFadeTime = new JSpinner();
+		mustBePositive(spinnerFadeTime, false);
+		GridBagConstraints gbc_spinnerFadeTime = new GridBagConstraints();
+		gbc_spinnerFadeTime.fill = GridBagConstraints.HORIZONTAL;
+		gbc_spinnerFadeTime.insets = new Insets(0, 0, 5, 5);
+		gbc_spinnerFadeTime.gridx = 3;
+		gbc_spinnerFadeTime.gridy = 26;
+		panel.add(spinnerFadeTime, gbc_spinnerFadeTime);
+		
 		lblRemoteEnabled = new JLabel("Remote enabled");
 		GridBagConstraints gbc_lblRemoteEnabled = new GridBagConstraints();
 		gbc_lblRemoteEnabled.anchor = GridBagConstraints.EAST;
 		gbc_lblRemoteEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemoteEnabled.gridx = 1;
-		gbc_lblRemoteEnabled.gridy = 26;
+		gbc_lblRemoteEnabled.gridy = 27;
 		panel.add(lblRemoteEnabled, gbc_lblRemoteEnabled);
 		
 		checkboxRemoteEnabled = new JCheckBox();
@@ -2863,7 +2894,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_checkboxRemoteEnabled.fill = GridBagConstraints.HORIZONTAL;
 		gbc_checkboxRemoteEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_checkboxRemoteEnabled.gridx = 3;
-		gbc_checkboxRemoteEnabled.gridy = 26;
+		gbc_checkboxRemoteEnabled.gridy = 27;
 		panel.add(checkboxRemoteEnabled, gbc_checkboxRemoteEnabled);
 		
 		lblRemoteServer = new JLabel("Remote server");
@@ -2871,7 +2902,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemoteServer.anchor = GridBagConstraints.EAST;
 		gbc_lblRemoteServer.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemoteServer.gridx = 1;
-		gbc_lblRemoteServer.gridy = 27;
+		gbc_lblRemoteServer.gridy = 28;
 		panel.add(lblRemoteServer, gbc_lblRemoteServer);
 		
 		textFieldRemoteServer = new JTextField();
@@ -2879,7 +2910,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_textFieldRemoteServer.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemoteServer.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemoteServer.gridx = 3;
-		gbc_textFieldRemoteServer.gridy = 27;
+		gbc_textFieldRemoteServer.gridy = 28;
 		panel.add(textFieldRemoteServer, gbc_textFieldRemoteServer);
 		
 		lblRemoteUsername = new JLabel("Remote username");
@@ -2887,7 +2918,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemoteUsername.anchor = GridBagConstraints.EAST;
 		gbc_lblRemoteUsername.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemoteUsername.gridx = 1;
-		gbc_lblRemoteUsername.gridy = 28;
+		gbc_lblRemoteUsername.gridy = 29;
 		panel.add(lblRemoteUsername, gbc_lblRemoteUsername);
 		
 		textFieldRemoteUsername = new JTextField();
@@ -2895,7 +2926,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_textFieldRemoteUsername.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemoteUsername.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemoteUsername.gridx = 3;
-		gbc_textFieldRemoteUsername.gridy = 28;
+		gbc_textFieldRemoteUsername.gridy = 29;
 		panel.add(textFieldRemoteUsername, gbc_textFieldRemoteUsername);
 		
 		lblRemotePassword = new JLabel("Remote password");
@@ -2903,7 +2934,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemotePassword.anchor = GridBagConstraints.EAST;
 		gbc_lblRemotePassword.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemotePassword.gridx = 1;
-		gbc_lblRemotePassword.gridy = 29;
+		gbc_lblRemotePassword.gridy = 30;
 		panel.add(lblRemotePassword, gbc_lblRemotePassword);
 		
 		textFieldRemotePassword = new JTextField();
@@ -2911,7 +2942,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_textFieldRemotePassword.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemotePassword.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemotePassword.gridx = 3;
-		gbc_textFieldRemotePassword.gridy = 29;
+		gbc_textFieldRemotePassword.gridy = 30;
 		panel.add(textFieldRemotePassword, gbc_textFieldRemotePassword);
 		
 		lblRemotePrefix = new JLabel("Remote prefix");
@@ -2919,7 +2950,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemotePrefix.anchor = GridBagConstraints.EAST;
 		gbc_lblRemotePrefix.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemotePrefix.gridx = 1;
-		gbc_lblRemotePrefix.gridy = 30;
+		gbc_lblRemotePrefix.gridy = 31;
 		panel.add(lblRemotePrefix, gbc_lblRemotePrefix);
 		
 		textFieldRemotePrefix = new JTextField();
@@ -2927,7 +2958,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_textFieldRemotePrefix.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemotePrefix.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemotePrefix.gridx = 3;
-		gbc_textFieldRemotePrefix.gridy = 30;
+		gbc_textFieldRemotePrefix.gridy = 31;
 		panel.add(textFieldRemotePrefix, gbc_textFieldRemotePrefix);
 		
 		lblRemoteRoom = new JLabel("Remote room");
@@ -2935,7 +2966,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemoteRoom.anchor = GridBagConstraints.EAST;
 		gbc_lblRemoteRoom.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemoteRoom.gridx = 1;
-		gbc_lblRemoteRoom.gridy = 31;
+		gbc_lblRemoteRoom.gridy = 32;
 		panel.add(lblRemoteRoom, gbc_lblRemoteRoom);
 		
 		textFieldRemoteRoom = new JTextField();
@@ -2943,7 +2974,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_textFieldRemoteRoom.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemoteRoom.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemoteRoom.gridx = 3;
-		gbc_textFieldRemoteRoom.gridy = 31;
+		gbc_textFieldRemoteRoom.gridy = 32;
 		panel.add(textFieldRemoteRoom, gbc_textFieldRemoteRoom);
 		
 		glassPane = (Container) getGlassPane();
@@ -2971,6 +3002,16 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		setRemoteStatus(RemoteStatus.OFF);
 		
 		afterConstruction();
+	}
+	
+	private void mustBePositive(JSpinner spinner, boolean zeroAllowed) {
+		spinner.getModel().addChangeListener(e -> {
+			if (zeroAllowed && ((Number) spinner.getValue()).intValue() < 0) {
+				spinner.setValue(0);
+			} else if (!zeroAllowed && ((Number) spinner.getValue()).intValue() < 1) {
+				spinner.setValue(1);
+			}
+		});
 	}
 	
 	public void setRemoteStatus(RemoteStatus status) {
