@@ -26,6 +26,7 @@ public enum Feature implements org.togglz.core.Feature {
 	@Label("highlight filter matches in song list")
 	HIGHLIGHT_FILTER_MATCHES;
 	
+	@Override
 	public boolean isActive() {
 		return FeatureContext.getFeatureManager().isActive(this);
 	}

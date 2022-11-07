@@ -93,21 +93,11 @@ public class PresenterWindow extends JFrame implements Presenter {
 		transparentCursor = getTransparentCursor();
 		setCursor(transparentCursor);
 		
-		GraphicsConfiguration graphicsConfiguration = ScreenHelper.getConfiguration(screen);
-		if (graphicsConfiguration == null) {
-			throw new IllegalStateException("please check cables and configuration - could not use " + screen.getDescription());
-		}
-		
 		// remove window decorations
 		setUndecorated(true);
 		getRootPane().setWindowDecorationStyle(JRootPane.NONE);
 		
-		Rectangle screenSizeUntransformed = graphicsConfiguration.getBounds();
-		Rectangle2D screenSizeTransformed = graphicsConfiguration.getDefaultTransform().createTransformedShape(screenSizeUntransformed).getBounds2D();
-		int width = (int) screenSizeTransformed.getMaxX() - (int) screenSizeTransformed.getMinX();
-		int height = (int) screenSizeTransformed.getMaxY() - (int) screenSizeTransformed.getMinY();
-		screenSize = new Rectangle((int) screenSizeTransformed.getMinX(), (int) screenSizeTransformed.getMinY(), width, height);
-		// screenSize = graphicsConfiguration.getBounds();
+		calculateScreenSize();
 		
 		setBounds(screenSize);
 		
@@ -127,6 +117,19 @@ public class PresenterWindow extends JFrame implements Presenter {
 		setContent(presentable);
 	}
 	
+	private void calculateScreenSize() {
+		GraphicsConfiguration graphicsConfiguration = ScreenHelper.getConfiguration(screen);
+		if (graphicsConfiguration == null) {
+			throw new IllegalStateException("please check cables and configuration - could not use " + screen.getDescription());
+		}
+		Rectangle screenSizeUntransformed = graphicsConfiguration.getBounds();
+		Rectangle2D screenSizeTransformed = graphicsConfiguration.getDefaultTransform().createTransformedShape(screenSizeUntransformed).getBounds2D();
+		int width = (int) screenSizeTransformed.getMaxX() - (int) screenSizeTransformed.getMinX();
+		int height = (int) screenSizeTransformed.getMaxY() - (int) screenSizeTransformed.getMinY();
+		screenSize = new Rectangle((int) screenSizeTransformed.getMinX(), (int) screenSizeTransformed.getMinY(), width, height);
+		// screenSize = graphicsConfiguration.getBounds();
+	}
+	
 	private Color setBackgroundColor(VirtualScreen virtualScreen, SettingsModel settings) {
 		Color backgroundColor = virtualScreen.getBackgroundColor(settings);
 		if (!Objects.equals(backgroundColor, getBackground())) {
@@ -140,6 +143,11 @@ public class PresenterWindow extends JFrame implements Presenter {
 	
 	public boolean metadataMatches(SelectableDisplay otherScreen, VirtualScreen otherVirtualScreen) {
 		return screen.equals(otherScreen) && virtualScreen.equals(otherVirtualScreen);
+	}
+	
+	public boolean screenSizeMatches() {
+		calculateScreenSize();
+		return getBounds().equals(screenSize);
 	}
 	
 	@Override
@@ -156,7 +164,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 			contentPane.removeAll();
 			
 			Color backgroundColor = setBackgroundColor(virtualScreen, settings);
-			if (getGlassPane()instanceof TranslucentPanel tp
+			if (getGlassPane() instanceof TranslucentPanel tp
 				&& !Objects.equals(backgroundColor, tp.getBaseColor())) {
 				tp.setBaseColor(backgroundColor);
 			}
@@ -217,6 +225,8 @@ public class PresenterWindow extends JFrame implements Presenter {
 			}
 			validate();
 		});
+		
+		toFront();
 		
 		fadeIn();
 		

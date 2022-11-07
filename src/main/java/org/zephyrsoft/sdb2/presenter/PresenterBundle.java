@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import org.zephyrsoft.sdb2.model.AddressablePart;
+import org.zephyrsoft.sdb2.remote.RemotePresenter;
 
 /**
  * Provide control over any number of running presenter windows.
@@ -35,6 +36,12 @@ public class PresenterBundle implements Presenter {
 	
 	public List<Presenter> getPresenters() {
 		return Collections.unmodifiableList(presenters);
+	}
+	
+	public List<Presenter> getScreenPresenters() {
+		return Collections.unmodifiableList(presenters.stream()
+			.filter(p -> !(p instanceof RemotePresenter))
+			.toList());
 	}
 	
 	@Override

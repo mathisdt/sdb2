@@ -196,7 +196,7 @@ public class MainController implements Scroller {
 		
 		boolean enableChanged = settings.get(SettingKey.REMOTE_ENABLED, Boolean.class) != (remoteController != null);
 		if (enableChanged || (remotePreferences != null && remotePreferences.equals(new SDB2RemotePreferences(settings))))
-			new Thread(() -> initRemoteController()).start();
+			new Thread(this::initRemoteController).start();
 	}
 	
 	/** called from constructor of {@link MainWindow} */
@@ -217,20 +217,31 @@ public class MainController implements Scroller {
 		SelectableDisplay screen1 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class));
 		SelectableDisplay screen2 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class));
 		
-		int presentersConfigured = (settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class) != null ? 1 : 0)
-			+ (settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class) != null ? 1 : 0)
-			+ (remoteController != null ? 1 : 0);
+		int screenPresentersConfigured = (settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class) != null ? 1 : 0)
+			+ (settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class) != null ? 1 : 0);
+		List<Presenter> screenPresenters = presentationControl == null
+			? null
+			: presentationControl.getScreenPresenters();
+		
 		if (presentationControl != null
-			&& presentationControl.getPresenters().size() == presentersConfigured
-			&& (presentationControl.getPresenters().isEmpty() ||
-				(presentationControl.getPresenters().get(0) instanceof PresenterWindow pw
-					&& pw.metadataMatches(screen1, VirtualScreen.SCREEN_A)))
-			&& (presentationControl.getPresenters().size() <= 2 ||
-				(presentationControl.getPresenters().get(1) instanceof PresenterWindow pw
-					&& pw.metadataMatches(screen2, VirtualScreen.SCREEN_B)))) {
+			&& screenPresenters != null
+			&& screenPresenters.size() == screenPresentersConfigured
+			&& (screenPresenters.isEmpty() ||
+				(screenPresenters.get(0) instanceof PresenterWindow pw
+					&& pw.metadataMatches(screen1, VirtualScreen.SCREEN_A)
+					&& pw.screenSizeMatches()))
+			&& (screenPresenters.size() < 2 ||
+				(screenPresenters.get(1) instanceof PresenterWindow pw
+					&& pw.metadataMatches(screen2, VirtualScreen.SCREEN_B)
+					&& pw.screenSizeMatches()))) {
 			LOG.trace("re-using the existing presenters");
 			currentlyPresentedSong = presentable.getSong();
 			presentationControl.setContent(presentable);
+			
+			// the presentation windows were moved to front and got the focus because of that,
+			// so we need to get the focus back to the main window:
+			mainWindow.toFront();
+			
 			return true;
 		} else {
 			LOG.trace("using newly created presenters");
@@ -409,7 +420,7 @@ public class MainController implements Scroller {
 	public boolean closeRemoteController() {
 		if (remoteController != null) {
 			setRemoteStatus(RemoteStatus.DISCONNECTING);
-			if (songsController != null && songsController instanceof PatchController) {
+			if (songsController instanceof PatchController) {
 				songsController.close();
 				songsController = new SongsModelController(songs);
 			}
