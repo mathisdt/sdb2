@@ -35,7 +35,7 @@
 
 		<!-- dependency versions -->
 		<version.spring>6.0.4</version.spring>
-		<version.slf4j>2.0.5</version.slf4j>
+		<version.slf4j>2.0.6</version.slf4j>
 		<version.logback>1.4.5</version.logback>
 		<version.log4j>2.19.0</version.log4j>
 		<version.args4j>2.33</version.args4j>
@@ -52,7 +52,7 @@
 		<version.guava>31.1-jre</version.guava>
 		<version.gson>2.10</version.gson>
 		<version.junit>4.13.2</version.junit>
-		<version.mockito>4.9.0</version.mockito>
+		<version.mockito>4.11.0</version.mockito>
 		<version.jakarta-xml-bind-api>4.0.0</version.jakarta-xml-bind-api>
 		<version.jakarta-activation-api>2.1.0</version.jakarta-activation-api>
 		<version.glassfish-jaxb-runtime>4.0.1</version.glassfish-jaxb-runtime>
@@ -263,7 +263,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
-				<version>2.13.0</version>
+				<version>2.14.2</version>
 				<configuration>
 					<rulesUri>file:///${project.basedir}/rules.xml</rulesUri>
 				</configuration>
@@ -341,7 +341,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>7.3.2</version>
+				<version>7.4.3</version>
 				<configuration>
 					<skip>${skipOwasp}</skip>
 					<failBuildOnCVSS>7</failBuildOnCVSS>
