@@ -424,9 +424,12 @@ public class MainController implements Scroller {
 				songsController.close();
 				songsController = new SongsModelController(songs);
 			}
-			if (presentationControl != null)
+			if (presentationControl != null) {
 				presentationControl.removeIf(p -> p instanceof RemotePresenter);
-			mqtt.close();
+			}
+			if (mqtt != null) {
+				mqtt.close();
+			}
 			remoteController = null;
 			mqtt = null;
 			setRemoteStatus(RemoteStatus.OFF);
