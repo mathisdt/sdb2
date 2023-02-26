@@ -55,7 +55,7 @@
 		<version.mockito>5.1.1</version.mockito>
 		<version.jakarta-xml-bind-api>4.0.0</version.jakarta-xml-bind-api>
 		<version.jakarta-activation-api>2.1.1</version.jakarta-activation-api>
-		<version.glassfish-jaxb-runtime>4.0.1</version.glassfish-jaxb-runtime>
+		<version.glassfish-jaxb-runtime>4.0.2</version.glassfish-jaxb-runtime>
 	</properties>
 
 	<dependencyManagement>
