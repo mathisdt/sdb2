@@ -95,7 +95,11 @@ public class FileAndDirectoryLocations {
 	}
 	
 	public static String getSongsBackupDir() {
-		return getDir(getSongsDir() + File.separator + SONGS_BACKUP_SUBDIR_STRING, false);
+		if (Options.getInstance().getSongsBackupDir() == null) {
+			return getDir(getSongsDir() + File.separator + SONGS_BACKUP_SUBDIR_STRING, false);
+		} else {
+			return getDir(Options.getInstance().getSongsBackupDir(), false);
+		}
 	}
 	
 	public static String getSongsBackupFile() {

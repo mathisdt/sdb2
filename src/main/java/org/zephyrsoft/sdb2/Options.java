@@ -37,6 +37,9 @@ public enum Options {
 	@Option(name = "--songs", aliases = "-song", metaVar = "<DIR>", usage = "use this directory as songs storage (optional, the default is ~/.songdatabase/songs/)")
 	private String songsDir = null;
 	
+	@Option(name = "--songs-backup", aliases = "-songback", metaVar = "<DIR>", usage = "use this directory as songs backup storage (optional, the default is ~/.songdatabase/songs/backup/)")
+	private String songsBackupDir = null;
+	
 	@Option(name = "--settings", aliases = "-sett", metaVar = "<DIR>", usage = "use this directory as settings storage (optional, the default is ~/.songdatabase/settings/)")
 	private String settingsDir = null;
 	
@@ -72,6 +75,14 @@ public enum Options {
 	
 	private void setSongsDir(String songsDir) {
 		this.songsDir = songsDir;
+	}
+	
+	public String getSongsBackupDir() {
+		return songsBackupDir;
+	}
+	
+	private void setSongsBackupDir(String songsBackupDir) {
+		this.songsBackupDir = songsBackupDir;
 	}
 	
 	public String getSettingsDir() {
