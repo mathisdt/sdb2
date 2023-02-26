@@ -31,6 +31,22 @@ public enum Options {
 	@Option(name = "--help", aliases = { "-help", "-h" }, usage = "display a short description of the available command line options (this message)")
 	private boolean help = false;
 	
+	@Option(name = "--statistics", aliases = "-stat", metaVar = "<DIR>", usage = "use this directory as statistics storage (optional, the default is ~/.songdatabase/statistics/)")
+	private String statisticsDir = null;
+	
+	@Option(name = "--songs", aliases = "-song", metaVar = "<DIR>", usage = "use this directory as songs storage (optional, the default is ~/.songdatabase/songs/)")
+	private String songsDir = null;
+	
+	@Option(name = "--settings", aliases = "-sett", metaVar = "<DIR>", usage = "use this directory as settings storage (optional, the default is ~/.songdatabase/settings/)")
+	private String settingsDir = null;
+	
+	@Option(name = "--logs", aliases = "-logs", metaVar = "<DIR>", usage = "use this directory as logs storage (optional, the default is ~/.songdatabase/log/)")
+	private String logsDir = null;
+	
+	/** this is used when remote control (via MQTT) is active */
+	@Option(name = "--database", aliases = "-db", metaVar = "<DIR>", usage = "use this directory as database storage (optional, the default is ~/.songdatabase/db/)")
+	private String databaseDir = null;
+	
 	@Argument(metaVar = "<FILE>", usage = "use this file to load from and save to (optional, the default is ~/.songdatabase/songs/songs.xml)")
 	private String songsFile = null;
 	
@@ -42,12 +58,51 @@ public enum Options {
 		this.help = help;
 	}
 	
+	public String getStatisticsDir() {
+		return statisticsDir;
+	}
+	
+	private void setStatisticsDir(String statisticsDir) {
+		this.statisticsDir = statisticsDir;
+	}
+	
+	public String getSongsDir() {
+		return songsDir;
+	}
+	
+	private void setSongsDir(String songsDir) {
+		this.songsDir = songsDir;
+	}
+	
+	public String getSettingsDir() {
+		return settingsDir;
+	}
+	
+	private void setSettingsDir(String settingsDir) {
+		this.settingsDir = settingsDir;
+	}
+	
+	public String getLogsDir() {
+		return logsDir;
+	}
+	
+	private void setLogsDir(String logsDir) {
+		this.logsDir = logsDir;
+	}
+	
+	public String getDatabaseDir() {
+		return databaseDir;
+	}
+	
+	private void setDatabaseDir(String databaseDir) {
+		this.databaseDir = databaseDir;
+	}
+	
 	public String getSongsFile() {
 		return songsFile;
 	}
 	
-	public void setSongsFile(String songsFile) {
+	private void setSongsFile(String songsFile) {
 		this.songsFile = songsFile;
 	}
-	
 }

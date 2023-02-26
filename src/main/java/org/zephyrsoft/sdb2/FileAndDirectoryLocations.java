@@ -25,20 +25,22 @@ import org.zephyrsoft.sdb2.util.DateTools;
  */
 public class FileAndDirectoryLocations {
 	
-	public static final String BASE_DIR_STRING = System.getProperty("user.home") + File.separator + ".songdatabase";
-	public static final String SONGS_SUBDIR_STRING = "songs";
-	public static final String BACKUP_SUBDIR_STRING = "backup";
-	public static final String SONGS_FILE_STRING = "songs.xml";
-	public static final String SONGS_BACKUP_FILE_STRING = "songs-%s.xml";
-	public static final String SETTINGS_SUBDIR_STRING = "settings";
-	public static final String SETTINGS_FILE_STRING = "settings.xml";
-	public static final String SETTINGS_FALLBACK_FILE_STRING = "settings-fallback.xml";
-	public static final String STATISTICS_SUBDIR_STRING = "statistics";
-	public static final String STATISTICS_FILE_STRING = "statistics.xml";
-	public static final String LOG_SUBDIR_STRING = "log";
-	public static final String DB_SUBDIR_STRING = "db";
-	public static final String DB_FILE_STRING = "db.xml";
-	public static final String DB_PROPERTIES_FILE_STRING = "db.properties.xml";
+	private static final String BASE_DIR_STRING = System.getProperty("user.home") + File.separator + ".songdatabase";
+	
+	private static final String SONGS_SUBDIR_STRING = "songs";
+	private static final String SONGS_BACKUP_SUBDIR_STRING = "backup";
+	private static final String SETTINGS_SUBDIR_STRING = "settings";
+	private static final String STATISTICS_SUBDIR_STRING = "statistics";
+	private static final String LOG_SUBDIR_STRING = "log";
+	private static final String DB_SUBDIR_STRING = "db";
+	
+	private static final String SONGS_FILE_STRING = "songs.xml";
+	private static final String SONGS_BACKUP_FILE_STRING = "songs-%s.xml";
+	private static final String SETTINGS_FILE_STRING = "settings.xml";
+	private static final String SETTINGS_FALLBACK_FILE_STRING = "settings-fallback.xml";
+	private static final String STATISTICS_FILE_STRING = "statistics.xml";
+	private static final String DB_FILE_STRING = "db.xml";
+	private static final String DB_PROPERTIES_FILE_STRING = "db.properties.xml";
 	
 	public static String getDefaultSongsFileName() {
 		return getSongsDir() + File.separator + SONGS_FILE_STRING;
@@ -49,7 +51,7 @@ public class FileAndDirectoryLocations {
 	 */
 	public static String getSongsFileName(String fileName) {
 		if (StringUtils.isBlank(fileName)) {
-			return FileAndDirectoryLocations.getDefaultSongsFileName();
+			return getDefaultSongsFileName();
 		} else {
 			return fileName;
 		}
@@ -75,41 +77,60 @@ public class FileAndDirectoryLocations {
 		return getStatisticsDir() + File.separator + STATISTICS_FILE_STRING;
 	}
 	
+	/** this is used when remote control (via MQTT) is active */
 	private static String getDBDir() {
-		return getDir(DB_SUBDIR_STRING);
+		if (Options.getInstance().getDatabaseDir() == null) {
+			return getDir(DB_SUBDIR_STRING, true);
+		} else {
+			return getDir(Options.getInstance().getDatabaseDir(), false);
+		}
 	}
 	
 	private static String getSongsDir() {
-		return getDir(SONGS_SUBDIR_STRING);
+		if (Options.getInstance().getSongsDir() == null) {
+			return getDir(SONGS_SUBDIR_STRING, true);
+		} else {
+			return getDir(Options.getInstance().getSongsDir(), false);
+		}
 	}
 	
 	public static String getSongsBackupDir() {
-		return getDir(SONGS_SUBDIR_STRING + File.separator + BACKUP_SUBDIR_STRING);
+		return getDir(getSongsDir() + File.separator + SONGS_BACKUP_SUBDIR_STRING, false);
 	}
 	
 	public static String getSongsBackupFile() {
-		return getDir(SONGS_SUBDIR_STRING + File.separator + BACKUP_SUBDIR_STRING)
-			+ File.separator + String.format(SONGS_BACKUP_FILE_STRING, DateTools.timestamp());
+		return getSongsBackupDir() + File.separator + String.format(SONGS_BACKUP_FILE_STRING, DateTools.timestamp());
 	}
 	
 	private static String getSettingsDir() {
-		return getDir(SETTINGS_SUBDIR_STRING);
+		if (Options.getInstance().getSettingsDir() == null) {
+			return getDir(SETTINGS_SUBDIR_STRING, true);
+		} else {
+			return getDir(Options.getInstance().getSettingsDir(), false);
+		}
 	}
 	
 	private static String getStatisticsDir() {
-		return getDir(STATISTICS_SUBDIR_STRING);
+		if (Options.getInstance().getStatisticsDir() == null) {
+			return getDir(STATISTICS_SUBDIR_STRING, true);
+		} else {
+			return getDir(Options.getInstance().getStatisticsDir(), false);
+		}
 	}
 	
 	/**
-	 * This method is only for telling the user where the log file resides! Configuration of log writing is subject to
-	 * the log framework's config files!
+	 * This method also provides the actual log directory to Logback (via {@code Options.getPropertyValue()}).
 	 */
 	public static String getLogDir() {
-		return getDir(LOG_SUBDIR_STRING);
+		if (Options.getInstance().getLogsDir() == null) {
+			return getDir(LOG_SUBDIR_STRING, true);
+		} else {
+			return getDir(Options.getInstance().getLogsDir(), false);
+		}
 	}
 	
-	private static String getDir(String subDirectory) {
-		String path = BASE_DIR_STRING + File.separator + subDirectory;
+	private static String getDir(String subDirectory, boolean prependBaseDir) {
+		String path = (prependBaseDir ? BASE_DIR_STRING + File.separator : "") + subDirectory;
 		File dir = new File(path);
 		if (!dir.exists()) {
 			dir.mkdirs();

@@ -1,10 +1,13 @@
 <configuration>
 
+	<!-- fetch log directory which can be set via command line option -->
+	<define name="baseDirectory" class="org.zephyrsoft.sdb2.util.LogbackBaseDirectoryProvider" />
+
 	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${user.home}/.songdatabase/log/sdb.log</file>
+		<file>${baseDirectory}/sdb.log</file>
 
 		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-			<fileNamePattern>${user.home}/.songdatabase/log/sdb.%i.log</fileNamePattern>
+			<fileNamePattern>${baseDirectory}/sdb.%i.log</fileNamePattern>
 			<minIndex>1</minIndex>
 			<maxIndex>9</maxIndex>
 		</rollingPolicy>
@@ -25,6 +28,7 @@
 	</appender>
 
 	<logger name="org.springframework" level="WARN" />
+	<logger name="org.apache.poi" level="WARN" />
 
 	<root level="DEBUG">
 		<appender-ref ref="FILE" />

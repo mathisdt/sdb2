@@ -31,16 +31,12 @@ import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
  */
 public final class Start {
 	
-	private static final Logger LOG = LoggerFactory.getLogger(Start.class);
-	
 	public static void main(String[] args) {
 		new Start(args);
 	}
 	
 	@SuppressWarnings("resource")
 	private Start(String[] args) {
-		LOG.debug("starting application");
-		
 		Options options = Options.getInstance();
 		
 		// parse command line arguments
@@ -52,20 +48,26 @@ public final class Start {
 			options.setHelp(true);
 		}
 		
+		// this is not a class-wide static logger and it's created here (after the "parser.parseArgument()" call)
+		// because the logging system has to be initialized *after* parsing the arguments into the Options instance
+		// or else the log directory command line option could never have any effect, it would be too late
+		Logger log = LoggerFactory.getLogger(Start.class);
+		log.debug("starting application");
+		
 		if (options.isHelp()) {
 			System.err.println("The available options are:");
 			parser.printUsage(System.err);
 		} else {
 			try {
-				LOG.debug("default file encoding is {}", Charset.defaultCharset().displayName());
-				LOG.debug("default time zone is {}", ZoneId.systemDefault().getId());
-				LOG.debug("application version is {}", VersionTools.getCurrent());
-				LOG.debug("application commit hash is {}", VersionTools.getGitCommitHash());
+				log.debug("default file encoding is {}", Charset.defaultCharset().displayName());
+				log.debug("default time zone is {}", ZoneId.systemDefault().getId());
+				log.debug("application version is {}", VersionTools.getCurrent());
+				log.debug("application commit hash is {}", VersionTools.getGitCommitHash());
 				
-				LOG.debug("loading application context");
+				log.debug("loading application context");
 				new AnnotationConfigApplicationContext(SpringConfiguration.class);
 			} catch (Exception e) {
-				LOG.error("problem while starting up the application", e);
+				log.error("problem while starting up the application", e);
 				ErrorDialog.openDialogBlocking(null, "There was a problem while starting the Song Database:\n\n"
 					+ e.getMessage()
 					+ "\n\nThis is a fatal error, exiting.\n"

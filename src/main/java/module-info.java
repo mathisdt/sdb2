@@ -1,6 +1,7 @@
 open module org.zephyrsoft.sdb2 {
 	
 	requires org.slf4j;
+	requires ch.qos.logback.core;
 	requires org.apache.commons.lang3;
 	requires org.apache.commons.text;
 	requires com.google.common;
