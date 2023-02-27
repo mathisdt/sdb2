@@ -32,11 +32,6 @@ jobs:
         run: TZ=Europe/Berlin xvfb-run mvn clean verify
       - name: Build distributions
         run: ./build-jre-distributions.sh
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: artifacts
-          path: target/*.zip
       - name: Collect release metadata
         if: github.ref == 'refs/heads/master'
         id: collect_release_metadata
@@ -47,43 +42,13 @@ jobs:
       - name: Create release
         if: github.ref == 'refs/heads/master'
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: release-${{ env.release_timestamp_terse }}-${{ env.release_hash }}
-          release_name: Release ${{ env.release_timestamp }}
+          name: Release ${{ env.release_timestamp }}
           body: built from commit ${{ env.release_hash }}
-      - name: Upload release artifact 1 (just the application)
-        if: github.ref == 'refs/heads/master'
-        id: upload-release-asset-1
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/sdb2-without-jre.zip
-          asset_name: sdb2-without-jre.zip
-          asset_content_type: application/zip
-      - name: Upload release artifact 2 (Linux bundle)
-        if: github.ref == 'refs/heads/master'
-        id: upload-release-asset-2
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/sdb2-bundle-linux.zip
-          asset_name: sdb2-bundle-linux.zip
-          asset_content_type: application/zip
-      - name: Upload release artifact 3 (Windows bundle)
-        if: github.ref == 'refs/heads/master'
-        id: upload-release-asset-3
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: target/sdb2-bundle-windows.zip
-          asset_name: sdb2-bundle-windows.zip
-          asset_content_type: application/zip
+          tag_name: release-${{ env.release_timestamp_terse }}-${{ env.release_hash }}
+          files: |
+            target/sdb2-without-jre.zip
+            target/sdb2-bundle-linux.zip
+            target/sdb2-bundle-windows.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
