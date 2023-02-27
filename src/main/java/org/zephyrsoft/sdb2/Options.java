@@ -46,6 +46,9 @@ public enum Options {
 	@Option(name = "--logs", aliases = "-logs", metaVar = "<DIR>", usage = "use this directory as logs storage (optional, the default is ~/.songdatabase/log/)")
 	private String logsDir = null;
 	
+	@Option(name = "--logs-rollover", aliases = "-logsroll", metaVar = "<DIR>", usage = "use this directory as older logs storage (optional, the default is ~/.songdatabase/log/)")
+	private String logsRolloverDir = null;
+	
 	/** this is used when remote control (via MQTT) is active */
 	@Option(name = "--database", aliases = "-db", metaVar = "<DIR>", usage = "use this directory as database storage (optional, the default is ~/.songdatabase/db/)")
 	private String databaseDir = null;
@@ -99,6 +102,14 @@ public enum Options {
 	
 	private void setLogsDir(String logsDir) {
 		this.logsDir = logsDir;
+	}
+	
+	public String getLogsRolloverDir() {
+		return logsRolloverDir;
+	}
+	
+	private void setLogsRolloverDir(String logsRolloverDir) {
+		this.logsRolloverDir = logsRolloverDir;
 	}
 	
 	public String getDatabaseDir() {

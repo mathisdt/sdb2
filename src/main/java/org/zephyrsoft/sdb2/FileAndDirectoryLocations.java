@@ -123,13 +123,25 @@ public class FileAndDirectoryLocations {
 	}
 	
 	/**
-	 * This method also provides the actual log directory to Logback (via {@code Options.getPropertyValue()}).
+	 * This method provides the actual log directory to Logback (via {@code Options.getPropertyValue()}).
 	 */
 	public static String getLogDir() {
 		if (Options.getInstance().getLogsDir() == null) {
 			return getDir(LOG_SUBDIR_STRING, true);
 		} else {
 			return getDir(Options.getInstance().getLogsDir(), false);
+		}
+	}
+	
+	/**
+	 * This method provides the actual log rollover directory to Logback (via {@code Options.getPropertyValue()}).
+	 */
+	public static String getLogRolloverDir() {
+		if (Options.getInstance().getLogsRolloverDir() == null) {
+			// default: same directory as the current log file
+			return getDir(LOG_SUBDIR_STRING, true);
+		} else {
+			return getDir(Options.getInstance().getLogsRolloverDir(), false);
 		}
 	}
 	

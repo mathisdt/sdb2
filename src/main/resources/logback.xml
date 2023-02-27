@@ -1,20 +1,19 @@
 <configuration>
 
-	<!-- fetch log directory which can be set via command line option -->
+	<!-- fetch log directories which can be set via command line options -->
 	<define name="baseDirectory" class="org.zephyrsoft.sdb2.util.LogbackBaseDirectoryProvider" />
+	<define name="rolloverDirectory" class="org.zephyrsoft.sdb2.util.LogbackRolloverDirectoryProvider" />
 
 	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<!-- if <file> is omitted here, the currently active log file will also be in the rolloverDirectory and
+		     have a date in its name as defined in <fileNamePattern> below -->
 		<file>${baseDirectory}/sdb.log</file>
 
-		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-			<fileNamePattern>${baseDirectory}/sdb.%i.log</fileNamePattern>
-			<minIndex>1</minIndex>
-			<maxIndex>9</maxIndex>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${rolloverDirectory}/sdb.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<maxHistory>60</maxHistory>
+			<totalSizeCap>3GB</totalSizeCap>
 		</rollingPolicy>
-
-		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-			<maxFileSize>10MB</maxFileSize>
-		</triggeringPolicy>
 
 		<encoder>
 			<pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %msg%n</pattern>
