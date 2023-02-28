@@ -292,6 +292,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private JLabel lblFadeTime;
 	private JSpinner spinnerFadeTime;
 	
+	private JButton btnUnselectAll;
+	private JButton btnUnselectAllAndBlankScreen;
+	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
 		return listSectionButtons;
@@ -329,6 +332,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		presentModel = new SongsModel();
 		presentListModel = presentModel.getListModel();
 		presentList.setModel(presentListModel);
+		presentModel.addSongsModelListener(() -> {
+			btnUnselectAll.setEnabled(!presentModel.isEmpty());
+			btnUnselectAllAndBlankScreen.setEnabled(!presentModel.isEmpty());
+		});
 		
 		// fill in available values for screen contents
 		for (ScreenContentsEnum item : ScreenContentsEnum.values()) {
@@ -1202,6 +1209,17 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		}
 	}
 	
+	protected void handleSongUnselectAll() {
+		presentModel.clear();
+		presentList.clearSelection();
+	}
+	
+	protected void handleSongUnselectAllAndBlankScreen() {
+		presentModel.clear();
+		presentList.clearSelection();
+		handleBlankScreen();
+	}
+	
 	protected void handleSongUp() {
 		if (presentListSelected != null) {
 			// use index because there could be multiple instances of one song in the list
@@ -1996,11 +2014,38 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		btnDown.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/sortDown.png"));
 		btnDown.setToolTipText("Down");
 		GridBagConstraints gbcBtnDown = new GridBagConstraints();
+		gbcBtnDown.insets = new Insets(0, 0, 5, 0);
 		gbcBtnDown.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnDown.anchor = GridBagConstraints.NORTH;
 		gbcBtnDown.gridx = 0;
 		gbcBtnDown.gridy = 3;
 		selectedSongListButtons.add(btnDown, gbcBtnDown);
+		
+		btnUnselectAll = new JButton("");
+		btnUnselectAll.setEnabled(false);
+		btnUnselectAll.setVerticalAlignment(SwingConstants.BOTTOM);
+		btnUnselectAll.setToolTipText("Unselect all");
+		btnUnselectAll.addActionListener(safeAction(e -> handleSongUnselectAll()));
+		btnUnselectAll.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/JXErrorPane16Double.png"));
+		GridBagConstraints gbcBtnUnselectAll = new GridBagConstraints();
+		gbcBtnUnselectAll.anchor = GridBagConstraints.SOUTH;
+		gbcBtnUnselectAll.fill = GridBagConstraints.HORIZONTAL;
+		gbcBtnUnselectAll.gridx = 0;
+		gbcBtnUnselectAll.gridy = 4;
+		selectedSongListButtons.add(btnUnselectAll, gbcBtnUnselectAll);
+		
+		btnUnselectAllAndBlankScreen = new JButton("");
+		btnUnselectAllAndBlankScreen.setEnabled(false);
+		btnUnselectAllAndBlankScreen.setVerticalAlignment(SwingConstants.BOTTOM);
+		btnUnselectAllAndBlankScreen.setToolTipText("Unselect all and blank screen");
+		btnUnselectAllAndBlankScreen.addActionListener(safeAction(e -> handleSongUnselectAllAndBlankScreen()));
+		btnUnselectAllAndBlankScreen.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/JXErrorPane16DoubleAndStop.png"));
+		GridBagConstraints gbcBtnUnselectAllAndBlankScreen = new GridBagConstraints();
+		gbcBtnUnselectAllAndBlankScreen.anchor = GridBagConstraints.SOUTH;
+		gbcBtnUnselectAllAndBlankScreen.fill = GridBagConstraints.HORIZONTAL;
+		gbcBtnUnselectAllAndBlankScreen.gridx = 0;
+		gbcBtnUnselectAllAndBlankScreen.gridy = 5;
+		selectedSongListButtons.add(btnUnselectAllAndBlankScreen, gbcBtnUnselectAllAndBlankScreen);
 		
 		btnJumpToSelected = new JButton("Jump to selected song");
 		btnJumpToSelected.addActionListener(safeAction(e -> handleJumpToSelectedSong()));
