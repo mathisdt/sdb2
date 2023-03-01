@@ -1335,8 +1335,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	}
 	
 	protected void presentSong(Song song) {
+		// not in a "contentChange" block because else the sections wouldn't be displayed:
+		boolean success = controller.present(new Presentable(song, null));
 		controller.contentChange(() -> {
-			boolean success = controller.present(new Presentable(song, null));
 			controller.stopSlideShow();
 			if (success) {
 				clearSectionButtons();
