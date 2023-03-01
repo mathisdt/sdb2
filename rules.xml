@@ -5,16 +5,12 @@
 	comparisonMethod="maven">
 
 	<rules>
-		<rule groupId="ch.qos.logback" artifactId="logback-classic">
-			<!-- 1.3.0-alpha5 has a bug: https://jira.qos.ch/browse/LOGBACK-1491 -->
+		<rule groupId="*">
 			<ignoreVersions>
-				<ignoreVersion>1.3.0-alpha5</ignoreVersion>
-			</ignoreVersions>
-		</rule>
-		<rule groupId="org.glassfish.jaxb" artifactId="jaxb-runtime">
-			<!-- we don't want to use JAXB beta versions -->
-			<ignoreVersions>
+				<ignoreVersion type="regex">^.*-alpha[0-9]+$</ignoreVersion>
+				<ignoreVersion type="regex">^.*-beta[0-9]+$</ignoreVersion>
 				<ignoreVersion type="regex">^.*-b[0-9]+$</ignoreVersion>
+				<ignoreVersion type="regex">^.*-M[0-9]+$</ignoreVersion>
 			</ignoreVersions>
 		</rule>
 	</rules>
