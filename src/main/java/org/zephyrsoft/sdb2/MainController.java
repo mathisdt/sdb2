@@ -45,6 +45,7 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.jdesktop.core.animation.timing.Animator;
 import org.jdesktop.core.animation.timing.TimingSource;
@@ -77,6 +78,7 @@ import org.zephyrsoft.sdb2.remote.RemotePresenter;
 import org.zephyrsoft.sdb2.remote.RemoteStatus;
 import org.zephyrsoft.sdb2.remote.SDB2RemotePreferences;
 import org.zephyrsoft.sdb2.util.StringTools;
+import org.zephyrsoft.sdb2.util.calendar.ICalInterpreter;
 import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
 import com.google.common.base.Preconditions;
@@ -270,8 +272,9 @@ public class MainController implements Scroller {
 					PRESENTATION_DISPLAY_WARNING);
 			return false;
 		} else {
-			if (remoteController != null)
+			if (remoteController != null) {
 				presentationControl.addPresenter(remoteController.getRemotePresenter(presentable));
+			}
 			
 			currentlyPresentedSong = presentable.getSong();
 			
@@ -575,6 +578,9 @@ public class MainController implements Scroller {
 		putDefaultIfKeyIsUnset(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, Integer.valueOf(20));
 		putDefaultIfKeyIsUnset(SettingKey.FADE_TIME, Integer.valueOf(300));
 		
+		putDefaultIfKeyIsUnset(SettingKey.CALENDAR_URL, "");
+		putDefaultIfKeyIsUnset(SettingKey.CALENDAR_DAYS_AHEAD, Integer.valueOf(7));
+		
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_ENABLED, false);
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_PASSWORD, "");
 		putDefaultIfKeyIsUnset(SettingKey.REMOTE_SERVER, "tcp://localhost:1883");
@@ -819,6 +825,45 @@ public class MainController implements Scroller {
 		stopSlideShow();
 		
 		startSlideShowCycle(seconds);
+		return true;
+	}
+	
+	public boolean presentCalendar() {
+		String url = settings.get(SettingKey.CALENDAR_URL, String.class);
+		if (StringUtils.isBlank(url)) {
+			LOG.warn("calendar URL is unset");
+			ErrorDialog.openDialog(null, """
+				The calendar URL is not set!
+				
+				Please correct that on the tab "Global Settings".""");
+			return false;
+		}
+		Integer daysAhead = settings.get(SettingKey.CALENDAR_DAYS_AHEAD, Integer.class);
+		if (daysAhead == null || daysAhead < 0) {
+			LOG.warn("illegal value for calendar days ahead: {}", daysAhead);
+			ErrorDialog.openDialog(null, """
+				The value for "days ahead" is illegal. It has to be a number equal to or greater than 0.
+				
+				Please correct that on the tab "Global Settings".""");
+			return false;
+		}
+		Song iCalSong = null;
+		try {
+			ICalInterpreter iCalInterpreter = new ICalInterpreter(url, daysAhead);
+			// if downloading and interpreting the iCal takes too long, maybe move the loading to startup phase
+			iCalSong = iCalInterpreter.getInterpretedData();
+			if (iCalSong == null) {
+				LOG.warn("calendar data could not be interpreted");
+				ErrorDialog.openDialog(null, "The calendar data could not be interpreted.");
+				return false;
+			}
+		} catch (Exception e) {
+			LOG.warn("problem while interpreting calendar", e);
+			ErrorDialog.openDialog(null, "problem while interpreting calendar:\n\n" + e.getMessage());
+			return false;
+		}
+		
+		mainWindow.present(iCalSong);
 		return true;
 	}
 	

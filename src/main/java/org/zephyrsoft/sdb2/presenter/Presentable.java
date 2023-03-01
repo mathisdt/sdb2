@@ -19,7 +19,7 @@ import org.togglz.core.util.Preconditions;
 import org.zephyrsoft.sdb2.model.Song;
 
 /**
- * Something that can be presented on a digital projector: a song, an image or nothing (blank screen).
+ * Something that can be presented on a digital projector: a song, an image, calendar content or nothing (blank screen).
  */
 public class Presentable {
 	

@@ -56,6 +56,7 @@
 		<version.jakarta-xml-bind-api>4.0.0</version.jakarta-xml-bind-api>
 		<version.jakarta-activation-api>2.1.1</version.jakarta-activation-api>
 		<version.glassfish-jaxb-runtime>4.0.2</version.glassfish-jaxb-runtime>
+		<version.ical4j>3.2.9</version.ical4j>
 	</properties>
 
 	<dependencyManagement>
@@ -214,6 +215,13 @@
 			<artifactId>jaxb-runtime</artifactId>
 			<version>${version.glassfish-jaxb-runtime}</version>
 			<scope>runtime</scope>
+		</dependency>
+
+		<!-- calendar -->
+		<dependency>
+			<groupId>org.mnode.ical4j</groupId>
+			<artifactId>ical4j</artifactId>
+			<version>${version.ical4j}</version>
 		</dependency>
 
 		<!-- test -->

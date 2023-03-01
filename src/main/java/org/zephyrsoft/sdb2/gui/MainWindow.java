@@ -271,6 +271,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private JLabel lblSlideShowDirectory;
 	private JLabel lblSlideShowSeconds;
 	private JButton btnSlideshow;
+	private JButton btnCalendar;
 	private JCheckBox chckbxWithTranslation;
 	private JCheckBox chckbxWithChords;
 	private JCheckBox chckbxOnlyExportSongs;
@@ -291,6 +292,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private JLabel lblGitCommitHash;
 	private JLabel lblFadeTime;
 	private JSpinner spinnerFadeTime;
+	
+	private JLabel lblCalendarUrl;
+	private JTextField textFieldCalendarUrl;
+	private JLabel lblDaysAhead;
+	private JSpinner spinnerDaysAhead;
 	
 	private JButton btnUnselectAll;
 	private JButton btnUnselectAllAndBlankScreen;
@@ -556,6 +562,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		setSpinnerValue(spinnerSlideShowSeconds, settingsModel.get(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, Integer.class));
 		setSpinnerValue(spinnerFadeTime, settingsModel.get(SettingKey.FADE_TIME, Integer.class));
 		
+		textFieldCalendarUrl.setText(settingsModel.get(SettingKey.CALENDAR_URL, String.class));
+		setSpinnerValue(spinnerDaysAhead, settingsModel.get(SettingKey.CALENDAR_DAYS_AHEAD, Integer.class));
+		
 		checkboxRemoteEnabled.setSelected(settingsModel.get(SettingKey.REMOTE_ENABLED, Boolean.class));
 		textFieldRemoteServer.setText(settingsModel.get(SettingKey.REMOTE_SERVER, String.class));
 		textFieldRemoteUsername.setText(settingsModel.get(SettingKey.REMOTE_USERNAME, String.class));
@@ -591,7 +600,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		if (btnUnlock != null && !btnUnlock.isEnabled() && settingsModel != null) {
 			commitSpinners(spinnerTopMargin, spinnerLeftMargin, spinnerRightMargin, spinnerBottomMargin,
 				spinnerDistanceTitleText, spinnerDistanceTextCopyright, spinnerCountAsDisplayedAfter, spinnerSlideShowSeconds,
-				spinnerFadeTime);
+				spinnerFadeTime, spinnerDaysAhead);
 			// disable controls
 			// copy changed settings to the model
 			settingsModel.put(SettingKey.MINIMAL_SCROLLING, checkboxMinimizeScrolling1.getModel().isSelected());
@@ -617,6 +626,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			settingsModel.put(SettingKey.SECONDS_UNTIL_COUNTED, spinnerCountAsDisplayedAfter.getValue());
 			settingsModel.put(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, spinnerSlideShowSeconds.getValue());
 			settingsModel.put(SettingKey.FADE_TIME, spinnerFadeTime.getValue());
+			
+			settingsModel.put(SettingKey.CALENDAR_URL, textFieldCalendarUrl.getText());
+			settingsModel.put(SettingKey.CALENDAR_DAYS_AHEAD, spinnerDaysAhead.getValue());
 			
 			settingsModel.put(SettingKey.REMOTE_ENABLED, checkboxRemoteEnabled.getModel().isSelected());
 			settingsModel.put(SettingKey.REMOTE_SERVER, textFieldRemoteServer.getText());
@@ -928,6 +940,8 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		setEnabledIfNotNull(btnSlideShowDirectory, enabled);
 		setEnabledIfNotNull(spinnerSlideShowSeconds, enabled);
 		setEnabledIfNotNull(spinnerFadeTime, enabled);
+		setEnabledIfNotNull(textFieldCalendarUrl, enabled);
+		setEnabledIfNotNull(spinnerDaysAhead, enabled);
 		setEnabledIfNotNull(checkboxRemoteEnabled, enabled);
 		setEnabledIfNotNull(textFieldRemoteServer, enabled);
 		setEnabledIfNotNull(textFieldRemoteUsername, enabled);
@@ -1321,9 +1335,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	}
 	
 	protected void presentSong(Song song) {
-		boolean success = controller.present(new Presentable(song, null));
-		controller.contentChange(() -> controller.stopSlideShow());
 		controller.contentChange(() -> {
+			boolean success = controller.present(new Presentable(song, null));
+			controller.stopSlideShow();
 			if (success) {
 				clearSectionButtons();
 				List<AddressablePart> parts = controller.getParts();
@@ -1353,30 +1367,47 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	}
 	
 	protected void handleBlankScreen() {
-		boolean success = controller.present(BLANK_SCREEN);
-		controller.stopSlideShow();
-		if (success) {
-			clearSectionButtons();
-			btnJumpToPresented.setEnabled(false);
-		}
+		controller.contentChange(() -> {
+			boolean success = controller.present(BLANK_SCREEN);
+			controller.stopSlideShow();
+			if (success) {
+				clearSectionButtons();
+				btnJumpToPresented.setEnabled(false);
+			}
+		});
 	}
 	
 	protected void handleLogoPresent() {
-		boolean success = controller.present(new Presentable(null, controller.loadLogo()));
-		controller.stopSlideShow();
-		if (success) {
-			clearSectionButtons();
-			btnJumpToPresented.setEnabled(false);
-		}
+		controller.contentChange(() -> {
+			boolean success = controller.present(new Presentable(null, controller.loadLogo()));
+			controller.stopSlideShow();
+			if (success) {
+				clearSectionButtons();
+				btnJumpToPresented.setEnabled(false);
+			}
+		});
 	}
 	
 	protected void handleSlideShowPresent() {
-		controller.stopSlideShow();
-		boolean success = controller.presentSlideShow();
-		if (success) {
-			clearSectionButtons();
-			btnJumpToPresented.setEnabled(false);
-		}
+		controller.contentChange(() -> {
+			controller.stopSlideShow();
+			boolean success = controller.presentSlideShow();
+			if (success) {
+				clearSectionButtons();
+				btnJumpToPresented.setEnabled(false);
+			}
+		});
+	}
+	
+	protected void handleCalendarPresent() {
+		controller.contentChange(() -> {
+			controller.stopSlideShow();
+			boolean success = controller.presentCalendar();
+			if (success) {
+				clearSectionButtons();
+				btnJumpToPresented.setEnabled(false);
+			}
+		});
 	}
 	
 	private void clearSectionButtons() {
@@ -2061,9 +2092,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		panelPresentRight.add(panelPresentationButtons, BorderLayout.CENTER);
 		
 		GridBagLayout gblPanelPresentationButtons = new GridBagLayout();
-		gblPanelPresentationButtons.columnWidths = new int[] { 0, 0, 0, 0 };
+		gblPanelPresentationButtons.columnWidths = new int[] { 0, 0, 0, 0, 0 };
 		// gblPanelPresentationButtons.rowHeights = new int[] { 1, 1, 1, 0, 0, 0 };
-		gblPanelPresentationButtons.columnWeights = new double[] { 0.5d, 0.5d, 0.5d, 0.5d };
+		gblPanelPresentationButtons.columnWeights = new double[] { 0.5d, 0.5d, 0.5d, 0.5d, 0.5d };
 		gblPanelPresentationButtons.rowWeights = new double[] { 0d, 0d, 0d, 0d, 1d };
 		panelPresentationButtons.setLayout(gblPanelPresentationButtons);
 		
@@ -2130,6 +2161,21 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		btnSlideshow.setPreferredSize(new Dimension(64, 64));
 		panelPresentationButtons.add(btnSlideshow, gbcBtnSlideshow);
 		
+		btnCalendar = new JButton("Calendar");
+		btnCalendar.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/calendar.png"));
+		btnCalendar.setVerticalTextPosition(SwingConstants.BOTTOM);
+		btnCalendar.setHorizontalTextPosition(SwingConstants.CENTER);
+		btnCalendar.addActionListener(safeAction(e -> handleCalendarPresent()));
+		GridBagConstraints gbcBtnCalendar = new GridBagConstraints();
+		gbcBtnCalendar.fill = GridBagConstraints.BOTH;
+		gbcBtnCalendar.gridheight = 3;
+		gbcBtnCalendar.insets = new Insets(10, 0, 15, 5);
+		gbcBtnCalendar.ipady = 80;
+		gbcBtnCalendar.gridx = 4;
+		gbcBtnCalendar.gridy = 0;
+		btnCalendar.setPreferredSize(new Dimension(64, 64));
+		panelPresentationButtons.add(btnCalendar, gbcBtnCalendar);
+		
 		JLabel lblSections = new JLabel("Sections:");
 		GridBagConstraints gbcLblSections = new GridBagConstraints();
 		gbcLblSections.fill = GridBagConstraints.HORIZONTAL;
@@ -2142,7 +2188,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		GridBagConstraints gbcScrollPaneSectionButtons = new GridBagConstraints();
 		gbcScrollPaneSectionButtons.insets = new Insets(0, 0, 0, 5);
 		gbcScrollPaneSectionButtons.fill = GridBagConstraints.BOTH;
-		gbcScrollPaneSectionButtons.gridwidth = 4;
+		gbcScrollPaneSectionButtons.gridwidth = 5;
 		gbcScrollPaneSectionButtons.gridx = 0;
 		gbcScrollPaneSectionButtons.gridy = 4;
 		panelPresentationButtons.add(scrollPaneSectionButtons, gbcScrollPaneSectionButtons);
@@ -2903,6 +2949,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		spinnerSlideShowSeconds = new JSpinner();
 		mustBePositive(spinnerSlideShowSeconds, false);
 		GridBagConstraints gbc_spinnerSlideShowSeconds = new GridBagConstraints();
+		gbc_spinnerSlideShowSeconds.gridwidth = 3;
 		gbc_spinnerSlideShowSeconds.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerSlideShowSeconds.insets = new Insets(0, 0, 5, 5);
 		gbc_spinnerSlideShowSeconds.gridx = 3;
@@ -2920,26 +2967,63 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		spinnerFadeTime = new JSpinner();
 		mustBePositive(spinnerFadeTime, false);
 		GridBagConstraints gbc_spinnerFadeTime = new GridBagConstraints();
+		gbc_spinnerFadeTime.gridwidth = 3;
 		gbc_spinnerFadeTime.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spinnerFadeTime.insets = new Insets(0, 0, 5, 5);
 		gbc_spinnerFadeTime.gridx = 3;
 		gbc_spinnerFadeTime.gridy = 26;
 		panel.add(spinnerFadeTime, gbc_spinnerFadeTime);
 		
+		lblCalendarUrl = new JLabel("Calendar URL");
+		GridBagConstraints gbcLblCalendarUrl = new GridBagConstraints();
+		gbcLblCalendarUrl.anchor = GridBagConstraints.EAST;
+		gbcLblCalendarUrl.insets = new Insets(0, 0, 5, 5);
+		gbcLblCalendarUrl.gridx = 1;
+		gbcLblCalendarUrl.gridy = 27;
+		panel.add(lblCalendarUrl, gbcLblCalendarUrl);
+		
+		textFieldCalendarUrl = new JTextField();
+		GridBagConstraints gbcTextFieldCalendarUrl = new GridBagConstraints();
+		gbcTextFieldCalendarUrl.gridwidth = 3;
+		gbcTextFieldCalendarUrl.fill = GridBagConstraints.HORIZONTAL;
+		gbcTextFieldCalendarUrl.insets = new Insets(0, 0, 5, 5);
+		gbcTextFieldCalendarUrl.gridx = 3;
+		gbcTextFieldCalendarUrl.gridy = 27;
+		panel.add(textFieldCalendarUrl, gbcTextFieldCalendarUrl);
+		
+		lblDaysAhead = new JLabel("Calendar days ahead");
+		GridBagConstraints gbcLblDaysAhead = new GridBagConstraints();
+		gbcLblDaysAhead.anchor = GridBagConstraints.EAST;
+		gbcLblDaysAhead.insets = new Insets(0, 0, 5, 5);
+		gbcLblDaysAhead.gridx = 1;
+		gbcLblDaysAhead.gridy = 28;
+		panel.add(lblDaysAhead, gbcLblDaysAhead);
+		
+		spinnerDaysAhead = new JSpinner();
+		mustBePositive(spinnerDaysAhead, true);
+		GridBagConstraints gbcSpinnerDaysAhead = new GridBagConstraints();
+		gbcSpinnerDaysAhead.gridwidth = 3;
+		gbcSpinnerDaysAhead.fill = GridBagConstraints.HORIZONTAL;
+		gbcSpinnerDaysAhead.insets = new Insets(0, 0, 5, 5);
+		gbcSpinnerDaysAhead.gridx = 3;
+		gbcSpinnerDaysAhead.gridy = 28;
+		panel.add(spinnerDaysAhead, gbcSpinnerDaysAhead);
+		
 		lblRemoteEnabled = new JLabel("Remote enabled");
 		GridBagConstraints gbc_lblRemoteEnabled = new GridBagConstraints();
 		gbc_lblRemoteEnabled.anchor = GridBagConstraints.EAST;
 		gbc_lblRemoteEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemoteEnabled.gridx = 1;
-		gbc_lblRemoteEnabled.gridy = 27;
+		gbc_lblRemoteEnabled.gridy = 29;
 		panel.add(lblRemoteEnabled, gbc_lblRemoteEnabled);
 		
 		checkboxRemoteEnabled = new JCheckBox();
 		GridBagConstraints gbc_checkboxRemoteEnabled = new GridBagConstraints();
+		gbc_checkboxRemoteEnabled.gridwidth = 3;
 		gbc_checkboxRemoteEnabled.fill = GridBagConstraints.HORIZONTAL;
 		gbc_checkboxRemoteEnabled.insets = new Insets(0, 0, 5, 5);
 		gbc_checkboxRemoteEnabled.gridx = 3;
-		gbc_checkboxRemoteEnabled.gridy = 27;
+		gbc_checkboxRemoteEnabled.gridy = 29;
 		panel.add(checkboxRemoteEnabled, gbc_checkboxRemoteEnabled);
 		
 		lblRemoteServer = new JLabel("Remote server");
@@ -2947,15 +3031,16 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemoteServer.anchor = GridBagConstraints.EAST;
 		gbc_lblRemoteServer.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemoteServer.gridx = 1;
-		gbc_lblRemoteServer.gridy = 28;
+		gbc_lblRemoteServer.gridy = 30;
 		panel.add(lblRemoteServer, gbc_lblRemoteServer);
 		
 		textFieldRemoteServer = new JTextField();
 		GridBagConstraints gbc_textFieldRemoteServer = new GridBagConstraints();
+		gbc_textFieldRemoteServer.gridwidth = 3;
 		gbc_textFieldRemoteServer.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemoteServer.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemoteServer.gridx = 3;
-		gbc_textFieldRemoteServer.gridy = 28;
+		gbc_textFieldRemoteServer.gridy = 30;
 		panel.add(textFieldRemoteServer, gbc_textFieldRemoteServer);
 		
 		lblRemoteUsername = new JLabel("Remote username");
@@ -2963,15 +3048,16 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemoteUsername.anchor = GridBagConstraints.EAST;
 		gbc_lblRemoteUsername.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemoteUsername.gridx = 1;
-		gbc_lblRemoteUsername.gridy = 29;
+		gbc_lblRemoteUsername.gridy = 31;
 		panel.add(lblRemoteUsername, gbc_lblRemoteUsername);
 		
 		textFieldRemoteUsername = new JTextField();
 		GridBagConstraints gbc_textFieldRemoteUsername = new GridBagConstraints();
+		gbc_textFieldRemoteUsername.gridwidth = 3;
 		gbc_textFieldRemoteUsername.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemoteUsername.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemoteUsername.gridx = 3;
-		gbc_textFieldRemoteUsername.gridy = 29;
+		gbc_textFieldRemoteUsername.gridy = 31;
 		panel.add(textFieldRemoteUsername, gbc_textFieldRemoteUsername);
 		
 		lblRemotePassword = new JLabel("Remote password");
@@ -2979,15 +3065,16 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemotePassword.anchor = GridBagConstraints.EAST;
 		gbc_lblRemotePassword.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemotePassword.gridx = 1;
-		gbc_lblRemotePassword.gridy = 30;
+		gbc_lblRemotePassword.gridy = 32;
 		panel.add(lblRemotePassword, gbc_lblRemotePassword);
 		
 		textFieldRemotePassword = new JTextField();
 		GridBagConstraints gbc_textFieldRemotePassword = new GridBagConstraints();
+		gbc_textFieldRemotePassword.gridwidth = 3;
 		gbc_textFieldRemotePassword.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemotePassword.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemotePassword.gridx = 3;
-		gbc_textFieldRemotePassword.gridy = 30;
+		gbc_textFieldRemotePassword.gridy = 32;
 		panel.add(textFieldRemotePassword, gbc_textFieldRemotePassword);
 		
 		lblRemotePrefix = new JLabel("Remote prefix");
@@ -2995,15 +3082,16 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemotePrefix.anchor = GridBagConstraints.EAST;
 		gbc_lblRemotePrefix.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemotePrefix.gridx = 1;
-		gbc_lblRemotePrefix.gridy = 31;
+		gbc_lblRemotePrefix.gridy = 33;
 		panel.add(lblRemotePrefix, gbc_lblRemotePrefix);
 		
 		textFieldRemotePrefix = new JTextField();
 		GridBagConstraints gbc_textFieldRemotePrefix = new GridBagConstraints();
+		gbc_textFieldRemotePrefix.gridwidth = 3;
 		gbc_textFieldRemotePrefix.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemotePrefix.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemotePrefix.gridx = 3;
-		gbc_textFieldRemotePrefix.gridy = 31;
+		gbc_textFieldRemotePrefix.gridy = 33;
 		panel.add(textFieldRemotePrefix, gbc_textFieldRemotePrefix);
 		
 		lblRemoteRoom = new JLabel("Remote room");
@@ -3011,15 +3099,16 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemoteRoom.anchor = GridBagConstraints.EAST;
 		gbc_lblRemoteRoom.insets = new Insets(0, 0, 5, 5);
 		gbc_lblRemoteRoom.gridx = 1;
-		gbc_lblRemoteRoom.gridy = 32;
+		gbc_lblRemoteRoom.gridy = 34;
 		panel.add(lblRemoteRoom, gbc_lblRemoteRoom);
 		
 		textFieldRemoteRoom = new JTextField();
 		GridBagConstraints gbc_textFieldRemoteRoom = new GridBagConstraints();
+		gbc_textFieldRemoteRoom.gridwidth = 3;
 		gbc_textFieldRemoteRoom.fill = GridBagConstraints.HORIZONTAL;
 		gbc_textFieldRemoteRoom.insets = new Insets(0, 0, 5, 5);
 		gbc_textFieldRemoteRoom.gridx = 3;
-		gbc_textFieldRemoteRoom.gridy = 32;
+		gbc_textFieldRemoteRoom.gridy = 34;
 		panel.add(textFieldRemoteRoom, gbc_textFieldRemoteRoom);
 		
 		glassPane = (Container) getGlassPane();

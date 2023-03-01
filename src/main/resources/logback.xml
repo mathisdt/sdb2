@@ -28,6 +28,7 @@
 
 	<logger name="org.springframework" level="WARN" />
 	<logger name="org.apache.poi" level="WARN" />
+	<logger name="net.fortuna.ical4j" level="INFO" />
 
 	<root level="DEBUG">
 		<appender-ref ref="FILE" />
