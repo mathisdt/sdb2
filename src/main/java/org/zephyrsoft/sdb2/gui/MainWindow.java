@@ -2056,7 +2056,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		btnUnselectAll = new JButton("");
 		btnUnselectAll.setEnabled(false);
 		btnUnselectAll.setVerticalAlignment(SwingConstants.BOTTOM);
-		btnUnselectAll.setToolTipText("Unselect all");
+		btnUnselectAll.setToolTipText("Unselect all (remove from presentation list)");
 		btnUnselectAll.addActionListener(safeAction(e -> handleSongUnselectAll()));
 		btnUnselectAll.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/JXErrorPane16Double.png"));
 		GridBagConstraints gbcBtnUnselectAll = new GridBagConstraints();
@@ -2069,7 +2069,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		btnUnselectAllAndBlankScreen = new JButton("");
 		btnUnselectAllAndBlankScreen.setEnabled(false);
 		btnUnselectAllAndBlankScreen.setVerticalAlignment(SwingConstants.BOTTOM);
-		btnUnselectAllAndBlankScreen.setToolTipText("Unselect all and blank screen");
+		btnUnselectAllAndBlankScreen.setToolTipText("Unselect all (remove from presentation list) and blank screen");
 		btnUnselectAllAndBlankScreen.addActionListener(safeAction(e -> handleSongUnselectAllAndBlankScreen()));
 		btnUnselectAllAndBlankScreen.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/JXErrorPane16DoubleAndStop.png"));
 		GridBagConstraints gbcBtnUnselectAllAndBlankScreen = new GridBagConstraints();
