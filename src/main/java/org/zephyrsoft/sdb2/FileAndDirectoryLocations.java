@@ -34,6 +34,7 @@ public class FileAndDirectoryLocations {
 	private static final String LOG_SUBDIR_STRING = "log";
 	private static final String DB_SUBDIR_STRING = "db";
 	
+	private static final String PROPERTIES_FILE_STRING = "global.properties";
 	private static final String SONGS_FILE_STRING = "songs.xml";
 	private static final String SONGS_BACKUP_FILE_STRING = "songs-%s.xml";
 	private static final String SETTINGS_FILE_STRING = "settings.xml";
@@ -55,6 +56,10 @@ public class FileAndDirectoryLocations {
 		} else {
 			return fileName;
 		}
+	}
+	
+	public static String getDefaultPropertiesFileName() {
+		return getDir("", true) + File.separator + PROPERTIES_FILE_STRING;
 	}
 	
 	public static String getDefaultDBFileName() {

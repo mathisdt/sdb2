@@ -519,7 +519,7 @@ public class MainController implements Scroller {
 	}
 	
 	public void loadSettings() {
-		LOG.debug("loading settings from file");
+		LOG.debug("loading settings from file {}", FileAndDirectoryLocations.getSettingsFileName());
 		settings = ioController.readSettings(is -> XMLConverter.fromXMLToPersistable(is));
 		if (settings == null) {
 			// there was a problem while reading
