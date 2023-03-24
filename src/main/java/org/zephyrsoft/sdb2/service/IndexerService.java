@@ -18,6 +18,7 @@ package org.zephyrsoft.sdb2.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.StoredFields;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
@@ -64,7 +66,7 @@ public class IndexerService {
 	
 	private Map<String, Song> songByUuid = new HashMap<>();
 	
-	private Map<IndexType, Directory> indexes = new HashMap<>();
+	private Map<IndexType, Directory> indexes = new EnumMap<>(IndexType.class);
 	private static final Object INDEXES_LOCK = new Object();
 	
 	private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -88,30 +90,24 @@ public class IndexerService {
 			Stopwatch stopwatch = Stopwatch.createStarted();
 			
 			Directory directory = new ByteBuffersDirectory();
-			try {
-				Analyzer analyzer = CustomAnalyzer.builder()
-					.withTokenizer(StandardTokenizerFactory.class)
-					.addTokenFilter(LowerCaseFilterFactory.class)
-					.addTokenFilter(NGramFilterFactory.class, "minGramSize", "1", "maxGramSize", "25")
-					.build();
-				
-				IndexWriterConfig config = new IndexWriterConfig(analyzer);
-				try (IndexWriter writer = new IndexWriter(directory, config)) {
-					for (Song song : songs) {
-						Document document = createDocument(song);
-						writer.addDocument(document);
-						songByUuid.put(song.getUUID(), song);
-					}
-				} catch (IOException e) {
-					LOG.warn("couldn't index songs", e);
+			try (Analyzer analyzer = CustomAnalyzer.builder()
+				.withTokenizer(StandardTokenizerFactory.class)
+				.addTokenFilter(LowerCaseFilterFactory.class)
+				.addTokenFilter(NGramFilterFactory.class, "minGramSize", "1", "maxGramSize", "25")
+				.build();
+				IndexWriter writer = new IndexWriter(directory, new IndexWriterConfig(analyzer))) {
+				for (Song song : songs) {
+					Document document = createDocument(song);
+					writer.addDocument(document);
+					songByUuid.put(song.getUUID(), song);
 				}
-			} catch (IOException e1) {
-				LOG.warn("couldn't create analyzer", e1);
+			} catch (IOException e) {
+				LOG.warn("couldn't create analyzer and index songs", e);
 			} finally {
 				putIndex(indexType, directory);
 				stopwatch.stop();
-				LOG.info("indexing songs in background thread took {}", stopwatch.toString());
-				onIndexChangeListeners.forEach((l) -> l.onIndexChange());
+				LOG.info("indexing songs in background thread took {}", stopwatch);
+				onIndexChangeListeners.forEach(l -> l.onIndexChange());
 			}
 		});
 	}
@@ -145,13 +141,13 @@ public class IndexerService {
 			}
 			BooleanQuery outerBooleanQuery = outerBooleanQueryBuilder.build();
 			TopDocs hits = indexSearcher.search(outerBooleanQuery, Integer.MAX_VALUE);
+			StoredFields storedFields = indexSearcher.storedFields();
 			
 			LOG.trace("{} hits for filter \"{}\"", hits.totalHits, outerBooleanQueryBuilder);
 			
 			List<Song> ret = new ArrayList<>();
 			for (ScoreDoc scoreDocument : hits.scoreDocs) {
-				Document document;
-				document = indexSearcher.doc(scoreDocument.doc);
+				Document document = storedFields.document(scoreDocument.doc);
 				String uuid = document.get(FieldName.UUID.name());
 				ret.add(songByUuid.get(uuid));
 			}
