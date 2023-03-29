@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    uses: mathisdt/workflows/.github/workflows/maven.yml@master
+    uses: mathisdt/workflows/.github/workflows/maven.yaml@master
     with:
       script-after-maven-build: ./build-jre-distributions.sh
       files-to-release: |
