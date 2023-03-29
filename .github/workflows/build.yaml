@@ -15,3 +15,4 @@ jobs:
         target/sdb2-bundle-linux.zip
         target/sdb2-bundle-windows.zip
     secrets: inherit
+
