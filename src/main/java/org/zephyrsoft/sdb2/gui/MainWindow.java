@@ -39,6 +39,7 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -52,6 +53,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 
 import javax.swing.DefaultListSelectionModel;
@@ -80,7 +83,9 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.text.JTextComponent;
+import javax.swing.undo.UndoManager;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.FileAndDirectoryLocations;
@@ -300,6 +305,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	private JButton btnUnselectAll;
 	private JButton btnUnselectAllAndBlankScreen;
+	
+	private final ConcurrentMap<String, UndoManager> songEditingUndoManagers = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, KeyListener> songEditingKeyListeners = new ConcurrentHashMap<>();
 	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
@@ -723,7 +731,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		}
 		
 		// Update selected song, if its already open (uuid is the same), do not rewind cursors.
-		boolean rewindCursors = song == null || selectedSong == null || !StringTools.equalsWithNullAsEmpty(selectedSong.getUUID(), song.getUUID());
+		boolean songIsAlreadyOpen = song != null && selectedSong != null && StringTools.equalsWithNullAsEmpty(selectedSong.getUUID(), song.getUUID());
 		
 		LOG.debug("setSelectedSong: {} selected before={}", song, selectedSong);
 		selectedSong = song;
@@ -731,19 +739,80 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		if (selectedSong == null) {
 			clearSongData();
 			setSongEditingEnabled(false);
+			
 			// disable buttons
 			btnDeleteSong.setEnabled(false);
 			btnSelectSong.setEnabled(false);
 			btnExportPdfSelected.setEnabled(false);
+			
+			// clear undo manager
+			manageUndoCapability(false);
 		} else {
-			loadSongData(selectedSong, rewindCursors);
-			if (rewindCursors) {
+			loadSongData(selectedSong, !songIsAlreadyOpen);
+			if (!songIsAlreadyOpen) {
 				setSongEditingEnabled(true);
+				
 				// enable buttons
 				btnDeleteSong.setEnabled(true);
 				btnSelectSong.setEnabled(true);
 				btnExportPdfSelected.setEnabled(true);
+				
+				// attach undo manager
+				manageUndoCapability(true);
 			}
+		}
+	}
+	
+	private void manageUndoCapability(boolean add) {
+		manageUndoCapability("editorLyrics", editorLyrics, add);
+		manageUndoCapability("textFieldTitle", textFieldTitle, add);
+		manageUndoCapability("comboBoxLanguage", (JTextField) comboBoxLanguage.getEditor().getEditorComponent(), add);
+		manageUndoCapability("textFieldTonality", textFieldTonality, add);
+		manageUndoCapability("textFieldComposer", textFieldComposer, add);
+		manageUndoCapability("textFieldAuthorText", textFieldAuthorText, add);
+		manageUndoCapability("textFieldAuthorTranslation", textFieldAuthorTranslation, add);
+		manageUndoCapability("textFieldPublisher", textFieldPublisher, add);
+		manageUndoCapability("textFieldAdditionalCopyrightNotes", textFieldAdditionalCopyrightNotes, add);
+		manageUndoCapability("textFieldTempo", textFieldTempo, add);
+		manageUndoCapability("editorChordSequence", editorChordSequence, add);
+		manageUndoCapability("editorDrumNotes", editorDrumNotes, add);
+		manageUndoCapability("editorSongNotes", editorSongNotes, add);
+	}
+	
+	private void manageUndoCapability(String key, JTextComponent textComponent, boolean add) {
+		UndoManager undoManager = songEditingUndoManagers.get(key);
+		if (undoManager != null) {
+			textComponent.getDocument().removeUndoableEditListener(undoManager);
+			songEditingUndoManagers.remove(key);
+		}
+		
+		KeyListener keyListener = songEditingKeyListeners.get(key);
+		if (keyListener != null) {
+			textComponent.removeKeyListener(keyListener);
+			songEditingKeyListeners.remove(key);
+		}
+		
+		if (add) {
+			UndoManager undoManagerToAdd = new UndoManager();
+			songEditingUndoManagers.put(key, undoManagerToAdd);
+			textComponent.getDocument().addUndoableEditListener(undoManagerToAdd);
+			
+			KeyListener keyListenerToAdd = new KeyAdapter() {
+				@Override
+				public void keyReleased(KeyEvent e) {
+					if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_Z) {
+						try {
+							if (undoManagerToAdd.canUndo()) {
+								undoManagerToAdd.undo();
+							}
+						} catch (Throwable ex) {
+							handleError(ex);
+						}
+					}
+				}
+			};
+			songEditingKeyListeners.put(key, keyListenerToAdd);
+			textComponent.addKeyListener(keyListenerToAdd);
 		}
 	}
 	
@@ -1156,9 +1225,14 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	}
 	
 	private static void setText(JTextComponent textComponent, String textToSet, boolean rewind) {
-		textComponent.setText(textToSet);
+		int caretPosition = textComponent.getCaretPosition();
+		if (!StringUtils.equals(textComponent.getText(), textToSet)) {
+			textComponent.setText(textToSet);
+		}
 		if (rewind) {
 			textComponent.setCaretPosition(0);
+		} else if (textToSet != null) {
+			textComponent.setCaretPosition(Math.min(caretPosition, textToSet.length()));
 		}
 	}
 	
