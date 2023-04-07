@@ -32,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import org.zephyrsoft.sdb2.model.Song;
@@ -51,20 +52,22 @@ public class ICalInterpreter {
 	
 	private static final String DEFAULT_PATTERN = "yyyyMMdd'T'HHmmss";
 	private static final DateTimeFormatter DEFAULT_FORMATTER = DateTimeFormatter.ofPattern(DEFAULT_PATTERN);
-	private static final DateTimeFormatter DISPLAY_DATE_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL);
-	private static final DateTimeFormatter DISPLAY_TIME_FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT);
+	private final DateTimeFormatter displayDateFormatter;
+	private final DateTimeFormatter displayTimeFormatter;
 	
 	private final String url;
 	private final int daysAhead;
 	private final HttpClient client;
 	
-	public ICalInterpreter(String url, int daysAhead) {
+	public ICalInterpreter(String url, int daysAhead, Locale locale) {
 		this.url = url;
 		this.daysAhead = daysAhead;
 		client = HttpClient.newBuilder()
 			.followRedirects(Redirect.NORMAL)
 			.connectTimeout(Duration.ofSeconds(15))
 			.build();
+		displayDateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale);
+		displayTimeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale);
 	}
 	
 	public Song getInterpretedData() {
@@ -104,14 +107,14 @@ public class ICalInterpreter {
 			for (SimpleEvent se : simpleEvents) {
 				if (alreadyAddedDate == null) {
 					alreadyAddedDate = se.getStart().toLocalDate();
-					calendarText.append(se.getStart().format(DISPLAY_DATE_FORMATTER)).append("\n");
+					calendarText.append(se.getStart().format(displayDateFormatter)).append("\n");
 				} else if (se.getStart().toLocalDate().isAfter(alreadyAddedDate)) {
 					alreadyAddedDate = se.getStart().toLocalDate();
-					calendarText.append("\n").append(se.getStart().format(DISPLAY_DATE_FORMATTER)).append("\n");
+					calendarText.append("\n").append(se.getStart().format(displayDateFormatter)).append("\n");
 				}
 				calendarText
 					.append("   ")
-					.append(se.getStart().format(DISPLAY_TIME_FORMATTER))
+					.append(se.getStart().format(displayTimeFormatter))
 					.append("  ")
 					.append(se.getTitle())
 					.append("\n");

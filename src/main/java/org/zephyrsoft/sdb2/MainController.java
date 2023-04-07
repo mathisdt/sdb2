@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -849,7 +850,7 @@ public class MainController implements Scroller {
 		}
 		Song iCalSong = null;
 		try {
-			ICalInterpreter iCalInterpreter = new ICalInterpreter(url, daysAhead);
+			ICalInterpreter iCalInterpreter = new ICalInterpreter(url, daysAhead, getConfiguredLocale());
 			// if downloading and interpreting the iCal takes too long, maybe move the loading to startup phase
 			iCalSong = iCalInterpreter.getInterpretedData();
 			if (iCalSong == null) {
@@ -865,6 +866,17 @@ public class MainController implements Scroller {
 		
 		mainWindow.present(iCalSong);
 		return true;
+	}
+	
+	private Locale getConfiguredLocale() {
+		Options options = Options.getInstance();
+		if (options.getLanguage() != null && options.getCountry() == null) {
+			return Locale.forLanguageTag(options.getLanguage());
+		} else if (options.getLanguage() != null && options.getCountry() != null) {
+			return Locale.forLanguageTag(options.getLanguage() + "-" + options.getCountry());
+		} else {
+			return Locale.getDefault();
+		}
 	}
 	
 	private Iterator<File> getImageIterator(Path imageDirectory) {
