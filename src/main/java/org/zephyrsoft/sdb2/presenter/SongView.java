@@ -479,6 +479,10 @@ public class SongView extends JPanel implements Scroller {
 		animator.start();
 	}
 	
+	public int getScrollPosition() {
+		return (int) text.getLocation().getY();
+	}
+	
 	private Animator createAnimator() {
 		return new Animator.Builder().setDuration(1200, TimeUnit.MILLISECONDS).build();
 	}

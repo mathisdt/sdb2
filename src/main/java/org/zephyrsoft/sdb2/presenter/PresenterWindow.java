@@ -19,7 +19,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GraphicsConfiguration;
 import java.awt.Image;
 import java.awt.Point;
@@ -47,11 +46,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.model.AddressablePart;
-import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableDisplay;
 import org.zephyrsoft.sdb2.model.VirtualScreen;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
+import org.zephyrsoft.sdb2.model.settings.VirtualScreenSettingsModel;
 
 /**
  * The presentation display for the lyrics.
@@ -69,6 +68,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 	private final VirtualScreen virtualScreen;
 	private final SettingsModel settings;
 	private final SelectableDisplay screen;
+	private VirtualScreenSettingsModel screenSettings;
 	private Presentable presentable;
 	private MainController controller;
 	
@@ -105,7 +105,8 @@ public class PresenterWindow extends JFrame implements Presenter {
 		
 		contentPane = new JPanel();
 		contentPane.setLayout(new BorderLayout(0, 0));
-		Color backgroundColor = setBackgroundColor(virtualScreen, settings);
+		Color backgroundColor = virtualScreen.getBackgroundColor(settings);
+		setBackgroundColor(backgroundColor);
 		// hide cursor above presentation display
 		contentPane.setCursor(transparentCursor);
 		
@@ -132,15 +133,13 @@ public class PresenterWindow extends JFrame implements Presenter {
 		// screenSize = graphicsConfiguration.getBounds();
 	}
 	
-	private Color setBackgroundColor(VirtualScreen virtualScreen, SettingsModel settings) {
-		Color backgroundColor = virtualScreen.getBackgroundColor(settings);
+	private void setBackgroundColor(Color backgroundColor) {
 		if (!Objects.equals(backgroundColor, getBackground())) {
 			setBackground(backgroundColor);
 		}
 		if (!Objects.equals(backgroundColor, contentPane.getBackground())) {
 			contentPane.setBackground(backgroundColor);
 		}
-		return backgroundColor;
 	}
 	
 	public boolean metadataMatches(SelectableDisplay otherScreen, VirtualScreen otherVirtualScreen) {
@@ -154,6 +153,10 @@ public class PresenterWindow extends JFrame implements Presenter {
 	
 	@Override
 	public void setContent(Presentable presentable) {
+		if (Objects.equals(presentable, this.presentable) && songView.getScrollPosition() == 0 && noSettingsWereChanged()) {
+			return;
+		}
+		
 		this.presentable = presentable;
 		
 		if (contentPane.getComponentCount() > 0) {
@@ -165,47 +168,38 @@ public class PresenterWindow extends JFrame implements Presenter {
 		controller.contentChange(() -> {
 			contentPane.removeAll();
 			
-			Color backgroundColor = setBackgroundColor(virtualScreen, settings);
+			screenSettings = VirtualScreenSettingsModel.of(settings, virtualScreen);
+			setBackgroundColor(screenSettings.getBackgroundColor());
 			if (getGlassPane() instanceof TranslucentPanel tp
-				&& !Objects.equals(backgroundColor, tp.getBaseColor())) {
-				tp.setBaseColor(backgroundColor);
+				&& !Objects.equals(screenSettings.getBackgroundColor(), tp.getBaseColor())) {
+				tp.setBaseColor(screenSettings.getBackgroundColor());
 			}
 			
-			int topMargin = settings.get(SettingKey.TOP_MARGIN, Integer.class);
-			int leftMargin = settings.get(SettingKey.LEFT_MARGIN, Integer.class);
-			int rightMargin = settings.get(SettingKey.RIGHT_MARGIN, Integer.class);
-			int bottomMargin = settings.get(SettingKey.BOTTOM_MARGIN, Integer.class);
-			
 			if (presentable.getSong() != null) {
-				ScreenContentsEnum contents = virtualScreen.getScreenContents(settings);
-				
-				// determine WHAT to present and HOW to present it
-				boolean showTitle = settings.get(SettingKey.SHOW_TITLE, Boolean.class).booleanValue();
-				boolean showTranslation = contents.shouldShowTranslation();
-				boolean showChords = contents.shouldShowChords();
-				Font titleFont = virtualScreen.getTitleFont(settings);
-				Font lyricsFont = virtualScreen.getLyricsFont(settings);
-				Font chordSequenceFont = virtualScreen.getChordSequenceFont(settings);
-				Font translationFont = virtualScreen.getTranslationFont(settings);
-				Font copyrightFont = virtualScreen.getCopyrightFont(settings);
-				int titleLyricsDistance = settings.get(SettingKey.DISTANCE_TITLE_TEXT, Integer.class);
-				int lyricsCopyrightDistance = settings.get(SettingKey.DISTANCE_TEXT_COPYRIGHT, Integer.class);
-				Color foregroundColor = virtualScreen.getTextColor(settings);
-				boolean minimalScrolling = virtualScreen.getMinimalScrolling(settings);
-				
 				// create a SongView to render the song
 				songView = new SongView.Builder(presentable.getSong())
-					.showTitle(showTitle).showTranslation(showTranslation).showChords(showChords)
-					.titleFont(titleFont).lyricsFont(lyricsFont)
-					.translationFont(translationFont).copyrightFont(copyrightFont).topMargin(topMargin)
-					.leftMargin(leftMargin).rightMargin(rightMargin).bottomMargin(bottomMargin)
-					.titleLyricsDistance(titleLyricsDistance).lyricsCopyrightDistance(lyricsCopyrightDistance)
-					.foregroundColor(foregroundColor).backgroundColor(backgroundColor)
-					.minimalScrolling(minimalScrolling).build();
+					.showTitle(screenSettings.isShowTitle())
+					.showTranslation(screenSettings.isShowTranslation())
+					.showChords(screenSettings.isShowChords())
+					.titleFont(screenSettings.getTitleFont())
+					.lyricsFont(screenSettings.getLyricsFont())
+					.translationFont(screenSettings.getTranslationFont())
+					.copyrightFont(screenSettings.getCopyrightFont())
+					.topMargin(screenSettings.getTopMargin())
+					.leftMargin(screenSettings.getLeftMargin())
+					.rightMargin(screenSettings.getRightMargin())
+					.bottomMargin(screenSettings.getBottomMargin())
+					.titleLyricsDistance(screenSettings.getTitleLyricsDistance())
+					.lyricsCopyrightDistance(screenSettings.getLyricsCopyrightDistance())
+					.foregroundColor(screenSettings.getForegroundColor())
+					.backgroundColor(screenSettings.getBackgroundColor())
+					.minimalScrolling(screenSettings.isMinimalScrolling())
+					.build();
 				contentPane.add(songView, BorderLayout.CENTER);
 				
-				if (contents.shouldShowChordSequence()) {
-					contentPane.add(new ChordSequenceView(presentable.getSong(), chordSequenceFont, foregroundColor, backgroundColor),
+				if (screenSettings.isShowChordSequence()) {
+					contentPane.add(new ChordSequenceView(presentable.getSong(), screenSettings.getChordSequenceFont(), screenSettings
+						.getForegroundColor(), screenSettings.getBackgroundColor()),
 						BorderLayout.SOUTH);
 				}
 				
@@ -216,11 +210,12 @@ public class PresenterWindow extends JFrame implements Presenter {
 				Image image = imageIcon.getImage();
 				int originalWidth = image.getWidth(null);
 				int originalHeight = image.getHeight(null);
-				double factor = Math.min((screenSize.getWidth() - leftMargin - rightMargin) / originalWidth,
-					(screenSize.getHeight() - topMargin - bottomMargin) / originalHeight);
+				double factor = Math.min((screenSize.getWidth() - screenSettings.getLeftMargin() - screenSettings.getRightMargin()) / originalWidth,
+					(screenSize.getHeight() - screenSettings.getTopMargin() - screenSettings.getBottomMargin()) / originalHeight);
 				image = image.getScaledInstance((int) (originalWidth * factor), (int) (originalHeight * factor), Image.SCALE_FAST);
 				JLabel imageComponent = new JLabel(new ImageIcon(image));
-				imageComponent.setBorder(BorderFactory.createEmptyBorder(topMargin, leftMargin, bottomMargin, rightMargin));
+				imageComponent.setBorder(BorderFactory.createEmptyBorder(screenSettings.getTopMargin(), screenSettings.getLeftMargin(), screenSettings
+					.getBottomMargin(), screenSettings.getRightMargin()));
 				contentPane.add(imageComponent, BorderLayout.CENTER);
 			} else {
 				// display a blank screen, remove all content: already done
@@ -233,6 +228,11 @@ public class PresenterWindow extends JFrame implements Presenter {
 		fadeIn();
 		
 		// TODO if necessary: hide cursor above every child of the content pane
+	}
+	
+	private boolean noSettingsWereChanged() {
+		VirtualScreenSettingsModel screenSettingsToCompare = VirtualScreenSettingsModel.of(settings, virtualScreen);
+		return screenSettingsToCompare.equals(screenSettings);
 	}
 	
 	private void fadeIn() {
