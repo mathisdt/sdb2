@@ -229,8 +229,9 @@ public class SongsModel implements Iterable<Song>, Persistable {
 			}
 		}
 		if (!actuallyChangedSongs.isEmpty()) {
-			if (autoSort)
+			if (autoSort) {
 				sortSongs();
+			}
 			notifyListModelListeners();
 		}
 		return actuallyChangedSongs;

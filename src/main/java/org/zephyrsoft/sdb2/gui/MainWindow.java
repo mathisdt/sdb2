@@ -1055,7 +1055,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		}
 		
 		LOG.debug("saveSongData: {}", selectedSong.getTitle());
-		controller.getSongsController().updateSong(songFromGUI());
+		Song songFromGUI = songFromGUI();
+		controller.getSongsController().updateSong(songFromGUI);
+		// copy the "song from GUI" to selectedSong to have all edits also in that variable so they get presented
+		// (it's the same song, so it's not necessary to call setSelectedSong() which does a whole lot more)
+		selectedSong = songFromGUI;
 	}
 	
 	private void applyFilter() {
@@ -2061,7 +2065,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		scrollPaneSongNotes.setViewportView(editorSongNotes);
 		editorSongNotes.setBackground(Color.WHITE);
 		
-		for (JComponent v : new JComponent[] {
+		for (JTextComponent v : new JTextComponent[] {
 			textFieldTonality,
 			textFieldAdditionalCopyrightNotes,
 			textFieldAuthorText,
@@ -2077,12 +2081,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			editorDrumNotes
 		}) {
 			v.addFocusListener(new FocusAdapter() {
-				
 				@Override
 				public void focusLost(FocusEvent e) {
 					try {
 						saveSongWithoutChangingGUI();
-					} catch (Throwable ex) {
+					} catch (Exception ex) {
 						handleError(ex);
 					}
 				}
