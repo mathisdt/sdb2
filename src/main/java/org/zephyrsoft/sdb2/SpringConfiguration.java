@@ -136,8 +136,7 @@ public class SpringConfiguration {
 	}
 	
 	@Bean
-	public MainWindow mainWindow() {
-		MainController mainController = mainController();
+	public MainWindow mainWindow(MainController mainController) {
 		MainWindow mainWindow = new MainWindow(mainController, keyboardShortcutManager(), indexerService(), exportService());
 		// Init remote control after mainwindow is ready:
 		mainController.initRemoteController();

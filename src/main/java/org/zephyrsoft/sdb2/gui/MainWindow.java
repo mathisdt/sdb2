@@ -20,6 +20,7 @@ import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_B;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Desktop;
@@ -57,6 +58,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -68,9 +71,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -111,6 +111,7 @@ import org.zephyrsoft.sdb2.model.VirtualScreen;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.model.settings.VirtualScreenSettingsModel;
+import org.zephyrsoft.sdb2.presenter.NamedSongPresentationPosition;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.SongPresentationPosition;
@@ -225,7 +226,8 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private JButton btnShowLogo;
 	private JButton btnShowBlankScreen;
 	private JButton btnPresentSelectedSong;
-	private JMenu menuPresentSelectedSong;
+	private JComboBox<NamedSongPresentationPosition> menuPresentSelectedSong;
+	private JPanel panelPresentationButtons;
 	private JScrollPane scrollPaneSectionButtons;
 	private JButton btnJumpToPresented;
 	private JButton btnExportPdfSelected;
@@ -462,6 +464,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		setVisible(true);
 		textFieldFilter.requestFocusInWindow();
 		checkForUpdateAsync();
+		
+		Dimension menuPresentSelectedSongPreferredSize = menuPresentSelectedSong.getPreferredSize();
+		menuPresentSelectedSongPreferredSize.width = panelPresentationButtons.getSize().width / 4;
+		menuPresentSelectedSong.setPreferredSize(menuPresentSelectedSongPreferredSize);
 	}
 	
 	private void checkForUpdateAsync() {
@@ -1114,7 +1120,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	}
 	
 	private void updateMenuPresentSelectedSong() {
-		menuPresentSelectedSong.removeAll();
+		DefaultComboBoxModel<NamedSongPresentationPosition> model = (DefaultComboBoxModel<NamedSongPresentationPosition>) menuPresentSelectedSong
+			.getModel();
+		model.removeAllElements();
+		model.addElement(new NamedSongPresentationPosition(null, null, "Present selected song at line ..."));
 		if (presentListSelected != null) {
 			// we choose screen A deliberately (the only important setting here is "showTitle" which is global)
 			VirtualScreenSettingsModel screenSettings = VirtualScreenSettingsModel.of(settingsModel, SCREEN_A);
@@ -1129,24 +1138,14 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				if (isFirst) {
 					isFirst = false;
 				} else {
-					JMenuItem separator = new JMenuItem(" ");
-					separator.setEnabled(false);
-					menuPresentSelectedSong.add(separator);
+					NamedSongPresentationPosition separator = new NamedSongPresentationPosition(null, null, " ");
+					model.addElement(separator);
 				}
 				int lineIndex = 0;
 				for (AddressableLine line : part) {
-					JMenuItem lineItem = new JMenuItem(line.getText());
-					lineItem.setBorder(new EmptyBorder(0, 10 * line.getIndentation(), 0, 0));
-					int innerPartIndex = partIndex;
-					int innerLineIndex = lineIndex;
-					lineItem.addActionListener(a -> {
-						try {
-							present(presentListSelected, innerPartIndex, innerLineIndex);
-						} catch (Exception e) {
-							handleError(e);
-						}
-					});
-					menuPresentSelectedSong.add(lineItem);
+					NamedSongPresentationPosition lineItem = new NamedSongPresentationPosition(partIndex, lineIndex,
+						"    ".repeat(line.getIndentation()) + line.getText());
+					model.addElement(lineItem);
 					lineIndex++;
 				}
 				partIndex++;
@@ -1425,14 +1424,14 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	 * A present function, which can be called by a remote controller.
 	 */
 	public void present(Song song) {
-		present(song, null, null);
+		present(song, null);
 	}
 	
-	public void present(Song song, Integer part, Integer line) {
+	public void present(Song song, SongPresentationPosition presentationPosition) {
 		if (song == null) {
 			handleBlankScreen();
 		} else {
-			presentSong(song, part, line);
+			presentSong(song, presentationPosition);
 		}
 	}
 	
@@ -1466,17 +1465,16 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	}
 	
 	protected void handleSongPresent() {
-		presentSong(presentListSelected, null, null);
+		presentSong(presentListSelected, null);
 	}
 	
 	/**
 	 * @param partToPresent
 	 *            index, includes title as index 0 if the title is displayed
 	 */
-	protected void presentSong(Song song, Integer partToPresent, Integer lineToPresent) {
+	protected void presentSong(Song song, SongPresentationPosition presentationPosition) {
 		// not in a "contentChange" block because else the sections wouldn't be displayed:
-		boolean success = controller.present(new Presentable(song, null),
-			partToPresent != null ? new SongPresentationPosition(partToPresent, lineToPresent) : null);
+		boolean success = controller.present(new Presentable(song, null), presentationPosition);
 		controller.contentChange(() -> {
 			controller.stopSlideShow();
 			if (success) {
@@ -1493,8 +1491,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				
 				// mark active line
 				if (!listSectionButtons.isEmpty()) {
-					listSectionButtons.get(partToPresent != null ? partToPresent - (showTitle ? 0 : 1) : 0)
-						.setActiveLine(lineToPresent != null ? lineToPresent : 0);
+					listSectionButtons
+						.get(presentationPosition != null && presentationPosition.getPartIndex() != null
+							? presentationPosition.getPartIndex() - (showTitle ? 0 : 1)
+							: 0)
+						.setActiveLine(presentationPosition != null && presentationPosition.getLineIndex() != null
+							? presentationPosition.getLineIndex()
+							: 0);
 				}
 				
 				// add empty component to consume any space that is left (so the parts appear at the top of the
@@ -2229,7 +2232,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		splitPanePresent.setRightComponent(panelPresentRight);
 		panelPresentRight.setLayout(new BorderLayout(0, 0));
 		
-		JPanel panelPresentationButtons = new JPanel();
+		panelPresentationButtons = new JPanel();
 		panelPresentRight.add(panelPresentationButtons, BorderLayout.CENTER);
 		
 		GridBagLayout gblPanelPresentationButtons = new GridBagLayout();
@@ -2250,11 +2253,34 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		btnPresentSelectedSong.setPreferredSize(new Dimension(64, 64));
 		panelPresentSelectedSong.add(btnPresentSelectedSong, BorderLayout.CENTER);
 		
-		JMenuBar menuBarPresentSelectedSong = new JMenuBar();
-		menuPresentSelectedSong = new JMenu("Present selected song at line ...");
-		menuBarPresentSelectedSong.add(menuPresentSelectedSong);
-		menuPresentSelectedSong.add(new JMenuItem("Test 1"));
-		panelPresentSelectedSong.add(menuBarPresentSelectedSong, BorderLayout.SOUTH);
+		menuPresentSelectedSong = new JComboBox<>();
+		menuPresentSelectedSong.setMaximumRowCount(50);
+		DefaultListCellRenderer menuPresentSelectedSongCellRenderer = new DefaultListCellRenderer() {
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+				Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+				NamedSongPresentationPosition nssp = (NamedSongPresentationPosition) value;
+				if (isSelected && nssp.getPartIndex() == null && nssp.getLineIndex() == null) {
+					rendererComponent.setBackground(list.getBackground());
+				}
+				return rendererComponent;
+			}
+		};
+		menuPresentSelectedSong.setRenderer(menuPresentSelectedSongCellRenderer);
+		menuPresentSelectedSong.addActionListener(actionEvent -> {
+			NamedSongPresentationPosition nssp = (NamedSongPresentationPosition) menuPresentSelectedSong.getSelectedItem();
+			
+			if (nssp != null && nssp.getPartIndex() != null) {
+				present(presentListSelected, nssp);
+			}
+			
+			if (menuPresentSelectedSong.getModel().getSize() > 0) {
+				menuPresentSelectedSong.setSelectedIndex(0);
+			}
+		});
+		panelPresentSelectedSong.add(menuPresentSelectedSong, BorderLayout.SOUTH);
 		
 		GridBagConstraints gbcPanelPresentSelectedSong = new GridBagConstraints();
 		gbcPanelPresentSelectedSong.fill = GridBagConstraints.BOTH;
