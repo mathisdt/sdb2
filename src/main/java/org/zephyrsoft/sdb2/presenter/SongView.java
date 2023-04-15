@@ -41,6 +41,7 @@ import java.util.stream.Stream;
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultCaret;
@@ -54,6 +55,8 @@ import org.jdesktop.core.animation.timing.Animator;
 import org.jdesktop.core.animation.timing.PropertySetter;
 import org.jdesktop.core.animation.timing.TimingTargetAdapter;
 import org.jdesktop.core.animation.timing.interpolators.AccelerationInterpolator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.AddressableLine;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.Song;
@@ -71,6 +74,7 @@ import com.google.common.base.Preconditions;
  * scrollpane around this component is needed!
  */
 public class SongView extends JPanel implements Scroller {
+	private static final Logger LOG = LoggerFactory.getLogger(SongView.class);
 	
 	private static final String SONG_PARTS_NOT_INITIALIZED = "the song parts are not initialized";
 	
@@ -102,7 +106,7 @@ public class SongView extends JPanel implements Scroller {
 	private Color backgroundColor;
 	private boolean minimalScrolling;
 	
-	private JTextPane text;
+	private final JTextPane text;
 	private List<AddressablePart> parts;
 	
 	private StyledDocument document;
@@ -145,9 +149,11 @@ public class SongView extends JPanel implements Scroller {
 		text.setForeground(foregroundColor);
 		text.setDisabledTextColor(foregroundColor);
 		
+		text.setSize(getWidth(), getHeight());
 		text.setBorder(BorderFactory.createEmptyBorder(topMargin, leftMargin, 0, rightMargin));
 		
-		render();
+		parts = render(song, showTranslation, showTitle, showChords, text.getStyledDocument(), titleFont, lyricsFont, translationFont, copyrightFont,
+			titleLyricsDistance, lyricsCopyrightDistance);
 		
 		// workaround for Nimbus L&F:
 		text.setOpaque(false);
@@ -177,16 +183,18 @@ public class SongView extends JPanel implements Scroller {
 	}
 	
 	/**
-	 * Display the song inside the JTextPane using the constraints indicated by the fields, e.g. "showTitle", and create
-	 * a list of addressable parts (paragraphs) and lines for the {@link Scroller} methods.
+	 * Render the song inside the styled document (e.g. from a JTextPane) using the given constraints,
+	 * e.g. "showTitle", and create a list of addressable parts (paragraphs) and lines for the {@link Scroller} methods.
 	 */
-	private void render() {
+	public static List<AddressablePart> render(Song song, boolean showTranslation, boolean showTitle, boolean showChords,
+		StyledDocument document, Font titleFont, Font lyricsFont, Font translationFont, Font copyrightFont,
+		int titleLyricsDistance, int lyricsCopyrightDistance) {
 		List<SongElement> toDisplay = SongParser.parse(song, showTranslation, showTitle, showChords);
 		SongElementHistory elements = new SongElementHistory(toDisplay);
 		
 		// chord lines: correct spacing (in lyrics font) to make the chords correspond to the words
-		FontMetrics fm = createFontMetricsForLyrics();
-		ChordSpaceCorrector chordSpaceCorrector = new ChordSpaceCorrector(str -> fm.stringWidth(str));
+		FontMetrics lyricsFontMetrics = createFontMetrics(lyricsFont);
+		ChordSpaceCorrector chordSpaceCorrector = new ChordSpaceCorrector(lyricsFontMetrics::stringWidth);
 		SongElement previousChordsElement = null;
 		for (SongElement songElement : toDisplay) {
 			switch (songElement.getType()) {
@@ -204,12 +212,11 @@ public class SongView extends JPanel implements Scroller {
 			}
 		}
 		
-		parts = new ArrayList<>();
+		List<AddressablePart> parts = new ArrayList<>();
 		AddressablePart currentPart = new AddressablePart();
 		Integer position = null;
 		
-		document = text.getStyledDocument();
-		addStyles();
+		addStyles(document, titleFont, lyricsFont, translationFont, copyrightFont, titleLyricsDistance, lyricsCopyrightDistance);
 		
 		// handle the elements of the song
 		for (SongElement element : elements) {
@@ -217,27 +224,27 @@ public class SongView extends JPanel implements Scroller {
 			SongElement back1 = elements.back(1);
 			SongElement back2 = elements.back(2);
 			
-			handleCopyrightLine(back1, element);
+			handleCopyrightLine(document, back1, element);
 			
-			handleTitlePosition(element);
+			handleTitlePosition(document, parts, element);
 			
 			if ((is(element, NEW_LINE, COPYRIGHT))
 				&& (!isEmpty(back1))
 				&& (!is(back1, TRANSLATION)
 					|| currentPart.isEmpty()) // translation line is first line in part
 				&& position == null) {
-				position = createPosition(back1);
+				position = createPosition(document, back1);
 			} else if ((is(element, NEW_LINE, COPYRIGHT))
 				&& (!isEmpty(back1))
 				&& is(back1, TRANSLATION)
 				&& is(back2, LYRICS)
 				&& position == null) {
-				position = createPosition(back2);
+				position = createPosition(document, back2);
 			} else if (is(back2, NEW_LINE)
 				&& is(back1, NEW_LINE)
 				&& !is(element, NEW_LINE)
 				&& position == null) {
-				position = createPosition();
+				position = createPosition(document);
 			}
 			
 			if (isBodyElement(element)) {
@@ -278,39 +285,40 @@ public class SongView extends JPanel implements Scroller {
 			if (bothAreNewlines(back1, element)
 				|| (is(element, NEW_LINE) && back1 != null && isEmpty(back1)
 					&& (back2 == null || is(back2, NEW_LINE)))) {
-				appendText(element.getContent(), LYRICS, element.getIndentation());
+				appendText(document, element.getContent(), LYRICS, element.getIndentation());
 			} else {
-				appendText(element.getContent(), element.getType(), element.getIndentation());
+				appendText(document, element.getContent(), element.getType(), element.getIndentation());
 			}
 			
-			handleTitleLine(element);
+			handleTitleLine(document, element);
 		}
 		if (currentPart.size() > 0) {
 			// current part is populated with at least one line => save current part
 			parts.add(currentPart);
 		}
+		return parts;
 	}
 	
-	private boolean bothAreNewlines(SongElement prevElement, SongElement element) {
+	private static boolean bothAreNewlines(SongElement prevElement, SongElement element) {
 		return is(element, NEW_LINE) && is(prevElement, NEW_LINE);
 	}
 	
-	private FontMetrics createFontMetricsForLyrics() {
+	private static FontMetrics createFontMetrics(Font font) {
 		BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = img.createGraphics();
-		return g.getFontMetrics(lyricsFont);
+		return g.getFontMetrics(font);
 	}
 	
-	private void handleTitlePosition(SongElement element) {
+	private static void handleTitlePosition(StyledDocument document, List<AddressablePart> parts, SongElement element) {
 		if (is(element, TITLE)) {
-			Integer position = createPosition();
+			Integer position = createPosition(document);
 			AddressablePart titlePart = new AddressablePart();
 			titlePart.add(new AddressableLine(element, position));
 			parts.add(titlePart);
 		}
 	}
 	
-	private Integer createPosition(SongElement... toSubtract) {
+	private static Integer createPosition(StyledDocument document, SongElement... toSubtract) {
 		int toSubtractInt = 0;
 		for (SongElement element : toSubtract) {
 			toSubtractInt += element.getContent() == null ? 0 : element.getContent().length();
@@ -319,23 +327,24 @@ public class SongView extends JPanel implements Scroller {
 		return document.getLength() - toSubtractInt + 1;
 	}
 	
-	private void addStyles() {
-		addStyleFromFont(TITLE.name(), titleFont);
-		addStyle(TITLE_LYRICS_DISTANCE, false, false, lyricsFont.getFamily(), titleLyricsDistance);
-		addStyleFromFont(CHORDS.name(), lyricsFont);
-		addStyleFromFont(LYRICS.name(), lyricsFont);
-		addStyleFromFont(TRANSLATION.name(), translationFont);
-		addStyle(LYRICS_COPYRIGHT_DISTANCE, false, false, lyricsFont.getFamily(), lyricsCopyrightDistance);
-		addStyleFromFont(COPYRIGHT.name(), copyrightFont);
+	private static void addStyles(StyledDocument document, Font titleFont, Font lyricsFont, Font translationFont,
+		Font copyrightFont, int titleLyricsDistance, int lyricsCopyrightDistance) {
+		addStyleFromFont(document, TITLE.name(), titleFont);
+		addStyle(document, TITLE_LYRICS_DISTANCE, false, false, lyricsFont.getFamily(), titleLyricsDistance);
+		addStyleFromFont(document, CHORDS.name(), lyricsFont);
+		addStyleFromFont(document, LYRICS.name(), lyricsFont);
+		addStyleFromFont(document, TRANSLATION.name(), translationFont);
+		addStyle(document, LYRICS_COPYRIGHT_DISTANCE, false, false, lyricsFont.getFamily(), lyricsCopyrightDistance);
+		addStyleFromFont(document, COPYRIGHT.name(), copyrightFont);
 		int indentationFontSize = Math.min(lyricsFont.getSize(), translationFont.getSize());
-		addStyle(INDENTATION_STYLE, false, false, lyricsFont.getFamily(), indentationFontSize);
+		addStyle(document, INDENTATION_STYLE, false, false, lyricsFont.getFamily(), indentationFontSize);
 	}
 	
-	private void handleTitleLine(SongElement element) {
+	private static void handleTitleLine(StyledDocument document, SongElement element) {
 		if (is(element, TITLE)) {
 			// append space
-			appendText(NEWLINE_CHAR, NEW_LINE, 0);
-			appendText(LYRICS_COPYRIGHT_DISTANCE_TEXT, TITLE_LYRICS_DISTANCE, 0);
+			appendText(document, NEWLINE_CHAR, NEW_LINE, 0);
+			appendText(document, LYRICS_COPYRIGHT_DISTANCE_TEXT, TITLE_LYRICS_DISTANCE, 0);
 		}
 	}
 	
@@ -358,14 +367,14 @@ public class SongView extends JPanel implements Scroller {
 		return is(element, CHORDS, LYRICS, TRANSLATION);
 	}
 	
-	private void handleCopyrightLine(SongElement previousElement, SongElement element) {
+	private static void handleCopyrightLine(StyledDocument document, SongElement previousElement, SongElement element) {
 		if (isFirstCopyrightLine(previousElement, element)) {
 			// prepend space
-			appendText(NEWLINE_CHAR, NEW_LINE, 0);
-			appendText(LYRICS_COPYRIGHT_DISTANCE_TEXT, LYRICS_COPYRIGHT_DISTANCE, 0);
+			appendText(document, NEWLINE_CHAR, NEW_LINE, 0);
+			appendText(document, LYRICS_COPYRIGHT_DISTANCE_TEXT, LYRICS_COPYRIGHT_DISTANCE, 0);
 		} else if (isCopyrightLineButNotFirstOne(previousElement, element)) {
 			// prepend newline
-			appendText(NEWLINE_CHAR, NEW_LINE, 0);
+			appendText(document, NEWLINE_CHAR, NEW_LINE, 0);
 		}
 	}
 	
@@ -377,11 +386,11 @@ public class SongView extends JPanel implements Scroller {
 		return !is(previousElement, COPYRIGHT) && is(element, COPYRIGHT);
 	}
 	
-	private void appendText(String string, SongElementEnum type, int indentation) {
-		appendText(string, type.name(), indentation);
+	private static void appendText(StyledDocument document, String string, SongElementEnum type, int indentation) {
+		appendText(document, string, type.name(), indentation);
 	}
 	
-	private void appendText(String string, String type, int indentation) {
+	private static void appendText(StyledDocument document, String string, String type, int indentation) {
 		try {
 			if (indentation > 0) {
 				int offset = document.getLength();
@@ -401,11 +410,11 @@ public class SongView extends JPanel implements Scroller {
 		}
 	}
 	
-	private Style addStyleFromFont(String styleName, Font font) {
-		return addStyle(styleName, font.isItalic(), font.isBold(), font.getFamily(), font.getSize());
+	private static Style addStyleFromFont(StyledDocument document, String styleName, Font font) {
+		return addStyle(document, styleName, font.isItalic(), font.isBold(), font.getFamily(), font.getSize());
 	}
 	
-	private Style addStyle(String styleName, boolean italic, boolean bold, String fontFamily, int fontSize) {
+	private static Style addStyle(StyledDocument document, String styleName, boolean italic, boolean bold, String fontFamily, int fontSize) {
 		Style style = document.addStyle(styleName, DEFAULT_STYLE);
 		StyleConstants.setItalic(style, italic);
 		StyleConstants.setBold(style, bold);
@@ -422,6 +431,10 @@ public class SongView extends JPanel implements Scroller {
 	
 	@Override
 	public void moveToPart(Integer part) {
+		moveToPart(part, true);
+	}
+	
+	public void moveToPart(Integer part, boolean animated) {
 		Preconditions.checkArgument(parts != null, SONG_PARTS_NOT_INITIALIZED);
 		adjustHeightIfNecessary();
 		try {
@@ -433,7 +446,13 @@ public class SongView extends JPanel implements Scroller {
 			if (minimalScrolling && targetY > text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight()) {
 				targetY = text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight();
 			}
-			animatedMoveTo(new Point((int) text.getLocation().getX(), (int) Math.min(0, (topMargin - targetY))));
+			Point targetLocation = new Point((int) text.getLocation().getX(), (int) Math.min(0, (topMargin - targetY)));
+			LOG.debug("moving to part {} (animated={}) - target={}", part, animated, targetLocation);
+			if (animated) {
+				animatedMoveTo(targetLocation);
+			} else {
+				abruptMoveTo(targetLocation);
+			}
 		} catch (BadLocationException e) {
 			throw new IllegalStateException("could not identify position in text", e);
 		}
@@ -441,7 +460,15 @@ public class SongView extends JPanel implements Scroller {
 	
 	@Override
 	public void moveToLine(Integer part, Integer line) {
+		moveToLine(part, line, true);
+	}
+	
+	public void moveToLine(Integer partNullable, Integer lineNullable, boolean animated) {
 		Preconditions.checkArgument(parts != null, SONG_PARTS_NOT_INITIALIZED);
+		
+		int part = partNullable == null ? 0 : partNullable;
+		int line = lineNullable == null ? 0 : lineNullable;
+		
 		adjustHeightIfNecessary();
 		try {
 			int noTitlePart = showTitle ? part : Math.max(part - 1, 0);
@@ -454,7 +481,13 @@ public class SongView extends JPanel implements Scroller {
 			if (minimalScrolling && targetY > text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight()) {
 				targetY = text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight();
 			}
-			animatedMoveTo(new Point((int) text.getLocation().getX(), (int) Math.min(0, (topMargin - targetY))));
+			Point targetLocation = new Point((int) text.getLocation().getX(), (int) Math.min(0, (topMargin - targetY)));
+			LOG.debug("moving to part {} / line {} (animated={}) - target={}", part, line, animated, targetLocation);
+			if (animated) {
+				animatedMoveTo(targetLocation);
+			} else {
+				abruptMoveTo(targetLocation);
+			}
 		} catch (BadLocationException e) {
 			throw new IllegalStateException("could not identify position in text", e);
 		}
@@ -472,29 +505,37 @@ public class SongView extends JPanel implements Scroller {
 			// discard old animator because it takes too long to let it stop completely
 			animator = null;
 		}
-		animator = createAnimator();
+		animator = createAnimator(1200);
 		TimingTargetAdapter target = PropertySetter.getTargetTo(text, "location",
 			new AccelerationInterpolator(0.5, 0.5), targetLocation);
 		animator.addTarget(target);
 		animator.start();
 	}
 	
+	private void abruptMoveTo(Point targetLocation) {
+		SwingUtilities.invokeLater(() -> {
+			adjustHeightIfNecessary();
+			text.setLocation(targetLocation);
+		});
+	}
+	
 	public int getScrollPosition() {
 		return (int) text.getLocation().getY();
 	}
 	
-	private Animator createAnimator() {
-		return new Animator.Builder().setDuration(1200, TimeUnit.MILLISECONDS).build();
+	private Animator createAnimator(long duration) {
+		return new Animator.Builder().setDuration(duration, TimeUnit.MILLISECONDS).build();
 	}
 	
 	private void adjustHeightIfNecessary() {
 		try {
+			text.validate();
 			// adjust height to meet at least the required value so that all text is visible
 			if (text.getSize().height < text.getPreferredSize().height) {
 				text.setSize(text.getSize().width, text.getPreferredSize().height);
 			}
 		} catch (NullPointerException e) {
-			// This is a fix for remote, where moveToLine is called to fast after startup
+			// This is a fix for remote, where moveToLine is called too fast after startup
 		}
 	}
 	

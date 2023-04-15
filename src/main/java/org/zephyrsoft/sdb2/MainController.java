@@ -66,6 +66,7 @@ import org.zephyrsoft.sdb2.model.XMLConverter;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
+import org.zephyrsoft.sdb2.presenter.PresentationPosition;
 import org.zephyrsoft.sdb2.presenter.Presenter;
 import org.zephyrsoft.sdb2.presenter.PresenterBundle;
 import org.zephyrsoft.sdb2.presenter.PresenterWindow;
@@ -216,7 +217,7 @@ public class MainController implements Scroller {
 		contentChanger.execute(command);
 	}
 	
-	public boolean present(Presentable presentable) {
+	public boolean present(Presentable presentable, PresentationPosition presentationPosition) {
 		SelectableDisplay screen1 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class));
 		SelectableDisplay screen2 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class));
 		
@@ -239,7 +240,7 @@ public class MainController implements Scroller {
 					&& pw.screenSizeMatches()))) {
 			LOG.trace("re-using the existing presenters");
 			currentlyPresentedSong = presentable.getSong();
-			presentationControl.setContent(presentable);
+			presentationControl.setContent(presentable, presentationPosition);
 			
 			// the presentation windows were moved to front and got the focus because of that,
 			// so we need to get the focus back to the main window:
@@ -248,20 +249,21 @@ public class MainController implements Scroller {
 			return true;
 		} else {
 			LOG.trace("using newly created presenters");
-			return presentInNewPresenters(presentable, screen1, screen2);
+			return presentInNewPresenters(presentable, presentationPosition, screen1, screen2);
 		}
 	}
 	
-	private boolean presentInNewPresenters(Presentable presentable, SelectableDisplay screen1, SelectableDisplay screen2) {
+	private boolean presentInNewPresenters(Presentable presentable, PresentationPosition presentationPosition, SelectableDisplay screen1,
+		SelectableDisplay screen2) {
 		PresenterBundle oldPresentationControl = presentationControl;
 		presentationControl = new PresenterBundle();
 		
-		Presenter presenter1 = createPresenter(screen1, presentable, VirtualScreen.SCREEN_A);
+		Presenter presenter1 = createPresenter(screen1, presentable, presentationPosition, VirtualScreen.SCREEN_A);
 		if (presenter1 != null) {
 			presentationControl.addPresenter(presenter1);
 		}
 		
-		Presenter presenter2 = createPresenter(screen2, presentable, VirtualScreen.SCREEN_B);
+		Presenter presenter2 = createPresenter(screen2, presentable, presentationPosition, VirtualScreen.SCREEN_B);
 		if (presenter2 != null) {
 			presentationControl.addPresenter(presenter2);
 		}
@@ -368,7 +370,8 @@ public class MainController implements Scroller {
 		}
 	}
 	
-	private PresenterWindow createPresenter(SelectableDisplay screen, Presentable presentable, VirtualScreen virtualScreen) {
+	private PresenterWindow createPresenter(SelectableDisplay screen, Presentable presentable, PresentationPosition presentationPosition,
+		VirtualScreen virtualScreen) {
 		if (screen == null || !screen.isAvailable()) {
 			// nothing to be done
 			LOG.debug("could not create presenter window for virtual screen {} - display is {}", virtualScreen.getName(), screen == null ? "null"
@@ -377,7 +380,7 @@ public class MainController implements Scroller {
 		}
 		PresenterWindow presenterWindow = null;
 		try {
-			presenterWindow = new PresenterWindow(screen, presentable, virtualScreen, settings, this);
+			presenterWindow = new PresenterWindow(screen, presentable, presentationPosition, virtualScreen, settings, this);
 		} catch (IllegalStateException ise) {
 			LOG.warn("could not create presenter window", ise);
 			return null;
@@ -789,7 +792,7 @@ public class MainController implements Scroller {
 	}
 	
 	private void showSlide(File imageFile) {
-		present(new Presentable(null, imageFile.getAbsolutePath()));
+		present(new Presentable(null, imageFile.getAbsolutePath()), null);
 	}
 	
 	public void stopSlideShow() {

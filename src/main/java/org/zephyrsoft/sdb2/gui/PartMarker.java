@@ -54,8 +54,6 @@ public class PartMarker extends JComponent {
 		int markerHeight = getHeight() - (2 * margin);
 		g.fillRect(markerStartX, margin, MARKER_WIDTH, markerHeight);
 		
-		// TODO paint marker if partButtonGroup.isActive() at line partButtonGroup.getActiveLine()
-		
 		if (drawArrow) {
 			// calculate position and size: use one third of the available space
 			int arrowStartX = markerStartX / 3;

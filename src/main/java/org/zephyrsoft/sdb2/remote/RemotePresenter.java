@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.presenter.Presentable;
+import org.zephyrsoft.sdb2.presenter.PresentationPosition;
 import org.zephyrsoft.sdb2.presenter.Presenter;
 
 /**
@@ -79,15 +80,15 @@ public class RemotePresenter implements Presenter {
 	}
 	
 	/**
-	 * @see org.zephyrsoft.sdb2.presenter.Presenter#setContent(org.zephyrsoft.sdb2.presenter.Presentable)
+	 * @see org.zephyrsoft.sdb2.presenter.Presenter#setContent(Presentable, PresentationPosition)
 	 */
 	@Override
-	public void setContent(Presentable presentable) {
+	public void setContent(Presentable presentable, PresentationPosition presentationPosition) {
 		this.presentable = presentable;
 		
 		if (presentable.getSong() != null) {
 			remoteController.getSong().set(presentable.getSong());
-			remoteController.getPosition().set(new Position(presentable.getSong().getUUID(), 0, 0));
+			remoteController.getPosition().set(new Position(presentable.getSong().getUUID(), presentationPosition));
 		} else if (presentable.getImage() != null) {
 			LOG.warn("Images are not presented over remote");
 		} else {

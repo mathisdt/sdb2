@@ -68,6 +68,9 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -82,6 +85,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
+import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.JTextComponent;
 import javax.swing.undo.UndoManager;
 
@@ -95,6 +99,7 @@ import org.zephyrsoft.sdb2.gui.renderer.FilterTypeCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenDisplayCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
+import org.zephyrsoft.sdb2.model.AddressableLine;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ExportFormat;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
@@ -105,8 +110,11 @@ import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.VirtualScreen;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
+import org.zephyrsoft.sdb2.model.settings.VirtualScreenSettingsModel;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
+import org.zephyrsoft.sdb2.presenter.SongPresentationPosition;
+import org.zephyrsoft.sdb2.presenter.SongView;
 import org.zephyrsoft.sdb2.presenter.UIScroller;
 import org.zephyrsoft.sdb2.remote.PatchController;
 import org.zephyrsoft.sdb2.remote.RemoteStatus;
@@ -217,6 +225,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private JButton btnShowLogo;
 	private JButton btnShowBlankScreen;
 	private JButton btnPresentSelectedSong;
+	private JMenu menuPresentSelectedSong;
 	private JScrollPane scrollPaneSectionButtons;
 	private JButton btnJumpToPresented;
 	private JButton btnExportPdfSelected;
@@ -339,6 +348,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		btnDown.setEnabled(false);
 		// disable "present this song" and "jump to" buttons
 		btnPresentSelectedSong.setEnabled(false);
+		menuPresentSelectedSong.setEnabled(false);
 		btnJumpToSelected.setEnabled(false);
 		btnJumpToPresented.setEnabled(false);
 		btnExportPdfSelected.setEnabled(false);
@@ -432,6 +442,8 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		tabbedPane.addChangeListener(e -> {
 			// on every tab switch, lock the settings again
 			handleSettingsSaveAndLock();
+			// maybe the setting "show title in presentation" was changed:
+			updateMenuPresentSelectedSong();
 		});
 		addWindowFocusListener(new WindowAdapter() {
 			@Override
@@ -1081,6 +1093,8 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			btnDown.setEnabled(presentList.getSelectedIndex() < presentModel.getSize() - 1);
 			// enable "present this song" and "jump to selected" buttons
 			btnPresentSelectedSong.setEnabled(true);
+			updateMenuPresentSelectedSong();
+			menuPresentSelectedSong.setEnabled(true);
 			btnJumpToSelected.setEnabled(true);
 		} else {
 			// disable buttons beneath the present list
@@ -1089,7 +1103,50 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			btnDown.setEnabled(false);
 			// disable "present this song" and "jump to selected" buttons
 			btnPresentSelectedSong.setEnabled(false);
+			updateMenuPresentSelectedSong();
+			menuPresentSelectedSong.setEnabled(false);
 			btnJumpToSelected.setEnabled(false);
+		}
+	}
+	
+	private void updateMenuPresentSelectedSong() {
+		menuPresentSelectedSong.removeAll();
+		if (presentListSelected != null) {
+			// we choose screen A deliberately (the only important setting here is "showTitle" which is global)
+			VirtualScreenSettingsModel screenSettings = VirtualScreenSettingsModel.of(settingsModel, SCREEN_A);
+			List<AddressablePart> parts = SongView.render(presentListSelected, screenSettings.isShowTranslation(),
+				screenSettings.isShowTitle(), screenSettings.isShowChords(), new DefaultStyledDocument(), screenSettings.getTitleFont(),
+				screenSettings.getLyricsFont(), screenSettings.getTranslationFont(), screenSettings.getCopyrightFont(),
+				screenSettings.getTitleLyricsDistance(), screenSettings.getLyricsCopyrightDistance());
+			
+			boolean isFirst = true;
+			int partIndex = screenSettings.isShowTitle() ? 0 : 1;
+			for (AddressablePart part : parts) {
+				if (isFirst) {
+					isFirst = false;
+				} else {
+					JMenuItem separator = new JMenuItem(" ");
+					separator.setEnabled(false);
+					menuPresentSelectedSong.add(separator);
+				}
+				int lineIndex = 0;
+				for (AddressableLine line : part) {
+					JMenuItem lineItem = new JMenuItem(line.getText());
+					lineItem.setBorder(new EmptyBorder(0, 10 * line.getIndentation(), 0, 0));
+					int innerPartIndex = partIndex;
+					int innerLineIndex = lineIndex;
+					lineItem.addActionListener(a -> {
+						try {
+							present(presentListSelected, innerPartIndex, innerLineIndex);
+						} catch (Exception e) {
+							handleError(e);
+						}
+					});
+					menuPresentSelectedSong.add(lineItem);
+					lineIndex++;
+				}
+				partIndex++;
+			}
 		}
 	}
 	
@@ -1364,14 +1421,14 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	 * A present function, which can be called by a remote controller.
 	 */
 	public void present(Song song) {
-		Song currentlyPresentedSong = controller.getCurrentlyPresentedSong();
-		if (currentlyPresentedSong != null && !currentlyPresentedSong.equals(song)
-			|| currentlyPresentedSong == null && song != null) {
-			if (song != null) {
-				presentSong(song);
-			} else {
-				handleBlankScreen();
-			}
+		present(song, null, null);
+	}
+	
+	public void present(Song song, Integer part, Integer line) {
+		if (song == null) {
+			handleBlankScreen();
+		} else {
+			presentSong(song, part, line);
 		}
 	}
 	
@@ -1398,19 +1455,24 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		controller.contentChange(() -> {
 			if (!getUIParts().isEmpty()) {
 				Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
-				int noTitlePart = showTitle ? part : Math.max(part - 1, 0);
+				int noTitlePart = Boolean.TRUE.equals(showTitle) ? part : Math.max(part - 1, 0);
 				getUIParts().get(noTitlePart).setActiveLine(line);
 			}
 		});
 	}
 	
 	protected void handleSongPresent() {
-		presentSong(presentListSelected);
+		presentSong(presentListSelected, null, null);
 	}
 	
-	protected void presentSong(Song song) {
+	/**
+	 * @param partToPresent
+	 *            index, includes title as index 0 if the title is displayed
+	 */
+	protected void presentSong(Song song, Integer partToPresent, Integer lineToPresent) {
 		// not in a "contentChange" block because else the sections wouldn't be displayed:
-		boolean success = controller.present(new Presentable(song, null));
+		boolean success = controller.present(new Presentable(song, null),
+			partToPresent != null ? new SongPresentationPosition(partToPresent, lineToPresent) : null);
 		controller.contentChange(() -> {
 			controller.stopSlideShow();
 			if (success) {
@@ -1425,9 +1487,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 					partIndex++;
 				}
 				
-				// mark first line as active
+				// mark active line
 				if (!listSectionButtons.isEmpty()) {
-					listSectionButtons.get(0).setActiveLine(0);
+					listSectionButtons.get(partToPresent != null ? partToPresent - (showTitle ? 0 : 1) : 0)
+						.setActiveLine(lineToPresent != null ? lineToPresent : 0);
 				}
 				
 				// add empty component to consume any space that is left (so the parts appear at the top of the
@@ -1443,7 +1506,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	protected void handleBlankScreen() {
 		controller.contentChange(() -> {
-			boolean success = controller.present(BLANK_SCREEN);
+			boolean success = controller.present(BLANK_SCREEN, null);
 			controller.stopSlideShow();
 			if (success) {
 				clearSectionButtons();
@@ -1454,7 +1517,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	protected void handleLogoPresent() {
 		controller.contentChange(() -> {
-			boolean success = controller.present(new Presentable(null, controller.loadLogo()));
+			boolean success = controller.present(new Presentable(null, controller.loadLogo()), null);
 			controller.stopSlideShow();
 			if (success) {
 				clearSectionButtons();
@@ -2173,21 +2236,32 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gblPanelPresentationButtons.rowWeights = new double[] { 0d, 0d, 0d, 0d, 1d };
 		panelPresentationButtons.setLayout(gblPanelPresentationButtons);
 		
+		JPanel panelPresentSelectedSong = new JPanel();
+		panelPresentSelectedSong.setLayout(new BorderLayout());
+		
 		btnPresentSelectedSong = new JButton("Present selected song");
 		btnPresentSelectedSong.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/play.png"));
 		btnPresentSelectedSong.setVerticalTextPosition(SwingConstants.BOTTOM);
 		btnPresentSelectedSong.setHorizontalTextPosition(SwingConstants.CENTER);
 		btnPresentSelectedSong.addActionListener(safeAction(e -> handleSongPresent()));
-		GridBagConstraints gbcBtnPresentSelectedSong = new GridBagConstraints();
-		gbcBtnPresentSelectedSong.fill = GridBagConstraints.BOTH;
-		gbcBtnPresentSelectedSong.insets = new Insets(10, 0, 15, 5);
-		gbcBtnPresentSelectedSong.gridheight = 3;
-		// gbcBtnPresentSelectedSong.ipadx = 20;
-		gbcBtnPresentSelectedSong.ipady = 80;
-		gbcBtnPresentSelectedSong.gridx = 0;
-		gbcBtnPresentSelectedSong.gridy = 0;
 		btnPresentSelectedSong.setPreferredSize(new Dimension(64, 64));
-		panelPresentationButtons.add(btnPresentSelectedSong, gbcBtnPresentSelectedSong);
+		panelPresentSelectedSong.add(btnPresentSelectedSong, BorderLayout.CENTER);
+		
+		JMenuBar menuBarPresentSelectedSong = new JMenuBar();
+		menuPresentSelectedSong = new JMenu("Present selected song at line ...");
+		menuBarPresentSelectedSong.add(menuPresentSelectedSong);
+		menuPresentSelectedSong.add(new JMenuItem("Test 1"));
+		panelPresentSelectedSong.add(menuBarPresentSelectedSong, BorderLayout.SOUTH);
+		
+		GridBagConstraints gbcPanelPresentSelectedSong = new GridBagConstraints();
+		gbcPanelPresentSelectedSong.fill = GridBagConstraints.BOTH;
+		gbcPanelPresentSelectedSong.insets = new Insets(10, 0, 15, 5);
+		gbcPanelPresentSelectedSong.gridheight = 3;
+		// gbcPanelPresentSelectedSong.ipadx = 20;
+		gbcPanelPresentSelectedSong.ipady = 80;
+		gbcPanelPresentSelectedSong.gridx = 0;
+		gbcPanelPresentSelectedSong.gridy = 0;
+		panelPresentationButtons.add(panelPresentSelectedSong, gbcPanelPresentSelectedSong);
 		
 		btnShowBlankScreen = new JButton("Blank screen");
 		btnShowBlankScreen.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/stop.png"));

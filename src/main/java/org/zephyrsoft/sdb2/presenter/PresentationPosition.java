@@ -15,32 +15,17 @@
  */
 package org.zephyrsoft.sdb2.presenter;
 
+import java.util.Optional;
+
 /**
- * Control the presentation.
+ * Indicates a position inside a {@link Presentable} (or a concrete implementation).
  */
-public interface Presenter extends Scroller {
-	
-	/**
-	 * Set the content. For re-using an existing presenter.
-	 *
-	 * @param presentationPosition
-	 *            the position (optional, can be {@code null})
-	 */
-	void setContent(Presentable presentable, PresentationPosition presentationPosition);
-	
-	/**
-	 * Show the presenter.
-	 */
-	void showPresenter();
-	
-	/**
-	 * Hide the presenter.
-	 */
-	void hidePresenter();
-	
-	/**
-	 * Permanently dispose of the presenter. It cannot be shown again after calling this method.
-	 */
-	void disposePresenter();
-	
+public interface PresentationPosition {
+	public static Optional<SongPresentationPosition> forSong(PresentationPosition genericPresentationPosition) {
+		if (genericPresentationPosition instanceof SongPresentationPosition spp) {
+			return Optional.of(spp);
+		} else {
+			return Optional.empty();
+		}
+	}
 }

@@ -45,9 +45,9 @@ public class PresenterBundle implements Presenter {
 	}
 	
 	@Override
-	public void setContent(Presentable presentable) {
+	public void setContent(Presentable presentable, PresentationPosition presentationPosition) {
 		for (Presenter presenter : presenters) {
-			presenter.setContent(presentable);
+			presenter.setContent(presentable, presentationPosition);
 		}
 	}
 	

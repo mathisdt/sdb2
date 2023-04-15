@@ -161,7 +161,7 @@ public class RemoteController {
 		if (mainWindow != null)
 			mainWindow.present(s);
 		else
-			mainController.present(new Presentable(s, null));
+			mainController.present(new Presentable(s, null), null);
 	}
 	
 	private void moveToLine(MainController mainController, MainWindow mainWindow, Position p) {
@@ -189,7 +189,7 @@ public class RemoteController {
 	}
 	
 	public RemotePresenter getRemotePresenter(Presentable presentable) {
-		remotePresenter.setContent(presentable);
+		remotePresenter.setContent(presentable, null);
 		return remotePresenter;
 	}
 	

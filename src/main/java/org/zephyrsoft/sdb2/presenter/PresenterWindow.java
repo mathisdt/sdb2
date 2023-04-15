@@ -26,6 +26,7 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.MemoryImageSource;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +37,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import org.jdesktop.core.animation.timing.Animator;
@@ -61,7 +63,9 @@ public class PresenterWindow extends JFrame implements Presenter {
 	private static final Logger LOG = LoggerFactory.getLogger(PresenterWindow.class);
 	
 	private final JPanel contentPane;
+	private JPanel songViewPanel;
 	private SongView songView;
+	private ChordSequenceView chordSequenceView;
 	
 	private Animator fader;
 	
@@ -70,13 +74,14 @@ public class PresenterWindow extends JFrame implements Presenter {
 	private final SelectableDisplay screen;
 	private VirtualScreenSettingsModel screenSettings;
 	private Presentable presentable;
+	private PresentationPosition presentationPosition;
 	private MainController controller;
 	
 	private Cursor transparentCursor;
 	
 	private Rectangle screenSize;
 	
-	public PresenterWindow(SelectableDisplay screen, Presentable presentable,
+	public PresenterWindow(SelectableDisplay screen, Presentable presentable, PresentationPosition presentationPosition,
 		VirtualScreen virtualScreen, SettingsModel settings, MainController controller) {
 		super(ScreenHelper.getConfiguration(screen));
 		this.controller = controller;
@@ -117,7 +122,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 		
 		setContentPane(contentPane);
 		
-		setContent(presentable);
+		setContent(presentable, presentationPosition);
 	}
 	
 	private void calculateScreenSize() {
@@ -152,9 +157,20 @@ public class PresenterWindow extends JFrame implements Presenter {
 	}
 	
 	@Override
-	public void setContent(Presentable presentable) {
-		if (Objects.equals(presentable, this.presentable) && songView.getScrollPosition() == 0 && noSettingsWereChanged()) {
-			return;
+	public void setContent(Presentable presentable, PresentationPosition presentationPosition) {
+		if (Objects.equals(presentable, this.presentable)
+			&& noSettingsWereChanged()) {
+			if (presentationPosition instanceof SongPresentationPosition spp) {
+				songView.moveToLine(spp.getPartIndex(), spp.getLineIndex(), true);
+				this.presentationPosition = presentationPosition;
+				toFront();
+				return;
+			} else if (presentationPosition == null) {
+				songView.moveToLine(null, null, true);
+				this.presentationPosition = presentationPosition;
+				toFront();
+				return;
+			}
 		}
 		
 		this.presentable = presentable;
@@ -164,70 +180,103 @@ public class PresenterWindow extends JFrame implements Presenter {
 		} else {
 			fadeOutAbruptly();
 		}
-		
 		controller.contentChange(() -> {
-			contentPane.removeAll();
-			
-			screenSettings = VirtualScreenSettingsModel.of(settings, virtualScreen);
-			setBackgroundColor(screenSettings.getBackgroundColor());
-			if (getGlassPane() instanceof TranslucentPanel tp
-				&& !Objects.equals(screenSettings.getBackgroundColor(), tp.getBaseColor())) {
-				tp.setBaseColor(screenSettings.getBackgroundColor());
+			try {
+				SwingUtilities.invokeAndWait(() -> {
+					contentPane.removeAll();
+					
+					screenSettings = VirtualScreenSettingsModel.of(settings, virtualScreen);
+					setBackgroundColor(screenSettings.getBackgroundColor());
+					if (getGlassPane() instanceof TranslucentPanel tp
+						&& !Objects.equals(screenSettings.getBackgroundColor(), tp.getBaseColor())) {
+						tp.setBaseColor(screenSettings.getBackgroundColor());
+					}
+					
+					if (presentable.getSong() != null) {
+						// create a SongView to render the song
+						songView = new SongView.Builder(presentable.getSong())
+							.showTitle(screenSettings.isShowTitle())
+							.showTranslation(screenSettings.isShowTranslation())
+							.showChords(screenSettings.isShowChords())
+							.titleFont(screenSettings.getTitleFont())
+							.lyricsFont(screenSettings.getLyricsFont())
+							.translationFont(screenSettings.getTranslationFont())
+							.copyrightFont(screenSettings.getCopyrightFont())
+							.topMargin(screenSettings.getTopMargin())
+							.leftMargin(screenSettings.getLeftMargin())
+							.rightMargin(screenSettings.getRightMargin())
+							.bottomMargin(screenSettings.getBottomMargin())
+							.titleLyricsDistance(screenSettings.getTitleLyricsDistance())
+							.lyricsCopyrightDistance(screenSettings.getLyricsCopyrightDistance())
+							.foregroundColor(screenSettings.getForegroundColor())
+							.backgroundColor(screenSettings.getBackgroundColor())
+							.minimalScrolling(screenSettings.isMinimalScrolling())
+							.build();
+						songViewPanel = new JPanel(null, true);
+						contentPane.add(songViewPanel, BorderLayout.CENTER);
+						songViewPanel.add(songView);
+						songView.setLocation(0, 0);
+						
+						if (screenSettings.isShowChordSequence()) {
+							chordSequenceView = new ChordSequenceView(presentable.getSong(), screenSettings.getChordSequenceFont(), screenSettings
+								.getForegroundColor(), screenSettings.getBackgroundColor());
+							contentPane.add(chordSequenceView,
+								BorderLayout.SOUTH);
+						} else {
+							chordSequenceView = null;
+						}
+						
+						songView.setSize((int) screenSize.getWidth(),
+							(int) screenSize.getHeight() - (chordSequenceView != null ? chordSequenceView.getHeight() : 0));
+						
+						songViewPanel.revalidate();
+						songViewPanel.repaint();
+						
+					} else if (presentable.getImage() != null) {
+						// display the image (fullscreen, but with margin)
+						String imageFile = presentable.getImage();
+						ImageIcon imageIcon = new ImageIcon(imageFile);
+						Image image = imageIcon.getImage();
+						int originalWidth = image.getWidth(null);
+						int originalHeight = image.getHeight(null);
+						double factor = Math.min((screenSize.getWidth() - screenSettings.getLeftMargin() - screenSettings.getRightMargin())
+							/ originalWidth,
+							(screenSize.getHeight() - screenSettings.getTopMargin() - screenSettings.getBottomMargin()) / originalHeight);
+						image = image.getScaledInstance((int) (originalWidth * factor), (int) (originalHeight * factor), Image.SCALE_FAST);
+						JLabel imageComponent = new JLabel(new ImageIcon(image));
+						imageComponent.setBorder(BorderFactory.createEmptyBorder(screenSettings.getTopMargin(), screenSettings.getLeftMargin(),
+							screenSettings
+								.getBottomMargin(), screenSettings.getRightMargin()));
+						contentPane.add(imageComponent, BorderLayout.CENTER);
+					} else {
+						// display a blank screen, remove all content: already done
+					}
+					
+					revalidate();
+					repaint();
+					
+					if (presentable.getSong() != null) {
+						PresentationPosition.forSong(presentationPosition)
+							.ifPresent(spp -> {
+								// queue for LATER because the revalidate/repaint above only will run
+								// after this "invokeAndWait" block is done, and it is required for the
+								// moveToLine to work (or else the text is not layouted yet)
+								SwingUtilities.invokeLater(() -> {
+									songView.moveToLine(spp.getPartIndex(), spp.getLineIndex(), false);
+									this.presentationPosition = presentationPosition;
+									repaint();
+								});
+							});
+					}
+				});
+			} catch (InvocationTargetException | InterruptedException e) {
+				throw new RuntimeException("error while presenting " + presentable, e);
 			}
-			
-			if (presentable.getSong() != null) {
-				// create a SongView to render the song
-				songView = new SongView.Builder(presentable.getSong())
-					.showTitle(screenSettings.isShowTitle())
-					.showTranslation(screenSettings.isShowTranslation())
-					.showChords(screenSettings.isShowChords())
-					.titleFont(screenSettings.getTitleFont())
-					.lyricsFont(screenSettings.getLyricsFont())
-					.translationFont(screenSettings.getTranslationFont())
-					.copyrightFont(screenSettings.getCopyrightFont())
-					.topMargin(screenSettings.getTopMargin())
-					.leftMargin(screenSettings.getLeftMargin())
-					.rightMargin(screenSettings.getRightMargin())
-					.bottomMargin(screenSettings.getBottomMargin())
-					.titleLyricsDistance(screenSettings.getTitleLyricsDistance())
-					.lyricsCopyrightDistance(screenSettings.getLyricsCopyrightDistance())
-					.foregroundColor(screenSettings.getForegroundColor())
-					.backgroundColor(screenSettings.getBackgroundColor())
-					.minimalScrolling(screenSettings.isMinimalScrolling())
-					.build();
-				contentPane.add(songView, BorderLayout.CENTER);
-				
-				if (screenSettings.isShowChordSequence()) {
-					contentPane.add(new ChordSequenceView(presentable.getSong(), screenSettings.getChordSequenceFont(), screenSettings
-						.getForegroundColor(), screenSettings.getBackgroundColor()),
-						BorderLayout.SOUTH);
-				}
-				
-			} else if (presentable.getImage() != null) {
-				// display the image (fullscreen, but with margin)
-				String imageFile = presentable.getImage();
-				ImageIcon imageIcon = new ImageIcon(imageFile);
-				Image image = imageIcon.getImage();
-				int originalWidth = image.getWidth(null);
-				int originalHeight = image.getHeight(null);
-				double factor = Math.min((screenSize.getWidth() - screenSettings.getLeftMargin() - screenSettings.getRightMargin()) / originalWidth,
-					(screenSize.getHeight() - screenSettings.getTopMargin() - screenSettings.getBottomMargin()) / originalHeight);
-				image = image.getScaledInstance((int) (originalWidth * factor), (int) (originalHeight * factor), Image.SCALE_FAST);
-				JLabel imageComponent = new JLabel(new ImageIcon(image));
-				imageComponent.setBorder(BorderFactory.createEmptyBorder(screenSettings.getTopMargin(), screenSettings.getLeftMargin(), screenSettings
-					.getBottomMargin(), screenSettings.getRightMargin()));
-				contentPane.add(imageComponent, BorderLayout.CENTER);
-			} else {
-				// display a blank screen, remove all content: already done
-			}
-			validate();
 		});
 		
 		toFront();
 		
 		fadeIn();
-		
-		// TODO if necessary: hide cursor above every child of the content pane
 	}
 	
 	private boolean noSettingsWereChanged() {

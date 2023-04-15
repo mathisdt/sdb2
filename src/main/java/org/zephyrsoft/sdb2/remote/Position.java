@@ -15,7 +15,11 @@
  */
 package org.zephyrsoft.sdb2.remote;
 
+import static org.zephyrsoft.sdb2.presenter.PresentationPosition.forSong;
+
 import org.zephyrsoft.sdb2.model.Persistable;
+import org.zephyrsoft.sdb2.presenter.PresentationPosition;
+import org.zephyrsoft.sdb2.presenter.SongPresentationPosition;
 
 import jakarta.xml.bind.annotation.XmlAccessOrder;
 import jakarta.xml.bind.annotation.XmlAccessType;
@@ -63,6 +67,13 @@ public class Position implements Persistable {
 	
 	public Position(String uuid, int part, int line) {
 		this(uuid, part, line, null);
+	}
+	
+	public Position(String uuid, PresentationPosition presentationPosition) {
+		this(uuid,
+			forSong(presentationPosition).map(SongPresentationPosition::getPartIndex).orElse(0),
+			forSong(presentationPosition).map(SongPresentationPosition::getLineIndex).orElse(0),
+			null);
 	}
 	
 	public Position(String uuid, int part, int line, Visibility visibility) {
