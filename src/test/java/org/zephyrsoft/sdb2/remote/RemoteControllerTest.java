@@ -15,7 +15,6 @@
  */
 package org.zephyrsoft.sdb2.remote;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,6 +24,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Map;
 import java.util.Properties;
 
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -142,8 +142,11 @@ public class RemoteControllerTest {
 	@Test
 	public void test() throws Exception {
 		String testSongUUID = "c874b2ae-8971-4be3-8c16-c8a6e4329b26";
-		String testSong = "<song><title>Ein m&#228;chtiger Test</title><uuid>" + testSongUUID
-			+ "</uuid><lyrics>Test Lyrics Line 1\nTest Lyrics Line 2\n\nTest Lyrics Line 3\nTest Lyrics Line 4</lyrics></song>";
+		String testSongTitleXml = "Ein m&#228;chtiger Test";
+		String testSongTitlePlain = "Ein mächtiger Test";
+		String testSongLyrics = "Test Lyrics Line 1\nTest Lyrics Line 2\n\nTest Lyrics Line 3\nTest Lyrics Line 4";
+		String testSong = "<song><title>" + testSongTitleXml + "</title><uuid>" + testSongUUID
+			+ "</uuid><lyrics>" + testSongLyrics + "</lyrics></song>";
 		
 		send("rooms/v1/default/song",
 			testSong,
@@ -161,6 +164,8 @@ public class RemoteControllerTest {
 		
 		Thread.sleep(1000);
 		
-		verify(mainWindow).present(any(Song.class), eq(new SongPresentationPosition(1, 1)));
+		verify(mainWindow).present(
+			eq(new Song(Map.of("uuid", testSongUUID, "title", testSongTitlePlain, "lyrics", testSongLyrics))),
+			eq(new SongPresentationPosition(1, 1)));
 	}
 }
