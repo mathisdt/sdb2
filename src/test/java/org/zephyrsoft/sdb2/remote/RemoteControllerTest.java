@@ -105,14 +105,14 @@ public class RemoteControllerTest {
 		mqttServer.startServer(configProps);
 		
 		// .integrationtest as client ID so the temp dir resulting from this is ignored by .gitignore
-		client = new MqttClient("tcp://localhost:" + mqttServer.getPort(), ".integrationtest");
+		client = new MqttClient("tcp://127.0.0.1:" + mqttServer.getPort(), ".integrationtest");
 		client.connect();
 		
 		SettingsModel settingsModel = new SettingsModel();
 		settingsModel.put(SettingKey.REMOTE_ENABLED, Boolean.TRUE);
 		settingsModel.put(SettingKey.REMOTE_PREFIX, "");
 		settingsModel.put(SettingKey.REMOTE_NAMESPACE, "default");
-		settingsModel.put(SettingKey.REMOTE_SERVER, "tcp://localhost:" + mqttServer.getPort());
+		settingsModel.put(SettingKey.REMOTE_SERVER, "tcp://127.0.0.1:" + mqttServer.getPort());
 		settingsModel.put(SettingKey.REMOTE_USERNAME, "anything");
 		settingsModel.put(SettingKey.REMOTE_PASSWORD, "anything");
 		remotePreferences = new SDB2RemotePreferences(settingsModel);
