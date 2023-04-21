@@ -100,9 +100,12 @@ public class RemoteControllerTest {
 		mqttServer = new Server();
 		Properties configProps = new Properties();
 		configProps.put(BrokerConstants.PORT_PROPERTY_NAME, Integer.toString(getFreePort()));
+		configProps.put(BrokerConstants.HOST_PROPERTY_NAME, "127.0.0.1");
 		configProps.put(BrokerConstants.PERSISTENT_STORE_PROPERTY_NAME, temporaryDirectory());
 		configProps.put(BrokerConstants.ENABLE_TELEMETRY_NAME, "false");
 		mqttServer.startServer(configProps);
+		
+		Thread.sleep(1000);
 		
 		// .integrationtest as client ID so the temp dir resulting from this is ignored by .gitignore
 		client = new MqttClient("tcp://127.0.0.1:" + mqttServer.getPort(), ".integrationtest");
