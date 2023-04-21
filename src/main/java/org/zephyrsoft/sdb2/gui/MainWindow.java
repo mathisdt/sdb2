@@ -20,7 +20,6 @@ import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_B;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Desktop;
@@ -59,7 +58,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -99,6 +97,7 @@ import org.zephyrsoft.sdb2.gui.renderer.FilterTypeCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenContentsCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.ScreenDisplayCellRenderer;
 import org.zephyrsoft.sdb2.gui.renderer.SongCellRenderer;
+import org.zephyrsoft.sdb2.gui.renderer.TextLineCellRenderer;
 import org.zephyrsoft.sdb2.model.AddressableLine;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ExportFormat;
@@ -465,9 +464,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		textFieldFilter.requestFocusInWindow();
 		checkForUpdateAsync();
 		
-		Dimension menuPresentSelectedSongPreferredSize = menuPresentSelectedSong.getPreferredSize();
-		menuPresentSelectedSongPreferredSize.width = panelPresentationButtons.getSize().width / 4;
-		menuPresentSelectedSong.setPreferredSize(menuPresentSelectedSongPreferredSize);
+		menuPresentSelectedSong.setPreferredSize(new Dimension(btnPresentSelectedSong.getWidth(), menuPresentSelectedSong.getHeight()));
+		menuPresentSelectedSong.setMinimumSize(new Dimension(btnPresentSelectedSong.getWidth(), menuPresentSelectedSong.getHeight()));
+		menuPresentSelectedSong.setMaximumSize(new Dimension(btnPresentSelectedSong.getWidth(), menuPresentSelectedSong.getHeight()));
 	}
 	
 	private void checkForUpdateAsync() {
@@ -2237,9 +2236,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		
 		GridBagLayout gblPanelPresentationButtons = new GridBagLayout();
 		gblPanelPresentationButtons.columnWidths = new int[] { 0, 0, 0, 0, 0 };
-		// gblPanelPresentationButtons.rowHeights = new int[] { 1, 1, 1, 0, 0, 0 };
-		gblPanelPresentationButtons.columnWeights = new double[] { 0.5d, 0.5d, 0.5d, 0.5d, 0.5d };
-		gblPanelPresentationButtons.rowWeights = new double[] { 0d, 0d, 0d, 0d, 1d };
+		gblPanelPresentationButtons.columnWeights = new double[] { 1, 0.5, 0.5, 0.5, 0.5 };
+		gblPanelPresentationButtons.rowWeights = new double[] { 0, 0, 1 };
+		gblPanelPresentationButtons.rowHeights = new int[] { 200, 0, 0 };
 		panelPresentationButtons.setLayout(gblPanelPresentationButtons);
 		
 		JPanel panelPresentSelectedSong = new JPanel();
@@ -2254,21 +2253,8 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		panelPresentSelectedSong.add(btnPresentSelectedSong, BorderLayout.CENTER);
 		
 		menuPresentSelectedSong = new JComboBox<>();
+		menuPresentSelectedSong.setRenderer(new TextLineCellRenderer(btnPresentSelectedSong));
 		menuPresentSelectedSong.setMaximumRowCount(50);
-		DefaultListCellRenderer menuPresentSelectedSongCellRenderer = new DefaultListCellRenderer() {
-			private static final long serialVersionUID = 1L;
-			
-			@Override
-			public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-				Component rendererComponent = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-				NamedSongPresentationPosition nssp = (NamedSongPresentationPosition) value;
-				if (isSelected && nssp.getPartIndex() == null && nssp.getLineIndex() == null) {
-					rendererComponent.setBackground(list.getBackground());
-				}
-				return rendererComponent;
-			}
-		};
-		menuPresentSelectedSong.setRenderer(menuPresentSelectedSongCellRenderer);
 		menuPresentSelectedSong.addActionListener(actionEvent -> {
 			NamedSongPresentationPosition nssp = (NamedSongPresentationPosition) menuPresentSelectedSong.getSelectedItem();
 			
@@ -2285,9 +2271,6 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		GridBagConstraints gbcPanelPresentSelectedSong = new GridBagConstraints();
 		gbcPanelPresentSelectedSong.fill = GridBagConstraints.BOTH;
 		gbcPanelPresentSelectedSong.insets = new Insets(10, 0, 15, 5);
-		gbcPanelPresentSelectedSong.gridheight = 3;
-		// gbcPanelPresentSelectedSong.ipadx = 20;
-		gbcPanelPresentSelectedSong.ipady = 80;
 		gbcPanelPresentSelectedSong.gridx = 0;
 		gbcPanelPresentSelectedSong.gridy = 0;
 		panelPresentationButtons.add(panelPresentSelectedSong, gbcPanelPresentSelectedSong);
@@ -2300,9 +2283,6 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		GridBagConstraints gbcBtnShowBlankScreen = new GridBagConstraints();
 		gbcBtnShowBlankScreen.fill = GridBagConstraints.BOTH;
 		gbcBtnShowBlankScreen.insets = new Insets(10, 0, 15, 5);
-		gbcBtnShowBlankScreen.gridheight = 3;
-		// gbcBtnShowBlankScreen.ipadx = 30;
-		gbcBtnShowBlankScreen.ipady = 80;
 		gbcBtnShowBlankScreen.gridx = 1;
 		gbcBtnShowBlankScreen.gridy = 0;
 		btnShowBlankScreen.setPreferredSize(new Dimension(64, 64));
@@ -2316,9 +2296,6 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		GridBagConstraints gbcBtnShowLogo = new GridBagConstraints();
 		gbcBtnShowLogo.fill = GridBagConstraints.BOTH;
 		gbcBtnShowLogo.insets = new Insets(10, 0, 15, 5);
-		gbcBtnShowLogo.gridheight = 3;
-		// gbcBtnShowLogo.ipadx = 40;
-		gbcBtnShowLogo.ipady = 80;
 		gbcBtnShowLogo.gridx = 2;
 		gbcBtnShowLogo.gridy = 0;
 		btnShowLogo.setPreferredSize(new Dimension(64, 64));
@@ -2331,9 +2308,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		btnSlideshow.addActionListener(safeAction(e -> handleSlideShowPresent()));
 		GridBagConstraints gbcBtnSlideshow = new GridBagConstraints();
 		gbcBtnSlideshow.fill = GridBagConstraints.BOTH;
-		gbcBtnSlideshow.gridheight = 3;
 		gbcBtnSlideshow.insets = new Insets(10, 0, 15, 5);
-		gbcBtnSlideshow.ipady = 80;
 		gbcBtnSlideshow.gridx = 3;
 		gbcBtnSlideshow.gridy = 0;
 		btnSlideshow.setPreferredSize(new Dimension(64, 64));
@@ -2346,9 +2321,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		btnCalendar.addActionListener(safeAction(e -> handleCalendarPresent()));
 		GridBagConstraints gbcBtnCalendar = new GridBagConstraints();
 		gbcBtnCalendar.fill = GridBagConstraints.BOTH;
-		gbcBtnCalendar.gridheight = 3;
 		gbcBtnCalendar.insets = new Insets(10, 0, 15, 5);
-		gbcBtnCalendar.ipady = 80;
 		gbcBtnCalendar.gridx = 4;
 		gbcBtnCalendar.gridy = 0;
 		btnCalendar.setPreferredSize(new Dimension(64, 64));
@@ -2359,7 +2332,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblSections.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblSections.insets = new Insets(0, 0, 5, 5);
 		gbcLblSections.gridx = 0;
-		gbcLblSections.gridy = 3;
+		gbcLblSections.gridy = 1;
 		panelPresentationButtons.add(lblSections, gbcLblSections);
 		
 		scrollPaneSectionButtons = new JScrollPane();
@@ -2368,7 +2341,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcScrollPaneSectionButtons.fill = GridBagConstraints.BOTH;
 		gbcScrollPaneSectionButtons.gridwidth = 5;
 		gbcScrollPaneSectionButtons.gridx = 0;
-		gbcScrollPaneSectionButtons.gridy = 4;
+		gbcScrollPaneSectionButtons.gridy = 2;
 		panelPresentationButtons.add(scrollPaneSectionButtons, gbcScrollPaneSectionButtons);
 		
 		panelSectionButtons = new JPanel();
