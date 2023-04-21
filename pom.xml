@@ -57,6 +57,7 @@
 		<version.jakarta-activation-api>2.1.1</version.jakarta-activation-api>
 		<version.glassfish-jaxb-runtime>4.0.2</version.glassfish-jaxb-runtime>
 		<version.ical4j>3.2.10</version.ical4j>
+		<version.moquette>0.16</version.moquette>
 	</properties>
 
 	<dependencyManagement>
@@ -241,6 +242,12 @@
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 			<version>${version.mockito}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.moquette</groupId>
+			<artifactId>moquette-broker</artifactId>
+			<version>${version.moquette}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

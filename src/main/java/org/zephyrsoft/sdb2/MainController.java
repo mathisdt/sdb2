@@ -143,7 +143,9 @@ public class MainController implements Scroller {
 	 * Run this function in a separate Thread to not block the UI and to see status changes.
 	 */
 	public void initRemoteController() {
-		assert settings != null : "Settings must be load before calling initRemoteController";
+		if (settings == null) {
+			throw new IllegalStateException("Settings must be load before calling initRemoteController");
+		}
 		
 		closeRemoteController();
 		

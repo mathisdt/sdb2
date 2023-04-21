@@ -32,7 +32,6 @@ public class MainControllerTest {
 	@Mock
 	private StatisticsController statisticsController;
 	private MainController mainController;
-	private AutoCloseable mocks;
 	
 	@Before
 	public void setup() {

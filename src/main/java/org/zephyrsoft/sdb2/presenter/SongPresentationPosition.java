@@ -15,6 +15,8 @@
  */
 package org.zephyrsoft.sdb2.presenter;
 
+import java.util.Objects;
+
 /**
  * Indicates a position inside a song.
  */
@@ -40,6 +42,26 @@ public class SongPresentationPosition implements PresentationPosition {
 	@Override
 	public String toString() {
 		return "SongPresentationPosition [partIndex=" + partIndex + ", lineIndex=" + lineIndex + "]";
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(lineIndex, partIndex);
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		SongPresentationPosition other = (SongPresentationPosition) obj;
+		return Objects.equals(lineIndex, other.lineIndex) && Objects.equals(partIndex, other.partIndex);
 	}
 	
 }
