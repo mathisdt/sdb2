@@ -28,6 +28,7 @@ import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.XMLConverter;
 import org.zephyrsoft.sdb2.presenter.Presentable;
+import org.zephyrsoft.sdb2.presenter.SongPresentationPosition;
 import org.zephyrsoft.sdb2.util.StringTools;
 
 public class RemoteController {
@@ -149,30 +150,21 @@ public class RemoteController {
 		
 		if (StringTools.equals(s.getUUID(), p.getUUID())) {
 			if (p.isVisible()) {
-				presentSong(mainController, mainWindow, s);
-				moveToLine(mainController, mainWindow, p);
+				presentSong(mainController, mainWindow, s, p);
 			} else {
-				presentSong(mainController, mainWindow, null);
+				presentSong(mainController, mainWindow, null, null);
 			}
 		}
 	}
 	
-	private void presentSong(MainController mainController, MainWindow mainWindow, Song s) {
-		if (mainWindow != null)
-			mainWindow.present(s);
-		else
-			mainController.present(new Presentable(s, null), null);
-	}
-	
-	private void moveToLine(MainController mainController, MainWindow mainWindow, Position p) {
-		int part = p.getPart();
-		try {
-			mainController.moveToLine(part, p.getLine());
-		} catch (IndexOutOfBoundsException e) {
-			LOG.warn("Part or line out of bounds!");
-		}
+	private void presentSong(MainController mainController, MainWindow mainWindow, Song s, Position p) {
+		SongPresentationPosition spp = p != null
+			? new SongPresentationPosition(p.getPart(), p.getLine())
+			: null;
 		if (mainWindow != null) {
-			mainWindow.setActiveLine(part, p.getLine());
+			mainWindow.present(s, spp);
+		} else {
+			mainController.present(new Presentable(s, null), spp);
 		}
 	}
 	
