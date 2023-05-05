@@ -39,6 +39,7 @@ import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
+import javax.swing.text.DefaultStyledDocument;
 
 import org.jdesktop.core.animation.timing.Animator;
 import org.jdesktop.core.animation.timing.PropertySetter;
@@ -54,6 +55,8 @@ import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.model.settings.VirtualScreenSettingsModel;
 
+import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_A;
+
 /**
  * The presentation display for the lyrics.
  */
@@ -65,6 +68,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 	private final JPanel contentPane;
 	private JPanel songViewPanel;
 	private SongView songView;
+	private List<AddressablePart> parts;
 	private ChordSequenceView chordSequenceView;
 	
 	private Animator fader;
@@ -167,13 +171,14 @@ public class PresenterWindow extends JFrame implements Presenter {
 				return;
 			} else if (presentationPosition == null) {
 				songView.moveToLine(null, null, true);
-				this.presentationPosition = presentationPosition;
+				this.presentationPosition = null;
 				toFront();
 				return;
 			}
 		}
 		
 		this.presentable = presentable;
+		parts = null;
 		
 		if (contentPane.getComponentCount() > 0) {
 			fadeOut();
@@ -389,13 +394,31 @@ public class PresenterWindow extends JFrame implements Presenter {
 			throw new IllegalStateException("it seems there is no song to display");
 		}
 	}
-	
+
+	private void fillPartsFromPresentable() {
+		if (parts == null && presentable != null && presentable.getSong() != null) {
+			// we choose screen A deliberately (the only important setting here is "showTitle" which is global)
+			VirtualScreenSettingsModel screenSettings = VirtualScreenSettingsModel.of(settings, SCREEN_A);
+			parts = SongView.render(presentable.getSong(), screenSettings.isShowTranslation(),
+					screenSettings.isShowTitle(), screenSettings.isShowChords(), new DefaultStyledDocument(), screenSettings.getTitleFont(),
+					screenSettings.getLyricsFont(), screenSettings.getTranslationFont(), screenSettings.getCopyrightFont(),
+					screenSettings.getTitleLyricsDistance(), screenSettings.getLyricsCopyrightDistance());
+		}
+	}
+
+	@Override
+	public boolean hasParts() {
+		fillPartsFromPresentable();
+		return parts != null && !parts.isEmpty();
+	}
+
 	@Override
 	public List<AddressablePart> getParts() {
-		if (songView != null) {
-			return songView.getParts();
+		fillPartsFromPresentable();
+		if (parts != null && !parts.isEmpty()) {
+			return parts;
 		} else {
-			throw new IllegalStateException("it seems there is no song to display");
+			throw new IllegalStateException("there are no parts available");
 		}
 	}
 }

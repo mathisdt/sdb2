@@ -1492,7 +1492,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				if (!listSectionButtons.isEmpty()) {
 					listSectionButtons
 						.get(presentationPosition != null && presentationPosition.getPartIndex() != null
-							? presentationPosition.getPartIndex() - (showTitle ? 0 : 1)
+							? Math.max(0, presentationPosition.getPartIndex() - (showTitle ? 0 : 1))
 							: 0)
 						.setActiveLine(presentationPosition != null && presentationPosition.getLineIndex() != null
 							? presentationPosition.getLineIndex()
