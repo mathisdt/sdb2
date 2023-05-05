@@ -24,6 +24,7 @@ import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.presenter.Presentable;
 import org.zephyrsoft.sdb2.presenter.PresentationPosition;
 import org.zephyrsoft.sdb2.presenter.Presenter;
+import org.zephyrsoft.sdb2.presenter.SongPresentationPosition;
 
 /**
  * The presentation display for the lyrics.
@@ -68,12 +69,17 @@ public class RemotePresenter implements Presenter {
 			remoteController.getPosition().set(new Position(presentable.getSong().getUUID(), part, line));
 		}
 	}
-
+	
+	@Override
+	public void moveTo(SongPresentationPosition position) {
+		moveToLine(position.getPartIndex(), position.getLineIndex());
+	}
+	
 	@Override
 	public boolean hasParts() {
 		return false;
 	}
-
+	
 	@Override
 	public List<AddressablePart> getParts() {
 		throw new NotImplementedException("RemotePresenter can't be used solo yet. Add a screen first.");

@@ -71,11 +71,12 @@ public class PresenterBundle implements Presenter {
 			presenter.disposePresenter();
 		}
 	}
-
+	
+	@Override
 	public boolean hasParts() {
 		return presenters.stream().anyMatch(Presenter::hasParts);
 	}
-
+	
 	@Override
 	public List<AddressablePart> getParts() {
 		if (presenters.isEmpty()) {
@@ -84,10 +85,10 @@ public class PresenterBundle implements Presenter {
 			throw new IllegalStateException("no presenter did contain any parts");
 		}
 		return presenters.stream()
-				.filter(Scroller::hasParts)
-				.findAny()
-				.map(Scroller::getParts)
-				.orElseThrow(() -> new IllegalStateException("no presenter did contain any parts (although at least one did moments ago)"));
+			.filter(Scroller::hasParts)
+			.findAny()
+			.map(Scroller::getParts)
+			.orElseThrow(() -> new IllegalStateException("no presenter did contain any parts (although at least one did moments ago)"));
 	}
 	
 	@Override
@@ -101,6 +102,13 @@ public class PresenterBundle implements Presenter {
 	public void moveToLine(Integer part, Integer line) {
 		for (Presenter presenter : presenters) {
 			presenter.moveToLine(part, line);
+		}
+	}
+	
+	@Override
+	public void moveTo(SongPresentationPosition position) {
+		for (Presenter presenter : presenters) {
+			presenter.moveTo(position);
 		}
 	}
 	

@@ -15,6 +15,8 @@
  */
 package org.zephyrsoft.sdb2.presenter;
 
+import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_A;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -54,8 +56,6 @@ import org.zephyrsoft.sdb2.model.VirtualScreen;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.model.settings.VirtualScreenSettingsModel;
-
-import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_A;
 
 /**
  * The presentation display for the lyrics.
@@ -394,24 +394,33 @@ public class PresenterWindow extends JFrame implements Presenter {
 			throw new IllegalStateException("it seems there is no song to display");
 		}
 	}
-
+	
+	@Override
+	public void moveTo(SongPresentationPosition position) {
+		if (songView != null) {
+			songView.moveTo(position);
+		} else {
+			throw new IllegalStateException("it seems there is no song to display");
+		}
+	}
+	
 	private void fillPartsFromPresentable() {
 		if (parts == null && presentable != null && presentable.getSong() != null) {
 			// we choose screen A deliberately (the only important setting here is "showTitle" which is global)
 			VirtualScreenSettingsModel screenSettings = VirtualScreenSettingsModel.of(settings, SCREEN_A);
 			parts = SongView.render(presentable.getSong(), screenSettings.isShowTranslation(),
-					screenSettings.isShowTitle(), screenSettings.isShowChords(), new DefaultStyledDocument(), screenSettings.getTitleFont(),
-					screenSettings.getLyricsFont(), screenSettings.getTranslationFont(), screenSettings.getCopyrightFont(),
-					screenSettings.getTitleLyricsDistance(), screenSettings.getLyricsCopyrightDistance());
+				screenSettings.isShowTitle(), screenSettings.isShowChords(), new DefaultStyledDocument(), screenSettings.getTitleFont(),
+				screenSettings.getLyricsFont(), screenSettings.getTranslationFont(), screenSettings.getCopyrightFont(),
+				screenSettings.getTitleLyricsDistance(), screenSettings.getLyricsCopyrightDistance());
 		}
 	}
-
+	
 	@Override
 	public boolean hasParts() {
 		fillPartsFromPresentable();
 		return parts != null && !parts.isEmpty();
 	}
-
+	
 	@Override
 	public List<AddressablePart> getParts() {
 		fillPartsFromPresentable();

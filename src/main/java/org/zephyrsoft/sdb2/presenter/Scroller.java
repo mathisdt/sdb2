@@ -24,12 +24,13 @@ import org.zephyrsoft.sdb2.model.Song;
  * Control the scrolling inside a {@link Song}.
  */
 public interface Scroller {
-
+	
 	/**
-	 * Check if this instance has any addressable parts. This is especially not the case if the corresponding screen is marked as unavailable.
+	 * Check if this instance has any addressable parts. This is especially not the case if the corresponding screen is
+	 * marked as unavailable.
 	 */
 	boolean hasParts();
-
+	
 	/**
 	 * Fetch a list of all addressable parts.
 	 */
@@ -47,5 +48,12 @@ public interface Scroller {
 	 * even if the transition is not finished yet!
 	 */
 	void moveToLine(Integer part, Integer line);
+	
+	/**
+	 * Start the transition to a specific position in the {@link Presentable}. This method should return immediately,
+	 * even
+	 * if the transition is not finished yet!
+	 */
+	void moveTo(SongPresentationPosition position);
 	
 }

@@ -72,6 +72,7 @@ import org.zephyrsoft.sdb2.presenter.PresenterBundle;
 import org.zephyrsoft.sdb2.presenter.PresenterWindow;
 import org.zephyrsoft.sdb2.presenter.ScreenHelper;
 import org.zephyrsoft.sdb2.presenter.Scroller;
+import org.zephyrsoft.sdb2.presenter.SongPresentationPosition;
 import org.zephyrsoft.sdb2.remote.Health;
 import org.zephyrsoft.sdb2.remote.MQTT;
 import org.zephyrsoft.sdb2.remote.PatchController;
@@ -184,6 +185,8 @@ public class MainController implements Scroller {
 				remoteController = null;
 				mqtt = null;
 				setRemoteStatus(RemoteStatus.FAILURE);
+				LOG.debug("error while connecting to remote server {} with username {} and client ID {}",
+					remotePreferences.getServer(), remotePreferences.getUsername(), remotePreferences.getClientID(), e);
 				ErrorDialog.openDialog(null, """
 					Error while connecting to remote server.
 					Please check settings or your network connection.
@@ -220,6 +223,14 @@ public class MainController implements Scroller {
 	}
 	
 	public boolean present(Presentable presentable, PresentationPosition presentationPosition) {
+		if (presentable != null
+			&& presentable.getSong() != null
+			&& presentable.getSong().equals(currentlyPresentedSong)
+			&& presentationPosition instanceof SongPresentationPosition spp) {
+			presentationControl.moveTo(spp);
+			return true;
+		}
+		
 		SelectableDisplay screen1 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class));
 		SelectableDisplay screen2 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_2_DISPLAY, Integer.class));
 		
@@ -341,12 +352,12 @@ public class MainController implements Scroller {
 			LOG.trace("wanted to stop countdown, but nothing to do");
 		}
 	}
-
+	
 	@Override
 	public boolean hasParts() {
 		return presentationControl.hasParts();
 	}
-
+	
 	@Override
 	public List<AddressablePart> getParts() {
 		Preconditions.checkArgument(presentationControl != null, "there is no active presentation");
@@ -372,6 +383,17 @@ public class MainController implements Scroller {
 			} catch (IllegalStateException e) {
 				// if song is not displayed yet
 			} catch (NullPointerException e) {
+				// if song is not displayed yet
+			}
+		}
+	}
+	
+	@Override
+	public void moveTo(SongPresentationPosition position) {
+		if (MainController.this.presentationControl != null) {
+			try {
+				presentationControl.moveTo(position);
+			} catch (IllegalStateException e) {
 				// if song is not displayed yet
 			}
 		}
