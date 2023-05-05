@@ -341,7 +341,12 @@ public class MainController implements Scroller {
 			LOG.trace("wanted to stop countdown, but nothing to do");
 		}
 	}
-	
+
+	@Override
+	public boolean hasParts() {
+		return presentationControl.hasParts();
+	}
+
 	@Override
 	public List<AddressablePart> getParts() {
 		Preconditions.checkArgument(presentationControl != null, "there is no active presentation");

@@ -71,13 +71,23 @@ public class PresenterBundle implements Presenter {
 			presenter.disposePresenter();
 		}
 	}
-	
+
+	public boolean hasParts() {
+		return presenters.stream().anyMatch(Presenter::hasParts);
+	}
+
 	@Override
 	public List<AddressablePart> getParts() {
 		if (presenters.isEmpty()) {
 			throw new IllegalStateException("there has to be at least one real presenter in a presenter bundle");
+		} else if (presenters.stream().noneMatch(Presenter::hasParts)) {
+			throw new IllegalStateException("no presenter did contain any parts");
 		}
-		return presenters.get(0).getParts();
+		return presenters.stream()
+				.filter(Scroller::hasParts)
+				.findAny()
+				.map(Scroller::getParts)
+				.orElseThrow(() -> new IllegalStateException("no presenter did contain any parts (although at least one did moments ago)"));
 	}
 	
 	@Override

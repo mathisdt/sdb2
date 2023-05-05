@@ -422,7 +422,12 @@ public class SongView extends JPanel implements Scroller {
 		StyleConstants.setFontSize(style, fontSize);
 		return style;
 	}
-	
+
+	@Override
+	public boolean hasParts() {
+		return parts != null && !parts.isEmpty();
+	}
+
 	@Override
 	public List<AddressablePart> getParts() {
 		Preconditions.checkArgument(parts != null, SONG_PARTS_NOT_INITIALIZED);
@@ -465,7 +470,7 @@ public class SongView extends JPanel implements Scroller {
 	
 	public void moveToLine(Integer partNullable, Integer lineNullable, boolean animated) {
 		Preconditions.checkArgument(parts != null, SONG_PARTS_NOT_INITIALIZED);
-		
+
 		int part = partNullable == null ? 0 : partNullable;
 		int line = lineNullable == null ? 0 : lineNullable;
 		

@@ -68,7 +68,12 @@ public class RemotePresenter implements Presenter {
 			remoteController.getPosition().set(new Position(presentable.getSong().getUUID(), part, line));
 		}
 	}
-	
+
+	@Override
+	public boolean hasParts() {
+		return false;
+	}
+
 	@Override
 	public List<AddressablePart> getParts() {
 		throw new NotImplementedException("RemotePresenter can't be used solo yet. Add a screen first.");
