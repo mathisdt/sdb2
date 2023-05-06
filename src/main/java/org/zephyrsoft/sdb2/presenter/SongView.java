@@ -546,6 +546,8 @@ public class SongView extends JPanel implements Scroller {
 			}
 		} catch (NullPointerException e) {
 			// This is a fix for remote, where moveToLine is called too fast after startup
+		} catch (ArrayIndexOutOfBoundsException e) {
+			// fix a Swing problem with layouting (sometimes getPreferredSize() throws this exception)
 		}
 	}
 	
