@@ -252,7 +252,7 @@ public class MainController implements Scroller {
 					&& pw.metadataMatches(screen2, VirtualScreen.SCREEN_B)
 					&& pw.screenSizeMatches()))) {
 			LOG.trace("re-using the existing presenters");
-			currentlyPresentedSong = presentable.getSong();
+			currentlyPresentedSong = presentable == null ? null : presentable.getSong();
 			presentationControl.setContent(presentable, presentationPosition);
 			
 			// the presentation windows were moved to front and got the focus because of that,

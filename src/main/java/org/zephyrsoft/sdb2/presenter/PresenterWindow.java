@@ -407,11 +407,11 @@ public class PresenterWindow extends JFrame implements Presenter {
 	private void fillPartsFromPresentable() {
 		if (parts == null && presentable != null && presentable.getSong() != null) {
 			// we choose screen A deliberately (the only important setting here is "showTitle" which is global)
-			VirtualScreenSettingsModel screenSettings = VirtualScreenSettingsModel.of(settings, SCREEN_A);
-			parts = SongView.render(presentable.getSong(), screenSettings.isShowTranslation(),
-				screenSettings.isShowTitle(), screenSettings.isShowChords(), new DefaultStyledDocument(), screenSettings.getTitleFont(),
-				screenSettings.getLyricsFont(), screenSettings.getTranslationFont(), screenSettings.getCopyrightFont(),
-				screenSettings.getTitleLyricsDistance(), screenSettings.getLyricsCopyrightDistance());
+			VirtualScreenSettingsModel localScreenSettings = VirtualScreenSettingsModel.of(settings, SCREEN_A);
+			parts = SongView.render(presentable.getSong(), localScreenSettings.isShowTranslation(),
+				localScreenSettings.isShowTitle(), localScreenSettings.isShowChords(), new DefaultStyledDocument(), localScreenSettings.getTitleFont(),
+				localScreenSettings.getLyricsFont(), localScreenSettings.getTranslationFont(), localScreenSettings.getCopyrightFont(),
+				localScreenSettings.getTitleLyricsDistance(), localScreenSettings.getLyricsCopyrightDistance());
 		}
 	}
 	
