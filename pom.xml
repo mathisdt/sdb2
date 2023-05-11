@@ -34,7 +34,7 @@
 		<maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
 		<!-- dependency versions -->
-		<version.spring>6.0.8</version.spring>
+		<version.spring>6.0.9</version.spring>
 		<version.slf4j>2.0.7</version.slf4j>
 		<version.logback>1.4.7</version.logback>
 		<version.log4j>2.20.0</version.log4j>
@@ -42,11 +42,11 @@
 		<version.commons-lang3>3.12.0</version.commons-lang3>
 		<version.commons-text>1.10.0</version.commons-text>
 		<version.togglz>4.0.0-M4</version.togglz>
-		<version.itext>7.2.5</version.itext>
+		<version.itext>8.0.0</version.itext>
 		<version.poi>5.2.3</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
-		<version.lucene>9.5.0</version.lucene>
+		<version.lucene>9.6.0</version.lucene>
 		<version.paho-mqtt>1.2.5</version.paho-mqtt>
 		<version.diff-match-patch>1.2</version.diff-match-patch>
 		<version.guava>31.1-jre</version.guava>
@@ -333,7 +333,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>license-maven-plugin</artifactId>
-				<version>2.0.0</version>
+				<version>2.0.1</version>
 				<configuration>
 					<useMissingFile>true</useMissingFile>
 					<useRepositoryMissingFiles>false</useRepositoryMissingFiles>
@@ -558,7 +558,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.0.0</version>
+					<version>3.1.0</version>
 				</plugin>
 
 				<!--This plugin's configuration is used to store Eclipse m2e settings
