@@ -443,12 +443,15 @@
 				<artifactId>maven-source-plugin</artifactId>
 				<version>3.3.0</version>
 				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
+				    <execution>
+						<id>generate-sources</id>
+				        <goals>
+				            <goal>jar</goal>
+				        </goals>
+				        <configuration>
+							<attach>false</attach>
+						</configuration>
+				    </execution>
 				</executions>
 				<configuration>
 					<outputDirectory>${project.build.directory}/distribution/bin</outputDirectory>
