@@ -35,7 +35,7 @@ It can also display calendar events or a slide show.
 - the song texts are displayed continually, not on individual slides, so everyone sees how the song continues
   after the current part
   - animated transition when displaying another part of a song
-  - short fade effect when displaying another song
+  - fade effect when displaying another song (with configurable fade duration)
 
 ## Getting started
 
