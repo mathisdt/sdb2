@@ -3,6 +3,7 @@
 # Song Database
 
 The Song Database is a program to show lyrics on a digital projector for worship in a congregation.
+It can also display calendar events or a slide show.
 
 ## Features:
 
