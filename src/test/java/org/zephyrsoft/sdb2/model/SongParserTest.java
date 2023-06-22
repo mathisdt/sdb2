@@ -15,13 +15,13 @@
  */
 package org.zephyrsoft.sdb2.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -51,7 +51,7 @@ public class SongParserTest {
 	@Mock
 	private Song song;
 	
-	@Before
+	@BeforeEach
 	public void setUp() {
 		MockitoAnnotations.openMocks(this);
 		
@@ -83,35 +83,35 @@ public class SongParserTest {
 		List<SongElement> result = SongParser.parse(song, true, true, true);
 		// Assert.assertEquals(20, result.size());
 		
-		Assert.assertEquals(new SongElement(SongElementEnum.TITLE, TITLE), result.get(0));
+		assertEquals(new SongElement(SongElementEnum.TITLE, TITLE), result.get(0));
 		
-		Assert.assertEquals(new SongElement(SongElementEnum.CHORDS, CHORDS_1), result.get(1));
-		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(2));
-		Assert.assertEquals(new SongElement(SongElementEnum.LYRICS, LYRICS_1), result.get(3));
-		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(4));
-		Assert.assertEquals(new SongElement(SongElementEnum.TRANSLATION, TRANSLATION_1), result.get(5));
-		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(6));
+		assertEquals(new SongElement(SongElementEnum.CHORDS, CHORDS_1), result.get(1));
+		assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(2));
+		assertEquals(new SongElement(SongElementEnum.LYRICS, LYRICS_1), result.get(3));
+		assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(4));
+		assertEquals(new SongElement(SongElementEnum.TRANSLATION, TRANSLATION_1), result.get(5));
+		assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(6));
 		
-		Assert.assertEquals(new SongElement(SongElementEnum.CHORDS, CHORDS_2), result.get(7));
-		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(8));
-		Assert.assertEquals(new SongElement(SongElementEnum.LYRICS, LYRICS_2), result.get(9));
-		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(10));
+		assertEquals(new SongElement(SongElementEnum.CHORDS, CHORDS_2), result.get(7));
+		assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(8));
+		assertEquals(new SongElement(SongElementEnum.LYRICS, LYRICS_2), result.get(9));
+		assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(10));
 		SongElement index11 = result.get(11);
-		Assert.assertEquals(new SongElement(SongElementEnum.TRANSLATION, TRANSLATION_2), index11);
-		Assert.assertEquals(SPACES_1.length(), index11.getIndentation());
+		assertEquals(new SongElement(SongElementEnum.TRANSLATION, TRANSLATION_2), index11);
+		assertEquals(SPACES_1.length(), index11.getIndentation());
 		
 		// final newline after lyrics part
-		Assert.assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(12));
+		assertEquals(new SongElement(SongElementEnum.NEW_LINE, "\n"), result.get(12));
 		
-		Assert.assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_MUSIC + COMPOSER),
+		assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_MUSIC + COMPOSER),
 			result.get(13));
-		Assert.assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_TEXT + AUTHOR_TEXT),
+		assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_TEXT + AUTHOR_TEXT),
 			result.get(14));
-		Assert.assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_TRANSLATION
+		assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_TRANSLATION
 			+ AUTHOR_TRANSLATION), result.get(15));
-		Assert.assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_PUBLISHER + PUBLISHER),
+		assertEquals(new SongElement(SongElementEnum.COPYRIGHT, SongParser.LABEL_PUBLISHER + PUBLISHER),
 			result.get(16));
-		Assert.assertEquals(new SongElement(SongElementEnum.COPYRIGHT, ADDITIONAL_NOTES), result.get(17));
+		assertEquals(new SongElement(SongElementEnum.COPYRIGHT, ADDITIONAL_NOTES), result.get(17));
 		
 	}
 }

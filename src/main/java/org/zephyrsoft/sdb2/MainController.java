@@ -28,6 +28,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -882,7 +883,7 @@ public class MainController implements Scroller {
 		}
 		Song iCalSong = null;
 		try {
-			ICalInterpreter iCalInterpreter = new ICalInterpreter(url, daysAhead, getConfiguredLocale());
+			ICalInterpreter iCalInterpreter = new ICalInterpreter(url, ZonedDateTime.now(), daysAhead, getConfiguredLocale());
 			// if downloading and interpreting the iCal takes too long, maybe move the loading to startup phase
 			iCalSong = iCalInterpreter.getInterpretedData();
 			if (iCalSong == null) {

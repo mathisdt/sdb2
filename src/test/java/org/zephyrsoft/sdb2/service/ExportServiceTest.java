@@ -15,15 +15,15 @@
  */
 package org.zephyrsoft.sdb2.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.zephyrsoft.sdb2.model.ExportFormat;
 import org.zephyrsoft.sdb2.model.Song;
 
@@ -37,7 +37,7 @@ public class ExportServiceTest {
 	private ExportService exportService;
 	private List<Song> songs;
 	
-	@Before
+	@BeforeEach
 	public void setup() {
 		exportService = new ExportService();
 		Song song1 = new Song("abcde-10000");

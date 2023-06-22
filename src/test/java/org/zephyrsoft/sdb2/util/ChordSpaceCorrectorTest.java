@@ -15,13 +15,13 @@
  */
 package org.zephyrsoft.sdb2.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.font.constants.StandardFonts;
@@ -34,7 +34,7 @@ public class ChordSpaceCorrectorTest {
 	private static final String CHORDS_INPUT = "A       B            C            D                    Em              F     A     F A";
 	private static final String TEXT_INPUT = "This is a Test which only should demonstrate that the service works as expected.";
 	private static final String EXPECTED_OUTPUT_PDF = "A        B                   C                   D                              Em                    F         A  F A";
-	private static final String EXPECTED_OUTPUT_PRESENTATION = "A        B                   C                   D                                Em                    F         A  F A";
+	private static final String EXPECTED_OUTPUT_PRESENTATION = "A         B                    C                     D                                  Em                      F         A   F A";
 	
 	@Test
 	public void correctChordSpacesForPdf() throws Exception {
@@ -48,7 +48,7 @@ public class ChordSpaceCorrectorTest {
 	
 	@Test
 	public void correctChordSpacesForPresentation() {
-		java.awt.Font lyricsFont = new java.awt.Font("Dialog", java.awt.Font.BOLD + java.awt.Font.ITALIC, 36);
+		java.awt.Font lyricsFont = new java.awt.Font("Arial", java.awt.Font.BOLD + java.awt.Font.ITALIC, 36);
 		
 		BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = img.createGraphics();

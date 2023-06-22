@@ -54,4 +54,13 @@ public class SimpleEvent {
 	public String getLocation() {
 		return location;
 	}
+	
+	public boolean isMultiDay() {
+		return !start.toLocalDate().isEqual(end.toLocalDate());
+	}
+	
+	@Override
+	public String toString() {
+		return "SimpleEvent [start=" + start + ", end=" + end + ", title=" + title + ", description=" + description + ", location=" + location + "]";
+	}
 }

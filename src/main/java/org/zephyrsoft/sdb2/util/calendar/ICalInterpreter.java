@@ -15,6 +15,7 @@
  */
 package org.zephyrsoft.sdb2.util.calendar;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -27,13 +28,16 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.calendar.SimpleEvent;
@@ -56,12 +60,14 @@ public class ICalInterpreter {
 	private final DateTimeFormatter displayTimeFormatter;
 	
 	private final String url;
-	private final int daysAhead;
+	private final ZonedDateTime startOfDisplayPeriod;
+	private final int lengthOfDisplayPeriodInDays;
 	private final HttpClient client;
 	
-	public ICalInterpreter(String url, int daysAhead, Locale locale) {
+	public ICalInterpreter(String url, ZonedDateTime startOfDisplayPeriod, int lengthOfDisplayPeriodInDays, Locale locale) {
 		this.url = url;
-		this.daysAhead = daysAhead;
+		this.startOfDisplayPeriod = startOfDisplayPeriod;
+		this.lengthOfDisplayPeriodInDays = lengthOfDisplayPeriodInDays;
 		client = HttpClient.newBuilder()
 			.followRedirects(Redirect.NORMAL)
 			.connectTimeout(Duration.ofSeconds(15))
@@ -73,19 +79,15 @@ public class ICalInterpreter {
 	public Song getInterpretedData() {
 		String icalString = null;
 		try {
-			HttpRequest request = HttpRequest.newBuilder()
-				.uri(URI.create(url))
-				.build();
-			HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-			icalString = response.body();
+			icalString = fetchCalendarData();
 			
 			StringReader reader = new StringReader(icalString);
 			CalendarBuilder builder = new CalendarBuilder();
 			Calendar calendar = builder.build(reader);
 			
 			ZonedDateTime zonedStart = ZonedDateTime.now();
-			LocalDateTime start = LocalDateTime.now();
-			LocalDateTime end = start.plusDays(daysAhead).with(LocalTime.MAX);
+			LocalDateTime start = zonedStart.toLocalDateTime();
+			LocalDateTime end = start.plusDays(lengthOfDisplayPeriodInDays).with(LocalTime.MAX);
 			DateTime from = new DateTime(start.format(DEFAULT_FORMATTER));
 			DateTime to = new DateTime(end.format(DEFAULT_FORMATTER));
 			Period period = new Period(from, to);
@@ -95,11 +97,14 @@ public class ICalInterpreter {
 					PeriodList list = component.calculateRecurrenceSet(period);
 					
 					return list.stream()
-						.map(p -> new SimpleEvent(convert(p.getStart()), convert(p.getEnd()),
-							extractSummary(p), extractDescription(p), extractLocation(p)));
+						.map(p -> {
+							return new SimpleEvent(convert(p.getStart(), true), convert(p.getEnd(), false),
+								extractSummary(p), extractDescription(p), extractLocation(p));
+						})
+						.flatMap(this::splitMultiDayEvents);
 				})
 				.filter(se -> se.getStart().isAfter(zonedStart))
-				.sorted(Comparator.comparing(SimpleEvent::getStart).thenComparing(SimpleEvent::getTitle))
+				.sorted(Comparator.comparing(SimpleEvent::getStart).thenComparing(SimpleEvent::getTitle).thenComparing(SimpleEvent::getDescription))
 				.toList();
 			
 			StringBuilder calendarText = new StringBuilder();
@@ -127,8 +132,53 @@ public class ICalInterpreter {
 		}
 	}
 	
-	private ZonedDateTime convert(DateTime dt) {
-		return ZonedDateTime.ofInstant(Instant.ofEpochMilli(dt.getTime()), dt.getTimeZone().toZoneId());
+	String fetchCalendarData() throws IOException, InterruptedException {
+		HttpRequest request = HttpRequest.newBuilder()
+			.uri(URI.create(url))
+			.build();
+		HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+		return response.body();
+	}
+	
+	private ZonedDateTime convert(DateTime dt, boolean isStart) {
+		if (dt.getTimeZone() != null) {
+			return ZonedDateTime.ofInstant(Instant.ofEpochMilli(dt.getTime()), dt.getTimeZone().toZoneId());
+		} else {
+			ZonedDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(dt.getTime()), ZoneId.of("Z"))
+				.toLocalDate()
+				.atStartOfDay()
+				.atZone(ZoneId.of("Z"));
+			
+			if (isStart) {
+				return dateTime;
+			} else {
+				return dateTime.minusSeconds(1);
+			}
+		}
+	}
+	
+	private Stream<SimpleEvent> splitMultiDayEvents(SimpleEvent e) {
+		if (!e.isMultiDay()) {
+			return Stream.of(e);
+		} else {
+			List<SimpleEvent> result = new ArrayList<>();
+			
+			LocalDate day = e.getStart().toLocalDate();
+			while (!day.isAfter(e.getEnd().toLocalDate())) {
+				ZonedDateTime startTime = day.equals(e.getStart().toLocalDate())
+					? e.getStart()
+					: ZonedDateTime.of(day, LocalTime.MIN, e.getStart().getZone());
+				ZonedDateTime endTime = day.equals(e.getEnd().toLocalDate())
+					? e.getEnd()
+					: ZonedDateTime.of(day, LocalTime.MAX, e.getEnd().getZone());
+				
+				result.add(new SimpleEvent(startTime, endTime, e.getTitle(), e.getDescription(), e.getLocation()));
+				
+				day = day.plusDays(1);
+			}
+			
+			return result.stream();
+		}
 	}
 	
 	private String extractSummary(Period veventPeriod) {

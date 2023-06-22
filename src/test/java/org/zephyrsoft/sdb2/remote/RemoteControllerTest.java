@@ -30,9 +30,9 @@ import java.util.Properties;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
@@ -92,7 +92,7 @@ public class RemoteControllerTest {
 		}
 	}
 	
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		MockitoAnnotations.openMocks(this);
 		when(mainWindow.getPresentModel()).thenAnswer(invocation -> new SongsModel());
@@ -123,7 +123,7 @@ public class RemoteControllerTest {
 		remoteController = new RemoteController(remotePreferences, mainController, mainWindow);
 	}
 	
-	@After
+	@AfterEach
 	public void teardown() throws MqttException {
 		client.disconnect();
 		mqttServer.stopServer();

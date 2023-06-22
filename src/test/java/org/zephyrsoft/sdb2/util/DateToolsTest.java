@@ -15,17 +15,18 @@
  */
 package org.zephyrsoft.sdb2.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.time.LocalDateTime;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class DateToolsTest {
 	
 	@Test
 	public void parseDateTime() {
 		LocalDateTime dateTime = DateTools.parseDateTime("2016-10-09T20:24:25+02:00[Europe/Berlin]");
-		Assert.assertEquals(LocalDateTime.of(2016, 10, 9, 20, 24, 25), dateTime);
+		assertEquals(LocalDateTime.of(2016, 10, 9, 20, 24, 25), dateTime);
 	}
 	
 }
