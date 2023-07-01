@@ -85,8 +85,7 @@ public class ICalInterpreter {
 			CalendarBuilder builder = new CalendarBuilder();
 			Calendar calendar = builder.build(reader);
 			
-			ZonedDateTime zonedStart = ZonedDateTime.now();
-			LocalDateTime start = zonedStart.toLocalDateTime();
+			LocalDateTime start = startOfDisplayPeriod.toLocalDateTime();
 			LocalDateTime end = start.plusDays(lengthOfDisplayPeriodInDays).with(LocalTime.MAX);
 			DateTime from = new DateTime(start.format(DEFAULT_FORMATTER));
 			DateTime to = new DateTime(end.format(DEFAULT_FORMATTER));
@@ -103,7 +102,7 @@ public class ICalInterpreter {
 						})
 						.flatMap(this::splitMultiDayEvents);
 				})
-				.filter(se -> se.getStart().isAfter(zonedStart))
+				.filter(se -> se.getStart().isAfter(startOfDisplayPeriod))
 				.sorted(Comparator.comparing(SimpleEvent::getStart).thenComparing(SimpleEvent::getTitle).thenComparing(SimpleEvent::getDescription))
 				.toList();
 			

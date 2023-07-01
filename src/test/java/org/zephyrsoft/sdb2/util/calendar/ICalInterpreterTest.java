@@ -33,7 +33,7 @@ public class ICalInterpreterTest {
 	public void wholeDayEvents() {
 		ICalInterpreter iCalInterpreter = new ICalInterpreter(
 			null,
-			ZonedDateTime.of(2023, 6, 21, 12, 0, 0, 0, ZoneId.of("Europe/Berlin")),
+			ZonedDateTime.of(2023, 6, 22, 23, 0, 0, 0, ZoneId.of("Europe/Berlin")),
 			7,
 			Locale.GERMAN) {
 			@Override
