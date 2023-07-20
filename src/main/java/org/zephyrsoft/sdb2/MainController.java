@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -334,6 +335,8 @@ public class MainController implements Scroller {
 			} catch (InterruptedException e) {
 				// if interrupted, do nothing (the countdown was stopped)
 				LOG.trace("interrupted (count-down)");
+			} catch (Exception e) {
+				LOG.warn("error while counting song as presented", e);
 			}
 		};
 		stopCountDown();
@@ -545,6 +548,15 @@ public class MainController implements Scroller {
 			});
 		} catch (Exception e) {
 			LOG.warn("could not start watching the songs file", e);
+		}
+	}
+	
+	public void exportStatisticsIfNecessary() {
+		File exportTarget = new File(FileAndDirectoryLocations.getStatisticsMonthlyExportFileName(LocalDate.now().minusMonths(1)));
+		if (!exportTarget.exists()) {
+			LOG.info("the file {} doesn't exist yet, exporting the statistics", exportTarget);
+			new Thread(() -> statisticsController.exportStatisticsAll(new SongsModel(songs), exportTarget))
+				.start();
 		}
 	}
 	

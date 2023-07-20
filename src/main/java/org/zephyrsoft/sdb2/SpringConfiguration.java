@@ -111,6 +111,12 @@ public class SpringConfiguration {
 				+ "\n   But be warned: all your songs will be gone!");
 			throw e;
 		}
+		try {
+			mainController.exportStatisticsIfNecessary();
+		} catch (Exception e) {
+			ErrorDialog.openDialogBlocking(null, "Could not export the statistics!\n\nThis is not fatal, but you should have a look at it.");
+			LOG.warn("", e);
+		}
 		// Run this in headless mode:
 		// mainController.initRemoteController();
 		return mainController;

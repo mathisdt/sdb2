@@ -44,6 +44,8 @@ public class SongStatistics implements Comparable<SongStatistics>, Iterable<Loca
 	
 	@XmlElement(name = "songUuid")
 	private String songUuid;
+	@XmlElement(name = "songTitle", required = false)
+	private String songTitle;
 	@XmlElementWrapper(name = "presentedOn")
 	@XmlElement(name = "date")
 	@XmlJavaTypeAdapter(LocalDateAdapter.class)
@@ -59,17 +61,23 @@ public class SongStatistics implements Comparable<SongStatistics>, Iterable<Loca
 	
 	/**
 	 * Create a statistics element for a single {@link Song}.
-	 *
-	 * @param songUuid
-	 *            the UUID which belongs to the song that these statistics are kept for
 	 */
-	public SongStatistics(String songUuid) {
-		Preconditions.checkArgument(songUuid != null, "the UUID must be different from null");
-		this.songUuid = songUuid;
+	public SongStatistics(Song song) {
+		Preconditions.checkArgument(song.getUUID() != null, "the UUID must be different from null");
+		this.songUuid = song.getUUID();
+		this.songTitle = song.getTitle();
 	}
 	
 	public String getSongUUID() {
 		return songUuid;
+	}
+	
+	public String getSongTitle() {
+		return songTitle;
+	}
+	
+	public void setSongTitle(String songTitle) {
+		this.songTitle = songTitle;
 	}
 	
 	@Override

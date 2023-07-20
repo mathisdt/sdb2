@@ -66,12 +66,14 @@ public class StatisticsModel implements Persistable {
 		SongStatistics stats = getStatistics(song);
 		if (stats == null) {
 			LOG.debug("creating SongStatistics for {} / UUID={}", song.getTitle(), song.getUUID());
-			stats = new SongStatistics(song.getUUID());
+			stats = new SongStatistics(song);
 			songStatistics.add(stats);
 		}
 		LOG.debug("adding date for {} / UUID={}", song.getTitle(), song.getUUID());
 		stats.dateAdd(date);
 		
+		// update title in case it was changed
+		stats.setSongTitle(song.getTitle());
 	}
 	
 	public SongStatistics getStatistics(Song song) {

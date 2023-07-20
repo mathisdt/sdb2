@@ -15,6 +15,7 @@
  */
 package org.zephyrsoft.sdb2;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -39,6 +40,7 @@ import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.XMLConverter;
 import org.zephyrsoft.sdb2.model.statistics.StatisticsModel;
 import org.zephyrsoft.sdb2.util.DateTools;
+import org.zephyrsoft.sdb2.util.StringTools;
 import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
 import com.google.common.base.Preconditions;
@@ -70,20 +72,21 @@ public class StatisticsController {
 		Preconditions.checkArgument(song != null, "counted song must be different from null");
 		LOG.info("counting song \"{}\" as presented today", song.getTitle());
 		statistics.addStatisticsEntry(song, DateTools.now());
+		saveStatistics();
 	}
 	
 	public synchronized boolean saveStatistics() {
 		// TODO move to IOController !?
 		File file = new File(FileAndDirectoryLocations.getStatisticsFileName());
-		try {
-			OutputStream xmlOutputStream = new FileOutputStream(file);
+		try (OutputStream xmlOutputStream = new BufferedOutputStream(new FileOutputStream(file))) {
 			XMLConverter.fromPersistableToXML(statistics, xmlOutputStream);
-			xmlOutputStream.close();
-			return true;
+			xmlOutputStream.flush();
+			LOG.info("wrote statistics to \"{}\"", file.getAbsolutePath());
 		} catch (IOException e) {
-			LOG.error("could not write statistics to \"" + file.getAbsolutePath() + "\"");
+			LOG.error("could not write statistics to \"{}\"", file.getAbsolutePath());
 			return false;
 		}
+		return true;
 	}
 	
 	public void exportStatisticsAll(SongsModel songs, File targetExcelFile) {
@@ -118,7 +121,12 @@ public class StatisticsController {
 				if (song != null) {
 					monthStatsBySong.put(song, monthStatsByUUID.get(uuid));
 				} else {
-					LOG.info("no song found in database for UUID {}", uuid);
+					String songTitle = statistics.getStatistics(uuid).getSongTitle();
+					LOG.info("no song found in database for UUID {}, creating a fake song with title '{}'",
+						uuid, StringTools.nullAsEmptyString(songTitle));
+					Song fakeSong = new Song(uuid);
+					fakeSong.setTitle(songTitle);
+					monthStatsBySong.put(fakeSong, monthStatsByUUID.get(uuid));
 				}
 			}
 			
@@ -166,23 +174,22 @@ public class StatisticsController {
 		// TODO move to IOController !?
 		try (FileOutputStream out = new FileOutputStream(targetExcelFile)) {
 			workbook.write(out);
-			out.close();
 			LOG.info("all statistics exported");
+			try {
+				workbook.close();
+			} catch (IOException e) {
+				LOG.warn("could not close XLS workbook");
+			}
 		} catch (IOException e) {
 			ErrorDialog.openDialog(null, "Could not export the statistics to:\n" + targetExcelFile.getAbsolutePath()
 				+ "\n\nPlease verify that you have write access and the file is not opened by any other program!");
 			LOG.warn("could not write statistics to file", e);
 		}
-		try {
-			workbook.close();
-		} catch (IOException e) {
-			// do nothing
-		}
 	}
 	
 	private static void addTextCell(Row row, int cellnum, CellStyle style, String text) {
 		Cell cell = addCell(row, cellnum, style);
-		cell.setCellValue(text);
+		cell.setCellValue(text == null ? "" : text.trim());
 	}
 	
 	private static void addIntegerCell(Row row, int cellnum, CellStyle style, Integer number) {

@@ -16,6 +16,8 @@
 package org.zephyrsoft.sdb2;
 
 import java.io.File;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.zephyrsoft.sdb2.util.DateTools;
@@ -42,6 +44,8 @@ public class FileAndDirectoryLocations {
 	private static final String STATISTICS_FILE_STRING = "statistics.xml";
 	private static final String DB_FILE_STRING = "db.xml";
 	private static final String DB_PROPERTIES_FILE_STRING = "db.properties.xml";
+	
+	private static final DateTimeFormatter YEAR_MONTH = DateTimeFormatter.ofPattern("yyyy-MM");
 	
 	public static String getDefaultSongsFileName() {
 		return getSongsDir() + File.separator + SONGS_FILE_STRING;
@@ -80,6 +84,10 @@ public class FileAndDirectoryLocations {
 	
 	public static String getStatisticsFileName() {
 		return getStatisticsDir() + File.separator + STATISTICS_FILE_STRING;
+	}
+	
+	public static String getStatisticsMonthlyExportFileName(LocalDate date) {
+		return getStatisticsDir() + File.separator + YEAR_MONTH.format(date) + ".xls";
 	}
 	
 	/** this is used when remote control (via MQTT) is active */
