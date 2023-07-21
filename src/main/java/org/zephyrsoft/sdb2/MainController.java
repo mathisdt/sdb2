@@ -256,7 +256,7 @@ public class MainController implements Scroller {
 					&& pw.metadataMatches(screen2, VirtualScreen.SCREEN_B)
 					&& pw.screenSizeMatches()))) {
 			LOG.trace("re-using the existing presenters");
-			currentlyPresentedSong = presentable == null ? null : presentable.getSong();
+			currentlyPresentedSong = presentable.getSong();
 			managePresentedSongStatistics();
 			presentationControl.setContent(presentable, presentationPosition);
 			
