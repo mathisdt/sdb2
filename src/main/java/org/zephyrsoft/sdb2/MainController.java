@@ -225,8 +225,10 @@ public class MainController implements Scroller {
 	}
 	
 	public boolean present(Presentable presentable, PresentationPosition presentationPosition) {
-		if (presentable != null
-			&& presentable.getSong() != null
+		if (presentable == null) {
+			throw new IllegalArgumentException("the given presentable must be non-null");
+		}
+		if (presentable.getSong() != null
 			&& presentable.getSong().equals(currentlyPresentedSong)
 			&& presentationPosition instanceof SongPresentationPosition spp) {
 			presentationControl.moveTo(spp);
@@ -255,6 +257,7 @@ public class MainController implements Scroller {
 					&& pw.screenSizeMatches()))) {
 			LOG.trace("re-using the existing presenters");
 			currentlyPresentedSong = presentable == null ? null : presentable.getSong();
+			managePresentedSongStatistics();
 			presentationControl.setContent(presentable, presentationPosition);
 			
 			// the presentation windows were moved to front and got the focus because of that,
@@ -265,6 +268,14 @@ public class MainController implements Scroller {
 		} else {
 			LOG.trace("using newly created presenters");
 			return presentInNewPresenters(presentable, presentationPosition, screen1, screen2);
+		}
+	}
+	
+	private void managePresentedSongStatistics() {
+		if (currentlyPresentedSong != null) {
+			startCountDown(settings.get(SettingKey.SECONDS_UNTIL_COUNTED, Integer.class), currentlyPresentedSong);
+		} else {
+			stopCountDown();
 		}
 	}
 	
@@ -295,12 +306,7 @@ public class MainController implements Scroller {
 			}
 			
 			currentlyPresentedSong = presentable.getSong();
-			
-			if (currentlyPresentedSong != null) {
-				startCountDown(settings.get(SettingKey.SECONDS_UNTIL_COUNTED, Integer.class), currentlyPresentedSong);
-			} else {
-				stopCountDown();
-			}
+			managePresentedSongStatistics();
 			
 			SwingUtilities.invokeLater(() -> {
 				// start presentation
