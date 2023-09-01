@@ -59,7 +59,7 @@
 		<version.jakarta-activation-api>2.1.2</version.jakarta-activation-api>
 		<version.glassfish-jaxb-runtime>4.0.2</version.glassfish-jaxb-runtime>
 		<version.ical4j>3.2.12</version.ical4j>
-		<version.moquette>0.16</version.moquette>
+		<version.moquette>0.17</version.moquette>
 	</properties>
 
 	<dependencyManagement>
