@@ -44,7 +44,7 @@
 		<version.commons-lang3>3.13.0</version.commons-lang3>
 		<version.commons-text>1.10.0</version.commons-text>
 		<version.togglz>4.3.0</version.togglz>
-		<version.itext>8.0.0</version.itext>
+		<version.itext>8.0.1</version.itext>
 		<version.poi>5.2.3</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
