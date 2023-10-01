@@ -55,7 +55,7 @@
 		<version.gson>2.10.1</version.gson>
 		<version.junit>5.10.0</version.junit>
 		<version.mockito>5.5.0</version.mockito>
-		<version.jakarta-xml-bind-api>4.0.0</version.jakarta-xml-bind-api>
+		<version.jakarta-xml-bind-api>4.0.1</version.jakarta-xml-bind-api>
 		<version.jakarta-activation-api>2.1.2</version.jakarta-activation-api>
 		<version.glassfish-jaxb-runtime>4.0.2</version.glassfish-jaxb-runtime>
 		<version.ical4j>3.2.12</version.ical4j>
