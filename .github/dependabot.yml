@@ -11,3 +11,8 @@ updates:
       - dependency-name: "org.glassfish.jaxb:jaxb-runtime"
     allow:
       - dependency-type: "direct"
+    groups:
+      minor-and-patch-version-updates:
+        update-types:
+        - "minor"
+        - "patch"
