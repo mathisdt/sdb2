@@ -36,7 +36,7 @@
 		<maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
 		<!-- dependency versions -->
-		<version.spring>6.0.12</version.spring>
+		<version.spring>6.0.13</version.spring>
 		<version.slf4j>2.0.9</version.slf4j>
 		<version.logback>1.4.11</version.logback>
 		<version.log4j>2.20.0</version.log4j>
