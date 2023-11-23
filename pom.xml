@@ -26,7 +26,7 @@
 	</scm>
 
 	<properties>
-		<version.java>17</version.java>
+		<version.java>21</version.java>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
@@ -36,12 +36,13 @@
 		<maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
 		<!-- dependency versions -->
-		<version.spring>6.1.0</version.spring>
+		<version.spring>6.1.1</version.spring>
 		<version.slf4j>2.0.9</version.slf4j>
 		<version.logback>1.4.11</version.logback>
-		<version.log4j>2.21.1</version.log4j>
+		<version.log4j>2.22.0</version.log4j>
+		<version.log4j-to-slf4j>2.21.1</version.log4j-to-slf4j><!-- 2.22.0 introduces a new module name for slf4j-api which is not present there yet -->
 		<version.args4j>2.33</version.args4j>
-		<version.commons-lang3>3.13.0</version.commons-lang3>
+		<version.commons-lang3>3.14.0</version.commons-lang3>
 		<version.commons-text>1.11.0</version.commons-text>
 		<version.togglz>4.4.0</version.togglz>
 		<version.itext>8.0.2</version.itext>
@@ -193,7 +194,7 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-to-slf4j</artifactId>
-			<version>${version.log4j}</version>
+			<version>${version.log4j-to-slf4j}</version>
 		</dependency>
 
 		<dependency>
@@ -293,7 +294,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
-				<version>2.16.1</version>
+				<version>2.16.2</version>
 				<configuration>
 					<rulesUri>file:///${project.basedir}/rules.xml</rulesUri>
 				</configuration>
@@ -312,7 +313,7 @@
 						<configuration>
 							<rules>
 								<requireJavaVersion>
-									<version>17</version>
+									<version>21</version>
 								</requireJavaVersion>
 								<requireMavenVersion>
 									<version>3.5.4</version>
@@ -373,7 +374,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>8.4.2</version>
+				<version>9.0.0</version>
 				<configuration>
 					<skip>${skipOwasp}</skip>
 					<failBuildOnCVSS>7</failBuildOnCVSS>
@@ -571,7 +572,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.2.1</version>
+					<version>3.2.2</version>
 				</plugin>
 
 				<!--This plugin's configuration is used to store Eclipse m2e settings
