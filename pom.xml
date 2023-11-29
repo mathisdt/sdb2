@@ -38,7 +38,7 @@
 		<!-- dependency versions -->
 		<version.spring>6.1.1</version.spring>
 		<version.slf4j>2.0.9</version.slf4j>
-		<version.logback>1.4.11</version.logback>
+		<version.logback>1.4.12</version.logback>
 		<version.log4j>2.22.0</version.log4j>
 		<version.log4j-to-slf4j>2.21.1</version.log4j-to-slf4j><!-- 2.22.0 introduces a new module name for slf4j-api which is not present there yet -->
 		<version.args4j>2.33</version.args4j>
