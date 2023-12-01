@@ -38,15 +38,15 @@
 		<!-- dependency versions -->
 		<version.spring>6.1.1</version.spring>
 		<version.slf4j>2.0.9</version.slf4j>
-		<version.logback>1.4.12</version.logback>
+		<version.logback>1.4.13</version.logback>
 		<version.log4j>2.22.0</version.log4j>
-		<version.log4j-to-slf4j>2.21.1</version.log4j-to-slf4j><!-- 2.22.0 introduces a new module name for slf4j-api which is not present there yet -->
+		<version.log4j-to-slf4j>2.22.0</version.log4j-to-slf4j><!-- 2.22.0 introduces a new module name for slf4j-api which is not present there yet -->
 		<version.args4j>2.33</version.args4j>
 		<version.commons-lang3>3.14.0</version.commons-lang3>
 		<version.commons-text>1.11.0</version.commons-text>
 		<version.togglz>4.4.0</version.togglz>
 		<version.itext>8.0.2</version.itext>
-		<version.poi>5.2.4</version.poi>
+		<version.poi>5.2.5</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
 		<version.lucene>9.8.0</version.lucene>
@@ -374,7 +374,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>9.0.0</version>
+				<version>9.0.1</version>
 				<configuration>
 					<skip>${skipOwasp}</skip>
 					<failBuildOnCVSS>7</failBuildOnCVSS>
@@ -515,7 +515,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>3.4.0</version>
+				<version>3.5.0</version>
 				<executions>
 					<execution>
 						<id>attach-distribution</id>
