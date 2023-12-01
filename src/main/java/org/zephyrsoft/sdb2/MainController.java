@@ -106,7 +106,7 @@ public class MainController implements Scroller {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(MainController.class);
 	
-	private Executor contentChanger = Executors.newSingleThreadExecutor();
+	private Executor contentChanger = Executors.newSingleThreadExecutor(Thread.ofVirtual().name("content-changer-", 0).factory());
 	
 	private MainWindow mainWindow;
 	
@@ -123,7 +123,7 @@ public class MainController implements Scroller {
 	private PresenterBundle presentationControl;
 	private Song currentlyPresentedSong = null;
 	
-	private ExecutorService executor = Executors.newCachedThreadPool();
+	private ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 	private Future<?> countDownFuture;
 	private Iterator<File> slideShowImages;
 	private Future<?> slideShowFuture;

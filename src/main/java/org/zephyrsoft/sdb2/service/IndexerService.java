@@ -69,7 +69,7 @@ public class IndexerService {
 	private Map<IndexType, Directory> indexes = new EnumMap<>(IndexType.class);
 	private static final Object INDEXES_LOCK = new Object();
 	
-	private final ExecutorService executor = Executors.newSingleThreadExecutor();
+	private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 	
 	private final ArrayList<OnIndexChangeListener> onIndexChangeListeners = new ArrayList<>();
 	

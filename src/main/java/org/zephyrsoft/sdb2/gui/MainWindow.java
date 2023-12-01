@@ -511,8 +511,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				});
 			}
 		};
-		Thread thread = new Thread(task);
-		thread.start();
+		Thread.startVirtualThread(task);
 	}
 	
 	public void reloadModels(SongsModel songs, SettingsModel settings) {
@@ -1601,7 +1600,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_R, Modifiers.CTRL, () -> {
 			LOG.debug("ctrl-r action");
 			handleSaveAll();
-			new Thread(() -> controller.initRemoteController()).start();
+			Thread.startVirtualThread(controller::initRemoteController);
 		}));
 	}
 	

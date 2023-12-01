@@ -247,12 +247,12 @@ public class MqttObject<T> {
 	
 	private void publishChange(T pObject, Object... args) {
 		if (publishTopic != null) {
-			new Thread(() -> {
+			Thread.startVirtualThread(() -> {
 				mqtt.publish(String.format(publishTopic, args),
 					toPayload.apply(pObject),
 					qos,
 					retained);
-			}).start();
+			});
 		}
 	}
 	

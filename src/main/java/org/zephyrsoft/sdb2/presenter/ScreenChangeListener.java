@@ -15,7 +15,8 @@
  */
 package org.zephyrsoft.sdb2.presenter;
 
-import java.awt.*;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadFactory;
@@ -23,61 +24,58 @@ import java.util.concurrent.ThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 /**
  * Polls (in reasonable intervals) for changes in native graphics device configuration (added screens, removed screens)
  * and notifies registered listeners when changes occur.
  */
 public class ScreenChangeListener {
-
-    private static final ThreadFactory THREAD_FACTORY = new ThreadFactoryBuilder()
-        .setDaemon(true)
-        .setNameFormat("screen-configuration-poller-%d")
-        .build();
-    private static final Logger LOG = LoggerFactory.getLogger(ScreenChangeListener.class);
-
-    private GraphicsDevice[] availableScreens;
-    private final List<Runnable> listeners = new ArrayList<>();
-
-    public ScreenChangeListener() {
-        availableScreens = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
-
-        THREAD_FACTORY.newThread(() -> {
-            while (true) {
-                try {
-                    Thread.sleep(5_000);
-                } catch (InterruptedException ignored) {
-                    // do nothing
-                }
-                if (hasChanged()) {
-                    LOG.debug("screen configuration has changed");
-                    for (Runnable listener : listeners) {
-                        listener.run();
-                    }
-                }
-            }
-        }).start();
-    }
-
-    private boolean hasChanged() {
-        GraphicsDevice[] nowAvailableScreens = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
-        if (nowAvailableScreens.length != availableScreens.length) {
-            availableScreens = nowAvailableScreens;
-            return true;
-        }
-        for (int i = 0; i < nowAvailableScreens.length; i++) {
-            if (!nowAvailableScreens[i].getDefaultConfiguration().getBounds().equals(
-                availableScreens[i].getDefaultConfiguration().getBounds())) {
-                availableScreens = nowAvailableScreens;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void addListener(Runnable listener) {
-        listeners.add(listener);
-    }
-
+	
+	private static final ThreadFactory THREAD_FACTORY = Thread.ofVirtual()
+		.name("screen-configuration-poller-", 0)
+		.factory();
+	private static final Logger LOG = LoggerFactory.getLogger(ScreenChangeListener.class);
+	
+	private GraphicsDevice[] availableScreens;
+	private final List<Runnable> listeners = new ArrayList<>();
+	
+	public ScreenChangeListener() {
+		availableScreens = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+		
+		THREAD_FACTORY.newThread(() -> {
+			while (true) {
+				try {
+					Thread.sleep(5_000);
+				} catch (InterruptedException ignored) {
+					// do nothing
+				}
+				if (hasChanged()) {
+					LOG.debug("screen configuration has changed");
+					for (Runnable listener : listeners) {
+						listener.run();
+					}
+				}
+			}
+		}).start();
+	}
+	
+	private boolean hasChanged() {
+		GraphicsDevice[] nowAvailableScreens = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+		if (nowAvailableScreens.length != availableScreens.length) {
+			availableScreens = nowAvailableScreens;
+			return true;
+		}
+		for (int i = 0; i < nowAvailableScreens.length; i++) {
+			if (!nowAvailableScreens[i].getDefaultConfiguration().getBounds().equals(
+				availableScreens[i].getDefaultConfiguration().getBounds())) {
+				availableScreens = nowAvailableScreens;
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public void addListener(Runnable listener) {
+		listeners.add(listener);
+	}
+	
 }
