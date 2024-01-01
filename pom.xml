@@ -40,7 +40,6 @@
 		<version.slf4j>2.0.10</version.slf4j>
 		<version.logback>1.4.14</version.logback>
 		<version.log4j>2.22.1</version.log4j>
-		<version.log4j-to-slf4j>2.22.1</version.log4j-to-slf4j><!-- 2.22.0 introduces a new module name for slf4j-api which is not present there yet -->
 		<version.args4j>2.33</version.args4j>
 		<version.commons-lang3>3.14.0</version.commons-lang3>
 		<version.commons-text>1.11.0</version.commons-text>
@@ -194,7 +193,7 @@
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-to-slf4j</artifactId>
-			<version>${version.log4j-to-slf4j}</version>
+			<version>${version.log4j}</version>
 		</dependency>
 
 		<dependency>
