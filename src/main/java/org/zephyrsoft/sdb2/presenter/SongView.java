@@ -481,8 +481,7 @@ public class SongView extends JPanel implements Scroller {
 			Preconditions.checkArgument(addressablePart != null, "part index does not correspond to a part of the song");
 			AddressableLine addressableLine = addressablePart.get(line);
 			Preconditions.checkArgument(addressableLine != null, "line index does not correspond to a line of the addressed part");
-			Rectangle2D target = text.modelToView2D(addressableLine.getPosition());
-			double targetY = target.getY();
+			double targetY = getTargetYOr0(partNullable, lineNullable, addressableLine.getPosition());
 			if (minimalScrolling && targetY > text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight()) {
 				targetY = text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight();
 			}
@@ -495,6 +494,17 @@ public class SongView extends JPanel implements Scroller {
 			}
 		} catch (BadLocationException e) {
 			throw new IllegalStateException("could not identify position in text", e);
+		}
+	}
+	
+	private double getTargetYOr0(Integer partNullable, Integer lineNullable, Integer addressableLinePosition)
+		throws BadLocationException {
+		try {
+			Rectangle2D target = text.modelToView2D(addressableLinePosition);
+			return target.getY();
+		} catch (NullPointerException e) {
+			LOG.warn("could not move song {} to part {} / line {}", song, partNullable, lineNullable, e);
+			return 0;
 		}
 	}
 	
