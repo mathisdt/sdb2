@@ -1352,17 +1352,20 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	protected void handleAddImage() {
 		// select target
 		JFileChooser chooser = new JFileChooser();
-		chooser.setDialogTitle("choose image file to add");
+		chooser.setDialogTitle("choose image file(s) to add");
 		CustomFileFilter filter = new CustomFileFilter("Images", ".png", ".jpg", ".jpeg", ".gif");
 		chooser.addChoosableFileFilter(filter);
 		chooser.setFileFilter(filter);
-		chooser.setApproveButtonText("Add Image");
+		chooser.setMultiSelectionEnabled(true);
+		chooser.setApproveButtonText("add image(s)");
 		int result = chooser.showOpenDialog(MainWindow.this);
 
 		if (result == JFileChooser.APPROVE_OPTION) {
 			try {
-				File target = chooser.getSelectedFile();
-				presentModel.addSong(new ImageSong(target));
+				File[] selectedFiles = chooser.getSelectedFiles();
+				for (File selectedFile : selectedFiles) {
+					presentModel.addSong(new ImageSong(selectedFile));
+				}
 				presentList.setSelectedIndex(presentModel.getSize() - 1);
 			} catch (Throwable ex) {
 				handleError(ex);
@@ -2189,7 +2192,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		
 		btnAddImage = new JButton("");
 		btnAddImage.addActionListener(safeAction(e -> handleAddImage()));
-		btnAddImage.setToolTipText("Add Image");
+		btnAddImage.setToolTipText("Add image(s)");
 		btnAddImage.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/plus.png"));
 		GridBagConstraints gbc_button = new GridBagConstraints();
 		gbc_button.anchor = GridBagConstraints.NORTH;
