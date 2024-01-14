@@ -51,11 +51,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.model.AddressablePart;
+import org.zephyrsoft.sdb2.model.ImageSong;
 import org.zephyrsoft.sdb2.model.SelectableDisplay;
 import org.zephyrsoft.sdb2.model.VirtualScreen;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.model.settings.VirtualScreenSettingsModel;
+import org.zephyrsoft.sdb2.util.gui.ImageTools;
 
 /**
  * The presentation display for the lyrics.
@@ -197,7 +199,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 						tp.setBaseColor(screenSettings.getBackgroundColor());
 					}
 					
-					if (presentable.getSong() != null) {
+					if (presentable.getSong() != null && !(presentable.getSong() instanceof ImageSong)) {
 						// create a SongView to render the song
 						songView = new SongView.Builder(presentable.getSong())
 							.showTitle(screenSettings.isShowTitle())
@@ -237,17 +239,21 @@ public class PresenterWindow extends JFrame implements Presenter {
 						songViewPanel.revalidate();
 						songViewPanel.repaint();
 						
-					} else if (presentable.getImage() != null) {
+					} else if (presentable.getSong() instanceof ImageSong || presentable.getImage() != null) {
 						// display the image (fullscreen, but with margin)
-						String imageFile = presentable.getImage();
+						String imageFile = presentable.getSong() instanceof ImageSong imageSong
+							? imageSong.getFile().getAbsolutePath()
+							: presentable.getImage();
+						int rotateRight = presentable.getSong() instanceof ImageSong imageSong
+							? imageSong.getRotateRight()
+							: 0;
 						ImageIcon imageIcon = new ImageIcon(imageFile);
 						Image image = imageIcon.getImage();
-						int originalWidth = image.getWidth(null);
-						int originalHeight = image.getHeight(null);
+						image = ImageTools.rotate(image, rotateRight);
 						double factor = Math.min((screenSize.getWidth() - screenSettings.getLeftMargin() - screenSettings.getRightMargin())
-							/ originalWidth,
-							(screenSize.getHeight() - screenSettings.getTopMargin() - screenSettings.getBottomMargin()) / originalHeight);
-						image = image.getScaledInstance((int) (originalWidth * factor), (int) (originalHeight * factor), Image.SCALE_FAST);
+								/ image.getWidth(null),
+							(screenSize.getHeight() - screenSettings.getTopMargin() - screenSettings.getBottomMargin()) / image.getHeight(null));
+						image = ImageTools.scale(image, factor);
 						JLabel imageComponent = new JLabel(new ImageIcon(image));
 						imageComponent.setBorder(BorderFactory.createEmptyBorder(screenSettings.getTopMargin(), screenSettings.getLeftMargin(),
 							screenSettings

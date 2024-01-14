@@ -57,28 +57,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListSelectionModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JColorChooser;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JEditorPane;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -1497,11 +1476,8 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	 *            index, includes title as index 0 if the title is displayed
 	 */
 	protected void presentSong(Song song, SongPresentationPosition presentationPosition) {
-		Presentable presentable = song instanceof ImageSong imageSong
-			? new Presentable(null, imageSong.getFile().getAbsolutePath())
-			: new Presentable(song, null);
 		// not in a "contentChange" block because else the sections wouldn't be displayed:
-		boolean success = controller.present(presentable, presentationPosition);
+		boolean success = controller.present(new Presentable(song, null), presentationPosition);
 
 		controller.contentChange(() -> {
 			controller.stopSlideShow();
@@ -1765,8 +1741,8 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				try {
-					if (e.getClickCount() >= 2 && selectedSong != null) {
-						// double-clicked: put into present list
+					if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() >= 2 && selectedSong != null) {
+						// left double-clicked: put into present list
 						handleSongSelect();
 					}
 				} catch (Throwable ex) {
@@ -2157,9 +2133,41 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				try {
-					if (e.getClickCount() >= 2 && presentListSelected != null) {
-						// double-clicked: present this song
+					if (e.getButton() == MouseEvent.BUTTON1 && e.getClickCount() >= 2 && presentListSelected != null) {
+						// left double-clicked: present this song
 						handleSongPresent();
+					} else if (e.getButton() == MouseEvent.BUTTON3) {
+						// select item at mouse cursor position
+						int index = presentList.locationToIndex(e.getPoint());
+						if (presentModel.get(index) instanceof ImageSong imageSong) {
+							presentList.setSelectedIndex(index);
+							JPopupMenu rotateMenu = new JPopupMenu();
+							JMenuItem rotate90 = new JMenuItem("rotate right by 90°");
+							rotate90.addActionListener(ae -> {
+								imageSong.setRotateRight(90);
+								presentList.updateUI();
+							});
+							JMenuItem rotate270 = new JMenuItem("rotate left by 90°");
+							rotate270.addActionListener(ae -> {
+								imageSong.setRotateRight(270);
+								presentList.updateUI();
+							});
+							JMenuItem rotate180 = new JMenuItem("rotate by 180°");
+							rotate180.addActionListener(ae -> {
+								imageSong.setRotateRight(180);
+								presentList.updateUI();
+							});
+							JMenuItem rotate0 = new JMenuItem("reset rotation");
+							rotate0.addActionListener(ae -> {
+								imageSong.setRotateRight(0);
+								presentList.updateUI();
+							});
+							rotateMenu.add(rotate90);
+							rotateMenu.add(rotate270);
+							rotateMenu.add(rotate180);
+							rotateMenu.add(rotate0);
+							rotateMenu.show(presentList, e.getX(), e.getY());
+						}
 					}
 				} catch (Throwable ex) {
 					handleError(ex);

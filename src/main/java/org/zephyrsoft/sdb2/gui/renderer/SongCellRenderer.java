@@ -132,7 +132,7 @@ public class SongCellRenderer implements ListCellRenderer<Song> {
 			ret.setSongTitle(value.getTitle() != null ? value.getTitle() : "");
 			ret.setFirstLine(SongParser.getFirstLyricsLine(value));
 			if (value instanceof ImageSong imageSong) {
-				ret.setImage(imageSong.getFile().getAbsolutePath());
+				ret.setImage(imageSong.getFile().getAbsolutePath(), imageSong.getRotateRight());
 			}
 		}
 		

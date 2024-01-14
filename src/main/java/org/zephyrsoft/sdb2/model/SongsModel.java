@@ -120,7 +120,9 @@ public class SongsModel implements Iterable<Song>, Persistable {
 		createdListModels.add(createdListModel);
 		return createdListModel;
 	}
-	
+	public Song get(final int index) {
+		return songs.get(index);
+	}
 	public int getSize() {
 		return songs.size();
 	}

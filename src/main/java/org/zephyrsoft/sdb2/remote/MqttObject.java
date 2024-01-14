@@ -248,18 +248,26 @@ public class MqttObject<T> {
 	private void publishChange(T pObject, Object... args) {
 		if (publishTopic != null) {
 			Thread.startVirtualThread(() -> {
-				mqtt.publish(String.format(publishTopic, args),
-					toPayload.apply(pObject),
-					qos,
-					retained);
+				try {
+					mqtt.publish(String.format(publishTopic, args),
+						toPayload.apply(pObject),
+						qos,
+						retained);
+				} catch (Exception e) {
+					LOG.warn("could not publish to {}", publishTopic, e);
+				}
 			});
 		}
 	}
 	
 	private void subscribe() throws MqttException {
 		if (subscriptionTopic != null) {
-			mqtt.onMessage(onMessageListener);
-			mqtt.subscribe(subscriptionTopic, qos);
+			try {
+				mqtt.onMessage(onMessageListener);
+				mqtt.subscribe(subscriptionTopic, qos);
+			} catch (Exception e) {
+				LOG.warn("could not subscribe to {}", subscriptionTopic, e);
+			}
 		}
 	}
 	
