@@ -36,8 +36,8 @@
 		<maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
 		<!-- dependency versions -->
-		<version.spring>6.1.2</version.spring>
-		<version.slf4j>2.0.10</version.slf4j>
+		<version.spring>6.1.3</version.spring>
+		<version.slf4j>2.0.11</version.slf4j>
 		<version.logback>1.4.14</version.logback>
 		<version.log4j>2.22.1</version.log4j>
 		<version.args4j>2.33</version.args4j>
@@ -373,7 +373,7 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>9.0.7</version>
+				<version>9.0.8</version>
 				<configuration>
 					<skip>${skipOwasp}</skip>
 					<failBuildOnCVSS>7</failBuildOnCVSS>
@@ -568,7 +568,7 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.2.3</version>
+					<version>3.2.5</version>
 				</plugin>
 
 				<!--This plugin's configuration is used to store Eclipse m2e settings
