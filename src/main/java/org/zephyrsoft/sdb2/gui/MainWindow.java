@@ -102,6 +102,7 @@ import org.zephyrsoft.sdb2.model.AddressableLine;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ExportFormat;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
+import org.zephyrsoft.sdb2.model.ImageSong;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableDisplay;
 import org.zephyrsoft.sdb2.model.Song;
@@ -318,6 +319,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	private final ConcurrentMap<String, UndoManager> songEditingUndoManagers = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, KeyListener> songEditingKeyListeners = new ConcurrentHashMap<>();
+	private JButton btnAddImage;
 	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
@@ -1346,6 +1348,27 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			splitPanePresentDividerLocationSet = true;
 		}
 	}
+
+	protected void handleAddImage() {
+		// select target
+		JFileChooser chooser = new JFileChooser();
+		chooser.setDialogTitle("choose image file to add");
+		CustomFileFilter filter = new CustomFileFilter("Images", ".png", ".jpg", ".jpeg", ".gif");
+		chooser.addChoosableFileFilter(filter);
+		chooser.setFileFilter(filter);
+		chooser.setApproveButtonText("Add Image");
+		int result = chooser.showOpenDialog(MainWindow.this);
+
+		if (result == JFileChooser.APPROVE_OPTION) {
+			try {
+				File target = chooser.getSelectedFile();
+				presentModel.addSong(new ImageSong(target));
+				presentList.setSelectedIndex(presentModel.getSize() - 1);
+			} catch (Throwable ex) {
+				handleError(ex);
+			}
+		}
+	}
 	
 	protected void handleSongUnselect() {
 		if (presentListSelected != null) {
@@ -1471,40 +1494,46 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	 *            index, includes title as index 0 if the title is displayed
 	 */
 	protected void presentSong(Song song, SongPresentationPosition presentationPosition) {
+		Presentable presentable = song instanceof ImageSong imageSong
+			? new Presentable(null, imageSong.getFile().getAbsolutePath())
+			: new Presentable(song, null);
 		// not in a "contentChange" block because else the sections wouldn't be displayed:
-		boolean success = controller.present(new Presentable(song, null), presentationPosition);
+		boolean success = controller.present(presentable, presentationPosition);
+
 		controller.contentChange(() -> {
 			controller.stopSlideShow();
 			if (success) {
 				clearSectionButtons();
-				List<AddressablePart> parts = controller.getParts();
-				Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
-				int partIndex = showTitle ? 0 : 1;
-				for (AddressablePart part : parts) {
-					PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller, this);
-					panelSectionButtons.add(buttonGroup, panelSectionButtonsHints);
-					listSectionButtons.add(buttonGroup);
-					partIndex++;
+				if (controller.hasParts()) {
+					List<AddressablePart> parts = controller.getParts();
+					Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
+					int partIndex = showTitle ? 0 : 1;
+					for (AddressablePart part : parts) {
+						PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller, this);
+						panelSectionButtons.add(buttonGroup, panelSectionButtonsHints);
+						listSectionButtons.add(buttonGroup);
+						partIndex++;
+					}
+
+					// mark active line
+					if (!listSectionButtons.isEmpty()) {
+						listSectionButtons
+							.get(presentationPosition != null && presentationPosition.getPartIndex() != null
+								? Math.max(0, presentationPosition.getPartIndex() - (showTitle ? 0 : 1))
+								: 0)
+							.setActiveLine(presentationPosition != null && presentationPosition.getLineIndex() != null
+								? presentationPosition.getLineIndex()
+								: 0);
+					}
+
+					// add empty component to consume any space that is left (so the parts appear at the top of the
+					// scrollpane view)
+					panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
+
+					panelSectionButtons.revalidate();
+					panelSectionButtons.repaint();
+					btnJumpToPresented.setEnabled(true);
 				}
-				
-				// mark active line
-				if (!listSectionButtons.isEmpty()) {
-					listSectionButtons
-						.get(presentationPosition != null && presentationPosition.getPartIndex() != null
-							? Math.max(0, presentationPosition.getPartIndex() - (showTitle ? 0 : 1))
-							: 0)
-						.setActiveLine(presentationPosition != null && presentationPosition.getLineIndex() != null
-							? presentationPosition.getLineIndex()
-							: 0);
-				}
-				
-				// add empty component to consume any space that is left (so the parts appear at the top of the
-				// scrollpane view)
-				panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
-				
-				panelSectionButtons.revalidate();
-				panelSectionButtons.repaint();
-				btnJumpToPresented.setEnabled(true);
 			}
 		});
 	}
@@ -2158,6 +2187,18 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gblPanelSelectedSongListButtons.rowWeights = new double[] { 1.0, 0.0, 0.0, 0.0, 1.0 };
 		selectedSongListButtons.setLayout(gblPanelSelectedSongListButtons);
 		
+		btnAddImage = new JButton("");
+		btnAddImage.addActionListener(safeAction(e -> handleAddImage()));
+		btnAddImage.setToolTipText("Add Image");
+		btnAddImage.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/plus.png"));
+		GridBagConstraints gbc_button = new GridBagConstraints();
+		gbc_button.anchor = GridBagConstraints.NORTH;
+		gbc_button.fill = GridBagConstraints.HORIZONTAL;
+		gbc_button.insets = new Insets(0, 0, 5, 0);
+		gbc_button.gridx = 0;
+		gbc_button.gridy = 0;
+		selectedSongListButtons.add(btnAddImage, gbc_button);
+		
 		btnUp = new JButton("");
 		btnUp.addActionListener(safeAction(e -> handleSongUp()));
 		btnUp.setToolTipText("Up");
@@ -2201,6 +2242,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		btnUnselectAll.addActionListener(safeAction(e -> handleSongUnselectAll()));
 		btnUnselectAll.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/JXErrorPane16Double.png"));
 		GridBagConstraints gbcBtnUnselectAll = new GridBagConstraints();
+		gbcBtnUnselectAll.insets = new Insets(0, 0, 5, 0);
 		gbcBtnUnselectAll.anchor = GridBagConstraints.SOUTH;
 		gbcBtnUnselectAll.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnUnselectAll.gridx = 0;

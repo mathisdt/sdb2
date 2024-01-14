@@ -27,7 +27,7 @@ public class Presentable {
 	final String image;
 	
 	public Presentable(Song song, String image) {
-		Preconditions.checkArgument(song == null || image == null, "you cant't display a song and a logo image simultaneously, it's either or!");
+		Preconditions.checkArgument(song == null || image == null, "you cant't display a song and an image simultaneously, it's either or!");
 		
 		this.song = song;
 		this.image = image;

@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.Feature;
 import org.zephyrsoft.sdb2.gui.SongCell;
+import org.zephyrsoft.sdb2.model.ImageSong;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.sdb2.service.IndexerService;
@@ -130,6 +131,9 @@ public class SongCellRenderer implements ListCellRenderer<Song> {
 		if (value != null) {
 			ret.setSongTitle(value.getTitle() != null ? value.getTitle() : "");
 			ret.setFirstLine(SongParser.getFirstLyricsLine(value));
+			if (value instanceof ImageSong imageSong) {
+				ret.setImage(imageSong.getFile().getAbsolutePath());
+			}
 		}
 		
 		ret.setForeground(Color.BLACK);
