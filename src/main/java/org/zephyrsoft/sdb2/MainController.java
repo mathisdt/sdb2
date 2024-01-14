@@ -855,7 +855,12 @@ public class MainController implements Scroller {
 	}
 	
 	public boolean presentSlideShow() {
-		Path imageDirectory = Paths.get(settings.get(SettingKey.SLIDE_SHOW_DIRECTORY, String.class));
+		String configuredDirectory = settings.get(SettingKey.SLIDE_SHOW_DIRECTORY, String.class);
+		if (configuredDirectory == null) {
+			LOG.warn("no slide show directory configured");
+			return false;
+		}
+		Path imageDirectory = Paths.get(configuredDirectory);
 		if (imageDirectory == null || !Files.exists(imageDirectory) || !Files.isReadable(imageDirectory) || !Files.isDirectory(imageDirectory)) {
 			LOG.warn("directory {} could not be opened", imageDirectory);
 			return false;
