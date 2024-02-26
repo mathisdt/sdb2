@@ -15,11 +15,9 @@
  */
 package org.zephyrsoft.sdb2.gui.renderer;
 
-import java.awt.Color;
-import java.awt.Component;
+import java.awt.*;
 
-import javax.swing.JList;
-import javax.swing.ListCellRenderer;
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
@@ -29,10 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.Feature;
 import org.zephyrsoft.sdb2.gui.SongCell;
-import org.zephyrsoft.sdb2.model.ImageSong;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongParser;
 import org.zephyrsoft.sdb2.service.IndexerService;
+import org.zephyrsoft.sdb2.util.StringTools;
 import org.zephyrsoft.sdb2.util.gui.SongCellHighlighter;
 
 /**
@@ -131,8 +129,8 @@ public class SongCellRenderer implements ListCellRenderer<Song> {
 		if (value != null) {
 			ret.setSongTitle(value.getTitle() != null ? value.getTitle() : "");
 			ret.setFirstLine(SongParser.getFirstLyricsLine(value));
-			if (value instanceof ImageSong imageSong) {
-				ret.setImage(imageSong.getFile().getAbsolutePath(), imageSong.getRotateRight());
+			if (!StringTools.isEmpty(value.getImage())) {
+				ret.setImage(value.getImage(), value.getImageRotationAsInt());
 			}
 		}
 		

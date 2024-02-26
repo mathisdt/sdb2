@@ -15,6 +15,7 @@
  */
 package org.zephyrsoft.sdb2.remote;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -98,6 +99,7 @@ public class MQTT implements MqttCallback {
 			LOG.debug("Publishing message: {}", topic);
 			try {
 				client.publish(topic, payload, qos, retained);
+				LOG.debug("Payload: " + new String(payload, StandardCharsets.UTF_8));
 			} catch (Exception e) {
 				// only log the exception
 				LOG.warn("could not publish message", e);

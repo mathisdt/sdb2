@@ -15,32 +15,17 @@
  */
 package org.zephyrsoft.sdb2.presenter;
 
-import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_A;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.GraphicsConfiguration;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.MemoryImageSource;
 import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRootPane;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.text.DefaultStyledDocument;
 
 import org.jdesktop.core.animation.timing.Animator;
@@ -51,13 +36,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.model.AddressablePart;
-import org.zephyrsoft.sdb2.model.ImageSong;
 import org.zephyrsoft.sdb2.model.SelectableDisplay;
 import org.zephyrsoft.sdb2.model.VirtualScreen;
 import org.zephyrsoft.sdb2.model.settings.SettingKey;
 import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.model.settings.VirtualScreenSettingsModel;
+import org.zephyrsoft.sdb2.util.StringTools;
 import org.zephyrsoft.sdb2.util.gui.ImageTools;
+
+import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_A;
 
 /**
  * The presentation display for the lyrics.
@@ -199,7 +186,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 						tp.setBaseColor(screenSettings.getBackgroundColor());
 					}
 					
-					if (presentable.getSong() != null && !(presentable.getSong() instanceof ImageSong)) {
+					if (presentable.getSong() != null && StringTools.isEmpty(presentable.getSong().getImage())) {
 						// create a SongView to render the song
 						songView = new SongView.Builder(presentable.getSong())
 							.showTitle(screenSettings.isShowTitle())
@@ -239,26 +226,30 @@ public class PresenterWindow extends JFrame implements Presenter {
 						songViewPanel.revalidate();
 						songViewPanel.repaint();
 						
-					} else if (presentable.getSong() instanceof ImageSong || presentable.getImage() != null) {
+					} else if (presentable.getImage() != null || ( presentable.getSong() != null && !StringTools.isEmpty(presentable.getSong().getImage()))) {
 						// display the image (fullscreen, but with margin)
-						String imageFile = presentable.getSong() instanceof ImageSong imageSong
-							? imageSong.getFile().getAbsolutePath()
-							: presentable.getImage();
-						int rotateRight = presentable.getSong() instanceof ImageSong imageSong
-							? imageSong.getRotateRight()
-							: 0;
-						ImageIcon imageIcon = new ImageIcon(imageFile);
-						Image image = imageIcon.getImage();
-						image = ImageTools.rotate(image, rotateRight);
-						double factor = Math.min((screenSize.getWidth() - screenSettings.getLeftMargin() - screenSettings.getRightMargin())
-								/ image.getWidth(null),
-							(screenSize.getHeight() - screenSettings.getTopMargin() - screenSettings.getBottomMargin()) / image.getHeight(null));
-						image = ImageTools.scale(image, factor);
-						JLabel imageComponent = new JLabel(new ImageIcon(image));
-						imageComponent.setBorder(BorderFactory.createEmptyBorder(screenSettings.getTopMargin(), screenSettings.getLeftMargin(),
-							screenSettings
-								.getBottomMargin(), screenSettings.getRightMargin()));
-						contentPane.add(imageComponent, BorderLayout.CENTER);
+						try {
+							ImageIcon imageIcon = presentable.getImage() == null ? new ImageIcon(URI.create(presentable.getSong().getImage()).toURL())
+								: new ImageIcon(presentable.getImage());
+							Image image = imageIcon.getImage();
+							if (presentable.getImage() == null) {
+								image = ImageTools.rotate(image, presentable.getSong().getImageRotationAsInt());
+							}
+							double factor = Math.min((screenSize.getWidth() - screenSettings.getLeftMargin() - screenSettings.getRightMargin())
+									/ image.getWidth(null),
+								(screenSize.getHeight() - screenSettings.getTopMargin() - screenSettings.getBottomMargin()) / image.getHeight(null));
+							image = ImageTools.scale(image, factor);
+							JLabel imageComponent = new JLabel(new ImageIcon(image));
+							imageComponent.setBorder(BorderFactory.createEmptyBorder(screenSettings.getTopMargin(), screenSettings.getLeftMargin(),
+								screenSettings
+									.getBottomMargin(), screenSettings.getRightMargin()));
+							contentPane.add(imageComponent, BorderLayout.CENTER);
+						} catch (MalformedURLException e) {
+							LOG.warn("could not display image {}", presentable.getImage() == null
+								? presentable.getSong().getImage()
+								: presentable.getImage(), e);
+							// display a blank screen, remove all content: already done
+						}
 					} else {
 						// display a blank screen, remove all content: already done
 					}

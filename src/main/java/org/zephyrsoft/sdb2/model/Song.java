@@ -66,7 +66,14 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 	private String tempo;
 	@XmlElement(name = "lyrics")
 	private String lyrics;
-	
+	@XmlElement(name = "image")
+	private String image;
+	/**
+	 * in degrees to rotate right
+	 */
+	@XmlElement(name = "imageRotation")
+	private String imageRotation;
+
 	/**
 	 * Create a song instance. CAUTION: every song has to have a UUID! This constructor is only necessary for
 	 * unmarshalling from XML.
@@ -97,6 +104,8 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 		drumNotes = song.getDrumNotes();
 		tempo = song.getTempo();
 		lyrics = song.getLyrics();
+		image = song.getImage();
+		imageRotation = song.getImageRotation();
 	}
 	
 	/**
@@ -163,6 +172,18 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 		return drumNotes;
 	}
 	
+	public String getImage() {
+		return image;
+	}
+
+	public String getImageRotation() {
+		return imageRotation;
+	}
+
+	public int getImageRotationAsInt() {
+		return imageRotation == null ? 0 : Integer.parseInt(imageRotation);
+	}
+
 	public String getCleanChordSequence() {
 		return chordSequence == null
 			? null
@@ -213,6 +234,18 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 		this.chordSequence = chordSequence;
 	}
 	
+	public void setImage(String image) {
+		this.image = image;
+	}
+
+	public void setImageRotation(String imageRotation) {
+		this.imageRotation = imageRotation;
+	}
+
+	public void setImageRotationAsInt(int imageRotation) {
+		this.imageRotation = String.valueOf(imageRotation);
+	}
+
 	public String getUUID() {
 		return uuid;
 	}
@@ -283,7 +316,9 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 			equalsAllowNull(chordSequence, other.chordSequence) &&
 			equalsAllowNull(drumNotes, other.drumNotes) &&
 			equalsAllowNull(tempo, other.tempo) &&
-			equalsAllowNull(lyrics, other.lyrics);
+			equalsAllowNull(lyrics, other.lyrics) &&
+			equalsAllowNull(image, other.image) &&
+			equalsAllowNull(imageRotation, other.imageRotation);
 	}
 	
 	@Override
@@ -319,7 +354,9 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 			&& isEmpty(getTonality())
 			&& isEmpty(getTempo())
 			&& isEmpty(getDrumNotes())
-			&& isEmpty(getChordSequence());
+			&& isEmpty(getChordSequence())
+			&& isEmpty(getImage())
+			&& isEmpty(getImageRotation());
 	}
 	
 	public Map<String, String> toMap() {
@@ -340,6 +377,8 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 				put("tempo", getTempo());
 				put("drumNotes", getDrumNotes());
 				put("chordSequence", getChordSequence());
+				put("image", getImage());
+				put("imageRotation", getImageRotation());
 			}
 		};
 	}
@@ -389,6 +428,12 @@ public class Song implements Serializable, Comparable<Song>, Persistable {
 					break;
 				case "chordSequence":
 					setChordSequence(value);
+					break;
+				case "image":
+					setImage(value);
+					break;
+				case "imageRotation":
+					setImageRotation(value);
 					break;
 			}
 		}

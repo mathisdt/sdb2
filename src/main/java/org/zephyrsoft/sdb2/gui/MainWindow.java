@@ -15,24 +15,7 @@
  */
 package org.zephyrsoft.sdb2.gui;
 
-import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_A;
-import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_B;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Cursor;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GraphicsEnvironment;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
-import java.awt.Insets;
-import java.awt.KeyboardFocusManager;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -53,6 +36,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
@@ -81,7 +65,6 @@ import org.zephyrsoft.sdb2.model.AddressableLine;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ExportFormat;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
-import org.zephyrsoft.sdb2.model.ImageSong;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableDisplay;
 import org.zephyrsoft.sdb2.model.Song;
@@ -119,6 +102,9 @@ import org.zephyrsoft.sdb2.util.gui.TransparentListModel;
 import com.google.common.io.Files;
 
 import say.swing.JFontChooser;
+
+import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_A;
+import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_B;
 
 /**
  * Main window of the application.
@@ -1343,7 +1329,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			try {
 				File[] selectedFiles = chooser.getSelectedFiles();
 				for (File selectedFile : selectedFiles) {
-					presentModel.addSong(new ImageSong(selectedFile));
+					Song imageSong = new Song(UUID.randomUUID().toString());
+					imageSong.setTitle(selectedFile.getName());
+					imageSong.setImage(selectedFile.getAbsoluteFile().toURI().toString());
+					presentModel.addSong(imageSong);
 				}
 				presentList.setSelectedIndex(presentModel.getSize() - 1);
 			} catch (Throwable ex) {
@@ -2139,27 +2128,28 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 					} else if (e.getButton() == MouseEvent.BUTTON3) {
 						// select item at mouse cursor position
 						int index = presentList.locationToIndex(e.getPoint());
-						if (presentModel.get(index) instanceof ImageSong imageSong) {
+						if (!StringTools.isEmpty(presentModel.get(index).getImage())) {
+							Song imageSong = presentModel.get(index);
 							presentList.setSelectedIndex(index);
 							JPopupMenu rotateMenu = new JPopupMenu();
 							JMenuItem rotate90 = new JMenuItem("rotate right by 90°");
 							rotate90.addActionListener(ae -> {
-								imageSong.setRotateRight(90);
+								imageSong.setImageRotationAsInt(90);
 								presentList.updateUI();
 							});
 							JMenuItem rotate270 = new JMenuItem("rotate left by 90°");
 							rotate270.addActionListener(ae -> {
-								imageSong.setRotateRight(270);
+								imageSong.setImageRotationAsInt(270);
 								presentList.updateUI();
 							});
 							JMenuItem rotate180 = new JMenuItem("rotate by 180°");
 							rotate180.addActionListener(ae -> {
-								imageSong.setRotateRight(180);
+								imageSong.setImageRotationAsInt(180);
 								presentList.updateUI();
 							});
 							JMenuItem rotate0 = new JMenuItem("reset rotation");
 							rotate0.addActionListener(ae -> {
-								imageSong.setRotateRight(0);
+								imageSong.setImageRotationAsInt(0);
 								presentList.updateUI();
 							});
 							rotateMenu.add(rotate90);

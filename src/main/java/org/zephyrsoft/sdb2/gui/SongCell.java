@@ -21,12 +21,16 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
 import java.awt.Insets;
+import java.net.MalformedURLException;
+import java.net.URI;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.util.StringTools;
 import org.zephyrsoft.sdb2.util.gui.ImageTools;
@@ -35,6 +39,7 @@ import org.zephyrsoft.sdb2.util.gui.ImageTools;
  * List entry for a {@link Song}.
  */
 public class SongCell extends JPanel {
+	private static final Logger LOG = LoggerFactory.getLogger(SongCell.class);
 	
 	private static final long serialVersionUID = 6861947343987825552L;
 	public static final int TITLE_BOTTOM_SPACE = 5;
@@ -118,20 +123,25 @@ public class SongCell extends JPanel {
 		}
 	}
 	
-	public void setImage(final String imageFile, int degreesToRotateRight) {
-		if (imageFile == null) {
+	public void setImage(final String imageUrl, int degreesToRotateRight) {
+		if (imageUrl == null) {
 			this.image.setVisible(false);
 		} else {
-			ImageIcon imageIcon = new ImageIcon(imageFile);
-			Image image = imageIcon.getImage();
-			image = ImageTools.rotate(image, degreesToRotateRight);
-			double factor = (songTitle.getPreferredSize().getHeight() + firstLine.getPreferredSize().getHeight()
-				+ TITLE_BOTTOM_SPACE + FIRSTLINE_BOTTOM_SPACE) * 2 / image.getHeight(null);
-			image = ImageTools.scale(image, factor);
-			this.image.setIcon(new ImageIcon(image));
-			this.image.setText("");
-			this.image.setVisible(true);
-		}
+			try {
+				ImageIcon imageIcon = new ImageIcon(URI.create(imageUrl).toURL());
+				Image image = imageIcon.getImage();
+				image = ImageTools.rotate(image, degreesToRotateRight);
+				double factor = (songTitle.getPreferredSize().getHeight() + firstLine.getPreferredSize().getHeight()
+					+ TITLE_BOTTOM_SPACE + FIRSTLINE_BOTTOM_SPACE) * 2 / image.getHeight(null);
+				image = ImageTools.scale(image, factor);
+				this.image.setIcon(new ImageIcon(image));
+				this.image.setText("");
+				this.image.setVisible(true);
+			} catch (MalformedURLException e) {
+				this.image.setVisible(false);
+                LOG.warn("could not locate image {}", imageUrl, e);
+            }
+        }
 	}
 	
 	@Override
