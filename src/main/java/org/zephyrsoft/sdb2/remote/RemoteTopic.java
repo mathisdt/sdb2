@@ -64,4 +64,21 @@ public class RemoteTopic {
 	final static String PATCHES_REQUEST_PATCHES = "%sdb/v1/patches/request/%s/patches";
 	final static int PATCHES_REQUEST_PATCHES_QOS = 1;
 	final static boolean PATCHES_REQUEST_PATCHES_RETAINED = false;
+	
+	// If client uploads a file: to username/uuid
+	final static String FILES_REQUEST_SET = "%sdb/v1/files/request/%s/set/+";
+	final static int FILES_REQUEST_SET_QOS = 1;
+	final static boolean FILES_REQUEST_SET_RETAINED = false;
+	
+	// If client needs a file, it sends a request to get
+	final static String FILES_REQUEST_GET = "%sdb/v1/files/request/%s/get";
+	final static int FILES_REQUEST_GET_QOS = 1;
+	final static boolean FILES_REQUEST_GET_RETAINED = false;
+	
+	// And it will recieve the requested file to uuid:
+	final static String FILES_REQUEST_FILE = "%sdb/v1/files/request/%s/file/+";
+	final static int FILES_REQUEST_FILE_QOS = 1;
+	final static boolean FILES_REQUEST_FILE_RETAINED = false;
+	public final static int FILES_REQUEST_FILE_UUID = 0;
+	
 }

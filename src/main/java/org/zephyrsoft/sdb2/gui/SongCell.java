@@ -23,6 +23,8 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -31,6 +33,7 @@ import javax.swing.border.EmptyBorder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zephyrsoft.sdb2.FileAndDirectoryLocations;
 import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.util.StringTools;
 import org.zephyrsoft.sdb2.util.gui.ImageTools;
@@ -128,7 +131,11 @@ public class SongCell extends JPanel {
 			this.image.setVisible(false);
 		} else {
 			try {
-				ImageIcon imageIcon = new ImageIcon(URI.create(imageUrl).toURL());
+				URI imageUri = URI.create(imageUrl);
+				if (imageUri.getScheme().equals("sdb")){
+					imageUri =  Paths.get(FileAndDirectoryLocations.getDBBlobDir(), imageUrl.replace("sdb://", "")).toUri();
+				}
+				ImageIcon imageIcon = new ImageIcon(imageUri.toURL());
 				Image image = imageIcon.getImage();
 				image = ImageTools.rotate(image, degreesToRotateRight);
 				double factor = (songTitle.getPreferredSize().getHeight() + firstLine.getPreferredSize().getHeight()

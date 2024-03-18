@@ -44,6 +44,7 @@ public class FileAndDirectoryLocations {
 	private static final String STATISTICS_FILE_STRING = "statistics.xml";
 	private static final String DB_FILE_STRING = "db.xml";
 	private static final String DB_PROPERTIES_FILE_STRING = "db.properties.xml";
+	private static final String DB_BLOB_SUBDIR_STRING = "blobs";
 	
 	private static final DateTimeFormatter YEAR_MONTH = DateTimeFormatter.ofPattern("yyyy-MM");
 	
@@ -88,6 +89,15 @@ public class FileAndDirectoryLocations {
 	
 	public static String getStatisticsMonthlyExportFileName(LocalDate date) {
 		return getStatisticsDir() + File.separator + YEAR_MONTH.format(date) + ".xls";
+	}
+	
+	/** this is used when remote control (via MQTT) is active */
+	public static String getDBBlobDir() {
+		if (Options.getInstance().getBlobDatabaseDir() == null) {
+			return getDir(DB_BLOB_SUBDIR_STRING, true);
+		} else {
+			return getDir(Options.getInstance().getBlobDatabaseDir(), false);
+		}
 	}
 	
 	/** this is used when remote control (via MQTT) is active */

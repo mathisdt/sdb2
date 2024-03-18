@@ -77,6 +77,11 @@ public enum Options {
 	@Option(name = "--database", aliases = "-db", metaVar = "<DIR>", usage = "use this directory as database storage (optional, the default is ~/.songdatabase/db/)")
 	private String databaseDir = null;
 	
+	private static final String PROP_BLOB_DATABASE_DIR = "blob_database";
+	/** this is used when remote control (via MQTT) is active */
+	@Option(name = "--blob-database", aliases = "-blob-db", metaVar = "<DIR>", usage = "use this directory as blob database storage (optional, the default is ~/.songdatabase/blobs/)")
+	private String blobDatabaseDir = null;
+	
 	private static final String PROP_SONGS_FILE = "songs-file";
 	@Argument(metaVar = "<FILE>", usage = "use this file to load from and save to (optional, the default is ~/.songdatabase/songs/songs.xml)")
 	private String songsFile = null;
@@ -175,6 +180,14 @@ public enum Options {
 	
 	private void setDatabaseDir(String databaseDir) {
 		this.databaseDir = databaseDir;
+	}
+	
+	public String getBlobDatabaseDir() {
+		return blobDatabaseDir;
+	}
+	
+	private void setBlobDatabaseDir(String blobDatabaseDir) {
+		this.blobDatabaseDir = blobDatabaseDir;
 	}
 	
 	public String getSongsFile() {
