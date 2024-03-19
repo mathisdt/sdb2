@@ -53,6 +53,7 @@ public class RemoteController {
 	private final MqttObject<ChangeReject> latestReject;
 	private MqttObject<byte[]> filesRequestSet;
 	private MqttObject<FileRequest> filesRequestGet;
+	private MqttObject<FileSetResponse> filesRequestSetResponse;
 	private MqttObject<byte[]> filesRequestFile;
 	private final MqttObject<Health> healthDB;
 	private final RemotePresenter remotePresenter;
@@ -87,11 +88,17 @@ public class RemoteController {
 				RemoteTopic.SONG_QOS, RemoteTopic.SONG_RETAINED, null);
 		song.onRemoteChange((s, a) -> updateSongOrPosition(mainController, mainWindow));
 
+		filesRequestGet = new MqttObject<>(formatClientIDTopic(RemoteTopic.FILES_REQUEST_GET),
+				RemoteController::toXML, RemoteTopic.FILES_REQUEST_GET_QOS, RemoteTopic.FILES_REQUEST_GET_RETAINED);
+
+		filesRequestFile = new MqttObject<>(formatClientIDTopic(RemoteTopic.FILES_REQUEST_FILE), null, null,
+				RemoteTopic.FILES_REQUEST_FILE_QOS, RemoteTopic.FILES_REQUEST_FILE_RETAINED, (a, b) -> false);
+
 		if (mainWindow != null) {
 			playlist = new MqttObject<>(formatTopic(RemoteTopic.PLAYLIST), (s) -> (SongsModel) parseXML(s),
 					RemoteController::toXML, RemoteTopic.PLAYLIST_QOS, RemoteTopic.PLAYLIST_RETAINED, null);
 			playlist.onRemoteChange((p, a) -> fileController.downloadFiles(p, () -> mainWindow.updatePlaylist(p)));
-			mainWindow.getPresentModel().addSongsModelListener(() -> playlist.set(new SongsModel(fileController.uploadFiles(mainWindow.getPresentModel()))));
+			mainWindow.getPresentModel().addSongsModelListener(() -> fileController.uploadFiles(mainWindow.getPresentModel(), (s) -> playlist.set(new SongsModel(s))));
 
 			latestVersion = new MqttObject<>(formatTopic(RemoteTopic.PATCHES_LATEST_VERSION),
 					(s) -> (Version) parseXML(s), RemoteController::toXML, RemoteTopic.PATCHES_LATEST_VERSION_QOS,
@@ -115,11 +122,9 @@ public class RemoteController {
 			filesRequestSet = new MqttObject<>(formatClientIDTopic(RemoteTopic.FILES_REQUEST_SET), (b) -> b, 
 					RemoteTopic.FILES_REQUEST_SET_QOS, RemoteTopic.FILES_REQUEST_SET_RETAINED);
 
-			filesRequestGet = new MqttObject<>(formatClientIDTopic(RemoteTopic.FILES_REQUEST_GET),
-					RemoteController::toXML, RemoteTopic.FILES_REQUEST_GET_QOS, RemoteTopic.FILES_REQUEST_GET_RETAINED);
-
-			filesRequestFile = new MqttObject<>(formatClientIDTopic(RemoteTopic.FILES_REQUEST_FILE), null, null,
-					RemoteTopic.FILES_REQUEST_FILE_QOS, RemoteTopic.FILES_REQUEST_FILE_RETAINED, (a, b) -> false);
+			filesRequestSetResponse = new MqttObject<>(formatClientIDTopic(RemoteTopic.FILES_REQUEST_SET_RESPONSE),
+					(s) -> (FileSetResponse) parseXML(s), null, RemoteTopic.FILES_REQUEST_SET_RESPONSE_QOS,
+					RemoteTopic.FILES_REQUEST_SET_RESPONSE_RETAINED, (a, b) -> false);
 
 			healthDB = new MqttObject<>(formatPrefixTopic(RemoteTopic.HEALTH_DB), Health::valueOfBytes, null,
 					RemoteTopic.HEALTH_DB_QOS, RemoteTopic.HEALTH_DB_RETAINED, null);
@@ -131,6 +136,8 @@ public class RemoteController {
 			this.latestReject = null;
 			this.latestChanges = null;
 			this.healthDB = null;
+			this.filesRequestSet = null;
+			this.filesRequestSetResponse = null;
 		}
 		
 		fileController = new FileController(this);
@@ -150,6 +157,7 @@ public class RemoteController {
 		filesRequestFile.connectTo(mqtt);
 		filesRequestGet.connectTo(mqtt);
 		filesRequestSet.connectTo(mqtt);
+		filesRequestSetResponse.connectTo(mqtt);
 	}
 
 	private void updateSongOrPosition(MainController mainController, MainWindow mainWindow) {
@@ -275,6 +283,10 @@ public class RemoteController {
 
 	public MqttObject<byte[]> getFilesRequestFile() {
 		return filesRequestFile;
+	}
+
+	public MqttObject<FileSetResponse> getFilesRequestSetResponse() {
+		return filesRequestSetResponse;
 	}
 
 }

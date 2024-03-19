@@ -70,6 +70,11 @@ public class RemoteTopic {
 	final static int FILES_REQUEST_SET_QOS = 1;
 	final static boolean FILES_REQUEST_SET_RETAINED = false;
 	
+	// If client uploads a file, response: to username
+	final static String FILES_REQUEST_SET_RESPONSE = "%sdb/v1/files/request/%s/set_response";
+	final static int FILES_REQUEST_SET_RESPONSE_QOS = 1;
+	final static boolean FILES_REQUEST_SET_RESPONSE_RETAINED = false;
+	
 	// If client needs a file, it sends a request to get
 	final static String FILES_REQUEST_GET = "%sdb/v1/files/request/%s/get";
 	final static int FILES_REQUEST_GET_QOS = 1;

@@ -22,6 +22,7 @@ import org.zephyrsoft.sdb2.model.settings.SettingsModel;
 import org.zephyrsoft.sdb2.model.statistics.StatisticsModel;
 import org.zephyrsoft.sdb2.remote.ChangeReject;
 import org.zephyrsoft.sdb2.remote.FileRequest;
+import org.zephyrsoft.sdb2.remote.FileSetResponse;
 import org.zephyrsoft.sdb2.remote.PatchRequest;
 import org.zephyrsoft.sdb2.remote.Patches;
 import org.zephyrsoft.sdb2.remote.Position;
@@ -66,7 +67,7 @@ public class XMLConverter {
 	
 	private static JAXBContext createContext() throws JAXBException {
 		JAXBContext context = JAXBContext.newInstance(SongsModel.class, SettingsModel.class, StatisticsModel.class, Version.class,
-			PatchRequest.class, Song.class, Patches.class, ChangeReject.class, Position.class, FileRequest.class);
+			PatchRequest.class, Song.class, Patches.class, ChangeReject.class, Position.class, FileRequest.class, FileSetResponse.class);
 		return context;
 	}
 	

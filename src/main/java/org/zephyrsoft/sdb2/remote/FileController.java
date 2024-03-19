@@ -89,7 +89,10 @@ public class FileController {
 		missingFiles.forEach((fileName) -> remoteController.getFilesRequestGet().set(new FileRequest(fileName)));
 	}
 
-	public SongsModel uploadFiles(SongsModel songsModel) {
+	
+	public void uploadFiles(SongsModel songsModel, Consumer<SongsModel> callback) {
+		HashSet<String> localFiles = new HashSet<>();
+		
 		for (Song song: songsModel.getSongs()) {
 			if(!StringTools.isEmpty(song.getImage()) && URI.create(song.getImage()).getScheme().equals("file")) {
 				Path path = Paths.get(URI.create(song.getImage()));
@@ -98,6 +101,7 @@ public class FileController {
 					      .filter(f -> f.contains("."))
 					      .map(f -> f.substring(oldFilename.lastIndexOf(".")));
 				String newFilename = StringTools.createUUID() + fileExtension.get();
+				localFiles.add(newFilename);
 				Path dbPath = Paths.get(FileAndDirectoryLocations.getDBBlobDir(), newFilename);
 				try {
 					Files.createDirectories(Paths.get(FileAndDirectoryLocations.getDBBlobDir()));
@@ -109,16 +113,42 @@ public class FileController {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				try {
-					byte[] content = Files.readAllBytes(dbPath);
-					remoteController.getFilesRequestSet().set(content, newFilename);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 				song.setImage("sdb://"+newFilename);
 			}
 		}
-		return songsModel;
+		if(localFiles.isEmpty()) {
+			callback.accept(songsModel);
+			return;
+		}
+		
+		this.remoteController.getFilesRequestSetResponse().onRemoteChange(new OnChangeListener<FileSetResponse>() {
+			@Override
+			public void onChange(FileSetResponse object, Object... args) {
+				String fileName = object.getUuid();
+				if ( localFiles.contains(fileName) ){
+					if(!object.isOk()) {
+						System.err.println("Could not upload file " + fileName + " Reason: " + object.getReason());
+						remoteController.getFilesRequestSetResponse().removeOnRemoteChangeListener(this);
+					}else {
+						localFiles.remove(fileName);
+						if (localFiles.isEmpty()) {
+							callback.accept(songsModel);
+							remoteController.getFilesRequestSetResponse().removeOnRemoteChangeListener(this);
+						}
+					}
+				}
+			}
+		});
+		
+		localFiles.forEach((fileName) -> {
+			Path dbPath = Paths.get(FileAndDirectoryLocations.getDBBlobDir(), fileName);
+			try {
+				byte[] content = Files.readAllBytes(dbPath);
+				remoteController.getFilesRequestSet().set(content, fileName);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
 	}
 
 }
