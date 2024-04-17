@@ -1,18 +1,18 @@
 version: 2
 updates:
   - package-ecosystem: "maven"
-    open-pull-requests-limit: 10
     directory: "/"
     schedule:
-      interval: "monthly"
+      interval: "daily"
+      time: "05:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 100
     ignore:
       # the releases are inconsistent - the latest jaxb-api does not work with the latest jaxb-runtime 
       - dependency-name: "javax.xml.bind:jaxb-api"
       - dependency-name: "org.glassfish.jaxb:jaxb-runtime"
     allow:
       - dependency-type: "direct"
-    groups:
-      minor-and-patch-version-updates:
-        update-types:
-        - "minor"
-        - "patch"
+    labels:
+      - "dependencies"
+      - "automatic-merge"
