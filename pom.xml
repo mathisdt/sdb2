@@ -38,7 +38,7 @@
 		<!-- dependency versions -->
 		<version.spring>6.1.6</version.spring>
 		<version.slf4j>2.0.13</version.slf4j>
-		<version.logback>1.5.5</version.logback>
+		<version.logback>1.5.6</version.logback>
 		<version.log4j>2.23.1</version.log4j>
 		<version.args4j>2.37</version.args4j>
 		<version.commons-lang3>3.14.0</version.commons-lang3>
