@@ -23,31 +23,46 @@ import javax.swing.AbstractListModel;
  * A list model which transparently uses an underlying {@link List}.
  */
 public class TransparentListModel<T> extends AbstractListModel<T> {
-	
-	private static final long serialVersionUID = -2952298254786461472L;
-	
-	private final List<T> underlyingList;
-	
-	public TransparentListModel(List<T> underlyingList) {
-		this.underlyingList = underlyingList;
-	}
-	
-	@Override
-	public int getSize() {
-		return underlyingList.size();
-	}
-	
-	@Override
-	public T getElementAt(int index) {
-		return underlyingList.get(index);
-	}
-	
-	public List<T> getAllElements() {
-		return underlyingList;
-	}
-	
-	public boolean contains(T element) {
-		return underlyingList.contains(element);
-	}
-	
+
+    private static final long serialVersionUID = -2952298254786461472L;
+
+    private final List<T> underlyingList;
+
+    public TransparentListModel(List<T> underlyingList) {
+        this.underlyingList = underlyingList;
+    }
+
+    @Override
+    public int getSize() {
+        return underlyingList.size();
+    }
+
+    @Override
+    public T getElementAt(int index) {
+        return underlyingList.get(index);
+    }
+
+    public List<T> getAllElements() {
+        return underlyingList;
+    }
+
+    public boolean contains(T element) {
+        return underlyingList.contains(element);
+    }
+
+    public void addSong(final T t) {
+        underlyingList.add(t);
+        fireIntervalAdded(this, underlyingList.size() - 1, underlyingList.size() - 1);
+    }
+
+    public void removeSong(final int index) {
+        underlyingList.remove(index);
+        fireIntervalRemoved(this, index, index);
+    }
+
+    public void clearSongs() {
+        int oldSize = underlyingList.size();
+        underlyingList.clear();
+        fireIntervalRemoved(this, 0, Math.max(0, oldSize - 1));
+    }
 }

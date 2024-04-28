@@ -1296,7 +1296,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	protected void handleSongSelect() {
 		if (selectedSong != null) {
-			presentModel.addSong(selectedSong);
+			presentListModel.addSong(selectedSong);
 			tabbedPane.setSelectedIndex(TAB_INDEX_PRESENT);
 			presentList.requestFocusInWindow();
 			setDefaultDividerLocation();
@@ -1332,7 +1332,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 					Song imageSong = new Song(UUID.randomUUID().toString());
 					imageSong.setTitle(selectedFile.getName());
 					imageSong.setImage(selectedFile.getAbsoluteFile().toURI().toString());
-					presentModel.addSong(imageSong);
+					presentListModel.addSong(imageSong);
 				}
 				presentList.setSelectedIndex(presentModel.getSize() - 1);
 			} catch (Throwable ex) {
@@ -1344,18 +1344,18 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	protected void handleSongUnselect() {
 		if (presentListSelected != null) {
 			// use index because there could be multiple instances of one song in the list
-			presentModel.removeSong(presentList.getSelectedIndex());
+			presentListModel.removeSong(presentList.getSelectedIndex());
 			presentList.clearSelection();
 		}
 	}
 	
 	protected void handleSongUnselectAll() {
-		presentModel.clear();
+		presentListModel.clearSongs();
 		presentList.clearSelection();
 	}
 	
 	protected void handleSongUnselectAllAndBlankScreen() {
-		presentModel.clear();
+		presentListModel.clearSongs();
 		presentList.clearSelection();
 		handleBlankScreen();
 	}
