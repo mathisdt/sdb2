@@ -48,7 +48,7 @@
 		<version.poi>5.2.5</version.poi>
 		<version.jfontchooser>1.0.5-3</version.jfontchooser>
 		<version.timingframework>7.3.1</version.timingframework>
-		<version.lucene>9.10.0</version.lucene>
+		<version.lucene>9.11.0</version.lucene>
 		<version.paho-mqtt>1.2.5</version.paho-mqtt>
 		<version.diff-match-patch>1.2</version.diff-match-patch>
 		<version.guava>33.2.1-jre</version.guava>
