@@ -23,7 +23,7 @@ open module org.zephyrsoft.sdb2 {
 	requires java.desktop;
 	requires java.sql;
 	requires java.net.http;
-	requires org.mnode.ical4j.core;
+	requires ical4j.core;
 	requires com.google.gson;
 	requires JFontChooser;
 	requires timingframework.core;

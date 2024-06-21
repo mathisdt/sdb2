@@ -15,25 +15,27 @@
  */
 package org.zephyrsoft.sdb2.util.calendar;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ICalInterpreterTest {
 	
 	@Test
 	public void wholeDayEvents() {
+		LocalDateTime dateTime = LocalDateTime.of(2023, 6, 22, 23, 0, 0);
 		ICalInterpreter iCalInterpreter = new ICalInterpreter(
 			null,
-			ZonedDateTime.of(2023, 6, 22, 23, 0, 0, 0, ZoneId.of("Europe/Berlin")),
+			OffsetDateTime.of(dateTime, ZoneId.of("Europe/Berlin").getRules().getOffset(dateTime)),
 			7,
 			Locale.GERMAN) {
 			@Override

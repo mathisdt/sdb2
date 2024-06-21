@@ -15,19 +15,19 @@
  */
 package org.zephyrsoft.sdb2.model.calendar;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * An entry of a calendar. Simple and flattened, any recurrence was already applied.
  */
 public class SimpleEvent {
-	private final ZonedDateTime start;
-	private final ZonedDateTime end;
+	private final OffsetDateTime start;
+	private final OffsetDateTime end;
 	private final String title;
 	private final String description;
 	private final String location;
 	
-	public SimpleEvent(ZonedDateTime start, ZonedDateTime end, String title, String description, String location) {
+	public SimpleEvent(OffsetDateTime start, OffsetDateTime end, String title, String description, String location) {
 		this.start = start;
 		this.end = end;
 		this.title = title;
@@ -35,11 +35,11 @@ public class SimpleEvent {
 		this.location = location;
 	}
 	
-	public ZonedDateTime getStart() {
+	public OffsetDateTime getStart() {
 		return start;
 	}
 	
-	public ZonedDateTime getEnd() {
+	public OffsetDateTime getEnd() {
 		return end;
 	}
 	
