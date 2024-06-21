@@ -24,18 +24,16 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -44,27 +42,30 @@ import org.zephyrsoft.sdb2.model.calendar.SimpleEvent;
 
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Period;
-import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.property.Description;
+import net.fortuna.ical4j.model.property.Location;
+import net.fortuna.ical4j.model.property.Summary;
 
 /**
  * Reads iCal data from an URL and interprets it.
  */
 public class ICalInterpreter {
 	
-	private static final String DEFAULT_PATTERN = "yyyyMMdd'T'HHmmss";
-	private static final DateTimeFormatter DEFAULT_FORMATTER = DateTimeFormatter.ofPattern(DEFAULT_PATTERN);
 	private final DateTimeFormatter displayDateFormatter;
 	private final DateTimeFormatter displayTimeFormatter;
 	
 	private final String url;
-	private final ZonedDateTime startOfDisplayPeriod;
+	private final OffsetDateTime startOfDisplayPeriod;
 	private final int lengthOfDisplayPeriodInDays;
 	private final HttpClient client;
+
+	static {
+		System.setProperty("ical4j.parsing.relaxed", "true");
+	}
 	
-	public ICalInterpreter(String url, ZonedDateTime startOfDisplayPeriod, int lengthOfDisplayPeriodInDays, Locale locale) {
+	public ICalInterpreter(String url, OffsetDateTime startOfDisplayPeriod, int lengthOfDisplayPeriodInDays, Locale locale) {
 		this.url = url;
 		this.startOfDisplayPeriod = startOfDisplayPeriod;
 		this.lengthOfDisplayPeriodInDays = lengthOfDisplayPeriodInDays;
@@ -77,30 +78,25 @@ public class ICalInterpreter {
 	}
 	
 	public Song getInterpretedData() {
-		String icalString = null;
 		try {
-			icalString = fetchCalendarData();
+			String icalString = fetchCalendarData();
 			
 			StringReader reader = new StringReader(icalString);
 			CalendarBuilder builder = new CalendarBuilder();
 			Calendar calendar = builder.build(reader);
-			
-			LocalDateTime start = startOfDisplayPeriod.toLocalDateTime();
-			LocalDateTime end = start.plusDays(lengthOfDisplayPeriodInDays).with(LocalTime.MAX);
-			DateTime from = new DateTime(start.format(DEFAULT_FORMATTER));
-			DateTime to = new DateTime(end.format(DEFAULT_FORMATTER));
-			Period period = new Period(from, to);
+
+			OffsetDateTime start = startOfDisplayPeriod;
+			OffsetDateTime end = start.plusDays(lengthOfDisplayPeriodInDays).with(LocalTime.MAX);
+			Period<OffsetDateTime> period = new Period<>(start, end);
 			
 			List<SimpleEvent> simpleEvents = calendar.getComponents("VEVENT").stream()
 				.flatMap(component -> {
-					PeriodList list = component.calculateRecurrenceSet(period);
+					Set<Period<OffsetDateTime>> list = component.calculateRecurrenceSet(period);
 					
 					return list.stream()
-						.map(p -> {
-							return new SimpleEvent(convert(p.getStart(), true), convert(p.getEnd(), false),
-								extractSummary(p), extractDescription(p), extractLocation(p));
-						})
-						.flatMap(this::splitMultiDayEvents);
+						.map(p -> new SimpleEvent(convert(p, true), convert(p, false),
+                            extractSummary(p), extractDescription(p), extractLocation(p)))
+						.flatMap(ICalInterpreter::splitMultiDayEvents);
 				})
 				.filter(se -> se.getStart().isAfter(startOfDisplayPeriod))
 				.sorted(Comparator.comparing(SimpleEvent::getStart).thenComparing(SimpleEvent::getTitle).thenComparing(SimpleEvent::getDescription))
@@ -139,24 +135,18 @@ public class ICalInterpreter {
 		return response.body();
 	}
 	
-	private ZonedDateTime convert(DateTime dt, boolean isStart) {
-		if (dt.getTimeZone() != null) {
-			return ZonedDateTime.ofInstant(Instant.ofEpochMilli(dt.getTime()), dt.getTimeZone().toZoneId());
+	private static OffsetDateTime convert(Period<OffsetDateTime> period, boolean useStart) {
+        if (useStart) {
+			return period.getStart();
 		} else {
-			ZonedDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(dt.getTime()), ZoneId.of("Z"))
-				.toLocalDate()
-				.atStartOfDay()
-				.atZone(ZoneId.of("Z"));
-			
-			if (isStart) {
-				return dateTime;
-			} else {
-				return dateTime.minusSeconds(1);
-			}
+			OffsetDateTime endMinusOneSec = period.getEnd().minusSeconds(1);
+			return endMinusOneSec.isAfter(period.getStart())
+				? endMinusOneSec
+				: period.getEnd();
 		}
 	}
 	
-	private Stream<SimpleEvent> splitMultiDayEvents(SimpleEvent e) {
+	private static Stream<SimpleEvent> splitMultiDayEvents(SimpleEvent e) {
 		if (!e.isMultiDay()) {
 			return Stream.of(e);
 		} else {
@@ -164,12 +154,12 @@ public class ICalInterpreter {
 			
 			LocalDate day = e.getStart().toLocalDate();
 			while (!day.isAfter(e.getEnd().toLocalDate())) {
-				ZonedDateTime startTime = day.equals(e.getStart().toLocalDate())
+				OffsetDateTime startTime = day.equals(e.getStart().toLocalDate())
 					? e.getStart()
-					: ZonedDateTime.of(day, LocalTime.MIN, e.getStart().getZone());
-				ZonedDateTime endTime = day.equals(e.getEnd().toLocalDate())
+					: OffsetDateTime.of(day, LocalTime.MIN, e.getStart().getOffset());
+				OffsetDateTime endTime = day.equals(e.getEnd().toLocalDate())
 					? e.getEnd()
-					: ZonedDateTime.of(day, LocalTime.MAX, e.getEnd().getZone());
+					: OffsetDateTime.of(day, LocalTime.MAX, e.getEnd().getOffset());
 				
 				result.add(new SimpleEvent(startTime, endTime, e.getTitle(), e.getDescription(), e.getLocation()));
 				
@@ -180,29 +170,32 @@ public class ICalInterpreter {
 		}
 	}
 	
-	private String extractSummary(Period veventPeriod) {
+	private static String extractSummary(Period<OffsetDateTime> veventPeriod) {
 		if (veventPeriod != null
 			&& veventPeriod.getComponent() instanceof VEvent vevent
-			&& vevent.getSummary() != null) {
-			return vevent.getSummary().getValue();
+			&& vevent.getSummary() != null
+			&& vevent.getSummary().isPresent()) {
+			return vevent.getSummary().map(Summary::getValue).orElse(null);
 		}
 		return null;
 	}
 	
-	private String extractDescription(Period veventPeriod) {
+	private static String extractDescription(Period<OffsetDateTime> veventPeriod) {
 		if (veventPeriod != null
 			&& veventPeriod.getComponent() instanceof VEvent vevent
-			&& vevent.getDescription() != null) {
-			return vevent.getDescription().getValue();
+			&& vevent.getDescription() != null
+			&& vevent.getDescription().isPresent()) {
+			return vevent.getDescription().map(Description::getValue).orElse(null);
 		}
 		return null;
 	}
 	
-	private String extractLocation(Period veventPeriod) {
+	private static String extractLocation(Period<OffsetDateTime> veventPeriod) {
 		if (veventPeriod != null
 			&& veventPeriod.getComponent() instanceof VEvent vevent
-			&& vevent.getLocation() != null) {
-			return vevent.getLocation().getValue();
+			&& vevent.getLocation() != null
+			&& vevent.getLocation().isPresent()) {
+			return vevent.getLocation().map(Location::getValue).orElse(null);
 		}
 		return null;
 	}
