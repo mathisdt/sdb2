@@ -33,6 +33,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -98,6 +99,7 @@ import org.zephyrsoft.sdb2.util.gui.ListFilter;
 import org.zephyrsoft.sdb2.util.gui.TransparentComboBoxModel;
 import org.zephyrsoft.sdb2.util.gui.TransparentFilterableListModel;
 import org.zephyrsoft.sdb2.util.gui.TransparentListModel;
+import org.zephyrsoft.sdb2.util.gui.TransparentMutableComboBoxModel;
 
 import com.google.common.io.Files;
 
@@ -139,6 +141,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	private JEditorPane editorLyrics;
 	private JTextField textFieldTitle;
+	private List<String> availableLanguages = new ArrayList<>();
 	private JComboBox<String> comboBoxLanguage;
 	private JTextField textFieldTonality;
 	private JTextField textFieldComposer;
@@ -642,7 +645,6 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	@Override
 	public void onIndexChange() {
-		comboBoxLanguage.removeAllItems();
 		Set<String> languages = new HashSet<>();
 		// Fill in used languages:
 		for (Song song : songsModel.getSongs()) {
@@ -650,7 +652,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				languages.add(song.getLanguage());
 			}
 		}
-		languages.forEach(comboBoxLanguage::addItem);
+		List<String> languagesSorted = new ArrayList<>(languages);
+		Collections.sort(languagesSorted);
+		availableLanguages.clear();
+		availableLanguages.addAll(languagesSorted);
 		
 		SwingUtilities.invokeLater(() -> {
 			LOG.debug("Loading songsmodel changes into ui..");
@@ -1233,6 +1238,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		LOG.debug("loadSongData: {} {}", song.getTitle(), song.getUUID());
 		setText(editorLyrics, song.getLyrics(), rewind);
 		setText(textFieldTitle, song.getTitle(), rewind);
+		if (availableLanguages.contains(song.getLanguage())) {
+			comboBoxLanguage.setSelectedItem(song.getLanguage());
+		}
 		((JTextField) comboBoxLanguage.getEditor().getEditorComponent()).setText(song.getLanguage());
 		if (rewind) {
 			((JTextField) comboBoxLanguage.getEditor().getEditorComponent()).setCaretPosition(0);
@@ -1908,8 +1916,8 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblAdditionalCopyrightNotes.gridx = 2;
 		gbcLblAdditionalCopyrightNotes.gridy = 4;
 		panelEdit.add(lblAdditionalCopyrightNotes, gbcLblAdditionalCopyrightNotes);
-		
-		comboBoxLanguage = new JComboBox<>();
+
+		comboBoxLanguage = new JComboBox<>(new TransparentMutableComboBoxModel<>(availableLanguages));
 		comboBoxLanguage.setEditable(true);
 		GridBagConstraints gbcComboBoxLanguage = new GridBagConstraints();
 		gbcComboBoxLanguage.insets = new Insets(0, 0, 5, 5);
