@@ -12,7 +12,7 @@ if [ ! -d "$JDK_LINUX" -o ! -d "$JDK_LINUX/jmods" -o "$($JDK_LINUX/bin/java --ve
 	exit 1
 fi
 
-echo "downloading a Windows JDK from adoptopenjdk.net"
+echo "downloading a Windows JDK from adoptium.net"
 # ATTENTION: has to match the version used on Linux -> .travis.yml
 wget -q -O /tmp/windows-jdk.zip 'https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jdk/hotspot/normal/adoptium?project=jdk'
 unzip -qq -d /tmp/windows-jdk /tmp/windows-jdk.zip
