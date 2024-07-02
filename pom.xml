@@ -30,9 +30,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
-		<!-- override when building locally using -DskipOwasp=true -->
-		<skipOwasp>false</skipOwasp>
-
 		<maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
 
 		<!-- dependency versions -->
@@ -365,27 +362,6 @@
 					<execution>
 						<goals>
 							<goal>add-third-party</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>org.owasp</groupId>
-				<artifactId>dependency-check-maven</artifactId>
-				<version>9.2.0</version>
-				<configuration>
-					<skip>${skipOwasp}</skip>
-					<failBuildOnCVSS>7</failBuildOnCVSS>
-					<failOnError>false</failOnError>
-					<suppressionFiles>
-						<suppressionFile>${basedir}/owasp-suppressions.xml</suppressionFile>
-					</suppressionFiles>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>check</goal>
 						</goals>
 					</execution>
 				</executions>

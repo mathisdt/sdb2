@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<suppressions
-	xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.1.xsd">
-	<suppress>
-		<notes>according to the Spring project, this problem is mitigated in version 5.3.17+</notes>
-		<gav regex="true">org\.springframework:spring.*</gav>
-		<cve>CVE-2016-1000027</cve>
-	</suppress>
-</suppressions>
