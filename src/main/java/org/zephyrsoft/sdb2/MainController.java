@@ -15,8 +15,7 @@
  */
 package org.zephyrsoft.sdb2;
 
-import java.awt.Color;
-import java.awt.Font;
+import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,8 +27,8 @@ import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -42,11 +41,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -906,7 +902,7 @@ public class MainController implements Scroller {
 		}
 		Song iCalSong = null;
 		try {
-			ICalInterpreter iCalInterpreter = new ICalInterpreter(url, ZonedDateTime.now(), daysAhead, getConfiguredLocale());
+			ICalInterpreter iCalInterpreter = new ICalInterpreter(url, OffsetDateTime.now(), daysAhead, getConfiguredLocale());
 			// if downloading and interpreting the iCal takes too long, maybe move the loading to startup phase
 			iCalSong = iCalInterpreter.getInterpretedData();
 			if (iCalSong == null) {
