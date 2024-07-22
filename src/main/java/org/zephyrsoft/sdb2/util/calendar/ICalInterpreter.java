@@ -25,14 +25,21 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.time.temporal.Temporal;
+import java.time.zone.ZoneRules;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -137,13 +144,34 @@ public class ICalInterpreter {
 	
 	private static OffsetDateTime convert(Period<OffsetDateTime> period, boolean useStart) {
         if (useStart) {
-			return period.getStart();
+			return ensureOffsetDateTime(period.getStart());
 		} else {
-			OffsetDateTime endMinusOneSec = period.getEnd().minusSeconds(1);
-			return endMinusOneSec.isAfter(period.getStart())
+			OffsetDateTime endMinusOneSec = ensureOffsetDateTime(period.getEnd()).minusSeconds(1);
+			return endMinusOneSec.isAfter(ensureOffsetDateTime(period.getStart()))
 				? endMinusOneSec
-				: period.getEnd();
+				: ensureOffsetDateTime(period.getEnd());
 		}
+	}
+
+	/**
+	 * since ical4j 4.0.0 it's not guaranteed anymore that the library adheres to the declared generics,
+	 * so we have to take some precaution
+	 */
+	private static OffsetDateTime ensureOffsetDateTime(Temporal temporal) {
+		return switch (temporal) {
+			case OffsetDateTime odt -> odt;
+			case ZonedDateTime zdt -> zdt.toOffsetDateTime();
+			case LocalDate ld -> OffsetDateTime.of(ld, LocalTime.MIN, systemDefaultOffset(LocalDateTime.of(ld, LocalTime.MIN)));
+			case LocalDateTime ldt -> OffsetDateTime.of(ldt, systemDefaultOffset(ldt));
+			case null, default -> throw new UnsupportedOperationException("could not convert "
+				+ Objects.requireNonNull(temporal).getClass() + " to an OffsetDateTime");
+		};
+	}
+
+	private static ZoneOffset systemDefaultOffset(LocalDateTime timestamp) {
+		ZoneId zoneId = ZoneId.systemDefault();
+		ZoneRules rules = zoneId.getRules();
+		return rules.getOffset(timestamp);
 	}
 	
 	private static Stream<SimpleEvent> splitMultiDayEvents(SimpleEvent e) {
