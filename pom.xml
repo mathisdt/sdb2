@@ -248,6 +248,12 @@
 			<artifactId>moquette-broker</artifactId>
 			<version>${version.moquette}</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>com.bugsnag</groupId>
+					<artifactId>bugsnag</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 
@@ -324,6 +330,10 @@
 										<exclude>commons-logging:commons-logging</exclude>
 									</excludes>
 								</bannedDependencies>
+								<banDynamicVersions>
+									<ignores>org.zephyrsoft:sdb2</ignores>
+								</banDynamicVersions>
+								<banDuplicatePomDependencyVersions/>
 							</rules>
 							<fail>true</fail>
 						</configuration>
