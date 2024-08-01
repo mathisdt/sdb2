@@ -98,7 +98,7 @@ public class ICalInterpreter {
 			
 			List<SimpleEvent> simpleEvents = calendar.getComponents("VEVENT").stream()
 				.flatMap(component -> {
-					Set<Period<OffsetDateTime>> list = component.calculateRecurrenceSet(period);
+					Set<Period<Temporal>> list = component.calculateRecurrenceSet(period);
 					
 					return list.stream()
 						.map(p -> new SimpleEvent(convert(p, true), convert(p, false),
@@ -142,7 +142,7 @@ public class ICalInterpreter {
 		return response.body();
 	}
 	
-	private static OffsetDateTime convert(Period<OffsetDateTime> period, boolean useStart) {
+	private static OffsetDateTime convert(Period<Temporal> period, boolean useStart) {
         if (useStart) {
 			return ensureOffsetDateTime(period.getStart());
 		} else {
@@ -153,10 +153,6 @@ public class ICalInterpreter {
 		}
 	}
 
-	/**
-	 * since ical4j 4.0.0 it's not guaranteed anymore that the library adheres to the declared generics,
-	 * so we have to take some precaution
-	 */
 	private static OffsetDateTime ensureOffsetDateTime(Temporal temporal) {
 		return switch (temporal) {
 			case OffsetDateTime odt -> odt;
@@ -198,7 +194,7 @@ public class ICalInterpreter {
 		}
 	}
 	
-	private static String extractSummary(Period<OffsetDateTime> veventPeriod) {
+	private static String extractSummary(Period<Temporal> veventPeriod) {
 		if (veventPeriod != null
 			&& veventPeriod.getComponent() instanceof VEvent vevent
 			&& vevent.getSummary() != null
@@ -208,7 +204,7 @@ public class ICalInterpreter {
 		return null;
 	}
 	
-	private static String extractDescription(Period<OffsetDateTime> veventPeriod) {
+	private static String extractDescription(Period<Temporal> veventPeriod) {
 		if (veventPeriod != null
 			&& veventPeriod.getComponent() instanceof VEvent vevent
 			&& vevent.getDescription() != null
@@ -218,7 +214,7 @@ public class ICalInterpreter {
 		return null;
 	}
 	
-	private static String extractLocation(Period<OffsetDateTime> veventPeriod) {
+	private static String extractLocation(Period<Temporal> veventPeriod) {
 		if (veventPeriod != null
 			&& veventPeriod.getComponent() instanceof VEvent vevent
 			&& vevent.getLocation() != null
