@@ -19,26 +19,56 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.WebApplicationInitializer;
+import org.springframework.web.context.ContextLoaderListener;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.servlet.DispatcherServlet;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.togglz.core.context.StaticFeatureManagerProvider;
 import org.togglz.core.manager.FeatureManager;
 import org.togglz.core.manager.FeatureManagerBuilder;
 import org.togglz.core.repository.FeatureState;
 import org.togglz.core.repository.mem.InMemoryStateRepository;
 import org.togglz.core.user.NoOpUserProvider;
+import org.zephyrsoft.sdb2.api.Endpoints;
 import org.zephyrsoft.sdb2.gui.KeyboardShortcutManager;
 import org.zephyrsoft.sdb2.gui.MainWindow;
 import org.zephyrsoft.sdb2.service.ExportService;
 import org.zephyrsoft.sdb2.service.IndexerService;
 import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration;
+
 /**
  * Configures the DI context.
  */
 @Configuration
-public class SpringConfiguration {
+@EnableWebMvc
+public class SpringConfiguration implements WebApplicationInitializer {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(SpringConfiguration.class);
-	
+
+	@Override
+	public void onStartup(final ServletContext servletContext) throws ServletException {
+		AnnotationConfigWebApplicationContext rootContext = new AnnotationConfigWebApplicationContext();
+		rootContext.register(SpringConfiguration.class);
+
+		servletContext.addListener(new ContextLoaderListener(rootContext));
+
+		AnnotationConfigWebApplicationContext dispatcherContext = new AnnotationConfigWebApplicationContext();
+
+		ServletRegistration.Dynamic dispatcher = servletContext.addServlet("dispatcher", new DispatcherServlet(dispatcherContext));
+		dispatcher.setLoadOnStartup(1);
+		dispatcher.addMapping("/");
+	}
+
+	@Bean
+	public Endpoints endpoints() {
+		return new Endpoints();
+	}
+
 	@Bean
 	public FeatureManager featureManager() {
 		FeatureManager featureManager = new FeatureManagerBuilder()

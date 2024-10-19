@@ -33,5 +33,7 @@ open module org.zephyrsoft.sdb2 {
 	
 	requires org.eclipse.paho.client.mqttv3;
 	requires org.bitbucket.cowwoc.diffmatchpatch;
-	
+    requires spring.web;
+	requires spring.webmvc;
+	requires org.apache.tomcat.embed.core;
 }

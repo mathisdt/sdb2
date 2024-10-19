@@ -37,46 +37,50 @@ public enum Options {
 	private String propertiesFile = FileAndDirectoryLocations.getDefaultPropertiesFileName();
 	
 	private static final String PROP_LANGUAGE = "language";
-	@Option(name = "--language", aliases = "-lang", metaVar = "<CODE>", usage = "use this language (2-char ISO code, e.g. de)")
+	@Option(name = "--" + PROP_LANGUAGE, aliases = "-lang", metaVar = "<CODE>", usage = "use this language (2-char ISO code, e.g. de)")
 	private String language = null;
 	
 	private static final String PROP_COUNTRY = "country";
-	@Option(name = "--country", metaVar = "<CODE>", usage = "use this country (2-char ISO code, e.g. DE)")
+	@Option(name = "--" + PROP_COUNTRY, metaVar = "<CODE>", usage = "use this country (2-char ISO code, e.g. DE)")
 	private String country = null;
 	
 	private static final String PROP_TIMEZONE = "timezone";
-	@Option(name = "--timezone", aliases = "-tz", metaVar = "<NAME>", usage = "use this time zone (e.g. Europe/Berlin)")
+	@Option(name = "--" + PROP_TIMEZONE, aliases = "-tz", metaVar = "<NAME>", usage = "use this time zone (e.g. Europe/Berlin)")
 	private String timezone = null;
 	
 	private static final String PROP_STATISTICS_DIR = "statistics";
-	@Option(name = "--statistics", aliases = "-stat", metaVar = "<DIR>", usage = "use this directory as statistics storage (optional, the default is ~/.songdatabase/statistics/)")
+	@Option(name = "--" + PROP_STATISTICS_DIR, aliases = "-stat", metaVar = "<DIR>", usage = "use this directory as statistics storage (optional, the default is ~/.songdatabase/statistics/)")
 	private String statisticsDir = null;
 	
 	private static final String PROP_SONGS_DIR = "songs";
-	@Option(name = "--songs", aliases = "-song", metaVar = "<DIR>", usage = "use this directory as songs storage (optional, the default is ~/.songdatabase/songs/)")
+	@Option(name = "--" + PROP_SONGS_DIR, aliases = "-song", metaVar = "<DIR>", usage = "use this directory as songs storage (optional, the default is ~/.songdatabase/songs/)")
 	private String songsDir = null;
 	
 	private static final String PROP_SONGS_BACKUP_DIR = "songs-backup";
-	@Option(name = "--songs-backup", aliases = "-songback", metaVar = "<DIR>", usage = "use this directory as songs backup storage (optional, the default is ~/.songdatabase/songs/backup/)")
+	@Option(name = "--" + PROP_SONGS_BACKUP_DIR, aliases = "-songback", metaVar = "<DIR>", usage = "use this directory as songs backup storage (optional, the default is ~/.songdatabase/songs/backup/)")
 	private String songsBackupDir = null;
 	
 	private static final String PROP_SETTINGS_DIR = "settings";
-	@Option(name = "--settings", aliases = "-sett", metaVar = "<DIR>", usage = "use this directory as settings storage (optional, the default is ~/.songdatabase/settings/)")
+	@Option(name = "--" + PROP_SETTINGS_DIR, aliases = "-sett", metaVar = "<DIR>", usage = "use this directory as settings storage (optional, the default is ~/.songdatabase/settings/)")
 	private String settingsDir = null;
 	
 	private static final String PROP_LOGS_DIR = "logs";
-	@Option(name = "--logs", aliases = "-logs", metaVar = "<DIR>", usage = "use this directory as logs storage (optional, the default is ~/.songdatabase/log/)")
+	@Option(name = "--" + PROP_LOGS_DIR, aliases = "-logs", metaVar = "<DIR>", usage = "use this directory as logs storage (optional, the default is ~/.songdatabase/log/)")
 	private String logsDir = null;
 	
 	private static final String PROP_LOGS_ROLLOVER_DIR = "logs-rollover";
-	@Option(name = "--logs-rollover", aliases = "-logsroll", metaVar = "<DIR>", usage = "use this directory as older logs storage (optional, the default is ~/.songdatabase/log/)")
+	@Option(name = "--" + PROP_LOGS_ROLLOVER_DIR, aliases = "-logsroll", metaVar = "<DIR>", usage = "use this directory as older logs storage (optional, the default is ~/.songdatabase/log/)")
 	private String logsRolloverDir = null;
 	
 	private static final String PROP_DATABASE_DIR = "database";
 	/** this is used when remote control (via MQTT) is active */
-	@Option(name = "--database", aliases = "-db", metaVar = "<DIR>", usage = "use this directory as database storage (optional, the default is ~/.songdatabase/db/)")
+	@Option(name = "--" + PROP_DATABASE_DIR, aliases = "-db", metaVar = "<DIR>", usage = "use this directory as database storage (optional, the default is ~/.songdatabase/db/)")
 	private String databaseDir = null;
-	
+
+	private static final String PROP_SPLIT_MODE = "split-mode";
+	@Option(name = "--" + PROP_SPLIT_MODE, aliases = "-sm", metaVar = "<MODE>", usage = "make SDB either a server (which takes orders via network) or a client (which gives orders)")
+	private SplitMode splitMode = null;
+
 	private static final String PROP_SONGS_FILE = "songs-file";
 	@Argument(metaVar = "<FILE>", usage = "use this file to load from and save to (optional, the default is ~/.songdatabase/songs/songs.xml)")
 	private String songsFile = null;
@@ -176,7 +180,15 @@ public enum Options {
 	private void setDatabaseDir(String databaseDir) {
 		this.databaseDir = databaseDir;
 	}
-	
+
+	public SplitMode getSplitMode() {
+		return splitMode;
+	}
+
+	public void setSplitMode(final SplitMode splitMode) {
+		this.splitMode = splitMode;
+	}
+
 	public String getSongsFile() {
 		return songsFile;
 	}
@@ -219,8 +231,27 @@ public enum Options {
 		if (databaseDir == null && props.containsKey(PROP_DATABASE_DIR)) {
 			setDatabaseDir(props.getProperty(PROP_DATABASE_DIR));
 		}
+		if (splitMode == null && props.containsKey(PROP_SPLIT_MODE)) {
+			setSplitMode(SplitMode.byNameCaseInsensitive(props.getProperty(PROP_SPLIT_MODE)));
+		}
 		if (songsFile == null && props.containsKey(PROP_SONGS_FILE)) {
 			setSongsFile(props.getProperty(PROP_SONGS_FILE));
+		}
+	}
+
+	public enum SplitMode {
+		CLIENT,
+		SERVER;
+
+		public static SplitMode byNameCaseInsensitive(String name) {
+			if (name.equalsIgnoreCase(CLIENT.name())) {
+				return CLIENT;
+			} else if (name.equalsIgnoreCase(SERVER.name())) {
+				return SERVER;
+			} else {
+				throw new IllegalArgumentException("split mode '" + name + "' not recognized, try "
+					+ CLIENT.name().toLowerCase() + " or " + SERVER.name().toLowerCase());
+			}
 		}
 	}
 }

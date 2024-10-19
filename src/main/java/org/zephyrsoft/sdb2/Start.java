@@ -17,20 +17,26 @@ package org.zephyrsoft.sdb2;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.ZoneId;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import org.apache.catalina.startup.Tomcat;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.servlet.DispatcherServlet;
 import org.zephyrsoft.sdb2.util.VersionTools;
 import org.zephyrsoft.sdb2.util.gui.ErrorDialog;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletRegistration;
 
 /**
  * Startup class for SDBv2.
@@ -96,9 +102,33 @@ public final class Start {
 				log.debug("default locale is {}", Locale.getDefault());
 				log.debug("application version is {}", VersionTools.getCurrent());
 				log.debug("application commit hash is {}", VersionTools.getGitCommitHash());
-				
+
+				// TODO remake startup process -> https://auth0.com/blog/spring-5-embedded-tomcat-8-gradle-tutorial/
 				log.debug("loading application context");
-				new AnnotationConfigApplicationContext(SpringConfiguration.class);
+				AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
+				context.register(SpringConfiguration.class);
+				context.refresh();
+
+				if (options.getSplitMode() == Options.SplitMode.SERVER) {
+					log.debug("starting API server");
+
+					// TODO make port configurable
+//					Tomcat tomcat = new Tomcat();
+//					tomcat.setBaseDir(createTempDir(8899));
+//					tomcat.setPort(8899);
+//					String appBase = ".";
+//					tomcat.getHost().setAppBase(appBase);
+//					tomcat.addWebapp("", appBase);
+//					tomcat.start();
+//					tomcat.getServer().await();
+
+					DispatcherServlet servlet = new DispatcherServlet(context);
+					ServletRegistration.Dynamic registration = context.getBean(ServletContext.class).addServlet("api", servlet);
+					registration.setLoadOnStartup(1);
+					registration.addMapping("/*");
+				} else {
+					log.debug("not starting API (not configured as split mode server)");
+				}
 			} catch (Exception e) {
 				log.error("problem while starting up the application", e);
 				ErrorDialog.openDialogBlocking(null, "There was a problem while starting the Song Database:\n\n"
@@ -109,5 +139,16 @@ public final class Start {
 			}
 		}
 	}
-	
+
+	private static String createTempDir(int port) {
+		try {
+			File tempDir = File.createTempFile("tomcat.", "." + port);
+			tempDir.delete();
+			tempDir.mkdir();
+			tempDir.deleteOnExit();
+			return tempDir.getAbsolutePath();
+		} catch (IOException ex) {
+			throw new RuntimeException("Unable to create tempDir. java.io.tmpdir is set to " + System.getProperty("java.io.tmpdir"), ex);
+		}
+	}
 }

@@ -34,6 +34,7 @@
 
 		<!-- dependency versions -->
 		<version.spring>6.1.13</version.spring>
+		<version.tomcat>11.0.0</version.tomcat>
 		<version.slf4j>2.0.16</version.slf4j>
 		<version.logback>1.5.11</version.logback>
 		<version.log4j>2.24.1</version.log4j>
@@ -149,7 +150,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
+			<artifactId>spring-webmvc</artifactId>
 			<version>${version.spring}</version>
 			<exclusions>
 				<exclusion>
@@ -162,6 +163,12 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-core</artifactId>
+			<version>${version.tomcat}</version>
+		</dependency>
+
 
 		<!-- REMOTE -->
 		<dependency>
