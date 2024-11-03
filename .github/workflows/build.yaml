@@ -9,6 +9,8 @@ jobs:
   release:
     uses: mathisdt/workflows/.github/workflows/maven.yaml@master
     with:
+      # JDK version has to match everywhere - also change in pom.xml and in build-jre-distributions.sh!
+      java-version: '23'
       script-after-maven-build: ./build-jre-distributions.sh
       files-to-release: |
         target/sdb2-without-jre.zip

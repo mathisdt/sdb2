@@ -7,14 +7,14 @@ if [ -z "$JAVA_HOME" ]; then
   exit 1
 fi
 JDK_LINUX=$JAVA_HOME
-if [ ! -d "$JDK_LINUX" -o ! -d "$JDK_LINUX/jmods" -o "$($JDK_LINUX/bin/java --version | head -n 1 | sed -e 's#^openjdk ##' -e 's#[^0-9].*$##')" != "21" ]; then
-	echo "JAVA_HOME has to point to a directory containing a Linux JDK in version 21"
+if [ ! -d "$JDK_LINUX" -o ! -d "$JDK_LINUX/jmods" -o "$($JDK_LINUX/bin/java --version | head -n 1 | sed -e 's#^openjdk ##' -e 's#[^0-9].*$##')" != "23" ]; then
+	echo "JAVA_HOME has to point to a directory containing a Linux JDK in version 23"
 	exit 1
 fi
 
 echo "downloading a Windows JDK from adoptium.net"
-# ATTENTION: has to match the version used on Linux -> .travis.yml
-wget -q -O /tmp/windows-jdk.zip 'https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jdk/hotspot/normal/adoptium?project=jdk'
+# JDK version has to match everywhere - also change in pom.xml and in build.yaml!
+wget -q -O /tmp/windows-jdk.zip 'https://api.adoptium.net/v3/binary/latest/23/ga/windows/x64/jdk/hotspot/normal/adoptium?project=jdk'
 unzip -qq -d /tmp/windows-jdk /tmp/windows-jdk.zip
 JDK_WINDOWS=$(ls -d /tmp/windows-jdk/*)
 if [ ! -d "$JDK_WINDOWS" -o ! -d "$JDK_WINDOWS/jmods" ]; then

@@ -26,7 +26,8 @@
 	</scm>
 
 	<properties>
-		<version.java>21</version.java>
+		<!-- JDK version has to match everywhere - also change in build.yaml and in build-jre-distributions.sh! -->
+		<version.java>23</version.java>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
@@ -315,7 +316,7 @@
 						<configuration>
 							<rules>
 								<requireJavaVersion>
-									<version>21</version>
+									<version>${version.java}</version>
 								</requireJavaVersion>
 								<requireMavenVersion>
 									<version>3.6.3</version>
