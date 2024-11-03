@@ -23,7 +23,9 @@ It can also display calendar events or a slide show.
 - easy song search/filtering - just type a part of the title or the text
 - show the song beginnings in the song list (additionally to the song title) - you can find songs faster
   in spontaneous worship sessions
+- image slides possible in worship, among normal song texts
 - image slide show possible for announcements, e.g. before or after the service
+- remote usage possible using MQTT, there's also an Android app for controlling SDB2
 
 ## Why use this software and not Powerpoint?
 
@@ -42,7 +44,8 @@ It can also display calendar events or a slide show.
 - download the latest [SDB2 release](https://github.com/mathisdt/sdb2/releases/latest)
   (use the file named `sdb2-...` which corresponds to your system), unpack it
   and look for an executable in the `bin` subdirectory
-  - if you're on MacOS you have to install Java 17 or later by yourself and use `sdb2-without-jre.zip`
+  - if you're on MacOS you have to install Java by yourself (use the most current version)
+    and download and extract `sdb2-without-jre.zip`, there's also a shell script in the `bin` subdirectory
 
 ## Contributing
 
