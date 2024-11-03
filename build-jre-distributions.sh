@@ -52,7 +52,7 @@ $JDK_LINUX/bin/jlink \
 cp -r $DIR/target/distribution/* $DIR/target/sdb2-bundle-windows/
 mkdir -p $DIR/target/sdb2-bundle-windows/bin
 cat <<EOF >$DIR/target/sdb2-bundle-windows/bin/sdb2.bat
-..\jre\bin\javaw.exe -Duser.language=de -Duser.country=DE -Dfile.encoding=UTF-8 -jar sdb2.jar $*
+..\jre\bin\javaw.exe -Dsun.java2d.opengl=true -Dsun.java2d.d3d=false -Duser.language=de -Duser.country=DE -Dfile.encoding=UTF-8 -jar sdb2.jar $*
 EOF
 cp $DIR/src/launcher/sdb2.exe $DIR/target/sdb2-bundle-windows/bin/
 cp $DIR/src/main/resources/org/zephyrsoft/sdb2/icon.ico $DIR/target/sdb2-bundle-windows/bin/icon.ico
