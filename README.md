@@ -43,9 +43,8 @@ It can also display calendar events or a slide show.
 
 - download the latest [SDB2 release](https://github.com/mathisdt/sdb2/releases/latest)
   (use the file named `sdb2-...` which corresponds to your system), unpack it
-  and look for an executable in the `bin` subdirectory
-  - if you're on MacOS you have to install Java by yourself (use the most current version)
-    and download and extract `sdb2-without-jre.zip`, there's also a shell script in the `bin` subdirectory
+  and look for a batch file or shell script in the `bin` subdirectory
+  - if you're on MacOS you have to install Java by yourself (use the most current version) and use `sdb2-without-jre.zip`
 
 ## Contributing
 
