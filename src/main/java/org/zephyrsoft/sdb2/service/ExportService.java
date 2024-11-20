@@ -44,9 +44,9 @@ import org.zephyrsoft.sdb2.util.TextRendererNonTrimming;
 
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.font.constants.StandardFonts;
-import com.itextpdf.kernel.events.Event;
-import com.itextpdf.kernel.events.IEventHandler;
-import com.itextpdf.kernel.events.PdfDocumentEvent;
+import com.itextpdf.kernel.pdf.event.AbstractPdfDocumentEvent;
+import com.itextpdf.kernel.pdf.event.AbstractPdfDocumentEventHandler;
+import com.itextpdf.kernel.pdf.event.PdfDocumentEvent;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.font.PdfFontFactory.EmbeddingStrategy;
@@ -72,9 +72,9 @@ import com.itextpdf.layout.properties.TabAlignment;
  */
 public class ExportService {
 	
-	private class PageNumbers implements IEventHandler {
+	private class PageNumbers extends AbstractPdfDocumentEventHandler {
 		@Override
-		public void handleEvent(Event event) {
+		public void onAcceptedEvent(AbstractPdfDocumentEvent event) {
 			PdfDocumentEvent docEvent = (PdfDocumentEvent) event;
 			PdfPage page = docEvent.getPage();
 			int pageNum = docEvent.getDocument().getPageNumber(page);
