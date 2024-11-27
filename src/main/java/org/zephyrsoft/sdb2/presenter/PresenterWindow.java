@@ -21,6 +21,7 @@ import java.awt.image.MemoryImageSource;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +35,7 @@ import org.jdesktop.core.animation.timing.TimingTargetAdapter;
 import org.jdesktop.core.animation.timing.interpolators.LinearInterpolator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zephyrsoft.sdb2.FileAndDirectoryLocations;
 import org.zephyrsoft.sdb2.MainController;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.SelectableDisplay;
@@ -159,7 +161,9 @@ public class PresenterWindow extends JFrame implements Presenter {
 				toFront();
 				return;
 			} else if (presentationPosition == null) {
-				songView.moveToLine(null, null, true);
+				if (songView != null ) {
+					songView.moveToLine(null, null, true);
+				}
 				this.presentationPosition = null;
 				toFront();
 				return;
@@ -229,8 +233,16 @@ public class PresenterWindow extends JFrame implements Presenter {
 					} else if (presentable.getImage() != null || ( presentable.getSong() != null && !StringTools.isEmpty(presentable.getSong().getImage()))) {
 						// display the image (fullscreen, but with margin)
 						try {
-							ImageIcon imageIcon = presentable.getImage() == null ? new ImageIcon(URI.create(presentable.getSong().getImage()).toURL())
-								: new ImageIcon(presentable.getImage());
+							ImageIcon imageIcon;
+							if (presentable.getImage() == null) {
+								URI imageUri = URI.create(presentable.getSong().getImage());
+								if (imageUri.getScheme().equals("sdb")){
+									imageUri =  Paths.get(FileAndDirectoryLocations.getDBBlobDir(), imageUri.toString().replace("sdb://", "")).toUri();
+								}
+								imageIcon = new ImageIcon(imageUri.toURL());
+							}else {
+								imageIcon = new ImageIcon(presentable.getImage());
+							}
 							Image image = imageIcon.getImage();
 							if (presentable.getImage() == null) {
 								image = ImageTools.rotate(image, presentable.getSong().getImageRotationAsInt());
@@ -257,7 +269,7 @@ public class PresenterWindow extends JFrame implements Presenter {
 					revalidate();
 					repaint();
 					
-					if (presentable.getSong() != null) {
+					if (presentable.getSong() != null && StringTools.isEmpty(presentable.getSong().getImage())) {
 						PresentationPosition.forSong(presentationPosition)
 							.ifPresent(spp -> {
 								// queue for LATER because the revalidate/repaint above only will run
