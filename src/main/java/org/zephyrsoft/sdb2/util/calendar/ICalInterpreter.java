@@ -197,9 +197,8 @@ public class ICalInterpreter {
 	private static String extractSummary(Period<Temporal> veventPeriod) {
 		if (veventPeriod != null
 			&& veventPeriod.getComponent() instanceof VEvent vevent
-			&& vevent.getSummary() != null
-			&& vevent.getSummary().isPresent()) {
-			return vevent.getSummary().map(Summary::getValue).orElse(null);
+			&& vevent.getSummary() != null) {
+			return vevent.getSummary().getValue();
 		}
 		return null;
 	}
@@ -207,9 +206,8 @@ public class ICalInterpreter {
 	private static String extractDescription(Period<Temporal> veventPeriod) {
 		if (veventPeriod != null
 			&& veventPeriod.getComponent() instanceof VEvent vevent
-			&& vevent.getDescription() != null
-			&& vevent.getDescription().isPresent()) {
-			return vevent.getDescription().map(Description::getValue).orElse(null);
+			&& vevent.getDescription() != null) {
+			return vevent.getDescription().getValue();
 		}
 		return null;
 	}
@@ -217,9 +215,8 @@ public class ICalInterpreter {
 	private static String extractLocation(Period<Temporal> veventPeriod) {
 		if (veventPeriod != null
 			&& veventPeriod.getComponent() instanceof VEvent vevent
-			&& vevent.getLocation() != null
-			&& vevent.getLocation().isPresent()) {
-			return vevent.getLocation().map(Location::getValue).orElse(null);
+			&& vevent.getLocation() != null) {
+			return vevent.getLocation().getValue();
 		}
 		return null;
 	}
