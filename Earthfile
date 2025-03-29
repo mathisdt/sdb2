@@ -7,6 +7,7 @@ build:
     COPY .git .git
     COPY pom.xml ./
     COPY src src
+    RUN apk add xvfb-run
     RUN TZ=Europe/Berlin xvfb-run mvn clean verify -U --no-transfer-progress
     RUN ./build-jre-distributions.sh
     SAVE ARTIFACT target AS LOCAL target
