@@ -7,7 +7,7 @@ build:
     COPY .git .git
     COPY pom.xml ./
     COPY src src
-    RUN apk --no-cache add xvfb-run msttcorefonts-installer fontconfig && update-ms-fonts && fc-cache -f
+    RUN apk --no-cache add xvfb xvfb-run msttcorefonts-installer fontconfig && update-ms-fonts && fc-cache -f >/dev/null
     RUN TZ=Europe/Berlin xvfb-run mvn clean verify -U --no-transfer-progress
     RUN ./build-jre-distributions.sh
     SAVE ARTIFACT target AS LOCAL target
