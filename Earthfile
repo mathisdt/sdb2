@@ -2,13 +2,17 @@ VERSION 0.8
 
 build:
     # JDK version has to match everywhere - also change in pom.xml and in build-jre-distributions.sh!
-    FROM maven:3.9.9-eclipse-temurin-23-alpine
+    FROM maven:3.9.9-eclipse-temurin-23-noble    # not using Alpine image here because the Eclipse-Temurin JDK builds for Alpine are HEADLESS
     WORKDIR /project
+    RUN echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections; \
+        echo ttf-mscorefonts-installer msttcorefonts/present-mscorefonts-eula note | debconf-set-selections; \
+        apt-get update >/dev/null 2>&1; \
+        apt-get -y install ttf-mscorefonts-installer xvfb libxi6 libxtst6 zip unzip >/dev/null 2>&1
     COPY .git .git
     COPY pom.xml ./
+    COPY build-jre-distributions.sh ./
     COPY src src
-    RUN apk --no-cache add xvfb xvfb-run x11vnc fluxbox msttcorefonts-installer fontconfig && update-ms-fonts && fc-cache -f >/dev/null
-    RUN TZ=Europe/Berlin xvfb-run mvn clean verify -U --no-transfer-progress
+    RUN export TZ=Europe/Berlin; xvfb-run mvn clean verify -U --no-transfer-progress
     RUN ./build-jre-distributions.sh
     SAVE ARTIFACT target AS LOCAL target
 
@@ -18,12 +22,12 @@ build-and-release-on-github:
     BUILD +build
     FROM ubuntu:latest
     WORKDIR /project
-    COPY .git .git
-    COPY +build/target target
     RUN apt-get update >/dev/null 2>&1 && apt-get -y install curl gpg >/dev/null 2>&1
     RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
-    RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+    RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" >/etc/apt/sources.list.d/github-cli.list
     RUN apt-get update >/dev/null 2>&1 && apt-get -y install gh >/dev/null 2>&1
+    COPY .git .git
+    COPY +build/target target
     RUN --push export release_timestamp=$(date '+%Y-%m-%d @ %H:%M'); \
                export release_timestamp_terse=$(date '+%Y-%m-%d-%H-%M'); \
                export release_hash_short=$(git rev-parse --short HEAD); \
