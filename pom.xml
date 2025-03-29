@@ -26,7 +26,7 @@
 	</scm>
 
 	<properties>
-		<!-- JDK version has to match everywhere - also change in build.yaml and in build-jre-distributions.sh! -->
+		<!-- JDK version has to match everywhere - also change in Earthfile and in build-jre-distributions.sh! -->
 		<version.java>23</version.java>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>

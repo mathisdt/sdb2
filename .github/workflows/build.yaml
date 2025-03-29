@@ -1,4 +1,5 @@
-name: Build
+name: build
+run-name: build commit with earthly
 
 on:
   push:
@@ -7,14 +8,10 @@ on:
 
 jobs:
   release:
-    uses: mathisdt/workflows/.github/workflows/maven.yaml@master
+    uses: mathisdt/workflows/.github/workflows/earthly.yaml@master
     with:
-      # JDK version has to match everywhere - also change in pom.xml and in build-jre-distributions.sh!
-      java-version: '23'
-      script-after-maven-build: ./build-jre-distributions.sh
-      files-to-release: |
+      pattern-to-release: |
         target/sdb2-without-jre.zip
         target/sdb2-bundle-linux.zip
         target/sdb2-bundle-windows.zip
     secrets: inherit
-

@@ -13,7 +13,7 @@ if [ ! -d "$JDK_LINUX" -o ! -d "$JDK_LINUX/jmods" -o "$($JDK_LINUX/bin/java --ve
 fi
 
 echo "downloading a Windows JDK from adoptium.net"
-# JDK version has to match everywhere - also change in pom.xml and in build.yaml!
+# JDK version has to match everywhere - also change in pom.xml and in Earthfile!
 wget -q -O /tmp/windows-jdk.zip 'https://api.adoptium.net/v3/binary/latest/23/ga/windows/x64/jdk/hotspot/normal/adoptium?project=jdk'
 unzip -qq -d /tmp/windows-jdk /tmp/windows-jdk.zip
 JDK_WINDOWS=$(ls -d /tmp/windows-jdk/*)
