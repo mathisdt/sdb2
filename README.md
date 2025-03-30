@@ -51,3 +51,11 @@ It can also display calendar events or a slide show.
 The program has evolved since 2005 at [Koinonia Calvary Chapel Hannover](https://koinonia.church).
 If you find a bug or want a new feature, you are welcome to [file an issue](https://github.com/mathisdt/sdb2/issues)
 or even fix things yourself and create a pull request!
+
+## Build using Earthly
+
+The CI build of this project uses [Earthly](https://docs.earthly.dev/), which in turn uses
+container virtualization (e.g. Docker or Podman). You can also run the build locally (if you
+have Earthly as well as an OCI compatible container engine installed) by executing
+`earthly +build`. This will create a container with everything needed for the build,
+create the package inside it and then copy the results to the directory `target` for you.
