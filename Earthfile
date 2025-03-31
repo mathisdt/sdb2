@@ -30,8 +30,8 @@ build-and-release-on-github:
     COPY +build/target target
     RUN --push export BRANCH=$(git rev-parse --abbrev-ref HEAD); \
                if [ "$BRANCH" != "main" -a "$BRANCH" != "master" ]; then \
-                 echo "not releasing, we're on branch $BRANCH"; \
-                 exit 0; \
+                   echo "not releasing, we're on branch $BRANCH"; \
+                   exit 0; \
                fi; \
                export release_timestamp=$(date '+%Y-%m-%d @ %H:%M'); \
                export release_timestamp_terse=$(date '+%Y-%m-%d-%H-%M'); \
