@@ -28,7 +28,12 @@ build-and-release-on-github:
     RUN apt-get update >/dev/null 2>&1 && apt-get -y install gh >/dev/null 2>&1
     COPY .git .git
     COPY +build/target target
-    RUN --push export release_timestamp=$(date '+%Y-%m-%d @ %H:%M'); \
+    RUN --push export BRANCH=$(git rev-parse --abbrev-ref HEAD); \
+               if [ "$BRANCH" != "main" -a "$BRANCH" != "master" ]; then \
+                 echo "not releasing, we're on branch $BRANCH"; \
+                 exit 0; \
+               fi; \
+               export release_timestamp=$(date '+%Y-%m-%d @ %H:%M'); \
                export release_timestamp_terse=$(date '+%Y-%m-%d-%H-%M'); \
                export release_hash_short=$(git rev-parse --short HEAD); \
                export release_hash=$(git rev-parse HEAD); \
