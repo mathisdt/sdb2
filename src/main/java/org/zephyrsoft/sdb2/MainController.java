@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,6 +55,7 @@ import org.slf4j.LoggerFactory;
 import org.zephyrsoft.sdb2.gui.MainWindow;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
+import org.zephyrsoft.sdb2.model.PresentCommandResult;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableDisplay;
 import org.zephyrsoft.sdb2.model.Song;
@@ -118,7 +120,9 @@ public class MainController implements Scroller {
 	private List<SelectableDisplay> screens;
 	private PresenterBundle presentationControl;
 	private Song currentlyPresentedSong = null;
-	
+	private Integer currentlyPresentedSongPartIndex = null;
+	private Integer currentlyPresentedSongLineIndex = null;
+
 	private ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 	private Future<?> countDownFuture;
 	private Iterator<File> slideShowImages;
@@ -220,15 +224,23 @@ public class MainController implements Scroller {
 		contentChanger.execute(command);
 	}
 	
-	public boolean present(Presentable presentable, PresentationPosition presentationPosition) {
+	public PresentCommandResult present(Presentable presentable, PresentationPosition presentationPosition) {
 		if (presentable == null) {
 			throw new IllegalArgumentException("the given presentable must be non-null");
 		}
 		if (presentable.getSong() != null
 			&& presentable.getSong().equals(currentlyPresentedSong)
+			&& presentationPosition instanceof SongPresentationPosition spp
+			&& Objects.equals(spp.getPartIndex(), currentlyPresentedSongPartIndex)
+			&& Objects.equals(spp.getLineIndex(), currentlyPresentedSongLineIndex)) {
+			return PresentCommandResult.NOTHING_TO_DO;
+		} else if (presentable.getSong() != null
+			&& presentable.getSong().equals(currentlyPresentedSong)
 			&& presentationPosition instanceof SongPresentationPosition spp) {
 			presentationControl.moveTo(spp);
-			return true;
+			currentlyPresentedSongPartIndex = spp.getPartIndex();
+			currentlyPresentedSongLineIndex = spp.getLineIndex();
+			return PresentCommandResult.ONLY_SCOLLED;
 		}
 		
 		SelectableDisplay screen1 = ScreenHelper.getScreen(screens, settings.get(SettingKey.SCREEN_1_DISPLAY, Integer.class));
@@ -253,6 +265,13 @@ public class MainController implements Scroller {
 					&& pw.screenSizeMatches()))) {
 			LOG.trace("re-using the existing presenters");
 			currentlyPresentedSong = presentable.getSong();
+			if (presentationPosition instanceof SongPresentationPosition spp) {
+				currentlyPresentedSongPartIndex = spp.getPartIndex();
+				currentlyPresentedSongLineIndex = spp.getLineIndex();
+			} else {
+				currentlyPresentedSongPartIndex = null;
+				currentlyPresentedSongLineIndex = null;
+			}
 			managePresentedSongStatistics();
 			presentationControl.setContent(presentable, presentationPosition);
 			
@@ -260,7 +279,7 @@ public class MainController implements Scroller {
 			// so we need to get the focus back to the main window:
 			mainWindow.toFront();
 			
-			return true;
+			return PresentCommandResult.SUCCESS;
 		} else {
 			LOG.trace("using newly created presenters");
 			return presentInNewPresenters(presentable, presentationPosition, screen1, screen2);
@@ -275,7 +294,7 @@ public class MainController implements Scroller {
 		}
 	}
 	
-	private boolean presentInNewPresenters(Presentable presentable, PresentationPosition presentationPosition, SelectableDisplay screen1,
+	private PresentCommandResult presentInNewPresenters(Presentable presentable, PresentationPosition presentationPosition, SelectableDisplay screen1,
 		SelectableDisplay screen2) {
 		PresenterBundle oldPresentationControl = presentationControl;
 		presentationControl = new PresenterBundle();
@@ -295,10 +314,10 @@ public class MainController implements Scroller {
 				.openDialog(
 					null,
 					PRESENTATION_DISPLAY_WARNING);
-			return false;
+			return PresentCommandResult.FAILURE;
 		} else {
 			if (remoteController != null) {
-				presentationControl.addPresenter(remoteController.getRemotePresenter(presentable));
+				presentationControl.addPresenter(remoteController.getRemotePresenter(presentable, presentationPosition));
 			}
 			
 			currentlyPresentedSong = presentable.getSong();
@@ -324,7 +343,7 @@ public class MainController implements Scroller {
 				}
 			});
 			
-			return true;
+			return PresentCommandResult.SUCCESS;
 		}
 	}
 	

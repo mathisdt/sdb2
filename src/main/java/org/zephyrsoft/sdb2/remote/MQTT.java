@@ -34,9 +34,9 @@ public class MQTT implements MqttCallback {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(MQTT.class);
 	
-	private MqttClient client;
-	private CopyOnWriteArrayList<OnMessageListener> onMessageListeners = new CopyOnWriteArrayList<>();
-	private CopyOnWriteArrayList<OnConnectionLostListener> onConnectionLostListeners = new CopyOnWriteArrayList<>();
+	private final MqttClient client;
+	private final CopyOnWriteArrayList<OnMessageListener> onMessageListeners = new CopyOnWriteArrayList<>();
+	private final CopyOnWriteArrayList<OnConnectionLostListener> onConnectionLostListeners = new CopyOnWriteArrayList<>();
 	
 	public MQTT(String serverUri, String userName, String password, boolean cleanSession) throws MqttException {
 		this(serverUri, UUID.randomUUID().toString(), userName, password, cleanSession);
@@ -46,10 +46,8 @@ public class MQTT implements MqttCallback {
 	 * A simple MQTTClient wrapper which establishes the connection on object creation,
 	 * implements the observable pattern to let multiple Observers receive messages and
 	 * handles some exceptions.
-	 *
+	 * <p>
 	 * It currently only supports String messages.
-	 *
-	 * @throws MqttException
 	 */
 	public MQTT(String serverUri, String clientID, String userName, String password, boolean cleanSession) throws MqttException {
 		MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
@@ -74,11 +72,9 @@ public class MQTT implements MqttCallback {
 	}
 	
 	@Override
-	public void messageArrived(String topic, MqttMessage message) throws Exception {
+	public void messageArrived(String topic, MqttMessage message) {
 		LOG.debug("Got message: {}", topic);
-		onMessageListeners.forEach(oml -> {
-			oml.onMessage(topic, message.getPayload());
-		});
+		onMessageListeners.forEach(oml -> oml.onMessage(topic, message.getPayload()));
 	}
 	
 	@Override
@@ -99,7 +95,7 @@ public class MQTT implements MqttCallback {
 			LOG.debug("Publishing message: {}", topic);
 			try {
 				client.publish(topic, payload, qos, retained);
-				LOG.debug("Payload: " + new String(payload, StandardCharsets.UTF_8));
+				LOG.debug("Payload: {}", new String(payload, StandardCharsets.UTF_8));
 			} catch (Exception e) {
 				// only log the exception
 				LOG.warn("could not publish message", e);
@@ -111,13 +107,13 @@ public class MQTT implements MqttCallback {
 		if (client.isConnected()) {
 			try {
 				client.disconnect();
-			} catch (MqttException e) {
+			} catch (MqttException _) {
 				// do nothing
 			}
 		}
 		try {
 			client.close();
-		} catch (MqttException e) {
+		} catch (MqttException _) {
 			// do nothing
 		}
 	}
@@ -126,15 +122,17 @@ public class MQTT implements MqttCallback {
 		onMessageListeners.add(onMessageListener);
 	}
 	
+	@FunctionalInterface
 	public interface OnMessageListener {
-		public abstract void onMessage(String topic, byte[] message);
+		void onMessage(String topic, byte[] message);
 	}
 	
 	public void onConnectionLost(OnConnectionLostListener onConnectionLostListener) {
 		onConnectionLostListeners.add(onConnectionLostListener);
 	}
 	
+	@FunctionalInterface
 	public interface OnConnectionLostListener {
-		public abstract void onConnectionLost(Throwable cause);
+		void onConnectionLost(Throwable cause);
 	}
 }

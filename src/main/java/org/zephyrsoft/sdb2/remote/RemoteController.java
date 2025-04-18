@@ -28,6 +28,7 @@ import org.zephyrsoft.sdb2.model.Song;
 import org.zephyrsoft.sdb2.model.SongsModel;
 import org.zephyrsoft.sdb2.model.XMLConverter;
 import org.zephyrsoft.sdb2.presenter.Presentable;
+import org.zephyrsoft.sdb2.presenter.PresentationPosition;
 import org.zephyrsoft.sdb2.presenter.SongPresentationPosition;
 import org.zephyrsoft.sdb2.util.StringTools;
 
@@ -180,8 +181,8 @@ public class RemoteController {
 		return position;
 	}
 	
-	public RemotePresenter getRemotePresenter(Presentable presentable) {
-		remotePresenter.setContent(presentable, null);
+	public RemotePresenter getRemotePresenter(Presentable presentable, PresentationPosition presentationPosition) {
+		remotePresenter.setContent(presentable, presentationPosition);
 		return remotePresenter;
 	}
 	

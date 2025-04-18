@@ -473,28 +473,30 @@ public class SongView extends JPanel implements Scroller {
 		
 		int part = partNullable == null ? 0 : partNullable;
 		int line = lineNullable == null ? 0 : lineNullable;
-		
-		adjustHeightIfNecessary();
-		try {
-			int noTitlePart = showTitle ? part : Math.max(part - 1, 0);
-			AddressablePart addressablePart = parts.get(noTitlePart);
-			Preconditions.checkArgument(addressablePart != null, "part index does not correspond to a part of the song");
-			AddressableLine addressableLine = addressablePart.get(line);
-			Preconditions.checkArgument(addressableLine != null, "line index does not correspond to a line of the addressed part");
-			double targetY = getTargetYOr0(partNullable, lineNullable, addressableLine.getPosition());
-			if (minimalScrolling && targetY > text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight()) {
-				targetY = text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight();
+
+		SwingUtilities.invokeLater(() -> {
+			adjustHeightIfNecessary();
+			try {
+				int noTitlePart = showTitle ? part : Math.max(part - 1, 0);
+				AddressablePart addressablePart = parts.get(noTitlePart);
+				Preconditions.checkArgument(addressablePart != null, "part index does not correspond to a part of the song");
+				AddressableLine addressableLine = addressablePart.get(line);
+				Preconditions.checkArgument(addressableLine != null, "line index does not correspond to a line of the addressed part");
+				double targetY = getTargetYOr0(partNullable, lineNullable, addressableLine.getPosition());
+				if (minimalScrolling && targetY > text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight()) {
+					targetY = text.getPreferredSize().getHeight() + topMargin + bottomMargin - getSize().getHeight();
+				}
+				Point targetLocation = new Point((int) text.getLocation().getX(), (int) Math.min(0, (topMargin - targetY)));
+				LOG.debug("moving to part {} / line {} (animated={}) - target={}", part, line, animated, targetLocation);
+				if (animated) {
+					animatedMoveTo(targetLocation);
+				} else {
+					abruptMoveTo(targetLocation);
+				}
+			} catch (BadLocationException e) {
+				throw new IllegalStateException("could not identify position in text", e);
 			}
-			Point targetLocation = new Point((int) text.getLocation().getX(), (int) Math.min(0, (topMargin - targetY)));
-			LOG.debug("moving to part {} / line {} (animated={}) - target={}", part, line, animated, targetLocation);
-			if (animated) {
-				animatedMoveTo(targetLocation);
-			} else {
-				abruptMoveTo(targetLocation);
-			}
-		} catch (BadLocationException e) {
-			throw new IllegalStateException("could not identify position in text", e);
-		}
+		});
 	}
 	
 	private double getTargetYOr0(Integer partNullable, Integer lineNullable, Integer addressableLinePosition)

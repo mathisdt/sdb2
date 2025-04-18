@@ -66,6 +66,7 @@ import org.zephyrsoft.sdb2.model.AddressableLine;
 import org.zephyrsoft.sdb2.model.AddressablePart;
 import org.zephyrsoft.sdb2.model.ExportFormat;
 import org.zephyrsoft.sdb2.model.FilterTypeEnum;
+import org.zephyrsoft.sdb2.model.PresentCommandResult;
 import org.zephyrsoft.sdb2.model.ScreenContentsEnum;
 import org.zephyrsoft.sdb2.model.SelectableDisplay;
 import org.zephyrsoft.sdb2.model.Song;
@@ -1474,41 +1475,56 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	 */
 	protected void presentSong(Song song, SongPresentationPosition presentationPosition) {
 		// not in a "contentChange" block because else the sections wouldn't be displayed:
-		boolean success = controller.present(new Presentable(song, null), presentationPosition);
+		PresentCommandResult result = controller.present(new Presentable(song, null), presentationPosition);
 
 		controller.contentChange(() -> {
 			controller.stopSlideShow();
-			if (success) {
-				clearSectionButtons();
-				if (controller.hasParts()) {
-					List<AddressablePart> parts = controller.getParts();
-					Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
-					int partIndex = showTitle ? 0 : 1;
-					for (AddressablePart part : parts) {
-						PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller, this);
-						panelSectionButtons.add(buttonGroup, panelSectionButtonsHints);
-						listSectionButtons.add(buttonGroup);
-						partIndex++;
-					}
+			if (result.wasSuccessful() && result.wasStateChanged()) {
+				btnJumpToPresented.setEnabled(true);
+				Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
 
+				if (result != PresentCommandResult.ONLY_SCOLLED) {
+					clearSectionButtons();
+					if (controller.hasParts()) {
+						List<AddressablePart> parts = controller.getParts();
+						int partIndex = showTitle ? 0 : 1;
+						for (AddressablePart part : parts) {
+							PartButtonGroup buttonGroup = new PartButtonGroup(part, partIndex, controller, this);
+							panelSectionButtons.add(buttonGroup, panelSectionButtonsHints);
+							listSectionButtons.add(buttonGroup);
+							partIndex++;
+						}
+					}
+				}
+
+				if (controller.hasParts()) {
 					// mark active line
 					if (!listSectionButtons.isEmpty()) {
-						listSectionButtons
-							.get(presentationPosition != null && presentationPosition.getPartIndex() != null
-								? Math.max(0, presentationPosition.getPartIndex() - (showTitle ? 0 : 1))
-								: 0)
-							.setActiveLine(presentationPosition != null && presentationPosition.getLineIndex() != null
-								? presentationPosition.getLineIndex()
-								: 0);
-					}
+						int activePartIndex = presentationPosition != null && presentationPosition.getPartIndex() != null
+							? Math.max(0, presentationPosition.getPartIndex() - (showTitle ? 0 : 1))
+							: 0;
+						int activeLineIndex = presentationPosition != null && presentationPosition.getLineIndex() != null
+							? presentationPosition.getLineIndex()
+							: 0;
 
-					// add empty component to consume any space that is left (so the parts appear at the top of the
-					// scrollpane view)
+						for (int partIndex = 0; partIndex < listSectionButtons.size(); partIndex++) {
+							if (partIndex == activePartIndex) {
+								listSectionButtons.get(partIndex).setActiveLine(activeLineIndex);
+							} else {
+								listSectionButtons.get(partIndex).setInactive();
+							}
+						}
+
+					}
+				}
+
+				if (result != PresentCommandResult.ONLY_SCOLLED) {
+					// add empty component to consume any space that is left
+					// (so the parts appear at the top of the scrollpane view)
 					panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
 
 					panelSectionButtons.revalidate();
 					panelSectionButtons.repaint();
-					btnJumpToPresented.setEnabled(true);
 				}
 			}
 		});
@@ -1516,9 +1532,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	protected void handleBlankScreen() {
 		controller.contentChange(() -> {
-			boolean success = controller.present(BLANK_SCREEN, null);
+			PresentCommandResult result = controller.present(BLANK_SCREEN, null);
 			controller.stopSlideShow();
-			if (success) {
+			if (result.wasSuccessful()) {
 				clearSectionButtons();
 				btnJumpToPresented.setEnabled(false);
 			}
@@ -1527,9 +1543,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	
 	protected void handleLogoPresent() {
 		controller.contentChange(() -> {
-			boolean success = controller.present(new Presentable(null, controller.loadLogo()), null);
+			PresentCommandResult result = controller.present(new Presentable(null, controller.loadLogo()), null);
 			controller.stopSlideShow();
-			if (success) {
+			if (result.wasSuccessful()) {
 				clearSectionButtons();
 				btnJumpToPresented.setEnabled(false);
 			}
@@ -2306,10 +2322,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		menuPresentSelectedSong.setRenderer(new TextLineCellRenderer(btnPresentSelectedSong));
 		menuPresentSelectedSong.setMaximumRowCount(50);
 		menuPresentSelectedSong.addActionListener(actionEvent -> {
-			NamedSongPresentationPosition nssp = (NamedSongPresentationPosition) menuPresentSelectedSong.getSelectedItem();
+			NamedSongPresentationPosition nspp = (NamedSongPresentationPosition) menuPresentSelectedSong.getSelectedItem();
 			
-			if (nssp != null && nssp.getPartIndex() != null) {
-				present(presentListSelected, nssp);
+			if (nspp != null && nspp.getPartIndex() != null) {
+				present(presentListSelected, nspp);
 			}
 			
 			if (menuPresentSelectedSong.getModel().getSize() > 0) {
