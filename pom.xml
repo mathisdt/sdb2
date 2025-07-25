@@ -40,7 +40,7 @@
 		<version.log4j>2.25.1</version.log4j>
 		<version.args4j>2.37</version.args4j>
 		<version.commons-lang3>3.18.0</version.commons-lang3>
-		<version.commons-text>1.13.1</version.commons-text>
+		<version.commons-text>1.14.0</version.commons-text>
 		<version.togglz>4.4.0</version.togglz>
 		<version.itext>9.2.0</version.itext>
 		<version.poi>5.4.1</version.poi>
