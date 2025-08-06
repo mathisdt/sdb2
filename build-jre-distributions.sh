@@ -7,18 +7,19 @@ if [ -z "$JAVA_HOME" ]; then
   exit 1
 fi
 JDK_LINUX=$JAVA_HOME
-if [ ! -d "$JDK_LINUX" -o ! -d "$JDK_LINUX/jmods" -o "$($JDK_LINUX/bin/java --version | head -n 1 | sed -e 's#^openjdk ##' -e 's#[^0-9].*$##')" != "23" ]; then
-	echo "JAVA_HOME has to point to a directory containing a Linux JDK in version 23"
+if [ ! -d "$JDK_LINUX" -o "$($JDK_LINUX/bin/java --version | head -n 1 | sed -e 's#^openjdk ##' -e 's#[^0-9].*$##')" != "24" ]; then
+	echo "JAVA_HOME has to point to a directory containing a Linux JDK in version 24"
 	exit 1
 fi
 
-echo "downloading a Windows JDK from adoptium.net"
-# JDK version has to match everywhere - also change in pom.xml and in Earthfile!
-wget -q -O /tmp/windows-jdk.zip 'https://api.adoptium.net/v3/binary/latest/23/ga/windows/x64/jdk/hotspot/normal/adoptium?project=jdk'
-unzip -qq -d /tmp/windows-jdk /tmp/windows-jdk.zip
-JDK_WINDOWS=$(ls -d /tmp/windows-jdk/*)
-if [ ! -d "$JDK_WINDOWS" -o ! -d "$JDK_WINDOWS/jmods" ]; then
-	echo "download of Windows JDK did not work"
+echo "downloading Windows JMODs from adoptium.net"
+# see https://github.com/adoptium/adoptium-support/issues/1271 on why only JMODs and not a full JDK
+# Java version has to match everywhere - also change in pom.xml and in Earthfile!
+wget -q -O /tmp/windows-jmods.zip 'https://api.adoptium.net/v3/binary/latest/24/ga/windows/x64/jmods/hotspot/normal/adoptium'
+unzip -qq -d /tmp/windows-jmods /tmp/windows-jmods.zip
+JMODS_WINDOWS=$(ls -d /tmp/windows-jmods/*)
+if [ ! -d "$JMODS_WINDOWS" ]; then
+	echo "download of Windows JMODs did not work"
 	exit 2
 fi
 
@@ -29,7 +30,6 @@ MODULES=java.desktop,jdk.localedata,java.scripting,java.xml,java.sql,java.net.ht
 echo "creating a Linux JRE"
 $JDK_LINUX/bin/jlink \
     --no-man-pages \
-    --module-path $JDK_LINUX/jmods/ \
     --add-modules $MODULES \
     --output $DIR/target/sdb2-bundle-linux/jre
 cp -r $DIR/target/distribution/* $DIR/target/sdb2-bundle-linux/
@@ -46,7 +46,7 @@ cp $DIR/src/main/resources/org/zephyrsoft/sdb2/icon-128.png $DIR/target/sdb2-bun
 echo "creating a Windows JRE"
 $JDK_LINUX/bin/jlink \
     --no-man-pages \
-    --module-path $JDK_WINDOWS/jmods/ \
+    --module-path $JMODS_WINDOWS/ \
     --add-modules $MODULES \
     --output $DIR/target/sdb2-bundle-windows/jre
 cp -r $DIR/target/distribution/* $DIR/target/sdb2-bundle-windows/

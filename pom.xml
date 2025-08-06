@@ -27,7 +27,7 @@
 
 	<properties>
 		<!-- JDK version has to match everywhere - also change in Earthfile and in build-jre-distributions.sh! -->
-		<version.java>23</version.java>
+		<version.java>24</version.java>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 
@@ -55,7 +55,7 @@
 		<version.mockito>5.18.0</version.mockito>
 		<version.jakarta-xml-bind-api>4.0.2</version.jakarta-xml-bind-api>
 		<version.jakarta-activation-api>2.1.3</version.jakarta-activation-api>
-		<version.glassfish-jaxb-runtime>4.0.4</version.glassfish-jaxb-runtime>
+		<version.glassfish-jaxb-runtime>4.0.5</version.glassfish-jaxb-runtime>
 		<version.ical4j>4.1.1</version.ical4j>
 		<version.moquette>0.17</version.moquette>
 	</properties>
@@ -387,6 +387,12 @@
 				<version>3.8.1</version>
 				<executions>
 					<execution>
+						<id>properties</id>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
+					<execution>
 						<id>copy-dependencies</id>
 						<phase>prepare-package</phase>
 						<goals>
@@ -550,6 +556,9 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>3.5.3</version>
+					<configuration>
+						<argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+					</configuration>
 				</plugin>
 
 				<!--This plugin's configuration is used to store Eclipse m2e settings
