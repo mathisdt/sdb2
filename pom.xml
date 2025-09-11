@@ -50,7 +50,7 @@
 		<version.paho-mqtt>1.2.5</version.paho-mqtt>
 		<version.diff-match-patch>1.2</version.diff-match-patch>
 		<version.guava>33.4.8-jre</version.guava>
-		<version.gson>2.13.1</version.gson>
+		<version.gson>2.13.2</version.gson>
 		<version.junit>5.13.4</version.junit>
 		<version.mockito>5.19.0</version.mockito>
 		<version.jakarta-xml-bind-api>4.0.2</version.jakarta-xml-bind-api>
