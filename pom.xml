@@ -52,7 +52,7 @@
 		<version.guava>33.5.0-jre</version.guava>
 		<version.gson>2.13.2</version.gson>
 		<version.junit>5.13.4</version.junit>
-		<version.mockito>5.19.0</version.mockito>
+		<version.mockito>5.20.0</version.mockito>
 		<version.jakarta-xml-bind-api>4.0.4</version.jakarta-xml-bind-api>
 		<version.jakarta-activation-api>2.1.4</version.jakarta-activation-api>
 		<version.glassfish-jaxb-runtime>4.0.5</version.glassfish-jaxb-runtime>
