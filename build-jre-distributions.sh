@@ -7,15 +7,15 @@ if [ -z "$JAVA_HOME" ]; then
   exit 1
 fi
 JDK_LINUX=$JAVA_HOME
-if [ ! -d "$JDK_LINUX" -o "$($JDK_LINUX/bin/java --version | head -n 1 | sed -e 's#^openjdk ##' -e 's#[^0-9].*$##')" != "24" ]; then
-	echo "JAVA_HOME has to point to a directory containing a Linux JDK in version 24"
+if [ ! -d "$JDK_LINUX" -o "$($JDK_LINUX/bin/java --version | head -n 1 | sed -e 's#^openjdk ##' -e 's#[^0-9].*$##')" != "25" ]; then
+	echo "JAVA_HOME has to point to a directory containing a Linux JDK in version 25"
 	exit 1
 fi
 
 echo "downloading Windows JMODs from adoptium.net"
 # see https://github.com/adoptium/adoptium-support/issues/1271 on why only JMODs and not a full JDK
 # Java version has to match everywhere - also change in pom.xml and in Earthfile!
-wget -q -O /tmp/windows-jmods.zip 'https://api.adoptium.net/v3/binary/latest/24/ga/windows/x64/jmods/hotspot/normal/adoptium'
+wget -q -O /tmp/windows-jmods.zip 'https://api.adoptium.net/v3/binary/latest/25/ga/windows/x64/jmods/hotspot/normal/adoptium'
 unzip -qq -d /tmp/windows-jmods /tmp/windows-jmods.zip
 JMODS_WINDOWS=$(ls -d /tmp/windows-jmods/*)
 if [ ! -d "$JMODS_WINDOWS" ]; then

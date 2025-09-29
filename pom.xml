@@ -27,7 +27,7 @@
 
 	<properties>
 		<!-- JDK version has to match everywhere - also change in Earthfile and in build-jre-distributions.sh! -->
-		<version.java>24</version.java>
+		<version.java>25</version.java>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<main.class>org.zephyrsoft.sdb2.Start</main.class>
 

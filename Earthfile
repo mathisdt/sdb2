@@ -2,7 +2,7 @@ VERSION 0.8
 
 build:
     # JDK version has to match everywhere - also change in pom.xml and in build-jre-distributions.sh!
-    FROM maven:3.9.9-eclipse-temurin-24-noble    # not using Alpine image here because the Eclipse-Temurin JDK builds for Alpine are HEADLESS
+    FROM maven:3.9.11-eclipse-temurin-25-noble    # not using Alpine image here because the Eclipse-Temurin JDK builds for Alpine are HEADLESS
     WORKDIR /project
     RUN echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections; \
         echo ttf-mscorefonts-installer msttcorefonts/present-mscorefonts-eula note | debconf-set-selections; \
