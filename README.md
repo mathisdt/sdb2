@@ -1,5 +1,3 @@
-![license](https://img.shields.io/github/license/mathisdt/sdb2.svg?style=flat) [![Build](https://github.com/mathisdt/sdb2/actions/workflows/build.yaml/badge.svg)](https://github.com/mathisdt/sdb2/actions) [![last released](https://img.shields.io/github/release-date/mathisdt/sdb2.svg?label=last%20released&style=flat)](https://github.com/mathisdt/sdb2/releases)
-
 # Song Database
 
 The Song Database is a program to show lyrics on a digital projector for worship in a congregation.
@@ -41,7 +39,7 @@ It can also display calendar events or a slide show.
 
 ## Getting started
 
-- download the latest [SDB2 release](https://github.com/mathisdt/sdb2/releases/latest)
+- download the latest [SDB2 release](https://codeberg.org/mathisdt/sdb2/releases/latest)
   (use the file named `sdb2-...` which corresponds to your system), unpack it
   and look for a batch file or shell script in the `bin` subdirectory
   - if you're on MacOS you have to install Java by yourself (use the most current version) and use `sdb2-without-jre.zip`
@@ -49,13 +47,10 @@ It can also display calendar events or a slide show.
 ## Contributing
 
 The program has evolved since 2005 at [Koinonia Calvary Chapel Hannover](https://koinonia.church).
-If you find a bug or want a new feature, you are welcome to [file an issue](https://github.com/mathisdt/sdb2/issues)
+If you find a bug or want a new feature, you are welcome to [file an issue](https://codeberg.org/mathisdt/sdb2/issues)
 or even fix things yourself and create a pull request!
 
-## Build using Earthly
+# License
 
-The CI build of this project uses [Earthly](https://docs.earthly.dev/), which in turn uses
-container virtualization (e.g. Docker or Podman). You can also run the build locally (if you
-have Earthly as well as an OCI compatible container engine installed) by executing
-`earthly +build`. This will create a container with everything needed for the build,
-create the package inside it and then copy the results to the directory `target` for you.
+This project is licensed under GPL v3. If you submit or contribute changes, these are automatically licensed
+under GPL v3 as well. If you don't want that, please don't submit the contribution (e.g. pull request)!

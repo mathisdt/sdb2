@@ -14,7 +14,7 @@ fi
 
 echo "downloading Windows JMODs from adoptium.net"
 # see https://github.com/adoptium/adoptium-support/issues/1271 on why only JMODs and not a full JDK
-# Java version has to match everywhere - also change in pom.xml and in Earthfile!
+# Java version has to match everywhere - also change in pom.xml and in Woodpecker YAML file!
 wget -q -O /tmp/windows-jmods.zip 'https://api.adoptium.net/v3/binary/latest/25/ga/windows/x64/jmods/hotspot/normal/adoptium'
 unzip -qq -d /tmp/windows-jmods /tmp/windows-jmods.zip
 JMODS_WINDOWS=$(ls -d /tmp/windows-jmods/*)

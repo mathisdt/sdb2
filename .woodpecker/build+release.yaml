@@ -1,0 +1,55 @@
+when:
+  - event: [push, manual]
+
+clone:
+  - name: clone
+    image: woodpeckerci/plugin-git
+    settings:
+      depth: 0
+      partial: false
+      recursive: true
+
+steps:
+  - name: mirror to Github
+    when:
+      - event: [ push, manual ]
+        branch: [ master, main ]
+    depends_on: []
+    image: codeberg.org/mathisdt/buildhelper:latest
+    pull: true
+    environment:
+      TOKEN_GITHUB:
+        from_secret: TOKEN_GITHUB
+    commands: |
+      git remote add github https://mathisdt:$TOKEN_GITHUB@github.com/mathisdt/$CI_REPO_NAME.git
+      git push github
+  - name: build
+    when:
+      - event: [ push, manual ]
+    depends_on: []
+    image: maven:3.9-eclipse-temurin-25-noble
+    pull: true
+    commands: |
+      echo "installing packages..."
+      echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | debconf-set-selections
+      echo ttf-mscorefonts-installer msttcorefonts/present-mscorefonts-eula note | debconf-set-selections
+      apt-get update >/dev/null 2>&1
+      apt-get -y install ttf-mscorefonts-installer xvfb libxi6 libxtst6 zip unzip >/dev/null 2>&1
+      echo "done installing packages"
+      export TZ=Europe/Berlin
+      xvfb-run mvn clean verify -U --no-transfer-progress
+      ./build-jre-distributions.sh
+  - name: release on Codeberg
+    when:
+      - event: manual
+        branch: [ master, main ]
+    depends_on: [ build ]
+    image: codeberg.org/mathisdt/releaseplugin:latest
+    pull: true
+    settings:
+      PATTERN_TO_RELEASE: |
+        target/sdb2-without-jre.zip
+        target/sdb2-bundle-linux.zip
+        target/sdb2-bundle-windows.zip
+      TOKEN:
+        from_secret: TOKEN_REPO_READWRITE
