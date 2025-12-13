@@ -56,7 +56,7 @@
 		<version.jakarta-xml-bind-api>4.0.4</version.jakarta-xml-bind-api>
 		<version.jakarta-activation-api>2.1.4</version.jakarta-activation-api>
 		<version.glassfish-jaxb-runtime>4.0.6</version.glassfish-jaxb-runtime>
-		<version.ical4j>4.2.1</version.ical4j>
+		<version.ical4j>4.2.2</version.ical4j>
 		<version.moquette>0.17</version.moquette>
 	</properties>
 
