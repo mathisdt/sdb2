@@ -289,6 +289,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private final ConcurrentMap<String, UndoManager> songEditingUndoManagers = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, KeyListener> songEditingKeyListeners = new ConcurrentHashMap<>();
 	private JButton btnAddImage;
+	private JButton btnExportPdfPresentList;
 	
 	@Override
 	public List<PartButtonGroup> getUIParts() {
@@ -1322,7 +1323,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			splitPanePresentDividerLocationSet = true;
 		}
 	}
-
+	
 	protected void handleAddImage() {
 		// select target
 		JFileChooser chooser = new JFileChooser();
@@ -1333,7 +1334,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		chooser.setMultiSelectionEnabled(true);
 		chooser.setApproveButtonText("add image(s)");
 		int result = chooser.showOpenDialog(MainWindow.this);
-
+		
 		if (result == JFileChooser.APPROVE_OPTION) {
 			try {
 				File[] selectedFiles = chooser.getSelectedFiles();
@@ -1476,13 +1477,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	protected void presentSong(Song song, SongPresentationPosition presentationPosition) {
 		// not in a "contentChange" block because else the sections wouldn't be displayed:
 		PresentCommandResult result = controller.present(new Presentable(song, null), presentationPosition);
-
+		
 		controller.contentChange(() -> {
 			controller.stopSlideShow();
 			if (result.wasSuccessful() && result.wasStateChanged()) {
 				btnJumpToPresented.setEnabled(true);
 				Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
-
+				
 				if (result != PresentCommandResult.ONLY_SCOLLED) {
 					clearSectionButtons();
 					if (controller.hasParts()) {
@@ -1496,7 +1497,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 						}
 					}
 				}
-
+				
 				if (controller.hasParts()) {
 					// mark active line
 					if (!listSectionButtons.isEmpty()) {
@@ -1506,7 +1507,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 						int activeLineIndex = presentationPosition != null && presentationPosition.getLineIndex() != null
 							? presentationPosition.getLineIndex()
 							: 0;
-
+						
 						for (int partIndex = 0; partIndex < listSectionButtons.size(); partIndex++) {
 							if (partIndex == activePartIndex) {
 								listSectionButtons.get(partIndex).setActiveLine(activeLineIndex);
@@ -1514,15 +1515,15 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 								listSectionButtons.get(partIndex).setInactive();
 							}
 						}
-
+						
 					}
 				}
-
+				
 				if (result != PresentCommandResult.ONLY_SCOLLED) {
 					// add empty component to consume any space that is left
 					// (so the parts appear at the top of the scrollpane view)
 					panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
-
+					
 					panelSectionButtons.revalidate();
 					panelSectionButtons.repaint();
 				}
@@ -1932,7 +1933,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblAdditionalCopyrightNotes.gridx = 2;
 		gbcLblAdditionalCopyrightNotes.gridy = 4;
 		panelEdit.add(lblAdditionalCopyrightNotes, gbcLblAdditionalCopyrightNotes);
-
+		
 		comboBoxLanguage = new JComboBox<>(new TransparentMutableComboBoxModel<>(availableLanguages));
 		comboBoxLanguage.setEditable(true);
 		GridBagConstraints gbcComboBoxLanguage = new GridBagConstraints();
@@ -2437,9 +2438,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		tabbedPane.addTab("Import / Export / Statistics", null, panelImportExportStatistics, null);
 		GridBagLayout gblPanelImportExportStatistics = new GridBagLayout();
 		gblPanelImportExportStatistics.columnWidths = new int[] { 0, 70, 0, 0 };
-		gblPanelImportExportStatistics.rowHeights = new int[] { 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30 };
+		gblPanelImportExportStatistics.rowHeights = new int[] { 30, 30, 30, 30, 30, 30, 0, 30, 30, 30, 30, 30, 30, 30, 30 };
 		gblPanelImportExportStatistics.columnWeights = new double[] { 1.0, 0.0, 1.0, Double.MIN_VALUE };
-		gblPanelImportExportStatistics.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		gblPanelImportExportStatistics.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 			Double.MIN_VALUE };
 		panelImportExportStatistics.setLayout(gblPanelImportExportStatistics);
 		
@@ -2487,15 +2488,6 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnExportPdfSelected.gridy = 4;
 		panelImportExportStatistics.add(btnExportPdfSelected, gbc_btnExportPdfSelected);
 		
-		btnExportPdfAll = new JButton("Export all songs");
-		btnExportPdfAll.addActionListener(safeAction(e -> handleExport(songsModel.getSongs())));
-		GridBagConstraints gbc_btnExportPdfAll = new GridBagConstraints();
-		gbc_btnExportPdfAll.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnExportPdfAll.insets = new Insets(0, 0, 5, 5);
-		gbc_btnExportPdfAll.gridx = 0;
-		gbc_btnExportPdfAll.gridy = 5;
-		panelImportExportStatistics.add(btnExportPdfAll, gbc_btnExportPdfAll);
-		
 		btnExportStatisticsAll = new JButton("Export statistics");
 		btnExportStatisticsAll.addActionListener(safeAction(e -> {
 			// select target
@@ -2519,6 +2511,24 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		}));
 		
+		btnExportPdfAll = new JButton("Export all songs");
+		btnExportPdfAll.addActionListener(safeAction(e -> handleExport(songsModel.getSongs())));
+		GridBagConstraints gbc_btnExportPdfAll = new GridBagConstraints();
+		gbc_btnExportPdfAll.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnExportPdfAll.insets = new Insets(0, 0, 5, 5);
+		gbc_btnExportPdfAll.gridx = 0;
+		gbc_btnExportPdfAll.gridy = 6;
+		panelImportExportStatistics.add(btnExportPdfAll, gbc_btnExportPdfAll);
+		
+		btnExportPdfPresentList = new JButton("Export songs in presentation list");
+		btnExportPdfPresentList.addActionListener(safeAction(e -> handleExport(presentListModel.getAllElements())));
+		GridBagConstraints gbc_btnExportPdfPresentList = new GridBagConstraints();
+		gbc_btnExportPdfPresentList.fill = GridBagConstraints.HORIZONTAL;
+		gbc_btnExportPdfPresentList.insets = new Insets(0, 0, 5, 5);
+		gbc_btnExportPdfPresentList.gridx = 0;
+		gbc_btnExportPdfPresentList.gridy = 5;
+		panelImportExportStatistics.add(btnExportPdfPresentList, gbc_btnExportPdfPresentList);
+		
 		labelExportStatisctics = new JLabel("Statistics");
 		GridBagConstraints gbc_labelExportStatisctics = new GridBagConstraints();
 		gbc_labelExportStatisctics.anchor = GridBagConstraints.SOUTH;
@@ -2526,13 +2536,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_labelExportStatisctics.fill = GridBagConstraints.HORIZONTAL;
 		gbc_labelExportStatisctics.insets = new Insets(0, 0, 5, 0);
 		gbc_labelExportStatisctics.gridx = 0;
-		gbc_labelExportStatisctics.gridy = 7;
+		gbc_labelExportStatisctics.gridy = 8;
 		panelImportExportStatistics.add(labelExportStatisctics, gbc_labelExportStatisctics);
 		GridBagConstraints gbcBtnExportStatisticsAll = new GridBagConstraints();
 		gbcBtnExportStatisticsAll.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnExportStatisticsAll.insets = new Insets(0, 0, 5, 5);
 		gbcBtnExportStatisticsAll.gridx = 0;
-		gbcBtnExportStatisticsAll.gridy = 8;
+		gbcBtnExportStatisticsAll.gridy = 9;
 		panelImportExportStatistics.add(btnExportStatisticsAll, gbcBtnExportStatisticsAll);
 		
 		// TODO comment in again when there are importers
@@ -2563,7 +2573,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblProgramVersionTitle.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblProgramVersionTitle.insets = new Insets(0, 0, 5, 0);
 		gbcLblProgramVersionTitle.gridx = 0;
-		gbcLblProgramVersionTitle.gridy = 10;
+		gbcLblProgramVersionTitle.gridy = 11;
 		panelImportExportStatistics.add(lblProgramVersionTitle, gbcLblProgramVersionTitle);
 		
 		lblProgramVersion = new JLabel("<PROGRAM VERSION>");
@@ -2574,7 +2584,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblProgramVersion.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblProgramVersion.gridwidth = 3;
 		gbcLblProgramVersion.gridx = 0;
-		gbcLblProgramVersion.gridy = 11;
+		gbcLblProgramVersion.gridy = 12;
 		panelImportExportStatistics.add(lblProgramVersion, gbcLblProgramVersion);
 		
 		lblGitCommitHash = new JLabel(" ");
@@ -2583,9 +2593,8 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		GridBagConstraints gbc_lblGitCommitHash = new GridBagConstraints();
 		gbc_lblGitCommitHash.gridwidth = 3;
 		gbc_lblGitCommitHash.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblGitCommitHash.insets = new Insets(0, 0, 5, 0);
 		gbc_lblGitCommitHash.gridx = 0;
-		gbc_lblGitCommitHash.gridy = 12;
+		gbc_lblGitCommitHash.gridy = 13;
 		panelImportExportStatistics.add(lblGitCommitHash, gbc_lblGitCommitHash);
 		
 		// MARK Settings Panel
