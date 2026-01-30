@@ -72,7 +72,7 @@ public class VersionTools {
 	public static VersionUpdate getLatest() {
 		try {
 			HttpRequest request = HttpRequest.newBuilder()
-				.uri(new URI("https://api.github.com/repos/mathisdt/sdb2/releases/latest"))
+				.uri(new URI("https://codeberg.org/api/v1/repos/mathisdt/sdb2/releases/latest"))
 				.GET()
 				.build();
 			HttpResponse<String> latestReleaseResponse = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
@@ -96,7 +96,7 @@ public class VersionTools {
 					latestRelease.get("html_url").getAsString());
 			}
 		} catch (Exception e) {
-			LOG.warn("error communicating with GitHub", e);
+			LOG.warn("error fetching update information", e);
 			return null;
 		}
 	}
