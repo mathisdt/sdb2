@@ -147,7 +147,8 @@ public class ExportService {
 	private ChordSpaceCorrector chordSpaceCorrector;
 	private Map<SongElementEnum, SongElementHandler> songElementHandlers;
 	private PdfFont baseFont;
-	
+
+	/** not in constructor because when used in a PDF the fonts etc. are not usable in another PDF anymore */
 	private void init() throws Exception {
 		baseFont = PdfFontFactory.createFont(StandardFonts.TIMES_ROMAN, PdfEncodings.WINANSI, EmbeddingStrategy.PREFER_EMBEDDED);
 		PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.TIMES_BOLD, PdfEncodings.WINANSI, EmbeddingStrategy.PREFER_EMBEDDED);
@@ -212,7 +213,7 @@ public class ExportService {
 				Paragraph chordSequence = paragraph(lyricsAttributes);
 
 				String toFormat = song.getCleanChordSequence() + "\n\n";
-				Pattern pattern = Pattern.compile("([_^])\\{?([^\\} ]+)([\\} ])");
+				Pattern pattern = Pattern.compile("([_^])\\{?([^\\} \n]+)([\\} \n])");
 				Matcher matcher = pattern.matcher(toFormat);
 				int index = 0;
 				while (matcher.find(index)) {
@@ -226,6 +227,8 @@ public class ExportService {
 					chordSequence.add(formatted);
 					if (matcher.group(3).equals(" ")) {
 						chordSequence.add(" ");
+					} else if (matcher.group(3).equals("\n")) {
+						chordSequence.add("\n");
 					}
 					index = matcher.end();
 				}
