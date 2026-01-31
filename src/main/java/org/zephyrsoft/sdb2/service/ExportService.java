@@ -29,7 +29,10 @@ import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.zephyrsoft.sdb2.model.ExportFormat;
@@ -90,7 +93,7 @@ public class ExportService {
 		}
 	}
 	
-	private class ExportInProgress {
+	private static class ExportInProgress {
 		private final ExportFormat exportFormat;
 		private final Document document;
 		private final List<TocEntry> toc = new ArrayList<>();
@@ -135,15 +138,12 @@ public class ExportService {
 		void handleElement(ExportInProgress exportInProgress, Song song, SongElementHistory history);
 	}
 	
-	@FunctionalInterface
-	private interface AttributeSetter {
-		void apply(AbstractElement<?> element);
-	}
-	
-	private AttributeSetter titleAttributes;
-	private AttributeSetter lyricsAttributes;
-	private AttributeSetter translationAttributes;
-	private AttributeSetter copyrightAttributes;
+	private Consumer<AbstractElement<?>> titleAttributes;
+	private Consumer<AbstractElement<?>> lyricsAttributes;
+	private Consumer<Text> chordSuperscriptAttributes;
+	private Consumer<Text> chordSubscriptAttributes;
+	private Consumer<AbstractElement<?>> translationAttributes;
+	private Consumer<AbstractElement<?>> copyrightAttributes;
 	private ChordSpaceCorrector chordSpaceCorrector;
 	private Map<SongElementEnum, SongElementHandler> songElementHandlers;
 	private PdfFont baseFont;
@@ -159,6 +159,16 @@ public class ExportService {
 		lyricsAttributes = e -> {
 			e.setFont(baseFont);
 			e.setFontSize(12);
+		};
+		chordSuperscriptAttributes = e -> {
+			e.setFont(baseFont);
+			e.setFontSize(7);
+			e.setTextRise(4);
+		};
+		chordSubscriptAttributes = e -> {
+			e.setFont(baseFont);
+			e.setFontSize(7);
+			e.setTextRise(-1);
 		};
 		translationAttributes = e -> {
 			e.setFont(italicFont);
@@ -199,7 +209,28 @@ public class ExportService {
 			
 			if (exportInProgress.getExportFormat().areChordsShown() && StringUtils.isNotBlank(song.getCleanChordSequence())) {
 				// insert chord sequence directly after title
-				Paragraph chordSequence = paragraph(song.getCleanChordSequence() + "\n\n", lyricsAttributes);
+				Paragraph chordSequence = paragraph(lyricsAttributes);
+
+				String toFormat = song.getCleanChordSequence() + "\n\n";
+				Pattern pattern = Pattern.compile("([_^])\\{?([^\\} ]+)([\\} ])");
+				Matcher matcher = pattern.matcher(toFormat);
+				int index = 0;
+				while (matcher.find(index)) {
+					chordSequence.add(toFormat.substring(index, matcher.start()));
+					Text formatted = new Text(matcher.group(2));
+					if (matcher.group(1).equals("^")) {
+						chordSuperscriptAttributes.accept(formatted);
+					} else {
+						chordSubscriptAttributes.accept(formatted);
+					}
+					chordSequence.add(formatted);
+					if (matcher.group(3).equals(" ")) {
+						chordSequence.add(" ");
+					}
+					index = matcher.end();
+				}
+				chordSequence.add(toFormat.substring(index));
+
 				chordSequence.setPaddingLeft(30);
 				exportInProgress.getDocument().add(chordSequence);
 			}
@@ -218,7 +249,7 @@ public class ExportService {
 				chordsLine = chordSpaceCorrector.correctChordSpaces(queryResult.getMatchedElements().get(0).getContent(),
 					history.current().getContent()) + "\n";
 			}
-			Paragraph currentLine = exportInProgress.getOrCreateCurrentLine(this::paragraph);
+			Paragraph currentLine = exportInProgress.getOrCreateCurrentLine(ExportService::paragraph);
 			if (history.current().getIndentation() > 0) {
 				currentLine.setPaddingLeft(calculateIndentation(history.current()));
 			}
@@ -229,7 +260,7 @@ public class ExportService {
 	private SongElementHandler translationHandler() {
 		return (exportInProgress, song, history) -> {
 			if (exportInProgress.getExportFormat().isTranslationShown()) {
-				Paragraph currentLine = exportInProgress.getOrCreateCurrentLine(this::paragraph);
+				Paragraph currentLine = exportInProgress.getOrCreateCurrentLine(ExportService::paragraph);
 				if (history.current().getIndentation() > 0) {
 					currentLine.setPaddingLeft(calculateIndentation(history.current()));
 				}
@@ -238,14 +269,14 @@ public class ExportService {
 		};
 	}
 	
-	private Text text(String text, AttributeSetter attributes) {
+	private static Text text(String text, Consumer<AbstractElement<?>> attributes) {
 		Text result = new Text(text);
-		attributes.apply(result);
+		attributes.accept(result);
 		result.setNextRenderer(new TextRendererNonTrimming(result));
 		return result;
 	}
 	
-	private SongElementHandler newlineHandler() {
+	private static SongElementHandler newlineHandler() {
 		return (exportInProgress, song, history) -> {
 			if (exportInProgress.getCurrentLine() != null) {
 				if (history.query()
@@ -275,7 +306,7 @@ public class ExportService {
 		};
 	}
 	
-	private int calculateIndentation(SongElement element) {
+	private static int calculateIndentation(SongElement element) {
 		return element.getIndentation() * 12;
 	}
 	
@@ -317,7 +348,7 @@ public class ExportService {
 		return outputStream.toByteArray();
 	}
 	
-	private static record TocEntry(String technicalName, String title, Integer pageNumber) {
+	private record TocEntry(String technicalName, String title, Integer pageNumber) {
 		// nothing here
 	}
 	
@@ -346,7 +377,7 @@ public class ExportService {
 		}
 	}
 	
-	private Paragraph paragraph() {
+	private static Paragraph paragraph() {
 		Paragraph paragraph = new Paragraph();
 		paragraph.setMultipliedLeading(1);
 		paragraph.setMargin(0);
@@ -354,13 +385,13 @@ public class ExportService {
 		return paragraph;
 	}
 	
-	private Paragraph paragraph(AttributeSetter attributes) {
+	private static Paragraph paragraph(Consumer<AbstractElement<?>> attributes) {
 		Paragraph paragraph = paragraph();
-		attributes.apply(paragraph);
+		attributes.accept(paragraph);
 		return paragraph;
 	}
 	
-	private Paragraph paragraph(String text, AttributeSetter attributes) {
+	private static Paragraph paragraph(String text, Consumer<AbstractElement<?>> attributes) {
 		Paragraph paragraph = paragraph(attributes);
 		paragraph.add(text);
 		return paragraph;
