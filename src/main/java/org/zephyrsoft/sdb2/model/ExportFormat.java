@@ -21,12 +21,14 @@ package org.zephyrsoft.sdb2.model;
 public class ExportFormat {
 	private boolean showTranslation;
 	private boolean showChords;
+	private boolean onlyExportChordSequence;
 	private boolean onlySongsWithChords;
-	
-	public ExportFormat(boolean showTranslation, boolean showChords, boolean onlySongsWithChords) {
+
+	public ExportFormat(boolean showTranslation, boolean showChords, boolean onlyExportChordSequence, boolean onlySongsWithChords) {
 		this.showTranslation = showTranslation;
 		this.showChords = showChords;
-		this.onlySongsWithChords = onlySongsWithChords;
+        this.onlyExportChordSequence = onlyExportChordSequence;
+        this.onlySongsWithChords = onlySongsWithChords;
 	}
 	
 	public boolean isTranslationShown() {
@@ -36,7 +38,11 @@ public class ExportFormat {
 	public boolean areChordsShown() {
 		return showChords;
 	}
-	
+
+	public boolean onlyExportChordSequence() {
+		return onlyExportChordSequence;
+	}
+
 	public boolean onlySongsWithChords() {
 		return onlySongsWithChords;
 	}

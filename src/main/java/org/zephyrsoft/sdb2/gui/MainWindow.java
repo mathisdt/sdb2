@@ -27,6 +27,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.VetoableChangeListener;
 import java.io.File;
 import java.net.URI;
 import java.text.ParseException;
@@ -113,33 +115,33 @@ import static org.zephyrsoft.sdb2.model.VirtualScreen.SCREEN_B;
  * Main window of the application.
  */
 public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListener {
-	
+
 	private static final String PROBLEM_WHILE_SAVING = """
 		There was a problem while saving the data.
-		
+
 		Please examine the log file at:
 		""";
-	
+
 	private static final Presentable BLANK_SCREEN = new Presentable(null, null);
-	
+
 	private static final long serialVersionUID = -6874196690375696416L;
-	
+
 	private static final String NEWLINE = "\n";
 	private static final String STACKTRACE_INDENTATION = "    ";
 	private static final int STACKTRACE_ELEMENT_COUNT = 4;
-	
+
 	private static final int TAB_INDEX_EDIT = 0;
 	private static final int TAB_INDEX_PRESENT = 1;
 	private static final int TAB_INDEX_STATS = 2;
 	private static final int TAB_INDEX_SETTINGS = 3;
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(MainWindow.class);
-	
+
 	private Container glassPane;
 	private JPanel contentPane;
 	private JTabbedPane tabbedPane;
 	private JPanel buttonPanel;
-	
+
 	private JEditorPane editorLyrics;
 	private JTextField textFieldTitle;
 	private List<String> availableLanguages = new ArrayList<>();
@@ -154,33 +156,33 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private JEditorPane editorChordSequence;
 	private JEditorPane editorDrumNotes;
 	private JEditorPane editorSongNotes;
-	
+
 	private KeyboardShortcutManager keyboardShortcutManager;
 	private final MainController controller;
 	private IndexerService indexer;
 	private ExportService exportService;
-	
+
 	private SettingsModel settingsModel;
-	
+
 	private FixedWidthJList<Song> songsList;
 	private SongsModel songsModel;
 	private TransparentFilterableListModel<Song> songsListModel;
 	private Collection<Song> songsListFiltered;
 	private Song selectedSong;
 	private String selectNewSongWithUUID;
-	
+
 	private FixedWidthJList<Song> presentList;
 	private SongsModel presentModel;
 	private TransparentListModel<Song> presentListModel;
 	private Song presentListSelected;
-	
+
 	private JPanel panelSongList;
 	private JButton btnClearFilter;
 	private JTextField textFieldFilter;
 	private JButton btnNewSong;
 	private JButton btnDeleteSong;
 	private JButton btnSelectSong;
-	
+
 	private JSplitPane splitPanePresent;
 	private boolean splitPanePresentDividerLocationSet = false;
 	private JPanel selectedSongListButtons;
@@ -204,7 +206,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private JButton btnExportStatisticsAll;
 	private JButton btnImportFromSdb1;
 	private JLabel lblProgramVersion;
-	
+
 	private JButton btnUnlock;
 	private JButton btnSelectTitleFont1;
 	private JButton btnSelectTitleFont2;
@@ -249,9 +251,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private JLabel lblRemotePassword;
 	private JLabel lblRemoteServer;
 	private JLabel lblRemoteEnabled;
-	
+
 	private JButton saveButton;
-	
+
 	private SongCellRenderer songCellRenderer;
 	private JLabel lblSlideShowDirectory;
 	private JLabel lblSlideShowSeconds;
@@ -268,41 +270,42 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	private JLabel lblMinimizeScrolling;
 	private JCheckBox checkboxMinimizeScrolling1;
 	private JCheckBox checkboxMinimizeScrolling2;
-	
+
 	private JLabel lblRemotePrefix;
-	
+
 	private JLabel lblRemoteRoom;
-	
+
 	private JLabel lblStatus;
 	private JLabel lblGitCommitHash;
 	private JLabel lblFadeTime;
 	private JSpinner spinnerFadeTime;
-	
+
 	private JLabel lblCalendarUrl;
 	private JTextField textFieldCalendarUrl;
 	private JLabel lblDaysAhead;
 	private JSpinner spinnerDaysAhead;
-	
+
 	private JButton btnUnselectAll;
 	private JButton btnUnselectAllAndBlankScreen;
-	
+
 	private final ConcurrentMap<String, UndoManager> songEditingUndoManagers = new ConcurrentHashMap<>();
 	private final ConcurrentMap<String, KeyListener> songEditingKeyListeners = new ConcurrentHashMap<>();
 	private JButton btnAddImage;
 	private JButton btnExportPdfPresentList;
-	
+	private JCheckBox chckbxOnlyChordSequence;
+
 	@Override
 	public List<PartButtonGroup> getUIParts() {
 		return listSectionButtons;
 	}
-	
+
 	private void afterConstruction() {
 		MainController.initAnimationTimer();
-		
+
 		// read program version
 		lblProgramVersion.setText(VersionTools.getCurrent());
 		lblGitCommitHash.setText(VersionTools.getGitCommitHash());
-		
+
 		// fill in available values for filter type
 		for (FilterTypeEnum item : FilterTypeEnum.values()) {
 			comboSongListFiltering.addItem(item);
@@ -333,7 +336,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			btnUnselectAll.setEnabled(!presentModel.isEmpty());
 			btnUnselectAllAndBlankScreen.setEnabled(!presentModel.isEmpty());
 		});
-		
+
 		// fill in available values for screen contents
 		for (ScreenContentsEnum item : ScreenContentsEnum.values()) {
 			comboPresentationScreen1Contents.addItem(item);
@@ -344,7 +347,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		comboPresentationScreen2Contents.setRenderer(new ScreenContentsCellRenderer());
 		comboPresentationScreen1Display.setRenderer(new ScreenDisplayCellRenderer());
 		comboPresentationScreen2Display.setRenderer(new ScreenDisplayCellRenderer());
-		
+
 		// add keyboard comfort to the filter field
 		textFieldFilter.addKeyListener(new KeyAdapter() {
 			@Override
@@ -362,7 +365,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				}
 			}
 		});
-		
+
 		// add keyboard comfort to the global songs list
 		songsList.addKeyListener(new KeyAdapter() {
 			@Override
@@ -373,11 +376,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 					handleSongSelect();
 				}
 			}
-			
+
 			@Override
 			public void keyTyped(KeyEvent e) {
 				char keyChar = e.getKeyChar();
-				
+
 				if (keyChar != KeyEvent.CHAR_UNDEFINED) {
 					if (Character.isLetterOrDigit(keyChar)
 						|| Character.getType(keyChar) == Character.CONNECTOR_PUNCTUATION
@@ -398,7 +401,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				}
 			}
 		});
-		
+
 		// add keyboard comfort to the present songs list
 		presentList.addKeyListener(new KeyAdapter() {
 			@Override
@@ -410,7 +413,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				}
 			}
 		});
-		
+
 		// lock setting controls to prevent accidental changes
 		tabbedPane.addChangeListener(e -> {
 			// on every tab switch, lock the settings again
@@ -429,18 +432,18 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				}
 			}
 		});
-		
+
 		indexer.onIndexChange(this);
 		setModels(controller.getSongs(), controller.getSettings());
 		setVisible(true);
 		textFieldFilter.requestFocusInWindow();
 		checkForUpdateAsync();
-		
+
 		menuPresentSelectedSong.setPreferredSize(new Dimension(btnPresentSelectedSong.getWidth(), menuPresentSelectedSong.getHeight()));
 		menuPresentSelectedSong.setMinimumSize(new Dimension(btnPresentSelectedSong.getWidth(), menuPresentSelectedSong.getHeight()));
 		menuPresentSelectedSong.setMaximumSize(new Dimension(btnPresentSelectedSong.getWidth(), menuPresentSelectedSong.getHeight()));
 	}
-	
+
 	private void checkForUpdateAsync() {
 		Runnable task = () -> {
 			try {
@@ -448,7 +451,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			} catch (InterruptedException e1) {
 				// do nothing
 			}
-			
+
 			final VersionUpdate updateAvailable = VersionTools.getLatest();
 			if (updateAvailable != null) {
 				final JLabel updateLabel = new JLabel("new version available with timestamp "
@@ -485,25 +488,25 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		};
 		Thread.startVirtualThread(task);
 	}
-	
+
 	public void reloadModels(SongsModel songs, SettingsModel settings) {
 		SwingUtilities.invokeLater(() -> setModels(songs, settings));
-		
+
 	}
-	
+
 	public void setModels(SongsModel songs, SettingsModel settings) {
 		this.songsModel = songs;
 		this.settingsModel = settings;
 		songsListModel = songs.getFilterableListModel();
 		songsList.setModel(songsListModel);
-		
+
 		// If some song changes, index changes, update the list and load the current song again
 		songsModel.addSongsModelListener(() -> {
 			indexAllSongs();
 		});
 		// start indexing once after initialization
 		indexAllSongs();
-		
+
 		// song list filtering
 		ListFilter<Song> filter = song -> {
 			String filterText = textFieldFilter.getText();
@@ -515,27 +518,27 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		};
 		songsListModel.setFilter(filter);
 		textFieldFilter.getDocument().addDocumentListener(new DocumentListener() {
-			
+
 			@Override
 			public void changedUpdate(DocumentEvent e) {
 				applyFilter();
 			}
-			
+
 			@Override
 			public void insertUpdate(DocumentEvent e) {
 				applyFilter();
 			}
-			
+
 			@Override
 			public void removeUpdate(DocumentEvent e) {
 				applyFilter();
 			}
 		});
-		
+
 		// prepare for settings
 		updateScreenModels();
 		ScreenHelper.addChangeListener(() -> SwingUtilities.invokeLater(this::updateScreenModels));
-		
+
 		// load values for instantly displayed settings
 		updateFontButtons();
 		Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
@@ -557,10 +560,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		setSpinnerValue(spinnerCountAsDisplayedAfter, settingsModel.get(SettingKey.SECONDS_UNTIL_COUNTED, Integer.class));
 		setSpinnerValue(spinnerSlideShowSeconds, settingsModel.get(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, Integer.class));
 		setSpinnerValue(spinnerFadeTime, settingsModel.get(SettingKey.FADE_TIME, Integer.class));
-		
+
 		textFieldCalendarUrl.setText(settingsModel.get(SettingKey.CALENDAR_URL, String.class));
 		setSpinnerValue(spinnerDaysAhead, settingsModel.get(SettingKey.CALENDAR_DAYS_AHEAD, Integer.class));
-		
+
 		checkboxRemoteEnabled.setSelected(settingsModel.get(SettingKey.REMOTE_ENABLED, Boolean.class));
 		textFieldRemoteServer.setText(settingsModel.get(SettingKey.REMOTE_SERVER, String.class));
 		textFieldRemoteUsername.setText(settingsModel.get(SettingKey.REMOTE_USERNAME, String.class));
@@ -568,7 +571,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		textFieldRemotePrefix.setText(settingsModel.get(SettingKey.REMOTE_PREFIX, String.class));
 		textFieldRemoteRoom.setText(settingsModel.get(SettingKey.REMOTE_NAMESPACE, String.class));
 	}
-	
+
 	private void updateScreenModels() {
 		controller.detectScreens();
 		comboPresentationScreen1Display.setModel(new TransparentComboBoxModel<>(controller.getScreens()));
@@ -578,19 +581,19 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		comboPresentationScreen2Display.setSelectedItem(ScreenHelper.getScreen(controller.getScreens(),
 			settingsModel.get(SettingKey.SCREEN_2_DISPLAY, Integer.class)));
 	}
-	
+
 	private static void setSpinnerValue(JSpinner spinner, Object value) {
 		spinner.setValue(value == null ? 0 : value);
 	}
-	
+
 	protected void handleSettingsUnlock() {
 		// reload screens
 		controller.detectScreens();
-		
+
 		// enable controls
 		setSettingsEnabled(true);
 	}
-	
+
 	protected void handleSettingsSaveAndLock() {
 		// only if the "unlock" button is disabled (which means that the settings were just edited)
 		if (btnUnlock != null && !btnUnlock.isEnabled() && settingsModel != null) {
@@ -622,10 +625,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			settingsModel.put(SettingKey.SECONDS_UNTIL_COUNTED, spinnerCountAsDisplayedAfter.getValue());
 			settingsModel.put(SettingKey.SLIDE_SHOW_SECONDS_UNTIL_NEXT_PICTURE, spinnerSlideShowSeconds.getValue());
 			settingsModel.put(SettingKey.FADE_TIME, spinnerFadeTime.getValue());
-			
+
 			settingsModel.put(SettingKey.CALENDAR_URL, textFieldCalendarUrl.getText());
 			settingsModel.put(SettingKey.CALENDAR_DAYS_AHEAD, spinnerDaysAhead.getValue());
-			
+
 			settingsModel.put(SettingKey.REMOTE_ENABLED, checkboxRemoteEnabled.getModel().isSelected());
 			settingsModel.put(SettingKey.REMOTE_SERVER, textFieldRemoteServer.getText());
 			settingsModel.put(SettingKey.REMOTE_PASSWORD, textFieldRemotePassword.getText());
@@ -634,17 +637,17 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			settingsModel.put(SettingKey.REMOTE_PREFIX, textFieldRemotePrefix.getText());
 			// copying is not necessary for fonts, colors, the logo file and the slide show directory
 			// because those settings are only stored directly in the model
-			
+
 			// apply settings
 			controller.settingsChanged();
 		}
 		setSettingsEnabled(false);
 	}
-	
+
 	private void indexAllSongs() {
 		indexer.index(IndexType.ALL_SONGS, songsModel.getSongs());
 	}
-	
+
 	@Override
 	public void onIndexChange() {
 		Set<String> languages = new HashSet<>();
@@ -658,10 +661,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		Collections.sort(languagesSorted);
 		availableLanguages.clear();
 		availableLanguages.addAll(languagesSorted);
-		
+
 		SwingUtilities.invokeLater(() -> {
 			LOG.debug("Loading songsmodel changes into ui..");
-			
+
 			Song newSelectedSong = selectNewSongWithUUID != null ? songsModel.getByUUID(selectNewSongWithUUID) : null;
 			if (newSelectedSong != null) {
 				selectNewSongWithUUID = null;
@@ -682,7 +685,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 					}
 				}
 			}
-			
+
 			// Update songlist / make it visible:
 			if (songsListFiltered != null && selectedSong != null && textFieldFilter != null && !textFieldFilter.getText().isBlank()
 				&& !songsListFiltered.contains(selectedSong)) {
@@ -692,67 +695,67 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		});
 	}
-	
+
 	private Song rebaseChanges(Song songFromRemote) {
 		if (!isSongDataChanged()) {
 			return songFromRemote;
 		}
-		
+
 		Song songFromGui = songFromGUI();
 		if (songFromGui.equals(songFromRemote)) {
 			return songFromRemote;
 		}
-		
+
 		Song localPatch = PatchController.patch(songFromGui, selectedSong);
 		if (localPatch.isEmpty()) {
 			return songFromRemote;
 		}
-		
+
 		// Merge/Remove equal patches:
 		Song remotePatch = PatchController.patch(songFromRemote, selectedSong);
 		Song mergedPatch = PatchController.mergePatches(remotePatch, localPatch);
 		return PatchController.applyPatch(selectedSong, mergedPatch);
 	}
-	
+
 	private void setSelectedSong(Song song, boolean save) {
 		// Save Song:
 		if (save && selectedSong != null) {
 			saveSongWithoutChangingGUI();
 		}
-		
+
 		// Update selected song, if its already open (uuid is the same), do not rewind cursors.
 		boolean songIsAlreadyOpen = song != null && selectedSong != null && StringTools.equalsWithNullAsEmpty(selectedSong.getUUID(), song.getUUID());
-		
+
 		LOG.debug("setSelectedSong: {} selected before={}", song, selectedSong);
 		selectedSong = song;
-		
+
 		if (selectedSong == null) {
 			clearSongData();
 			setSongEditingEnabled(false);
-			
+
 			// disable buttons
 			btnDeleteSong.setEnabled(false);
 			btnSelectSong.setEnabled(false);
 			btnExportPdfSelected.setEnabled(false);
-			
+
 			// clear undo manager
 			manageUndoCapability(false);
 		} else {
 			loadSongData(selectedSong, !songIsAlreadyOpen);
 			if (!songIsAlreadyOpen) {
 				setSongEditingEnabled(true);
-				
+
 				// enable buttons
 				btnDeleteSong.setEnabled(true);
 				btnSelectSong.setEnabled(true);
 				btnExportPdfSelected.setEnabled(true);
-				
+
 				// attach undo manager
 				manageUndoCapability(true);
 			}
 		}
 	}
-	
+
 	private void manageUndoCapability(boolean add) {
 		manageUndoCapability("editorLyrics", editorLyrics, add);
 		manageUndoCapability("textFieldTitle", textFieldTitle, add);
@@ -768,25 +771,25 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		manageUndoCapability("editorDrumNotes", editorDrumNotes, add);
 		manageUndoCapability("editorSongNotes", editorSongNotes, add);
 	}
-	
+
 	private void manageUndoCapability(String key, JTextComponent textComponent, boolean add) {
 		UndoManager undoManager = songEditingUndoManagers.get(key);
 		if (undoManager != null) {
 			textComponent.getDocument().removeUndoableEditListener(undoManager);
 			songEditingUndoManagers.remove(key);
 		}
-		
+
 		KeyListener keyListener = songEditingKeyListeners.get(key);
 		if (keyListener != null) {
 			textComponent.removeKeyListener(keyListener);
 			songEditingKeyListeners.remove(key);
 		}
-		
+
 		if (add) {
 			UndoManager undoManagerToAdd = new UndoManager();
 			songEditingUndoManagers.put(key, undoManagerToAdd);
 			textComponent.getDocument().addUndoableEditListener(undoManagerToAdd);
-			
+
 			KeyListener keyListenerToAdd = new KeyAdapter() {
 				@Override
 				public void keyReleased(KeyEvent e) {
@@ -805,7 +808,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			textComponent.addKeyListener(keyListenerToAdd);
 		}
 	}
-	
+
 	/**
 	 * Let the user select a font, save it into the {@link SettingsModel} (if changed) and re-enable the settings tab.
 	 *
@@ -832,7 +835,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		setSettingsEnabled(true);
 		updateFontButtons();
 	}
-	
+
 	private boolean selectColor(Color defaultColor, String title, SettingKey... targets) {
 		Color color = settingsModel.get(targets[0], Color.class);
 		if (color == null) {
@@ -848,43 +851,43 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			return false;
 		}
 	}
-	
+
 	protected void handleSelectTextColor1() {
 		selectColor(Color.WHITE, "Select Text Color (Screen 1)", SettingKey.TEXT_COLOR);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
-	
+
 	protected void handleSelectTextColor2() {
 		selectColor(Color.WHITE, "Select Text Color (Screen 2)", SettingKey.TEXT_COLOR_2);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
-	
+
 	protected void handleSelectTextColorBoth() {
 		selectColor(Color.WHITE, "Select Text Color (Both Screens)", SettingKey.TEXT_COLOR, SettingKey.TEXT_COLOR_2);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
-	
+
 	protected void handleSelectBackgroundColor1() {
 		selectColor(Color.BLACK, "Select Background Color (Screen 1)", SettingKey.BACKGROUND_COLOR);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
-	
+
 	protected void handleSelectBackgroundColor2() {
 		selectColor(Color.BLACK, "Select Background Color (Screen 2)", SettingKey.BACKGROUND_COLOR_2);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
-	
+
 	protected void handleSelectBackgroundColorBoth() {
 		selectColor(Color.BLACK, "Select Background Color (Both Screens)", SettingKey.BACKGROUND_COLOR, SettingKey.BACKGROUND_COLOR_2);
 		// TODO perhaps apply the new settings?
 		setSettingsEnabled(true);
 	}
-	
+
 	protected void handleSelectLogo() {
 		JFileChooser fileChooser = new JFileChooser();
 		String pathname = settingsModel.get(SettingKey.LOGO_FILE, String.class);
@@ -896,13 +899,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		}
 		fileChooser.setApproveButtonText("Select");
 		fileChooser.setDialogTitle("Select Logo");
-		
+
 		// set a custom file filter but also keep the "accept all" filter
 		fileChooser.setFileFilter(new CustomFileFilter("Images", ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".gif"));
-		
+
 		// add the preview pane
 		fileChooser.setAccessory(new ImagePreview(fileChooser));
-		
+
 		int returnVal = fileChooser.showDialog(this, null);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			File file = fileChooser.getSelectedFile();
@@ -916,7 +919,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		}
 		setSettingsEnabled(true);
 	}
-	
+
 	protected void handleSelectSlideShowDirectory() {
 		JFileChooser fileChooser = new JFileChooser();
 		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -929,11 +932,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		}
 		fileChooser.setApproveButtonText("Select");
 		fileChooser.setDialogTitle("Select Slide Show Directory");
-		
+
 		// set a custom file filter and don't keep the "accept all" filter
 		fileChooser.setFileFilter(new CustomFileFilter("Directories"));
 		fileChooser.setAcceptAllFileFilterUsed(false);
-		
+
 		int returnVal = fileChooser.showDialog(this, null);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			File file = fileChooser.getSelectedFile();
@@ -947,7 +950,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		}
 		setSettingsEnabled(true);
 	}
-	
+
 	private static void commitSpinners(JSpinner... spinners) {
 		for (JSpinner spinner : spinners) {
 			try {
@@ -957,7 +960,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		}
 	}
-	
+
 	private void setSettingsEnabled(boolean enabled) {
 		setEnabledIfNotNull(btnSelectTitleFont1, enabled);
 		setEnabledIfNotNull(btnSelectTitleFont2, enabled);
@@ -1011,13 +1014,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		// (and the other way around)
 		setEnabledIfNotNull(btnUnlock, !enabled);
 	}
-	
+
 	private static void setEnabledIfNotNull(JComponent component, boolean enabled) {
 		if (component != null) {
 			component.setEnabled(enabled);
 		}
 	}
-	
+
 	protected void handleSongsListSelectionChanged(ListSelectionEvent e) {
 		// only the last event in a row should fire these actions (check valueIsAdjusting)
 		if (!e.getValueIsAdjusting()) {
@@ -1026,12 +1029,12 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			setSelectedSong(song, true);
 		}
 	}
-	
+
 	private void saveSongWithoutChangingGUI() {
 		if (!isSongDataChanged()) {
 			return;
 		}
-		
+
 		LOG.debug("saveSongData: {}", selectedSong.getTitle());
 		Song songFromGUI = songFromGUI();
 		controller.getSongsController().updateSong(songFromGUI);
@@ -1039,14 +1042,14 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		// (it's the same song, so it's not necessary to call setSelectedSong() which does a whole lot more)
 		selectedSong = songFromGUI;
 	}
-	
+
 	private void applyFilter() {
 		// Filter:
 		final String filterText = textFieldFilter.getText();
 		FieldName[] fieldsToSearch = settingsModel.get(SettingKey.SONG_LIST_FILTER, FilterTypeEnum.class).getFields();
 		songsListFiltered = indexer.search(IndexType.ALL_SONGS, filterText, fieldsToSearch);
 		songsListModel.refilter();
-		
+
 		// Find and select currently opened song:
 		SwingUtilities.invokeLater(() -> {
 			songsList.setValueIsAdjusting(true);
@@ -1058,14 +1061,14 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		});
 	}
-	
+
 	protected void handlePresentListSelectionChanged(ListSelectionEvent e) {
 		// only the last event in a row should fire these actions (check valueIsAdjusting)
 		if (!e.getValueIsAdjusting()) {
 			updateButtonsForPresentListSelection();
 		}
 	}
-	
+
 	protected void updateButtonsForPresentListSelection() {
 		presentListSelected = presentList.getSelectedValue();
 		if (presentListSelected != null) {
@@ -1090,7 +1093,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			btnJumpToSelected.setEnabled(false);
 		}
 	}
-	
+
 	private void updateMenuPresentSelectedSong() {
 		DefaultComboBoxModel<NamedSongPresentationPosition> model = (DefaultComboBoxModel<NamedSongPresentationPosition>) menuPresentSelectedSong
 			.getModel();
@@ -1103,7 +1106,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				screenSettings.isShowTitle(), screenSettings.isShowChords(), new DefaultStyledDocument(), screenSettings.getTitleFont(),
 				screenSettings.getLyricsFont(), screenSettings.getTranslationFont(), screenSettings.getCopyrightFont(),
 				screenSettings.getTitleLyricsDistance(), screenSettings.getLyricsCopyrightDistance());
-			
+
 			boolean isFirst = true;
 			int partIndex = screenSettings.isShowTitle() ? 0 : 1;
 			for (AddressablePart part : parts) {
@@ -1124,7 +1127,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		}
 	}
-	
+
 	private boolean isSongDataChanged() {
 		return selectedSong != null && (!StringTools.equalsWithNullAsEmpty(selectedSong.getLyrics(), editorLyrics.getText())
 			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getTitle(), textFieldTitle.getText())
@@ -1141,10 +1144,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getDrumNotes(), editorDrumNotes.getText())
 			|| !StringTools.equalsWithNullAsEmpty(selectedSong.getSongNotes(), editorSongNotes.getText()));
 	}
-	
+
 	private Song songFromGUI() {
 		Song song = new Song(selectedSong);
-		
+
 		if (!StringTools.equalsWithNullAsEmpty(song.getLyrics(), editorLyrics.getText())) {
 			song.setLyrics(editorLyrics.getText());
 		}
@@ -1187,7 +1190,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		}
 		return song;
 	}
-	
+
 	/**
 	 * Deletes all values contained in the GUI elements of the song editing tab.
 	 */
@@ -1207,7 +1210,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		setText(editorDrumNotes, "", true);
 		setText(editorSongNotes, "", true);
 	}
-	
+
 	/**
 	 * Enables or disables all GUI elements of the song editing tab.
 	 */
@@ -1229,7 +1232,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			editorLyrics.setCaretPosition(0);
 		}
 	}
-	
+
 	/**
 	 * Reads song data and puts the values into the GUI elements.
 	 *
@@ -1258,7 +1261,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		setText(editorDrumNotes, song.getDrumNotes(), rewind);
 		setText(editorSongNotes, song.getSongNotes(), rewind);
 	}
-	
+
 	private static void setText(JTextComponent textComponent, String textToSet, boolean rewind) {
 		int caretPosition = textComponent.getCaretPosition();
 		if (!StringUtils.equals(textComponent.getText(), textToSet)) {
@@ -1270,7 +1273,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			textComponent.setCaretPosition(Math.min(caretPosition, textToSet.length()));
 		}
 	}
-	
+
 	protected void handleWindowClosing() {
 		saveSongWithoutChangingGUI();
 		handleSettingsSaveAndLock();
@@ -1283,13 +1286,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			showErrorDialog(PROBLEM_WHILE_SAVING + FileAndDirectoryLocations.getLogDir());
 		}
 	}
-	
+
 	protected void handleSave() {
 		saveSongWithoutChangingGUI();
 		handleSettingsSaveAndLock();
 		controller.saveAll();
 	}
-	
+
 	protected void handleSongNew() {
 		Song song = new Song(StringTools.createUUID());
 		song.setTitle("New Song");
@@ -1297,13 +1300,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		selectNewSongWithUUID = song.getUUID();
 		controller.getSongsController().updateSong(song);
 	}
-	
+
 	protected void handleSongDelete() {
 		if (selectedSong != null) {
 			controller.getSongsController().removeSong(selectedSong);
 		}
 	}
-	
+
 	protected void handleSongSelect() {
 		if (selectedSong != null) {
 			presentListModel.addSong(selectedSong);
@@ -1313,7 +1316,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			presentList.setSelectedIndex(presentModel.getSize() - 1);
 		}
 	}
-	
+
 	private void setDefaultDividerLocation() {
 		if (!splitPanePresentDividerLocationSet) {
 			int desiredMinimumWidth = panelSongList.getWidth() + selectedSongListButtons.getWidth();
@@ -1323,7 +1326,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			splitPanePresentDividerLocationSet = true;
 		}
 	}
-	
+
 	protected void handleAddImage() {
 		// select target
 		JFileChooser chooser = new JFileChooser();
@@ -1334,7 +1337,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		chooser.setMultiSelectionEnabled(true);
 		chooser.setApproveButtonText("add image(s)");
 		int result = chooser.showOpenDialog(MainWindow.this);
-		
+
 		if (result == JFileChooser.APPROVE_OPTION) {
 			try {
 				File[] selectedFiles = chooser.getSelectedFiles();
@@ -1350,7 +1353,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		}
 	}
-	
+
 	protected void handleSongUnselect() {
 		if (presentListSelected != null) {
 			// use index because there could be multiple instances of one song in the list
@@ -1358,18 +1361,18 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			presentList.clearSelection();
 		}
 	}
-	
+
 	protected void handleSongUnselectAll() {
 		presentListModel.clearSongs();
 		presentList.clearSelection();
 	}
-	
+
 	protected void handleSongUnselectAllAndBlankScreen() {
 		presentListModel.clearSongs();
 		presentList.clearSelection();
 		handleBlankScreen();
 	}
-	
+
 	protected void handleSongUp() {
 		if (presentListSelected != null) {
 			// use index because there could be multiple instances of one song in the list
@@ -1381,7 +1384,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			presentList.setSelectedIndex(newIndex);
 		}
 	}
-	
+
 	protected void handleSongDown() {
 		if (presentListSelected != null) {
 			// use index because there could be multiple instances of one song in the list
@@ -1393,7 +1396,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			presentList.setSelectedIndex(newIndex);
 		}
 	}
-	
+
 	protected void handleJumpToSelectedSong() {
 		if (presentListSelected != null) {
 			textFieldFilter.setText("");
@@ -1403,12 +1406,12 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		}
 	}
-	
+
 	protected void handleJumpToPresentedSong() {
 		Song currentlyPresentedSong = controller.getCurrentlyPresentedSong();
 		if (currentlyPresentedSong != null) {
 			List<Song> songs = presentListModel.getAllElements();
-			
+
 			// Search for new equal songs starting with last used song position:
 			int startIndex = presentList.getSelectedIndex() + 1;
 			for (int i = 0; i < songs.size(); i++) {
@@ -1421,14 +1424,14 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		}
 	}
-	
+
 	/**
 	 * A present function, which can be called by a remote controller.
 	 */
 	public void present(Song song) {
 		present(song, null);
 	}
-	
+
 	public void present(Song song, SongPresentationPosition presentationPosition) {
 		if (song == null) {
 			handleBlankScreen();
@@ -1436,7 +1439,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			presentSong(song, presentationPosition);
 		}
 	}
-	
+
 	/**
 	 * A update playlist function, which can be called by a remote controller.
 	 */
@@ -1452,7 +1455,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		}
 		setDefaultDividerLocation();
 	}
-	
+
 	/**
 	 * A setActiveLine function, which can be called by a remote controller.
 	 */
@@ -1465,11 +1468,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		});
 	}
-	
+
 	protected void handleSongPresent() {
 		presentSong(presentListSelected, null);
 	}
-	
+
 	/**
 	 * @param partToPresent
 	 *            index, includes title as index 0 if the title is displayed
@@ -1477,13 +1480,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 	protected void presentSong(Song song, SongPresentationPosition presentationPosition) {
 		// not in a "contentChange" block because else the sections wouldn't be displayed:
 		PresentCommandResult result = controller.present(new Presentable(song, null), presentationPosition);
-		
+
 		controller.contentChange(() -> {
 			controller.stopSlideShow();
 			if (result.wasSuccessful() && result.wasStateChanged()) {
 				btnJumpToPresented.setEnabled(true);
 				Boolean showTitle = settingsModel.get(SettingKey.SHOW_TITLE, Boolean.class);
-				
+
 				if (result != PresentCommandResult.ONLY_SCOLLED) {
 					clearSectionButtons();
 					if (controller.hasParts()) {
@@ -1497,7 +1500,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 						}
 					}
 				}
-				
+
 				if (controller.hasParts()) {
 					// mark active line
 					if (!listSectionButtons.isEmpty()) {
@@ -1507,7 +1510,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 						int activeLineIndex = presentationPosition != null && presentationPosition.getLineIndex() != null
 							? presentationPosition.getLineIndex()
 							: 0;
-						
+
 						for (int partIndex = 0; partIndex < listSectionButtons.size(); partIndex++) {
 							if (partIndex == activePartIndex) {
 								listSectionButtons.get(partIndex).setActiveLine(activeLineIndex);
@@ -1515,22 +1518,22 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 								listSectionButtons.get(partIndex).setInactive();
 							}
 						}
-						
+
 					}
 				}
-				
+
 				if (result != PresentCommandResult.ONLY_SCOLLED) {
 					// add empty component to consume any space that is left
 					// (so the parts appear at the top of the scrollpane view)
 					panelSectionButtons.add(new JLabel(""), panelSectionButtonsLastRowHints);
-					
+
 					panelSectionButtons.revalidate();
 					panelSectionButtons.repaint();
 				}
 			}
 		});
 	}
-	
+
 	protected void handleBlankScreen() {
 		controller.contentChange(() -> {
 			PresentCommandResult result = controller.present(BLANK_SCREEN, null);
@@ -1541,7 +1544,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		});
 	}
-	
+
 	protected void handleLogoPresent() {
 		controller.contentChange(() -> {
 			PresentCommandResult result = controller.present(new Presentable(null, controller.loadLogo()), null);
@@ -1552,7 +1555,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		});
 	}
-	
+
 	protected void handleSlideShowPresent() {
 		controller.contentChange(() -> {
 			controller.stopSlideShow();
@@ -1563,7 +1566,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		});
 	}
-	
+
 	protected void handleCalendarPresent() {
 		controller.contentChange(() -> {
 			controller.stopSlideShow();
@@ -1574,18 +1577,18 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		});
 	}
-	
+
 	private void clearSectionButtons() {
 		listSectionButtons.clear();
 		panelSectionButtons.removeAll();
 		panelSectionButtons.revalidate();
 		panelSectionButtons.repaint();
 	}
-	
+
 	private final void defineShortcuts() {
 		KeyboardFocusManager focusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		focusManager.addKeyEventDispatcher(keyboardShortcutManager);
-		
+
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_ESCAPE, Modifiers.NONE, () -> {
 			LOG.debug("escape action");
 			if (textFieldFilter.isFocusOwner()) {
@@ -1599,12 +1602,12 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				textFieldFilter.requestFocus();
 			}
 		}));
-		
+
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_S, Modifiers.CTRL, () -> {
 			LOG.debug("ctrl-s action");
 			handleSaveAll();
 		}));
-		
+
 		// TODO use single Shortcut (without ctrl), put an option in the global settings tab
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_P, Modifiers.CTRL, () -> {
 			LOG.debug("ctrl-p action");
@@ -1612,20 +1615,20 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				handleSongPresent();
 			}
 		}));
-		
+
 		// TODO use single Shortcut (without ctrl), put an option in the global settings tab
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_B, Modifiers.CTRL, () -> {
 			LOG.debug("ctrl-b action");
 			handleBlankScreen();
 		}));
-		
+
 		keyboardShortcutManager.add(new KeyboardShortcut(KeyEvent.VK_R, Modifiers.CTRL, () -> {
 			LOG.debug("ctrl-r action");
 			handleSaveAll();
 			Thread.startVirtualThread(controller::initRemoteController);
 		}));
 	}
-	
+
 	private void handleSaveAll() {
 		saveSongWithoutChangingGUI();
 		boolean success = controller.saveAll();
@@ -1634,7 +1637,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				+ FileAndDirectoryLocations.getLogDir());
 		}
 	}
-	
+
 	public void handleError(Throwable ex) {
 		LOG.error("handled exception", ex);
 		StringBuilder ret = new StringBuilder();
@@ -1644,11 +1647,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		buildStackTraceText(ex, ret);
 		showErrorDialog(ret.toString());
 	}
-	
+
 	public void showErrorDialog(String text) {
 		ErrorDialog.openDialog(this, text);
 	}
-	
+
 	private static void buildStackTraceText(Throwable ex, StringBuilder sb) {
 		sb.append(ex.getClass().getCanonicalName());
 		sb.append(": ");
@@ -1666,7 +1669,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			buildStackTraceText(ex.getCause(), sb);
 		}
 	}
-	
+
 	public MainWindow(MainController mainController, KeyboardShortcutManager keyboardShortcutManager,
 		IndexerService indexer, ExportService exportService) {
 		controller = mainController;
@@ -1677,7 +1680,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		setIconImages(getIconsFromResources(getClass()));
 		setTitle("Song Database");
 		defineShortcuts();
-		
+
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -1695,17 +1698,17 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		contentPane.setBorder(null);
 		setContentPane(contentPane);
 		contentPane.setLayout(new BorderLayout(0, 0));
-		
+
 		JSplitPane splitPane = new JSplitPane();
 		splitPane.setBorder(null);
 		contentPane.add(splitPane, BorderLayout.CENTER);
-		
+
 		// MARK Edit Panel
 		panelSongList = new JPanel();
 		panelSongList.setBorder(new EmptyBorder(5, 5, 5, 5));
 		splitPane.setLeftComponent(panelSongList);
 		panelSongList.setLayout(new BorderLayout(0, 0));
-		
+
 		JPanel panelFilter = new JPanel();
 		panelFilter.setBorder(null);
 		panelSongList.add(panelFilter, BorderLayout.NORTH);
@@ -1715,7 +1718,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gblPanelFilter.columnWeights = new double[] { 0.0, 1.0, 0.0, Double.MIN_VALUE };
 		gblPanelFilter.rowWeights = new double[] { 0.0, Double.MIN_VALUE };
 		panelFilter.setLayout(gblPanelFilter);
-		
+
 		JLabel lblFilter = new JLabel("Filter:");
 		GridBagConstraints gbcLblFilter = new GridBagConstraints();
 		gbcLblFilter.anchor = GridBagConstraints.WEST;
@@ -1723,7 +1726,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblFilter.gridx = 0;
 		gbcLblFilter.gridy = 0;
 		panelFilter.add(lblFilter, gbcLblFilter);
-		
+
 		textFieldFilter = new JTextField();
 		GridBagConstraints gbcTextFieldFilter = new GridBagConstraints();
 		gbcTextFieldFilter.fill = GridBagConstraints.HORIZONTAL;
@@ -1732,7 +1735,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcTextFieldFilter.gridy = 0;
 		panelFilter.add(textFieldFilter, gbcTextFieldFilter);
 		textFieldFilter.setColumns(10);
-		
+
 		btnClearFilter = new JButton("");
 		btnClearFilter.addActionListener(safeAction(e -> {
 			textFieldFilter.setText("");
@@ -1745,11 +1748,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnClearFilter.gridx = 2;
 		gbcBtnClearFilter.gridy = 0;
 		panelFilter.add(btnClearFilter, gbcBtnClearFilter);
-		
+
 		JScrollPane scrollPaneSongList = new JScrollPane();
 		scrollPaneSongList.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		panelSongList.add(scrollPaneSongList, BorderLayout.CENTER);
-		
+
 		songsList = new FixedWidthJList<>();
 		songsList.addMouseListener(new MouseAdapter() {
 			@Override
@@ -1776,7 +1779,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		scrollPaneSongList.setViewportView(songsList);
 		songCellRenderer = new SongCellRenderer(textFieldFilter);
 		songsList.setCellRenderer(songCellRenderer);
-		
+
 		JPanel panelSongListButtons = new JPanel();
 		panelSongList.add(panelSongListButtons, BorderLayout.SOUTH);
 		GridBagLayout gblPanelSongListButtons = new GridBagLayout();
@@ -1785,7 +1788,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gblPanelSongListButtons.columnWeights = new double[] { 0.0, 0.0, 0.0 };
 		gblPanelSongListButtons.rowWeights = new double[] { 0.0 };
 		panelSongListButtons.setLayout(gblPanelSongListButtons);
-		
+
 		btnNewSong = new JButton("New");
 		btnNewSong.addActionListener(safeAction(e -> handleSongNew()));
 		btnNewSong.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/newHighlighter.gif"));
@@ -1796,7 +1799,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnNewSong.gridx = 0;
 		gbcBtnNewSong.gridy = 0;
 		panelSongListButtons.add(btnNewSong, gbcBtnNewSong);
-		
+
 		btnDeleteSong = new JButton("Delete");
 		btnDeleteSong.addActionListener(safeAction(e -> handleSongDelete()));
 		btnDeleteSong.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/deleteHighlighter.gif"));
@@ -1807,7 +1810,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnDeleteSong.gridx = 1;
 		gbcBtnDeleteSong.gridy = 0;
 		panelSongListButtons.add(btnDeleteSong, gbcBtnDeleteSong);
-		
+
 		btnSelectSong = new JButton("Select");
 		btnSelectSong.addActionListener(safeAction(e -> handleSongSelect()));
 		btnSelectSong.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/month-up.png"));
@@ -1818,11 +1821,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnSelectSong.gridx = 2;
 		gbcBtnSelectSong.gridy = 0;
 		panelSongListButtons.add(btnSelectSong, gbcBtnSelectSong);
-		
+
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.setBorder(null);
 		splitPane.setRightComponent(tabbedPane);
-		
+
 		JPanel panelEdit = new JPanel();
 		panelEdit.setBorder(new EmptyBorder(5, 5, 5, 5));
 		tabbedPane.addTab("Edit Song", null, panelEdit, null);
@@ -1833,7 +1836,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gblPanelEdit.rowWeights = new double[] { 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
 			Double.MIN_VALUE };
 		panelEdit.setLayout(gblPanelEdit);
-		
+
 		JLabel lblLyricsAndChords = new JLabel("Lyrics and Chords");
 		GridBagConstraints gbcLblLyricsAndChords = new GridBagConstraints();
 		gbcLblLyricsAndChords.fill = GridBagConstraints.HORIZONTAL;
@@ -1842,7 +1845,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblLyricsAndChords.gridx = 0;
 		gbcLblLyricsAndChords.gridy = 0;
 		panelEdit.add(lblLyricsAndChords, gbcLblLyricsAndChords);
-		
+
 		JScrollPane scrollPaneLyrics = new JScrollPane();
 		GridBagConstraints gbcScrollPaneLyrics = new GridBagConstraints();
 		gbcScrollPaneLyrics.weighty = 7.0;
@@ -1852,13 +1855,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcScrollPaneLyrics.gridx = 0;
 		gbcScrollPaneLyrics.gridy = 1;
 		panelEdit.add(scrollPaneLyrics, gbcScrollPaneLyrics);
-		
+
 		editorLyrics = new JEditorPane();
 		editorLyrics
 			.setFont(new Font("Monospaced", editorLyrics.getFont().getStyle(), editorLyrics.getFont().getSize()));
 		editorLyrics.setBackground(Color.WHITE);
 		scrollPaneLyrics.setViewportView(editorLyrics);
-		
+
 		JLabel lblTitle = new JLabel("Title");
 		GridBagConstraints gbcLblTitle = new GridBagConstraints();
 		gbcLblTitle.fill = GridBagConstraints.HORIZONTAL;
@@ -1866,7 +1869,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblTitle.gridx = 0;
 		gbcLblTitle.gridy = 2;
 		panelEdit.add(lblTitle, gbcLblTitle);
-		
+
 		JLabel lblComposer = new JLabel("Composer (Music)");
 		GridBagConstraints gbcLblComposer = new GridBagConstraints();
 		gbcLblComposer.fill = GridBagConstraints.HORIZONTAL;
@@ -1874,7 +1877,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblComposer.gridx = 1;
 		gbcLblComposer.gridy = 2;
 		panelEdit.add(lblComposer, gbcLblComposer);
-		
+
 		JLabel lblPublisher = new JLabel("Publisher");
 		GridBagConstraints gbcLblPublisher = new GridBagConstraints();
 		gbcLblPublisher.fill = GridBagConstraints.HORIZONTAL;
@@ -1882,7 +1885,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblPublisher.gridx = 2;
 		gbcLblPublisher.gridy = 2;
 		panelEdit.add(lblPublisher, gbcLblPublisher);
-		
+
 		textFieldTitle = new JTextField();
 		GridBagConstraints gbcTextFieldTitle = new GridBagConstraints();
 		gbcTextFieldTitle.insets = new Insets(0, 0, 5, 5);
@@ -1891,7 +1894,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcTextFieldTitle.gridy = 3;
 		panelEdit.add(textFieldTitle, gbcTextFieldTitle);
 		textFieldTitle.setColumns(10);
-		
+
 		textFieldComposer = new JTextField();
 		GridBagConstraints gbcTextFieldComposer = new GridBagConstraints();
 		gbcTextFieldComposer.insets = new Insets(0, 0, 5, 5);
@@ -1900,7 +1903,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcTextFieldComposer.gridy = 3;
 		panelEdit.add(textFieldComposer, gbcTextFieldComposer);
 		textFieldComposer.setColumns(10);
-		
+
 		textFieldPublisher = new JTextField();
 		GridBagConstraints gbcTextFieldPublisher = new GridBagConstraints();
 		gbcTextFieldPublisher.insets = new Insets(0, 0, 5, 0);
@@ -1909,7 +1912,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcTextFieldPublisher.gridy = 3;
 		panelEdit.add(textFieldPublisher, gbcTextFieldPublisher);
 		textFieldPublisher.setColumns(10);
-		
+
 		JLabel lblLanguage = new JLabel("Language");
 		GridBagConstraints gbcLblLanguage = new GridBagConstraints();
 		gbcLblLanguage.fill = GridBagConstraints.HORIZONTAL;
@@ -1917,7 +1920,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblLanguage.gridx = 0;
 		gbcLblLanguage.gridy = 4;
 		panelEdit.add(lblLanguage, gbcLblLanguage);
-		
+
 		JLabel lblAuthorText = new JLabel("Author (Text)");
 		GridBagConstraints gbcLblAuthorText = new GridBagConstraints();
 		gbcLblAuthorText.fill = GridBagConstraints.HORIZONTAL;
@@ -1925,7 +1928,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblAuthorText.gridx = 1;
 		gbcLblAuthorText.gridy = 4;
 		panelEdit.add(lblAuthorText, gbcLblAuthorText);
-		
+
 		JLabel lblAdditionalCopyrightNotes = new JLabel("Additional Copyright Notes");
 		GridBagConstraints gbcLblAdditionalCopyrightNotes = new GridBagConstraints();
 		gbcLblAdditionalCopyrightNotes.fill = GridBagConstraints.HORIZONTAL;
@@ -1933,7 +1936,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblAdditionalCopyrightNotes.gridx = 2;
 		gbcLblAdditionalCopyrightNotes.gridy = 4;
 		panelEdit.add(lblAdditionalCopyrightNotes, gbcLblAdditionalCopyrightNotes);
-		
+
 		comboBoxLanguage = new JComboBox<>(new TransparentMutableComboBoxModel<>(availableLanguages));
 		comboBoxLanguage.setEditable(true);
 		GridBagConstraints gbcComboBoxLanguage = new GridBagConstraints();
@@ -1942,7 +1945,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcComboBoxLanguage.gridx = 0;
 		gbcComboBoxLanguage.gridy = 5;
 		panelEdit.add(comboBoxLanguage, gbcComboBoxLanguage);
-		
+
 		textFieldAuthorText = new JTextField();
 		GridBagConstraints gbcTextFieldAuthorText = new GridBagConstraints();
 		gbcTextFieldAuthorText.insets = new Insets(0, 0, 5, 5);
@@ -1951,7 +1954,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcTextFieldAuthorText.gridy = 5;
 		panelEdit.add(textFieldAuthorText, gbcTextFieldAuthorText);
 		textFieldAuthorText.setColumns(10);
-		
+
 		textFieldAdditionalCopyrightNotes = new JTextField();
 		GridBagConstraints gbcTextFieldAdditionalCopyrightNotes = new GridBagConstraints();
 		gbcTextFieldAdditionalCopyrightNotes.insets = new Insets(0, 0, 5, 0);
@@ -1960,7 +1963,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcTextFieldAdditionalCopyrightNotes.gridy = 5;
 		panelEdit.add(textFieldAdditionalCopyrightNotes, gbcTextFieldAdditionalCopyrightNotes);
 		textFieldAdditionalCopyrightNotes.setColumns(10);
-		
+
 		JLabel lblTonality = new JLabel("Tonality");
 		GridBagConstraints gbcLblTonality = new GridBagConstraints();
 		gbcLblTonality.fill = GridBagConstraints.HORIZONTAL;
@@ -1968,7 +1971,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblTonality.gridx = 0;
 		gbcLblTonality.gridy = 6;
 		panelEdit.add(lblTonality, gbcLblTonality);
-		
+
 		JLabel lblAuthorTranslation = new JLabel("Author (Translation)");
 		GridBagConstraints gbcLblAuthorTranslation = new GridBagConstraints();
 		gbcLblAuthorTranslation.fill = GridBagConstraints.HORIZONTAL;
@@ -1976,7 +1979,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblAuthorTranslation.gridx = 1;
 		gbcLblAuthorTranslation.gridy = 6;
 		panelEdit.add(lblAuthorTranslation, gbcLblAuthorTranslation);
-		
+
 		JLabel lblTempo = new JLabel("Tempo");
 		GridBagConstraints gbcLblTempo = new GridBagConstraints();
 		gbcLblTempo.fill = GridBagConstraints.HORIZONTAL;
@@ -1984,7 +1987,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblTempo.gridx = 2;
 		gbcLblTempo.gridy = 6;
 		panelEdit.add(lblTempo, gbcLblTempo);
-		
+
 		textFieldTonality = new JTextField();
 		GridBagConstraints gbcTextFieldTonality = new GridBagConstraints();
 		gbcTextFieldTonality.insets = new Insets(0, 0, 5, 5);
@@ -1993,7 +1996,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcTextFieldTonality.gridy = 7;
 		panelEdit.add(textFieldTonality, gbcTextFieldTonality);
 		textFieldTonality.setColumns(10);
-		
+
 		textFieldAuthorTranslation = new JTextField();
 		GridBagConstraints gbcTextFieldAuthorTranslation = new GridBagConstraints();
 		gbcTextFieldAuthorTranslation.insets = new Insets(0, 0, 5, 5);
@@ -2002,7 +2005,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcTextFieldAuthorTranslation.gridy = 7;
 		panelEdit.add(textFieldAuthorTranslation, gbcTextFieldAuthorTranslation);
 		textFieldAuthorTranslation.setColumns(10);
-		
+
 		textFieldTempo = new JTextField();
 		GridBagConstraints gbcTextFieldSongNotes = new GridBagConstraints();
 		gbcTextFieldSongNotes.insets = new Insets(0, 0, 5, 0);
@@ -2011,7 +2014,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcTextFieldSongNotes.gridy = 7;
 		panelEdit.add(textFieldTempo, gbcTextFieldSongNotes);
 		textFieldTempo.setColumns(10);
-		
+
 		JLabel lblChordSequence = new JLabel("Chord Sequence");
 		GridBagConstraints gbcLblChordSequence = new GridBagConstraints();
 		gbcLblChordSequence.fill = GridBagConstraints.HORIZONTAL;
@@ -2020,7 +2023,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblChordSequence.gridx = 0;
 		gbcLblChordSequence.gridy = 8;
 		panelEdit.add(lblChordSequence, gbcLblChordSequence);
-		
+
 		JScrollPane scrollPaneChordSequence = new JScrollPane();
 		GridBagConstraints gbcScrollPaneChordSequence = new GridBagConstraints();
 		gbcScrollPaneChordSequence.gridheight = 2;
@@ -2031,13 +2034,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcScrollPaneChordSequence.gridx = 0;
 		gbcScrollPaneChordSequence.gridy = 9;
 		panelEdit.add(scrollPaneChordSequence, gbcScrollPaneChordSequence);
-		
+
 		editorChordSequence = new JEditorPane();
 		editorChordSequence.setFont(new Font("Monospaced", editorChordSequence.getFont().getStyle(),
 			editorChordSequence.getFont().getSize()));
 		scrollPaneChordSequence.setViewportView(editorChordSequence);
 		editorChordSequence.setBackground(Color.WHITE);
-		
+
 		JLabel lblDrumNotes = new JLabel("Drum notes");
 		GridBagConstraints gbcLblDrumNotes = new GridBagConstraints();
 		gbcLblDrumNotes.fill = GridBagConstraints.HORIZONTAL;
@@ -2046,7 +2049,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblDrumNotes.gridx = 1;
 		gbcLblDrumNotes.gridy = 8;
 		panelEdit.add(lblDrumNotes, gbcLblDrumNotes);
-		
+
 		JScrollPane scrollPaneDrumNotes = new JScrollPane();
 		GridBagConstraints gbcScrollPaneDrumNotes = new GridBagConstraints();
 		gbcScrollPaneDrumNotes.gridheight = 2;
@@ -2057,13 +2060,13 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcScrollPaneDrumNotes.gridx = 1;
 		gbcScrollPaneDrumNotes.gridy = 9;
 		panelEdit.add(scrollPaneDrumNotes, gbcScrollPaneDrumNotes);
-		
+
 		editorDrumNotes = new JEditorPane();
 		editorDrumNotes.setFont(new Font("Monospaced", editorDrumNotes.getFont().getStyle(),
 			editorDrumNotes.getFont().getSize()));
 		scrollPaneDrumNotes.setViewportView(editorDrumNotes);
 		editorDrumNotes.setBackground(Color.WHITE);
-		
+
 		JLabel lblSongNotes = new JLabel("Song Notes (not shown in presentation)");
 		GridBagConstraints gbcLblSongNotes = new GridBagConstraints();
 		gbcLblSongNotes.fill = GridBagConstraints.HORIZONTAL;
@@ -2072,7 +2075,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblSongNotes.gridx = 2;
 		gbcLblSongNotes.gridy = 8;
 		panelEdit.add(lblSongNotes, gbcLblSongNotes);
-		
+
 		JScrollPane scrollPaneSongNotes = new JScrollPane();
 		GridBagConstraints gbcScrollPaneSongNotes = new GridBagConstraints();
 		gbcScrollPaneSongNotes.gridheight = 2;
@@ -2083,11 +2086,11 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcScrollPaneSongNotes.gridx = 2;
 		gbcScrollPaneSongNotes.gridy = 9;
 		panelEdit.add(scrollPaneSongNotes, gbcScrollPaneSongNotes);
-		
+
 		editorSongNotes = new JEditorPane();
 		scrollPaneSongNotes.setViewportView(editorSongNotes);
 		editorSongNotes.setBackground(Color.WHITE);
-		
+
 		for (JTextComponent v : new JTextComponent[] {
 			textFieldTonality,
 			textFieldAdditionalCopyrightNotes,
@@ -2114,27 +2117,27 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				}
 			});
 		}
-		
+
 		// MARK Present Panel
 		JPanel panelPresent = new JPanel();
 		tabbedPane.addTab("Present Songs", null, panelPresent, null);
 		panelPresent.setLayout(new BorderLayout(0, 0));
-		
+
 		splitPanePresent = new JSplitPane();
 		splitPanePresent.setBorder(null);
 		panelPresent.add(splitPanePresent, BorderLayout.CENTER);
-		
+
 		// left part, filterable list of all songs
 		JPanel panelPresentLeft = new JPanel();
 		panelPresentLeft.setBorder(new EmptyBorder(5, 5, 5, 5));
 		splitPanePresent.setLeftComponent(panelPresentLeft);
 		panelPresentLeft.setLayout(new BorderLayout(0, 0));
 		splitPanePresent.setDividerLocation(-1);
-		
+
 		JScrollPane scrollPanePresentSongList = new JScrollPane();
 		scrollPanePresentSongList.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		panelPresentLeft.add(scrollPanePresentSongList, BorderLayout.CENTER);
-		
+
 		presentList = new FixedWidthJList<>();
 		presentList.addListSelectionListener(e -> {
 			try {
@@ -2203,7 +2206,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		});
 		presentList.setCellRenderer(songCellRenderer);
 		scrollPanePresentSongList.setViewportView(presentList);
-		
+
 		selectedSongListButtons = new JPanel();
 		panelPresentLeft.add(selectedSongListButtons, BorderLayout.EAST);
 		GridBagLayout gblPanelSelectedSongListButtons = new GridBagLayout();
@@ -2212,7 +2215,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gblPanelSelectedSongListButtons.columnWeights = new double[] { 0.0 };
 		gblPanelSelectedSongListButtons.rowWeights = new double[] { 1.0, 0.0, 0.0, 0.0, 1.0 };
 		selectedSongListButtons.setLayout(gblPanelSelectedSongListButtons);
-		
+
 		btnAddImage = new JButton("");
 		btnAddImage.addActionListener(safeAction(e -> handleAddImage()));
 		btnAddImage.setToolTipText("Add image(s)");
@@ -2224,7 +2227,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_button.gridx = 0;
 		gbc_button.gridy = 0;
 		selectedSongListButtons.add(btnAddImage, gbc_button);
-		
+
 		btnUp = new JButton("");
 		btnUp.addActionListener(safeAction(e -> handleSongUp()));
 		btnUp.setToolTipText("Up");
@@ -2236,7 +2239,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnUp.gridx = 0;
 		gbcBtnUp.gridy = 1;
 		selectedSongListButtons.add(btnUp, gbcBtnUp);
-		
+
 		btnUnselect = new JButton("");
 		btnUnselect.setToolTipText("Unselect");
 		btnUnselect.addActionListener(safeAction(e -> handleSongUnselect()));
@@ -2248,7 +2251,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnUnselect.gridx = 0;
 		gbcBtnUnselect.gridy = 2;
 		selectedSongListButtons.add(btnUnselect, gbcBtnUnselect);
-		
+
 		btnDown = new JButton("");
 		btnDown.addActionListener(safeAction(e -> handleSongDown()));
 		btnDown.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/sortDown.png"));
@@ -2260,7 +2263,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnDown.gridx = 0;
 		gbcBtnDown.gridy = 3;
 		selectedSongListButtons.add(btnDown, gbcBtnDown);
-		
+
 		btnUnselectAll = new JButton("");
 		btnUnselectAll.setEnabled(false);
 		btnUnselectAll.setVerticalAlignment(SwingConstants.BOTTOM);
@@ -2274,7 +2277,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnUnselectAll.gridx = 0;
 		gbcBtnUnselectAll.gridy = 4;
 		selectedSongListButtons.add(btnUnselectAll, gbcBtnUnselectAll);
-		
+
 		btnUnselectAllAndBlankScreen = new JButton("");
 		btnUnselectAllAndBlankScreen.setEnabled(false);
 		btnUnselectAllAndBlankScreen.setVerticalAlignment(SwingConstants.BOTTOM);
@@ -2287,30 +2290,30 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnUnselectAllAndBlankScreen.gridx = 0;
 		gbcBtnUnselectAllAndBlankScreen.gridy = 5;
 		selectedSongListButtons.add(btnUnselectAllAndBlankScreen, gbcBtnUnselectAllAndBlankScreen);
-		
+
 		btnJumpToSelected = new JButton("Jump to selected song");
 		btnJumpToSelected.addActionListener(safeAction(e -> handleJumpToSelectedSong()));
 		panelPresentLeft.add(btnJumpToSelected, BorderLayout.SOUTH);
-		
+
 		// right part, controls and active song
 		JPanel panelPresentRight = new JPanel();
 		panelPresentRight.setBorder(new EmptyBorder(5, 5, 5, 5));
 		splitPanePresent.setRightComponent(panelPresentRight);
 		panelPresentRight.setLayout(new BorderLayout(0, 0));
-		
+
 		panelPresentationButtons = new JPanel();
 		panelPresentRight.add(panelPresentationButtons, BorderLayout.CENTER);
-		
+
 		GridBagLayout gblPanelPresentationButtons = new GridBagLayout();
 		gblPanelPresentationButtons.columnWidths = new int[] { 0, 0, 0, 0, 0 };
 		gblPanelPresentationButtons.columnWeights = new double[] { 1, 0.5, 0.5, 0.5, 0.5 };
 		gblPanelPresentationButtons.rowWeights = new double[] { 0, 0, 1 };
 		gblPanelPresentationButtons.rowHeights = new int[] { 200, 0, 0 };
 		panelPresentationButtons.setLayout(gblPanelPresentationButtons);
-		
+
 		JPanel panelPresentSelectedSong = new JPanel();
 		panelPresentSelectedSong.setLayout(new BorderLayout());
-		
+
 		btnPresentSelectedSong = new JButton("Present selected song");
 		btnPresentSelectedSong.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/play.png"));
 		btnPresentSelectedSong.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -2318,30 +2321,30 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		btnPresentSelectedSong.addActionListener(safeAction(e -> handleSongPresent()));
 		btnPresentSelectedSong.setPreferredSize(new Dimension(64, 64));
 		panelPresentSelectedSong.add(btnPresentSelectedSong, BorderLayout.CENTER);
-		
+
 		menuPresentSelectedSong = new JComboBox<>();
 		menuPresentSelectedSong.setRenderer(new TextLineCellRenderer(btnPresentSelectedSong));
 		menuPresentSelectedSong.setMaximumRowCount(50);
 		menuPresentSelectedSong.addActionListener(actionEvent -> {
 			NamedSongPresentationPosition nspp = (NamedSongPresentationPosition) menuPresentSelectedSong.getSelectedItem();
-			
+
 			if (nspp != null && nspp.getPartIndex() != null) {
 				present(presentListSelected, nspp);
 			}
-			
+
 			if (menuPresentSelectedSong.getModel().getSize() > 0) {
 				menuPresentSelectedSong.setSelectedIndex(0);
 			}
 		});
 		panelPresentSelectedSong.add(menuPresentSelectedSong, BorderLayout.SOUTH);
-		
+
 		GridBagConstraints gbcPanelPresentSelectedSong = new GridBagConstraints();
 		gbcPanelPresentSelectedSong.fill = GridBagConstraints.BOTH;
 		gbcPanelPresentSelectedSong.insets = new Insets(10, 0, 15, 5);
 		gbcPanelPresentSelectedSong.gridx = 0;
 		gbcPanelPresentSelectedSong.gridy = 0;
 		panelPresentationButtons.add(panelPresentSelectedSong, gbcPanelPresentSelectedSong);
-		
+
 		btnShowBlankScreen = new JButton("Blank screen");
 		btnShowBlankScreen.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/stop.png"));
 		btnShowBlankScreen.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -2354,7 +2357,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnShowBlankScreen.gridy = 0;
 		btnShowBlankScreen.setPreferredSize(new Dimension(64, 64));
 		panelPresentationButtons.add(btnShowBlankScreen, gbcBtnShowBlankScreen);
-		
+
 		btnShowLogo = new JButton("Show logo");
 		btnShowLogo.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/picture.png"));
 		btnShowLogo.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -2367,7 +2370,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnShowLogo.gridy = 0;
 		btnShowLogo.setPreferredSize(new Dimension(64, 64));
 		panelPresentationButtons.add(btnShowLogo, gbcBtnShowLogo);
-		
+
 		btnSlideshow = new JButton("Slide Show");
 		btnSlideshow.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/movie.png"));
 		btnSlideshow.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -2380,7 +2383,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnSlideshow.gridy = 0;
 		btnSlideshow.setPreferredSize(new Dimension(64, 64));
 		panelPresentationButtons.add(btnSlideshow, gbcBtnSlideshow);
-		
+
 		btnCalendar = new JButton("Calendar");
 		btnCalendar.setIcon(ResourceTools.getIcon(getClass(), "/org/zephyrsoft/sdb2/calendar.png"));
 		btnCalendar.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -2393,7 +2396,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnCalendar.gridy = 0;
 		btnCalendar.setPreferredSize(new Dimension(64, 64));
 		panelPresentationButtons.add(btnCalendar, gbcBtnCalendar);
-		
+
 		JLabel lblSections = new JLabel("Sections:");
 		GridBagConstraints gbcLblSections = new GridBagConstraints();
 		gbcLblSections.fill = GridBagConstraints.HORIZONTAL;
@@ -2401,7 +2404,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblSections.gridx = 0;
 		gbcLblSections.gridy = 1;
 		panelPresentationButtons.add(lblSections, gbcLblSections);
-		
+
 		scrollPaneSectionButtons = new JScrollPane();
 		GridBagConstraints gbcScrollPaneSectionButtons = new GridBagConstraints();
 		gbcScrollPaneSectionButtons.insets = new Insets(0, 0, 0, 5);
@@ -2410,7 +2413,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcScrollPaneSectionButtons.gridx = 0;
 		gbcScrollPaneSectionButtons.gridy = 2;
 		panelPresentationButtons.add(scrollPaneSectionButtons, gbcScrollPaneSectionButtons);
-		
+
 		panelSectionButtons = new JPanel();
 		scrollPaneSectionButtons.setViewportView(panelSectionButtons);
 		scrollPaneSectionButtons.getVerticalScrollBar().setUnitIncrement(30);
@@ -2427,23 +2430,23 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		panelSectionButtonsLastRowHints.weighty = 1.0;
 		panelSectionButtonsLastRowHints.fill = GridBagConstraints.BOTH;
 		panelSectionButtons.setLayout(new GridBagLayout());
-		
+
 		btnJumpToPresented = new JButton("Jump to presented song");
 		btnJumpToPresented.addActionListener(safeAction(e -> handleJumpToPresentedSong()));
 		panelPresentRight.add(btnJumpToPresented, BorderLayout.SOUTH);
-		
+
 		// MARK Export/Import Panel
 		JPanel panelImportExportStatistics = new JPanel();
 		panelImportExportStatistics.setBorder(new EmptyBorder(5, 5, 5, 5));
 		tabbedPane.addTab("Import / Export / Statistics", null, panelImportExportStatistics, null);
 		GridBagLayout gblPanelImportExportStatistics = new GridBagLayout();
 		gblPanelImportExportStatistics.columnWidths = new int[] { 0, 70, 0, 0 };
-		gblPanelImportExportStatistics.rowHeights = new int[] { 30, 30, 30, 30, 30, 30, 0, 30, 30, 30, 30, 30, 30, 30, 30 };
+		gblPanelImportExportStatistics.rowHeights = new int[] { 30, 30, 30, 30, 0, 30, 30, 0, 30, 30, 30, 30, 30, 30, 30, 30 };
 		gblPanelImportExportStatistics.columnWeights = new double[] { 1.0, 0.0, 1.0, Double.MIN_VALUE };
-		gblPanelImportExportStatistics.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		gblPanelImportExportStatistics.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 			Double.MIN_VALUE };
 		panelImportExportStatistics.setLayout(gblPanelImportExportStatistics);
-		
+
 		JLabel lblExportToPDF = new JLabel("Songs as PDF");
 		GridBagConstraints gbc_lblExportToPDF = new GridBagConstraints();
 		gbc_lblExportToPDF.fill = GridBagConstraints.HORIZONTAL;
@@ -2453,7 +2456,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblExportToPDF.gridx = 0;
 		gbc_lblExportToPDF.gridy = 0;
 		panelImportExportStatistics.add(lblExportToPDF, gbc_lblExportToPDF);
-		
+
 		chckbxWithTranslation = new JCheckBox("with translation");
 		GridBagConstraints gbc_chckbxWithTranslation = new GridBagConstraints();
 		gbc_chckbxWithTranslation.anchor = GridBagConstraints.NORTHWEST;
@@ -2461,7 +2464,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_chckbxWithTranslation.gridx = 0;
 		gbc_chckbxWithTranslation.gridy = 1;
 		panelImportExportStatistics.add(chckbxWithTranslation, gbc_chckbxWithTranslation);
-		
+
 		chckbxWithChords = new JCheckBox("with chords");
 		GridBagConstraints gbc_chckbxWithChords = new GridBagConstraints();
 		gbc_chckbxWithChords.anchor = GridBagConstraints.NORTHWEST;
@@ -2469,25 +2472,44 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_chckbxWithChords.gridx = 0;
 		gbc_chckbxWithChords.gridy = 2;
 		panelImportExportStatistics.add(chckbxWithChords, gbc_chckbxWithChords);
-		
-		btnExportPdfSelected = new JButton("Export selected song");
-		btnExportPdfSelected.addActionListener(safeAction(e -> handleExport(Arrays.asList(selectedSong))));
-		
+
+		chckbxOnlyChordSequence = new JCheckBox("only export chord sequence, no lyrics");
+        chckbxOnlyChordSequence.addActionListener(safeAction(e -> {
+			if (chckbxOnlyChordSequence.isSelected()) {
+				chckbxWithTranslation.setSelected(false);
+				chckbxWithTranslation.setEnabled(false);
+				chckbxWithChords.setSelected(true);
+				chckbxWithChords.setEnabled(false);
+			} else {
+				chckbxWithTranslation.setEnabled(true);
+				chckbxWithChords.setEnabled(true);
+			}
+        }));
+		GridBagConstraints gbc_chckbxOnlyChordSequence = new GridBagConstraints();
+		gbc_chckbxOnlyChordSequence.anchor = GridBagConstraints.NORTHWEST;
+		gbc_chckbxOnlyChordSequence.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxOnlyChordSequence.gridx = 0;
+		gbc_chckbxOnlyChordSequence.gridy = 3;
+		panelImportExportStatistics.add(chckbxOnlyChordSequence, gbc_chckbxOnlyChordSequence);
+
 		chckbxOnlyExportSongs = new JCheckBox("only export songs which have chords");
 		GridBagConstraints gbc_chckbxOnlyExportSongs = new GridBagConstraints();
 		gbc_chckbxOnlyExportSongs.anchor = GridBagConstraints.NORTHWEST;
 		gbc_chckbxOnlyExportSongs.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxOnlyExportSongs.gridx = 0;
-		gbc_chckbxOnlyExportSongs.gridy = 3;
+		gbc_chckbxOnlyExportSongs.gridy = 4;
 		panelImportExportStatistics.add(chckbxOnlyExportSongs, gbc_chckbxOnlyExportSongs);
+
+        btnExportPdfSelected = new JButton("Export selected song");
+        btnExportPdfSelected.addActionListener(safeAction(e -> handleExport(Arrays.asList(selectedSong))));
 		GridBagConstraints gbc_btnExportPdfSelected = new GridBagConstraints();
 		gbc_btnExportPdfSelected.anchor = GridBagConstraints.NORTH;
 		gbc_btnExportPdfSelected.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnExportPdfSelected.insets = new Insets(0, 0, 5, 5);
 		gbc_btnExportPdfSelected.gridx = 0;
-		gbc_btnExportPdfSelected.gridy = 4;
+		gbc_btnExportPdfSelected.gridy = 5;
 		panelImportExportStatistics.add(btnExportPdfSelected, gbc_btnExportPdfSelected);
-		
+
 		btnExportStatisticsAll = new JButton("Export statistics");
 		btnExportStatisticsAll.addActionListener(safeAction(e -> {
 			// select target
@@ -2499,7 +2521,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			chooser.setApproveButtonText("Export");
 			chooser.setSelectedFile(new File("song-statistics.xls"));
 			int result = chooser.showOpenDialog(MainWindow.this);
-			
+
 			if (result == JFileChooser.APPROVE_OPTION) {
 				File target = chooser.getSelectedFile();
 				// export
@@ -2510,25 +2532,25 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 				}
 			}
 		}));
-		
+
 		btnExportPdfAll = new JButton("Export all songs");
 		btnExportPdfAll.addActionListener(safeAction(e -> handleExport(songsModel.getSongs())));
 		GridBagConstraints gbc_btnExportPdfAll = new GridBagConstraints();
 		gbc_btnExportPdfAll.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnExportPdfAll.insets = new Insets(0, 0, 5, 5);
 		gbc_btnExportPdfAll.gridx = 0;
-		gbc_btnExportPdfAll.gridy = 6;
+		gbc_btnExportPdfAll.gridy = 7;
 		panelImportExportStatistics.add(btnExportPdfAll, gbc_btnExportPdfAll);
-		
+
 		btnExportPdfPresentList = new JButton("Export songs in presentation list");
 		btnExportPdfPresentList.addActionListener(safeAction(e -> handleExport(presentListModel.getAllElements())));
 		GridBagConstraints gbc_btnExportPdfPresentList = new GridBagConstraints();
 		gbc_btnExportPdfPresentList.fill = GridBagConstraints.HORIZONTAL;
 		gbc_btnExportPdfPresentList.insets = new Insets(0, 0, 5, 5);
 		gbc_btnExportPdfPresentList.gridx = 0;
-		gbc_btnExportPdfPresentList.gridy = 5;
+		gbc_btnExportPdfPresentList.gridy = 6;
 		panelImportExportStatistics.add(btnExportPdfPresentList, gbc_btnExportPdfPresentList);
-		
+
 		labelExportStatisctics = new JLabel("Statistics");
 		GridBagConstraints gbc_labelExportStatisctics = new GridBagConstraints();
 		gbc_labelExportStatisctics.anchor = GridBagConstraints.SOUTH;
@@ -2536,15 +2558,15 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_labelExportStatisctics.fill = GridBagConstraints.HORIZONTAL;
 		gbc_labelExportStatisctics.insets = new Insets(0, 0, 5, 0);
 		gbc_labelExportStatisctics.gridx = 0;
-		gbc_labelExportStatisctics.gridy = 8;
+		gbc_labelExportStatisctics.gridy = 9;
 		panelImportExportStatistics.add(labelExportStatisctics, gbc_labelExportStatisctics);
 		GridBagConstraints gbcBtnExportStatisticsAll = new GridBagConstraints();
 		gbcBtnExportStatisticsAll.fill = GridBagConstraints.HORIZONTAL;
 		gbcBtnExportStatisticsAll.insets = new Insets(0, 0, 5, 5);
 		gbcBtnExportStatisticsAll.gridx = 0;
-		gbcBtnExportStatisticsAll.gridy = 9;
+		gbcBtnExportStatisticsAll.gridy = 10;
 		panelImportExportStatistics.add(btnExportStatisticsAll, gbcBtnExportStatisticsAll);
-		
+
 		// TODO comment in again when there are importers
 		// JLabel lblImportingSongs = new JLabel("Importing Songs");
 		// GridBagConstraints gbcLblImportingSongs = new GridBagConstraints();
@@ -2555,7 +2577,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		// gbcLblImportingSongs.gridx = 0;
 		// gbcLblImportingSongs.gridy = 8;
 		// panelImportExportStatistics.add(lblImportingSongs, gbcLblImportingSongs);
-		
+
 		// TODO handle importers dynamically, load every implementation of "Importer" as button (=> ServiceLoader?)
 		// btnImportFromEasiSlides = new JButton("Import from EasiSlides 4.0");
 		// btnImportFromEasiSlides.addActionListener(safeAction(e -> handleImportFromEasiSlides()));
@@ -2565,7 +2587,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		// gbcBtnImportFromEasiSlides.gridx = 0;
 		// gbcBtnImportFromEasiSlides.gridy = 9;
 		// panelImportExportStatistics.add(btnImportFromEasiSlides, gbcBtnImportFromEasiSlides);
-		
+
 		JLabel lblProgramVersionTitle = new JLabel("Program Version");
 		lblProgramVersionTitle.setFont(new Font("DejaVu Sans", Font.ITALIC, 12));
 		GridBagConstraints gbcLblProgramVersionTitle = new GridBagConstraints();
@@ -2573,9 +2595,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblProgramVersionTitle.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblProgramVersionTitle.insets = new Insets(0, 0, 5, 0);
 		gbcLblProgramVersionTitle.gridx = 0;
-		gbcLblProgramVersionTitle.gridy = 11;
+		gbcLblProgramVersionTitle.gridy = 12;
 		panelImportExportStatistics.add(lblProgramVersionTitle, gbcLblProgramVersionTitle);
-		
+
 		lblProgramVersion = new JLabel("<PROGRAM VERSION>");
 		lblProgramVersion.setBorder(new EmptyBorder(0, 0, 0, 0));
 		lblProgramVersion.setFont(new Font("DejaVu Sans", Font.ITALIC, 12));
@@ -2584,9 +2606,9 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblProgramVersion.fill = GridBagConstraints.HORIZONTAL;
 		gbcLblProgramVersion.gridwidth = 3;
 		gbcLblProgramVersion.gridx = 0;
-		gbcLblProgramVersion.gridy = 12;
+		gbcLblProgramVersion.gridy = 13;
 		panelImportExportStatistics.add(lblProgramVersion, gbcLblProgramVersion);
-		
+
 		lblGitCommitHash = new JLabel(" ");
 		lblGitCommitHash.setBorder(new EmptyBorder(0, 0, 0, 0));
 		lblGitCommitHash.setFont(new Font("DejaVu Sans", Font.ITALIC, 12));
@@ -2594,19 +2616,19 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblGitCommitHash.gridwidth = 3;
 		gbc_lblGitCommitHash.fill = GridBagConstraints.HORIZONTAL;
 		gbc_lblGitCommitHash.gridx = 0;
-		gbc_lblGitCommitHash.gridy = 13;
+		gbc_lblGitCommitHash.gridy = 14;
 		panelImportExportStatistics.add(lblGitCommitHash, gbc_lblGitCommitHash);
-		
+
 		// MARK Settings Panel
 		JPanel panelSettings = new JPanel();
 		panelSettings.setBorder(null);
 		tabbedPane.addTab("Global Settings", null, panelSettings, null);
 		panelSettings.setLayout(new BorderLayout(0, 0));
-		
+
 		JScrollPane scrollPaneSettings = new JScrollPane();
 		scrollPaneSettings.setBorder(null);
 		panelSettings.add(scrollPaneSettings);
-		
+
 		JPanel panel = new JPanel();
 		panel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		scrollPaneSettings.setViewportBorder(null);
@@ -2618,7 +2640,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gblPanel.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 			0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 		panel.setLayout(gblPanel);
-		
+
 		btnUnlock = new JButton("Unlock");
 		btnUnlock.addActionListener(safeAction(e -> handleSettingsUnlock()));
 		GridBagConstraints gbcBtnUnlock = new GridBagConstraints();
@@ -2628,7 +2650,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnUnlock.gridx = 1;
 		gbcBtnUnlock.gridy = 1;
 		panel.add(btnUnlock, gbcBtnUnlock);
-		
+
 		JLabel lblTitleFont = new JLabel("Title font");
 		GridBagConstraints gbcLblTitleFont = new GridBagConstraints();
 		gbcLblTitleFont.anchor = GridBagConstraints.EAST;
@@ -2636,7 +2658,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblTitleFont.gridx = 1;
 		gbcLblTitleFont.gridy = 2;
 		panel.add(lblTitleFont, gbcLblTitleFont);
-		
+
 		btnSelectTitleFont1 = new JButton("Screen A");
 		btnSelectTitleFont1.addActionListener(safeAction(e -> selectFont(SettingKey.TITLE_FONT)));
 		GridBagConstraints gbc_btnSelectTitleFont1 = new GridBagConstraints();
@@ -2645,7 +2667,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectTitleFont1.gridx = 3;
 		gbc_btnSelectTitleFont1.gridy = 2;
 		panel.add(btnSelectTitleFont1, gbc_btnSelectTitleFont1);
-		
+
 		btnSelectTitleFont2 = new JButton("Screen B");
 		btnSelectTitleFont2.addActionListener(safeAction(e -> selectFont(SettingKey.TITLE_FONT_2)));
 		GridBagConstraints gbc_btnSelectTitleFont2 = new GridBagConstraints();
@@ -2654,7 +2676,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectTitleFont2.gridx = 4;
 		gbc_btnSelectTitleFont2.gridy = 2;
 		panel.add(btnSelectTitleFont2, gbc_btnSelectTitleFont2);
-		
+
 		btnSelectTitleFontBoth = new JButton("Change for both Screens");
 		btnSelectTitleFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.TITLE_FONT, SettingKey.TITLE_FONT_2)));
 		GridBagConstraints gbc_btnSelectTitleFontBoth = new GridBagConstraints();
@@ -2663,7 +2685,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectTitleFontBoth.gridx = 5;
 		gbc_btnSelectTitleFontBoth.gridy = 2;
 		panel.add(btnSelectTitleFontBoth, gbc_btnSelectTitleFontBoth);
-		
+
 		JLabel lblLyricsFont = new JLabel("Lyrics font");
 		GridBagConstraints gbcLblLyricsFont = new GridBagConstraints();
 		gbcLblLyricsFont.anchor = GridBagConstraints.EAST;
@@ -2671,7 +2693,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblLyricsFont.gridx = 1;
 		gbcLblLyricsFont.gridy = 3;
 		panel.add(lblLyricsFont, gbcLblLyricsFont);
-		
+
 		btnSelectLyricsFont1 = new JButton("Screen A");
 		btnSelectLyricsFont1.addActionListener(safeAction(e -> selectFont(SettingKey.LYRICS_FONT)));
 		GridBagConstraints gbc_btnSelectLyricsFont1 = new GridBagConstraints();
@@ -2680,7 +2702,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectLyricsFont1.gridx = 3;
 		gbc_btnSelectLyricsFont1.gridy = 3;
 		panel.add(btnSelectLyricsFont1, gbc_btnSelectLyricsFont1);
-		
+
 		btnSelectLyricsFont2 = new JButton("Screen B");
 		btnSelectLyricsFont2.addActionListener(safeAction(e -> selectFont(SettingKey.LYRICS_FONT_2)));
 		GridBagConstraints gbc_btnSelectLyricsFont2 = new GridBagConstraints();
@@ -2689,7 +2711,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectLyricsFont2.gridx = 4;
 		gbc_btnSelectLyricsFont2.gridy = 3;
 		panel.add(btnSelectLyricsFont2, gbc_btnSelectLyricsFont2);
-		
+
 		btnSelectLyricsFontBoth = new JButton("Change for both Screens");
 		btnSelectLyricsFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.LYRICS_FONT, SettingKey.LYRICS_FONT_2)));
 		GridBagConstraints gbc_btnSelectLyricsFontBoth = new GridBagConstraints();
@@ -2698,7 +2720,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectLyricsFontBoth.gridx = 5;
 		gbc_btnSelectLyricsFontBoth.gridy = 3;
 		panel.add(btnSelectLyricsFontBoth, gbc_btnSelectLyricsFontBoth);
-		
+
 		JLabel lblChordSequenceFont = new JLabel("Chord sequence font");
 		GridBagConstraints gbc_lblChordSequenceFont = new GridBagConstraints();
 		gbc_lblChordSequenceFont.anchor = GridBagConstraints.EAST;
@@ -2706,7 +2728,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblChordSequenceFont.gridx = 1;
 		gbc_lblChordSequenceFont.gridy = 4;
 		panel.add(lblChordSequenceFont, gbc_lblChordSequenceFont);
-		
+
 		btnSelectChordSequenceFont1 = new JButton("Screen A");
 		btnSelectChordSequenceFont1.addActionListener(safeAction(e -> selectFont(SettingKey.CHORD_SEQUENCE_FONT)));
 		GridBagConstraints gbc_btnChordSequenceFont1 = new GridBagConstraints();
@@ -2715,7 +2737,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnChordSequenceFont1.gridx = 3;
 		gbc_btnChordSequenceFont1.gridy = 4;
 		panel.add(btnSelectChordSequenceFont1, gbc_btnChordSequenceFont1);
-		
+
 		btnSelectChordSequenceFont2 = new JButton("Screen B");
 		btnSelectChordSequenceFont2.addActionListener(safeAction(e -> selectFont(SettingKey.CHORD_SEQUENCE_FONT_2)));
 		GridBagConstraints gbc_btnChordSequenceFont2 = new GridBagConstraints();
@@ -2724,7 +2746,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnChordSequenceFont2.gridx = 4;
 		gbc_btnChordSequenceFont2.gridy = 4;
 		panel.add(btnSelectChordSequenceFont2, gbc_btnChordSequenceFont2);
-		
+
 		btnSelectChordSequenceFontBoth = new JButton("Change for both Screens");
 		btnSelectChordSequenceFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.CHORD_SEQUENCE_FONT,
 			SettingKey.CHORD_SEQUENCE_FONT_2)));
@@ -2734,7 +2756,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnChordSequenceFontBoth.gridx = 5;
 		gbc_btnChordSequenceFontBoth.gridy = 4;
 		panel.add(btnSelectChordSequenceFontBoth, gbc_btnChordSequenceFontBoth);
-		
+
 		JLabel lblTranslationFont = new JLabel("Translation font");
 		GridBagConstraints gbcLblTranslationFont = new GridBagConstraints();
 		gbcLblTranslationFont.anchor = GridBagConstraints.EAST;
@@ -2742,7 +2764,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblTranslationFont.gridx = 1;
 		gbcLblTranslationFont.gridy = 5;
 		panel.add(lblTranslationFont, gbcLblTranslationFont);
-		
+
 		btnSelectTranslationFont1 = new JButton("Screen A");
 		btnSelectTranslationFont1.addActionListener(safeAction(e -> selectFont(SettingKey.TRANSLATION_FONT)));
 		GridBagConstraints gbc_btnSelectTranslationFont1 = new GridBagConstraints();
@@ -2751,7 +2773,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectTranslationFont1.gridx = 3;
 		gbc_btnSelectTranslationFont1.gridy = 5;
 		panel.add(btnSelectTranslationFont1, gbc_btnSelectTranslationFont1);
-		
+
 		btnSelectTranslationFont2 = new JButton("Screen B");
 		btnSelectTranslationFont2.addActionListener(safeAction(e -> selectFont(SettingKey.TRANSLATION_FONT_2)));
 		GridBagConstraints gbc_btnSelectTranslationFont2 = new GridBagConstraints();
@@ -2760,7 +2782,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectTranslationFont2.gridx = 4;
 		gbc_btnSelectTranslationFont2.gridy = 5;
 		panel.add(btnSelectTranslationFont2, gbc_btnSelectTranslationFont2);
-		
+
 		btnSelectTranslationFontBoth = new JButton("Change for both Screens");
 		btnSelectTranslationFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.TRANSLATION_FONT, SettingKey.TRANSLATION_FONT_2)));
 		GridBagConstraints gbc_btnSelectTranslationFontBoth = new GridBagConstraints();
@@ -2769,7 +2791,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectTranslationFontBoth.gridx = 5;
 		gbc_btnSelectTranslationFontBoth.gridy = 5;
 		panel.add(btnSelectTranslationFontBoth, gbc_btnSelectTranslationFontBoth);
-		
+
 		JLabel lblCopyrightFont = new JLabel("Copyright font");
 		GridBagConstraints gbcLblCopyrightFont = new GridBagConstraints();
 		gbcLblCopyrightFont.anchor = GridBagConstraints.EAST;
@@ -2777,7 +2799,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblCopyrightFont.gridx = 1;
 		gbcLblCopyrightFont.gridy = 6;
 		panel.add(lblCopyrightFont, gbcLblCopyrightFont);
-		
+
 		btnSelectCopyrightFont1 = new JButton("Screen A");
 		btnSelectCopyrightFont1.addActionListener(safeAction(e -> selectFont(SettingKey.COPYRIGHT_FONT)));
 		GridBagConstraints gbc_btnSelectCopyrightFont1 = new GridBagConstraints();
@@ -2786,7 +2808,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectCopyrightFont1.gridx = 3;
 		gbc_btnSelectCopyrightFont1.gridy = 6;
 		panel.add(btnSelectCopyrightFont1, gbc_btnSelectCopyrightFont1);
-		
+
 		btnSelectCopyrightFont2 = new JButton("Screen B");
 		btnSelectCopyrightFont2.addActionListener(safeAction(e -> selectFont(SettingKey.COPYRIGHT_FONT_2)));
 		GridBagConstraints gbc_btnSelectCopyrightFont2 = new GridBagConstraints();
@@ -2795,7 +2817,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectCopyrightFont2.gridx = 4;
 		gbc_btnSelectCopyrightFont2.gridy = 6;
 		panel.add(btnSelectCopyrightFont2, gbc_btnSelectCopyrightFont2);
-		
+
 		btnSelectCopyrightFontBoth = new JButton("Change for both Screens");
 		btnSelectCopyrightFontBoth.addActionListener(safeAction(e -> selectFont(SettingKey.COPYRIGHT_FONT, SettingKey.COPYRIGHT_FONT_2)));
 		GridBagConstraints gbc_btnSelectCopyrightFontBoth = new GridBagConstraints();
@@ -2804,7 +2826,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectCopyrightFontBoth.gridx = 5;
 		gbc_btnSelectCopyrightFontBoth.gridy = 6;
 		panel.add(btnSelectCopyrightFontBoth, gbc_btnSelectCopyrightFontBoth);
-		
+
 		JLabel lblTextColor = new JLabel("Text color");
 		GridBagConstraints gbcLblTextColor = new GridBagConstraints();
 		gbcLblTextColor.anchor = GridBagConstraints.EAST;
@@ -2812,7 +2834,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblTextColor.gridx = 1;
 		gbcLblTextColor.gridy = 7;
 		panel.add(lblTextColor, gbcLblTextColor);
-		
+
 		btnSelectTextColor1 = new JButton("Screen A");
 		btnSelectTextColor1.addActionListener(safeAction(e -> handleSelectTextColor1()));
 		GridBagConstraints gbc_btnSelectTextColor1 = new GridBagConstraints();
@@ -2821,7 +2843,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectTextColor1.gridx = 3;
 		gbc_btnSelectTextColor1.gridy = 7;
 		panel.add(btnSelectTextColor1, gbc_btnSelectTextColor1);
-		
+
 		btnSelectTextColor2 = new JButton("Screen B");
 		btnSelectTextColor2.addActionListener(safeAction(e -> handleSelectTextColor2()));
 		GridBagConstraints gbc_btnSelectTextColor2 = new GridBagConstraints();
@@ -2830,7 +2852,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectTextColor2.gridx = 4;
 		gbc_btnSelectTextColor2.gridy = 7;
 		panel.add(btnSelectTextColor2, gbc_btnSelectTextColor2);
-		
+
 		btnSelectTextColorBoth = new JButton("Change for both Screens");
 		btnSelectTextColorBoth.addActionListener(safeAction(e -> handleSelectTextColorBoth()));
 		GridBagConstraints gbc_btnSelectTextColorBoth = new GridBagConstraints();
@@ -2839,7 +2861,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectTextColorBoth.gridx = 5;
 		gbc_btnSelectTextColorBoth.gridy = 7;
 		panel.add(btnSelectTextColorBoth, gbc_btnSelectTextColorBoth);
-		
+
 		JLabel lblBackgroundColor = new JLabel("Background color");
 		GridBagConstraints gbcLblBackgroundColor = new GridBagConstraints();
 		gbcLblBackgroundColor.anchor = GridBagConstraints.EAST;
@@ -2847,7 +2869,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblBackgroundColor.gridx = 1;
 		gbcLblBackgroundColor.gridy = 8;
 		panel.add(lblBackgroundColor, gbcLblBackgroundColor);
-		
+
 		btnSelectBackgroundColor1 = new JButton("Screen A");
 		btnSelectBackgroundColor1.addActionListener(safeAction(e -> handleSelectBackgroundColor1()));
 		GridBagConstraints gbc_btnSelectBackgroundColor1 = new GridBagConstraints();
@@ -2856,7 +2878,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectBackgroundColor1.gridx = 3;
 		gbc_btnSelectBackgroundColor1.gridy = 8;
 		panel.add(btnSelectBackgroundColor1, gbc_btnSelectBackgroundColor1);
-		
+
 		btnSelectBackgroundColor2 = new JButton("Screen B");
 		btnSelectBackgroundColor2.addActionListener(safeAction(e -> handleSelectBackgroundColor2()));
 		GridBagConstraints gbc_btnSelectBackgroundColor2 = new GridBagConstraints();
@@ -2865,7 +2887,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectBackgroundColor2.gridx = 4;
 		gbc_btnSelectBackgroundColor2.gridy = 8;
 		panel.add(btnSelectBackgroundColor2, gbc_btnSelectBackgroundColor2);
-		
+
 		btnSelectBackgroundColorBoth = new JButton("Change for both Screens");
 		btnSelectBackgroundColorBoth.addActionListener(safeAction(e -> handleSelectBackgroundColorBoth()));
 		GridBagConstraints gbc_btnSelectBackgroundColorBoth = new GridBagConstraints();
@@ -2874,7 +2896,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSelectBackgroundColorBoth.gridx = 5;
 		gbc_btnSelectBackgroundColorBoth.gridy = 8;
 		panel.add(btnSelectBackgroundColorBoth, gbc_btnSelectBackgroundColorBoth);
-		
+
 		JLabel lblLogo = new JLabel("Logo");
 		GridBagConstraints gbcLblLogo = new GridBagConstraints();
 		gbcLblLogo.anchor = GridBagConstraints.EAST;
@@ -2882,7 +2904,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblLogo.gridx = 1;
 		gbcLblLogo.gridy = 9;
 		panel.add(lblLogo, gbcLblLogo);
-		
+
 		btnSelectLogo = new JButton("Select...");
 		btnSelectLogo.addActionListener(safeAction(e -> handleSelectLogo()));
 		GridBagConstraints gbcBtnSelectLogo = new GridBagConstraints();
@@ -2892,7 +2914,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcBtnSelectLogo.gridx = 3;
 		gbcBtnSelectLogo.gridy = 9;
 		panel.add(btnSelectLogo, gbcBtnSelectLogo);
-		
+
 		JLabel lblTopMargin = new JLabel("Top margin");
 		GridBagConstraints gbcLblTopMargin = new GridBagConstraints();
 		gbcLblTopMargin.anchor = GridBagConstraints.EAST;
@@ -2900,7 +2922,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblTopMargin.gridx = 1;
 		gbcLblTopMargin.gridy = 10;
 		panel.add(lblTopMargin, gbcLblTopMargin);
-		
+
 		spinnerTopMargin = new JSpinner();
 		mustBePositive(spinnerTopMargin, true);
 		GridBagConstraints gbcSpinnerTopMargin = new GridBagConstraints();
@@ -2910,7 +2932,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcSpinnerTopMargin.gridx = 3;
 		gbcSpinnerTopMargin.gridy = 10;
 		panel.add(spinnerTopMargin, gbcSpinnerTopMargin);
-		
+
 		JLabel lblLeftMargin = new JLabel("Left margin");
 		GridBagConstraints gbcLblLeftMargin = new GridBagConstraints();
 		gbcLblLeftMargin.anchor = GridBagConstraints.EAST;
@@ -2918,7 +2940,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblLeftMargin.gridx = 1;
 		gbcLblLeftMargin.gridy = 11;
 		panel.add(lblLeftMargin, gbcLblLeftMargin);
-		
+
 		spinnerLeftMargin = new JSpinner();
 		mustBePositive(spinnerLeftMargin, true);
 		GridBagConstraints gbcSpinnerLeftMargin = new GridBagConstraints();
@@ -2928,7 +2950,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcSpinnerLeftMargin.gridx = 3;
 		gbcSpinnerLeftMargin.gridy = 11;
 		panel.add(spinnerLeftMargin, gbcSpinnerLeftMargin);
-		
+
 		JLabel lblRightMargin = new JLabel("Right margin");
 		GridBagConstraints gbcLblRightMargin = new GridBagConstraints();
 		gbcLblRightMargin.anchor = GridBagConstraints.EAST;
@@ -2936,7 +2958,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblRightMargin.gridx = 1;
 		gbcLblRightMargin.gridy = 12;
 		panel.add(lblRightMargin, gbcLblRightMargin);
-		
+
 		spinnerRightMargin = new JSpinner();
 		mustBePositive(spinnerRightMargin, true);
 		GridBagConstraints gbcSpinnerRightMargin = new GridBagConstraints();
@@ -2946,7 +2968,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcSpinnerRightMargin.gridx = 3;
 		gbcSpinnerRightMargin.gridy = 12;
 		panel.add(spinnerRightMargin, gbcSpinnerRightMargin);
-		
+
 		JLabel lblBottomMargin = new JLabel("Bottom margin");
 		GridBagConstraints gbcLblBottomMargin = new GridBagConstraints();
 		gbcLblBottomMargin.anchor = GridBagConstraints.EAST;
@@ -2954,7 +2976,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblBottomMargin.gridx = 1;
 		gbcLblBottomMargin.gridy = 13;
 		panel.add(lblBottomMargin, gbcLblBottomMargin);
-		
+
 		spinnerBottomMargin = new JSpinner();
 		mustBePositive(spinnerBottomMargin, true);
 		GridBagConstraints gbcSpinnerBottomMargin = new GridBagConstraints();
@@ -2964,7 +2986,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcSpinnerBottomMargin.gridx = 3;
 		gbcSpinnerBottomMargin.gridy = 13;
 		panel.add(spinnerBottomMargin, gbcSpinnerBottomMargin);
-		
+
 		JLabel lblShowTitle = new JLabel("Show title in presentation");
 		lblShowTitle.setHorizontalAlignment(SwingConstants.TRAILING);
 		GridBagConstraints gbcLblShowTitle = new GridBagConstraints();
@@ -2973,7 +2995,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblShowTitle.gridx = 1;
 		gbcLblShowTitle.gridy = 14;
 		panel.add(lblShowTitle, gbcLblShowTitle);
-		
+
 		checkboxShowTitle = new JCheckBox("");
 		GridBagConstraints gbcCheckboxShowTitle = new GridBagConstraints();
 		gbcCheckboxShowTitle.fill = GridBagConstraints.HORIZONTAL;
@@ -2982,7 +3004,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcCheckboxShowTitle.gridx = 3;
 		gbcCheckboxShowTitle.gridy = 14;
 		panel.add(checkboxShowTitle, gbcCheckboxShowTitle);
-		
+
 		JLabel lblDistanceBetweenTitle = new JLabel("Distance between title and text");
 		GridBagConstraints gbcLblDistanceBetweenTitle = new GridBagConstraints();
 		gbcLblDistanceBetweenTitle.anchor = GridBagConstraints.EAST;
@@ -2990,7 +3012,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblDistanceBetweenTitle.gridx = 1;
 		gbcLblDistanceBetweenTitle.gridy = 15;
 		panel.add(lblDistanceBetweenTitle, gbcLblDistanceBetweenTitle);
-		
+
 		spinnerDistanceTitleText = new JSpinner();
 		mustBePositive(spinnerDistanceTitleText, true);
 		GridBagConstraints gbcSpinnerDistanceTitleText = new GridBagConstraints();
@@ -3000,7 +3022,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcSpinnerDistanceTitleText.gridx = 3;
 		gbcSpinnerDistanceTitleText.gridy = 15;
 		panel.add(spinnerDistanceTitleText, gbcSpinnerDistanceTitleText);
-		
+
 		JLabel lblDistanceBetweenText = new JLabel("Distance between text and copyright");
 		GridBagConstraints gbcLblDistanceBetweenText = new GridBagConstraints();
 		gbcLblDistanceBetweenText.anchor = GridBagConstraints.EAST;
@@ -3008,7 +3030,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblDistanceBetweenText.gridx = 1;
 		gbcLblDistanceBetweenText.gridy = 16;
 		panel.add(lblDistanceBetweenText, gbcLblDistanceBetweenText);
-		
+
 		spinnerDistanceTextCopyright = new JSpinner();
 		mustBePositive(spinnerDistanceTextCopyright, true);
 		GridBagConstraints gbcSpinnerDistanceTextCopyright = new GridBagConstraints();
@@ -3018,7 +3040,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcSpinnerDistanceTextCopyright.gridx = 3;
 		gbcSpinnerDistanceTextCopyright.gridy = 16;
 		panel.add(spinnerDistanceTextCopyright, gbcSpinnerDistanceTextCopyright);
-		
+
 		JLabel lblSongListFiltering = new JLabel("Song list filter");
 		GridBagConstraints gbcLblSongListFiltering = new GridBagConstraints();
 		gbcLblSongListFiltering.anchor = GridBagConstraints.EAST;
@@ -3026,7 +3048,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblSongListFiltering.gridx = 1;
 		gbcLblSongListFiltering.gridy = 17;
 		panel.add(lblSongListFiltering, gbcLblSongListFiltering);
-		
+
 		comboSongListFiltering = new JComboBox<>();
 		GridBagConstraints gbcComboSongListFiltering = new GridBagConstraints();
 		gbcComboSongListFiltering.fill = GridBagConstraints.HORIZONTAL;
@@ -3035,7 +3057,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcComboSongListFiltering.gridx = 3;
 		gbcComboSongListFiltering.gridy = 17;
 		panel.add(comboSongListFiltering, gbcComboSongListFiltering);
-		
+
 		JLabel lblPresentationScreen1Display = new JLabel("Physical Display for Screen A");
 		GridBagConstraints gbcLblPresentationScreen1Display = new GridBagConstraints();
 		gbcLblPresentationScreen1Display.anchor = GridBagConstraints.EAST;
@@ -3043,7 +3065,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblPresentationScreen1Display.gridx = 1;
 		gbcLblPresentationScreen1Display.gridy = 18;
 		panel.add(lblPresentationScreen1Display, gbcLblPresentationScreen1Display);
-		
+
 		comboPresentationScreen1Display = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen1Display = new GridBagConstraints();
 		gbcComboPresentationScreen1Display.fill = GridBagConstraints.HORIZONTAL;
@@ -3052,7 +3074,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcComboPresentationScreen1Display.gridx = 3;
 		gbcComboPresentationScreen1Display.gridy = 18;
 		panel.add(comboPresentationScreen1Display, gbcComboPresentationScreen1Display);
-		
+
 		JLabel lblPresentationScreen1Contents = new JLabel("Contents of Screen A");
 		GridBagConstraints gbcLblPresentationScreen1Contents = new GridBagConstraints();
 		gbcLblPresentationScreen1Contents.anchor = GridBagConstraints.EAST;
@@ -3060,7 +3082,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblPresentationScreen1Contents.gridx = 1;
 		gbcLblPresentationScreen1Contents.gridy = 19;
 		panel.add(lblPresentationScreen1Contents, gbcLblPresentationScreen1Contents);
-		
+
 		comboPresentationScreen1Contents = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen1Contents = new GridBagConstraints();
 		gbcComboPresentationScreen1Contents.fill = GridBagConstraints.HORIZONTAL;
@@ -3069,7 +3091,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcComboPresentationScreen1Contents.gridx = 3;
 		gbcComboPresentationScreen1Contents.gridy = 19;
 		panel.add(comboPresentationScreen1Contents, gbcComboPresentationScreen1Contents);
-		
+
 		JLabel lblPresentationScreen2Display = new JLabel("Physical Display for Screen B");
 		GridBagConstraints gbcLblPresentationScreen2Display = new GridBagConstraints();
 		gbcLblPresentationScreen2Display.anchor = GridBagConstraints.EAST;
@@ -3077,7 +3099,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblPresentationScreen2Display.gridx = 1;
 		gbcLblPresentationScreen2Display.gridy = 20;
 		panel.add(lblPresentationScreen2Display, gbcLblPresentationScreen2Display);
-		
+
 		comboPresentationScreen2Display = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen2Display = new GridBagConstraints();
 		gbcComboPresentationScreen2Display.fill = GridBagConstraints.HORIZONTAL;
@@ -3086,7 +3108,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcComboPresentationScreen2Display.gridx = 3;
 		gbcComboPresentationScreen2Display.gridy = 20;
 		panel.add(comboPresentationScreen2Display, gbcComboPresentationScreen2Display);
-		
+
 		JLabel lblPresentationScreen2Contents = new JLabel("Contents of Screen B");
 		GridBagConstraints gbcLblPresentationScreen2Contents = new GridBagConstraints();
 		gbcLblPresentationScreen2Contents.anchor = GridBagConstraints.EAST;
@@ -3094,10 +3116,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblPresentationScreen2Contents.gridx = 1;
 		gbcLblPresentationScreen2Contents.gridy = 21;
 		panel.add(lblPresentationScreen2Contents, gbcLblPresentationScreen2Contents);
-		
+
 		btnSlideShowDirectory = new JButton("Select...");
 		btnSlideShowDirectory.addActionListener(safeAction(e -> handleSelectSlideShowDirectory()));
-		
+
 		comboPresentationScreen2Contents = new JComboBox<>();
 		GridBagConstraints gbcComboPresentationScreen2Contents = new GridBagConstraints();
 		gbcComboPresentationScreen2Contents.fill = GridBagConstraints.HORIZONTAL;
@@ -3106,7 +3128,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcComboPresentationScreen2Contents.gridx = 3;
 		gbcComboPresentationScreen2Contents.gridy = 21;
 		panel.add(comboPresentationScreen2Contents, gbcComboPresentationScreen2Contents);
-		
+
 		lblMinimizeScrolling = new JLabel("Minimize Scrolling");
 		GridBagConstraints gbc_lblMinimizeScrolling = new GridBagConstraints();
 		gbc_lblMinimizeScrolling.anchor = GridBagConstraints.EAST;
@@ -3114,7 +3136,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblMinimizeScrolling.gridx = 1;
 		gbc_lblMinimizeScrolling.gridy = 22;
 		panel.add(lblMinimizeScrolling, gbc_lblMinimizeScrolling);
-		
+
 		checkboxMinimizeScrolling1 = new JCheckBox("Screen A");
 		GridBagConstraints gbc_checkboxMinimizeScrolling1 = new GridBagConstraints();
 		gbc_checkboxMinimizeScrolling1.anchor = GridBagConstraints.WEST;
@@ -3122,7 +3144,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_checkboxMinimizeScrolling1.gridx = 3;
 		gbc_checkboxMinimizeScrolling1.gridy = 22;
 		panel.add(checkboxMinimizeScrolling1, gbc_checkboxMinimizeScrolling1);
-		
+
 		checkboxMinimizeScrolling2 = new JCheckBox("Screen B");
 		GridBagConstraints gbc_checkboxMinimizeScrolling2 = new GridBagConstraints();
 		gbc_checkboxMinimizeScrolling2.anchor = GridBagConstraints.WEST;
@@ -3130,7 +3152,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_checkboxMinimizeScrolling2.gridx = 4;
 		gbc_checkboxMinimizeScrolling2.gridy = 22;
 		panel.add(checkboxMinimizeScrolling2, gbc_checkboxMinimizeScrolling2);
-		
+
 		JLabel lblSecondsToCount = new JLabel("Seconds to count a song as displayed after");
 		GridBagConstraints gbcLblSecondsToCount = new GridBagConstraints();
 		gbcLblSecondsToCount.anchor = GridBagConstraints.EAST;
@@ -3138,7 +3160,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblSecondsToCount.gridx = 1;
 		gbcLblSecondsToCount.gridy = 23;
 		panel.add(lblSecondsToCount, gbcLblSecondsToCount);
-		
+
 		spinnerCountAsDisplayedAfter = new JSpinner();
 		mustBePositive(spinnerCountAsDisplayedAfter, false);
 		GridBagConstraints gbcSpinnerCountAsDisplayedAfter = new GridBagConstraints();
@@ -3148,7 +3170,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcSpinnerCountAsDisplayedAfter.gridx = 3;
 		gbcSpinnerCountAsDisplayedAfter.gridy = 23;
 		panel.add(spinnerCountAsDisplayedAfter, gbcSpinnerCountAsDisplayedAfter);
-		
+
 		lblSlideShowDirectory = new JLabel("Directory for slide show");
 		GridBagConstraints gbc_lblSlideShowDirectory = new GridBagConstraints();
 		gbc_lblSlideShowDirectory.anchor = GridBagConstraints.EAST;
@@ -3163,7 +3185,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_btnSlideShowDirectory.gridx = 3;
 		gbc_btnSlideShowDirectory.gridy = 24;
 		panel.add(btnSlideShowDirectory, gbc_btnSlideShowDirectory);
-		
+
 		lblSlideShowSeconds = new JLabel("Seconds between slide show changes");
 		GridBagConstraints gbc_lblSlideShowSeconds = new GridBagConstraints();
 		gbc_lblSlideShowSeconds.anchor = GridBagConstraints.EAST;
@@ -3171,7 +3193,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblSlideShowSeconds.gridx = 1;
 		gbc_lblSlideShowSeconds.gridy = 25;
 		panel.add(lblSlideShowSeconds, gbc_lblSlideShowSeconds);
-		
+
 		spinnerSlideShowSeconds = new JSpinner();
 		mustBePositive(spinnerSlideShowSeconds, false);
 		GridBagConstraints gbc_spinnerSlideShowSeconds = new GridBagConstraints();
@@ -3181,7 +3203,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_spinnerSlideShowSeconds.gridx = 3;
 		gbc_spinnerSlideShowSeconds.gridy = 25;
 		panel.add(spinnerSlideShowSeconds, gbc_spinnerSlideShowSeconds);
-		
+
 		lblFadeTime = new JLabel("Fade time in milliseconds");
 		GridBagConstraints gbc_lblFadeTime = new GridBagConstraints();
 		gbc_lblFadeTime.anchor = GridBagConstraints.EAST;
@@ -3189,7 +3211,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblFadeTime.gridx = 1;
 		gbc_lblFadeTime.gridy = 26;
 		panel.add(lblFadeTime, gbc_lblFadeTime);
-		
+
 		spinnerFadeTime = new JSpinner();
 		mustBePositive(spinnerFadeTime, false);
 		GridBagConstraints gbc_spinnerFadeTime = new GridBagConstraints();
@@ -3199,7 +3221,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_spinnerFadeTime.gridx = 3;
 		gbc_spinnerFadeTime.gridy = 26;
 		panel.add(spinnerFadeTime, gbc_spinnerFadeTime);
-		
+
 		lblCalendarUrl = new JLabel("Calendar URL");
 		GridBagConstraints gbcLblCalendarUrl = new GridBagConstraints();
 		gbcLblCalendarUrl.anchor = GridBagConstraints.EAST;
@@ -3207,7 +3229,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblCalendarUrl.gridx = 1;
 		gbcLblCalendarUrl.gridy = 27;
 		panel.add(lblCalendarUrl, gbcLblCalendarUrl);
-		
+
 		textFieldCalendarUrl = new JTextField();
 		GridBagConstraints gbcTextFieldCalendarUrl = new GridBagConstraints();
 		gbcTextFieldCalendarUrl.gridwidth = 3;
@@ -3216,7 +3238,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcTextFieldCalendarUrl.gridx = 3;
 		gbcTextFieldCalendarUrl.gridy = 27;
 		panel.add(textFieldCalendarUrl, gbcTextFieldCalendarUrl);
-		
+
 		lblDaysAhead = new JLabel("Calendar days ahead");
 		GridBagConstraints gbcLblDaysAhead = new GridBagConstraints();
 		gbcLblDaysAhead.anchor = GridBagConstraints.EAST;
@@ -3224,7 +3246,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcLblDaysAhead.gridx = 1;
 		gbcLblDaysAhead.gridy = 28;
 		panel.add(lblDaysAhead, gbcLblDaysAhead);
-		
+
 		spinnerDaysAhead = new JSpinner();
 		mustBePositive(spinnerDaysAhead, true);
 		GridBagConstraints gbcSpinnerDaysAhead = new GridBagConstraints();
@@ -3234,7 +3256,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbcSpinnerDaysAhead.gridx = 3;
 		gbcSpinnerDaysAhead.gridy = 28;
 		panel.add(spinnerDaysAhead, gbcSpinnerDaysAhead);
-		
+
 		lblRemoteEnabled = new JLabel("Remote enabled");
 		GridBagConstraints gbc_lblRemoteEnabled = new GridBagConstraints();
 		gbc_lblRemoteEnabled.anchor = GridBagConstraints.EAST;
@@ -3242,7 +3264,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemoteEnabled.gridx = 1;
 		gbc_lblRemoteEnabled.gridy = 29;
 		panel.add(lblRemoteEnabled, gbc_lblRemoteEnabled);
-		
+
 		checkboxRemoteEnabled = new JCheckBox();
 		GridBagConstraints gbc_checkboxRemoteEnabled = new GridBagConstraints();
 		gbc_checkboxRemoteEnabled.gridwidth = 3;
@@ -3251,7 +3273,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_checkboxRemoteEnabled.gridx = 3;
 		gbc_checkboxRemoteEnabled.gridy = 29;
 		panel.add(checkboxRemoteEnabled, gbc_checkboxRemoteEnabled);
-		
+
 		lblRemoteServer = new JLabel("Remote server");
 		GridBagConstraints gbc_lblRemoteServer = new GridBagConstraints();
 		gbc_lblRemoteServer.anchor = GridBagConstraints.EAST;
@@ -3259,7 +3281,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemoteServer.gridx = 1;
 		gbc_lblRemoteServer.gridy = 30;
 		panel.add(lblRemoteServer, gbc_lblRemoteServer);
-		
+
 		textFieldRemoteServer = new JTextField();
 		GridBagConstraints gbc_textFieldRemoteServer = new GridBagConstraints();
 		gbc_textFieldRemoteServer.gridwidth = 3;
@@ -3268,7 +3290,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_textFieldRemoteServer.gridx = 3;
 		gbc_textFieldRemoteServer.gridy = 30;
 		panel.add(textFieldRemoteServer, gbc_textFieldRemoteServer);
-		
+
 		lblRemoteUsername = new JLabel("Remote username");
 		GridBagConstraints gbc_lblRemoteUsername = new GridBagConstraints();
 		gbc_lblRemoteUsername.anchor = GridBagConstraints.EAST;
@@ -3276,7 +3298,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemoteUsername.gridx = 1;
 		gbc_lblRemoteUsername.gridy = 31;
 		panel.add(lblRemoteUsername, gbc_lblRemoteUsername);
-		
+
 		textFieldRemoteUsername = new JTextField();
 		GridBagConstraints gbc_textFieldRemoteUsername = new GridBagConstraints();
 		gbc_textFieldRemoteUsername.gridwidth = 3;
@@ -3285,7 +3307,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_textFieldRemoteUsername.gridx = 3;
 		gbc_textFieldRemoteUsername.gridy = 31;
 		panel.add(textFieldRemoteUsername, gbc_textFieldRemoteUsername);
-		
+
 		lblRemotePassword = new JLabel("Remote password");
 		GridBagConstraints gbc_lblRemotePassword = new GridBagConstraints();
 		gbc_lblRemotePassword.anchor = GridBagConstraints.EAST;
@@ -3293,7 +3315,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemotePassword.gridx = 1;
 		gbc_lblRemotePassword.gridy = 32;
 		panel.add(lblRemotePassword, gbc_lblRemotePassword);
-		
+
 		textFieldRemotePassword = new JTextField();
 		GridBagConstraints gbc_textFieldRemotePassword = new GridBagConstraints();
 		gbc_textFieldRemotePassword.gridwidth = 3;
@@ -3302,7 +3324,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_textFieldRemotePassword.gridx = 3;
 		gbc_textFieldRemotePassword.gridy = 32;
 		panel.add(textFieldRemotePassword, gbc_textFieldRemotePassword);
-		
+
 		lblRemotePrefix = new JLabel("Remote prefix");
 		GridBagConstraints gbc_lblRemotePrefix = new GridBagConstraints();
 		gbc_lblRemotePrefix.anchor = GridBagConstraints.EAST;
@@ -3310,7 +3332,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemotePrefix.gridx = 1;
 		gbc_lblRemotePrefix.gridy = 33;
 		panel.add(lblRemotePrefix, gbc_lblRemotePrefix);
-		
+
 		textFieldRemotePrefix = new JTextField();
 		GridBagConstraints gbc_textFieldRemotePrefix = new GridBagConstraints();
 		gbc_textFieldRemotePrefix.gridwidth = 3;
@@ -3319,7 +3341,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_textFieldRemotePrefix.gridx = 3;
 		gbc_textFieldRemotePrefix.gridy = 33;
 		panel.add(textFieldRemotePrefix, gbc_textFieldRemotePrefix);
-		
+
 		lblRemoteRoom = new JLabel("Remote room");
 		GridBagConstraints gbc_lblRemoteRoom = new GridBagConstraints();
 		gbc_lblRemoteRoom.anchor = GridBagConstraints.EAST;
@@ -3327,7 +3349,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_lblRemoteRoom.gridx = 1;
 		gbc_lblRemoteRoom.gridy = 34;
 		panel.add(lblRemoteRoom, gbc_lblRemoteRoom);
-		
+
 		textFieldRemoteRoom = new JTextField();
 		GridBagConstraints gbc_textFieldRemoteRoom = new GridBagConstraints();
 		gbc_textFieldRemoteRoom.gridwidth = 3;
@@ -3336,7 +3358,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		gbc_textFieldRemoteRoom.gridx = 3;
 		gbc_textFieldRemoteRoom.gridy = 34;
 		panel.add(textFieldRemoteRoom, gbc_textFieldRemoteRoom);
-		
+
 		glassPane = (Container) getGlassPane();
 		glassPane.setVisible(true);
 		glassPane.setLayout(new GridBagLayout());
@@ -3360,10 +3382,10 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		buttonPanel.add(saveButton);
 		glassPane.add(buttonPanel, gbc);
 		setRemoteStatus(RemoteStatus.OFF);
-		
+
 		afterConstruction();
 	}
-	
+
 	private void mustBePositive(JSpinner spinner, boolean zeroAllowed) {
 		spinner.getModel().addChangeListener(e -> {
 			if (zeroAllowed && ((Number) spinner.getValue()).intValue() < 0) {
@@ -3373,7 +3395,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		});
 	}
-	
+
 	public void setRemoteStatus(RemoteStatus status) {
 		String path = null;
 		String tooltip = null;
@@ -3406,7 +3428,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		lblStatus.setIcon(ResourceTools.getIcon(getClass(), path));
 		lblStatus.setToolTipText(tooltip);
 	}
-	
+
 	private void updateFontButtons() {
 		int size = btnSelectTitleFont1.getFont().getSize();
 		updateFontButton(SCREEN_A, btnSelectTitleFont1, SCREEN_A.getTitleFont(settingsModel), size);
@@ -3420,12 +3442,12 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		updateFontButton(SCREEN_A, btnSelectCopyrightFont1, SCREEN_A.getCopyrightFont(settingsModel), size);
 		updateFontButton(SCREEN_B, btnSelectCopyrightFont2, SCREEN_B.getCopyrightFont(settingsModel), size);
 	}
-	
+
 	private void updateFontButton(VirtualScreen screen, JButton fontButton, Font font, int size) {
 		fontButton.setFont(font.deriveFont((float) size));
 		fontButton.setText("Screen " + screen.getName() + " (font size: " + font.getSize() + ")");
 	}
-	
+
 	private void handleExport(Collection<Song> songs) {
 		JFileChooser chooser = new JFileChooser();
 		chooser.setDialogTitle("choose target file for PDF export");
@@ -3435,12 +3457,12 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		chooser.setApproveButtonText("Export");
 		chooser.setSelectedFile(new File("songs.pdf"));
 		int result = chooser.showOpenDialog(MainWindow.this);
-		
+
 		if (result == JFileChooser.APPROVE_OPTION) {
 			File target = chooser.getSelectedFile();
 			// export
 			ExportFormat format = new ExportFormat(chckbxWithTranslation.isSelected(),
-				chckbxWithChords.isSelected(), chckbxOnlyExportSongs.isSelected());
+				chckbxWithChords.isSelected(), chckbxOnlyChordSequence.isSelected(), chckbxOnlyExportSongs.isSelected());
 			try {
 				byte[] exported = exportService.export(format, songs);
 				Files.write(exported, target);
@@ -3449,7 +3471,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		}
 	}
-	
+
 	private ActionListener safeAction(Consumer<ActionEvent> listener) {
 		return e -> {
 			try {
@@ -3459,10 +3481,20 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			}
 		};
 	}
-	
+
+	private VetoableChangeListener safeChange(Consumer<PropertyChangeEvent> listener) {
+		return e -> {
+			try {
+				listener.accept(e);
+			} catch (Throwable ex) {
+				handleError(ex);
+			}
+		};
+	}
+
 	private void displayNotification(String textToDisplay, long millis) {
 		NotificationLabel notificationLabel = new NotificationLabel(textToDisplay, millis, glassPane);
-		
+
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.weightx = 1.0;
 		gbc.weighty = 1.0;
@@ -3473,7 +3505,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 		notificationLabel.setVisible(true);
 		glassPane.revalidate();
 	}
-	
+
 	public static List<Image> getIconsFromResources(Class<?> classToUse) {
 		return Arrays
 			.asList(ResourceTools.getImage(classToUse, "/org/zephyrsoft/sdb2/icon-128.png"), ResourceTools.getImage(
@@ -3481,7 +3513,7 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 					"/org/zephyrsoft/sdb2/icon-32.png"), ResourceTools.getImage(classToUse,
 						"/org/zephyrsoft/sdb2/icon-16.png"));
 	}
-	
+
 	private void calculateAndSetBounds() {
 		GraphicsEnvironment env = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		Rectangle maximumWindowBounds = env.getMaximumWindowBounds();
@@ -3493,69 +3525,69 @@ public class MainWindow extends JFrame implements UIScroller, OnIndexChangeListe
 			setBounds(50, 50, 965, 659);
 		}
 	}
-	
+
 	public JTextField getTextFieldTitle() {
 		return textFieldTitle;
 	}
-	
+
 	public JComboBox<String> getComboBoxLanguage() {
 		return comboBoxLanguage;
 	}
-	
+
 	public JTextField getTextFieldTonality() {
 		return textFieldTonality;
 	}
-	
+
 	public JEditorPane getEditorLyrics() {
 		return editorLyrics;
 	}
-	
+
 	public JTextField getTextFieldComposer() {
 		return textFieldComposer;
 	}
-	
+
 	public JTextField getTextFieldAuthorText() {
 		return textFieldAuthorText;
 	}
-	
+
 	public JTextField getTextFieldAuthorTranslation() {
 		return textFieldAuthorTranslation;
 	}
-	
+
 	public JTextField getTextFieldPublisher() {
 		return textFieldPublisher;
 	}
-	
+
 	public JTextField getTextFieldAdditionalCopyrightNotes() {
 		return textFieldAdditionalCopyrightNotes;
 	}
-	
+
 	public JTextField getTextFieldTempo() {
 		return textFieldTempo;
 	}
-	
+
 	public JEditorPane getEditorChordSequence() {
 		return editorChordSequence;
 	}
-	
+
 	public JList<?> getSongList() {
 		return songsList;
 	}
-	
+
 	public JTextField getTextFieldFilter() {
 		return textFieldFilter;
 	}
-	
+
 	public JList<?> getPresentSongList() {
 		return presentList;
 	}
-	
+
 	public JPanel getPanelSectionButtons() {
 		return panelSectionButtons;
 	}
-	
+
 	public SongsModel getPresentModel() {
 		return presentModel;
 	}
-	
+
 }

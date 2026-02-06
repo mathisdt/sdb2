@@ -61,14 +61,18 @@ import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.canvas.draw.DottedLine;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.AbstractElement;
 import com.itextpdf.layout.element.AreaBreak;
+import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Tab;
 import com.itextpdf.layout.element.TabStop;
+import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
 import com.itextpdf.layout.properties.AreaBreakType;
 import com.itextpdf.layout.properties.TabAlignment;
+import com.itextpdf.layout.properties.UnitValue;
 
 /**
  * Exports songs as PDF in different variations.
@@ -142,6 +146,9 @@ public class ExportService {
 	private Consumer<AbstractElement<?>> lyricsAttributes;
 	private Consumer<Text> chordSuperscriptAttributes;
 	private Consumer<Text> chordSubscriptAttributes;
+	private Consumer<AbstractElement<?>> chordSequenceAttributes;
+	private Consumer<Text> chordSequenceSuperscriptAttributes;
+	private Consumer<Text> chordSequenceSubscriptAttributes;
 	private Consumer<AbstractElement<?>> translationAttributes;
 	private Consumer<AbstractElement<?>> copyrightAttributes;
 	private ChordSpaceCorrector chordSpaceCorrector;
@@ -169,6 +176,20 @@ public class ExportService {
 		chordSubscriptAttributes = e -> {
 			e.setFont(baseFont);
 			e.setFontSize(7);
+			e.setTextRise(-1);
+		};
+		chordSequenceAttributes = e -> {
+			e.setFont(baseFont);
+			e.setFontSize(15);
+		};
+		chordSequenceSuperscriptAttributes = e -> {
+			e.setFont(baseFont);
+			e.setFontSize(8);
+			e.setTextRise(6);
+		};
+		chordSequenceSubscriptAttributes = e -> {
+			e.setFont(baseFont);
+			e.setFontSize(8);
 			e.setTextRise(-1);
 		};
 		translationAttributes = e -> {
@@ -210,34 +231,40 @@ public class ExportService {
 			
 			if (exportInProgress.getExportFormat().areChordsShown() && StringUtils.isNotBlank(song.getCleanChordSequence())) {
 				// insert chord sequence directly after title
-				Paragraph chordSequence = paragraph(lyricsAttributes);
-
-				String toFormat = song.getCleanChordSequence() + "\n\n";
-				Pattern pattern = Pattern.compile("([_^])\\{?([^\\} \n]+)([\\} \n])");
-				Matcher matcher = pattern.matcher(toFormat);
-				int index = 0;
-				while (matcher.find(index)) {
-					chordSequence.add(toFormat.substring(index, matcher.start()));
-					Text formatted = new Text(matcher.group(2));
-					if (matcher.group(1).equals("^")) {
-						chordSuperscriptAttributes.accept(formatted);
-					} else {
-						chordSubscriptAttributes.accept(formatted);
-					}
-					chordSequence.add(formatted);
-					if (matcher.group(3).equals(" ")) {
-						chordSequence.add(" ");
-					} else if (matcher.group(3).equals("\n")) {
-						chordSequence.add("\n");
-					}
-					index = matcher.end();
-				}
-				chordSequence.add(toFormat.substring(index));
-
+				Paragraph chordSequence = formatChordSequence(song, lyricsAttributes,
+					chordSuperscriptAttributes, chordSubscriptAttributes);
 				chordSequence.setPaddingLeft(30);
 				exportInProgress.getDocument().add(chordSequence);
 			}
 		};
+	}
+
+	private Paragraph formatChordSequence(Song song, Consumer<AbstractElement<?>> attributes,
+		Consumer<Text> superscriptAttributes, Consumer<Text> subscriptAttributes) {
+		Paragraph chordSequence = paragraph(attributes);
+
+		String toFormat = song.getCleanChordSequence() + "\n\n";
+		Pattern pattern = Pattern.compile("([_^])\\{?([^\\} \n]+)([\\} \n])");
+		Matcher matcher = pattern.matcher(toFormat);
+		int index = 0;
+		while (matcher.find(index)) {
+			chordSequence.add(toFormat.substring(index, matcher.start()));
+			Text formatted = new Text(matcher.group(2));
+			if (matcher.group(1).equals("^")) {
+				superscriptAttributes.accept(formatted);
+			} else {
+				subscriptAttributes.accept(formatted);
+			}
+			chordSequence.add(formatted);
+			if (matcher.group(3).equals(" ")) {
+				chordSequence.add(" ");
+			} else if (matcher.group(3).equals("\n")) {
+				chordSequence.add("\n");
+			}
+			index = matcher.end();
+		}
+		chordSequence.add(toFormat.substring(index));
+		return chordSequence;
 	}
 	
 	private SongElementHandler lyricsHandler() {
@@ -320,28 +347,59 @@ public class ExportService {
 		
 		try {
 			Document document = beginDocument(outputStream);
+
+			Table table = null;
+			if (exportFormat.onlyExportChordSequence()) {
+				table = new Table(new UnitValue[] {
+					new UnitValue(UnitValue.PERCENT, 45),
+					new UnitValue(UnitValue.PERCENT, 55)
+				}).useAllAvailableWidth();
+			}
 			
 			ExportInProgress exportInProgress = new ExportInProgress(exportFormat, document);
 			for (Song song : songs) {
-				List<SongElement> songElements = SongParser.parse(song, true, true, true);
-				
-				if (exportFormat.onlySongsWithChords()
-					&& songElements.stream().noneMatch(e -> e.getType() == CHORDS)) {
-					continue;
-				}
-				
-				SongElementHistory history = new SongElementHistory(songElements);
-				for (SongElement songElement : history) {
-					SongElementHandler handler = songElementHandlers.get(songElement.getType());
-					if (handler != null) {
-						handler.handleElement(exportInProgress, song, history);
+				if (exportFormat.onlyExportChordSequence()) {
+					if (exportFormat.onlySongsWithChords() && StringUtils.isBlank(song.getChordSequence())) {
+						continue;
 					}
+
+					Cell cellTitle = new Cell();
+					Paragraph titleParagraph = paragraph(chordSequenceAttributes);
+					titleParagraph.add(song.getTitle());
+					cellTitle.add(titleParagraph);
+					cellTitle.setBorder(Border.NO_BORDER);
+					cellTitle.setPaddingRight(30);
+					table.addCell(cellTitle);
+					Cell cellChordSequence = new Cell();
+					cellChordSequence.add(formatChordSequence(song, chordSequenceAttributes,
+						chordSequenceSuperscriptAttributes, chordSequenceSubscriptAttributes));
+					cellChordSequence.setBorder(Border.NO_BORDER);
+					table.addCell(cellChordSequence);
+				} else {
+					List<SongElement> songElements = SongParser.parse(song, true, true, true);
+
+					if (exportFormat.onlySongsWithChords()
+						&& songElements.stream().noneMatch(e -> e.getType() == CHORDS)) {
+						continue;
+					}
+
+					SongElementHistory history = new SongElementHistory(songElements);
+					for (SongElement songElement : history) {
+						SongElementHandler handler = songElementHandlers.get(songElement.getType());
+						if (handler != null) {
+							handler.handleElement(exportInProgress, song, history);
+						}
+					}
+
+					document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
 				}
-				
-				document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
 			}
-			
-			appendTableOfContents(document, exportInProgress.getToc());
+
+			if (exportFormat.onlyExportChordSequence()) {
+				document.add(table);
+			} else {
+				appendTableOfContents(document, exportInProgress.getToc());
+			}
 			
 			document.close();
 		} catch (Exception e) {
