@@ -264,6 +264,7 @@
 	</developers>
 
 	<build>
+		<finalName>${project.artifactId}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>io.github.git-commit-id</groupId>
@@ -411,7 +412,6 @@
 				<version>3.5.0</version>
 				<configuration>
 					<outputDirectory>${project.build.directory}/distribution/bin</outputDirectory>
-					<finalName>${project.artifactId}</finalName>
 					<archive>
 						<manifest>
 							<mainClass>${main.class}</mainClass>
