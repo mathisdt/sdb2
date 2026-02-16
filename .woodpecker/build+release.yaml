@@ -27,7 +27,7 @@ steps:
     when:
       - event: [ push, manual ]
     depends_on: []
-    image: maven:3.9-eclipse-temurin-25-noble
+    image: eclipse-temurin:25-jdk
     pull: true
     commands: |
       echo "installing packages..."
@@ -37,7 +37,7 @@ steps:
       apt-get -y install ttf-mscorefonts-installer xvfb libxi6 libxtst6 zip unzip >/dev/null 2>&1
       echo "done installing packages"
       export TZ=Europe/Berlin
-      xvfb-run mvn clean verify -U --no-transfer-progress
+      xvfb-run ./mvnw clean verify -U --no-transfer-progress
       ./build-jre-distributions.sh
   - name: release on Codeberg
     when:
